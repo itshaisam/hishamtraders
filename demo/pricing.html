@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flexible Pricing Tiers - Sinnextech ERP</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .comparison-table {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+
+        .feature-row {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .feature-row:last-child {
+            border-bottom: none;
+        }
+
+        .tier-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="text-2xl font-bold text-white">Sinnextech</div>
+                <div class="flex gap-4">
+                    <a href="presentation.html" class="px-4 py-2 text-white hover:bg-white/10 rounded-lg transition">
+                        Back to Features
+                    </a>
+                    <a href="dashboard.html" class="px-4 py-2 text-white hover:bg-white/10 rounded-lg transition">
+                        View Demo
+                    </a>
+                    <a href="#contact" class="px-6 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-gray-100 transition">
+                        Contact Us
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="min-h-screen py-16 px-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h1 class="text-5xl font-bold text-white mb-4">Flexible Pricing Tiers</h1>
+                <p class="text-xl text-white/90 max-w-3xl mx-auto">
+                    Choose the perfect package for your business size and needs. All tiers include on-premise deployment, training, and lifetime support.
+                </p>
+            </div>
+
+            <!-- Pricing Cards -->
+            <div class="grid lg:grid-cols-3 gap-8 mb-16">
+                <!-- Basic Tier -->
+                <div class="bg-white rounded-2xl p-8 border-2 border-gray-200 hover:border-blue-300 transition transform hover:-translate-y-2" data-aos="fade-up" data-aos-delay="100">
+                    <div class="text-center mb-6">
+                        <div class="inline-block px-4 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-semibold mb-4">
+                            BASIC / MVP
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Essential Operations</h3>
+                        <p class="text-gray-600 text-sm mb-6">Perfect for small wholesalers starting digital transformation</p>
+                    </div>
+
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Basic Inventory Tracking</div>
+                                <div class="text-sm text-gray-600">Single warehouse, simple stock in/out</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Simple Purchase Orders</div>
+                                <div class="text-sm text-gray-600">Basic PO creation and tracking</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Sales Invoicing</div>
+                                <div class="text-sm text-gray-600">Create invoices with auto stock deduction</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Client Management</div>
+                                <div class="text-sm text-gray-600">Basic client database with balances</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Payment Tracking</div>
+                                <div class="text-sm text-gray-600">Record and track payments</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Basic Reports</div>
+                                <div class="text-sm text-gray-600">Inventory, sales, and payment reports</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">3 User Roles</div>
+                                <div class="text-sm text-gray-600">Admin, Sales, Warehouse</div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="text-center mb-6 pt-6 border-t border-gray-200">
+                        <div class="text-4xl font-bold text-gray-900">$1,150</div>
+                        <div class="text-sm text-gray-500 mt-1">Foundation Tier • 4-6 weeks delivery</div>
+                    </div>
+
+                    <button class="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg font-semibold transition">
+                        Get Started
+                    </button>
+                </div>
+
+                <!-- Standard Tier (Highlighted) -->
+                <div class="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-8 border-2 border-blue-500 shadow-2xl transform lg:-translate-y-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="absolute top-0 right-0 bg-yellow-400 text-gray-900 px-4 py-1 rounded-bl-lg rounded-tr-xl font-bold text-sm">
+                        RECOMMENDED
+                    </div>
+                    <div class="text-center mb-6 mt-4">
+                        <div class="inline-block px-4 py-1 bg-white/20 text-white rounded-full text-sm font-semibold mb-4 backdrop-blur-sm">
+                            STANDARD (CURRENT)
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-2">Complete ERP Solution</h3>
+                        <p class="text-white/90 text-sm mb-6">Everything you need for professional import-distribution</p>
+                    </div>
+
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-white">All Basic Features +</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-white">Multi-Warehouse Management</div>
+                                <div class="text-sm text-white/80">Unlimited warehouses with bin locations</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-white">Import Documentation</div>
+                                <div class="text-sm text-white/80">Track customs, taxes, shipping costs</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-white">Batch/Lot Tracking</div>
+                                <div class="text-sm text-white/80">Complete traceability with expiry alerts</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-white">Credit Limit Enforcement</div>
+                                <div class="text-sm text-white/80">Automatic warnings and controls</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-white">Weekly Recovery Schedule</div>
+                                <div class="text-sm text-white/80">Organized collection with aging analysis</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-white">Gate Pass System</div>
+                                <div class="text-sm text-white/80">Auto/manual approval workflow</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-white">Complete Audit Trail</div>
+                                <div class="text-sm text-white/80">Full activity logging & change history</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-white">5 User Roles</div>
+                                <div class="text-sm text-white/80">Admin, Warehouse, Sales, Accountant, Recovery</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-white">Excel Export</div>
+                                <div class="text-sm text-white/80">All reports exportable</div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="text-center mb-6 pt-6 border-t border-white/20">
+                        <div class="text-4xl font-bold text-white">$1,850</div>
+                        <div class="text-sm text-white/80 mt-1">Recommended • 6-8 weeks delivery</div>
+                    </div>
+
+                    <button class="w-full py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg">
+                        View Live Demo
+                    </button>
+                </div>
+
+                <!-- Premium Tier -->
+                <div class="bg-white rounded-2xl p-8 border-2 border-purple-200 hover:border-purple-400 transition transform hover:-translate-y-2" data-aos="fade-up" data-aos-delay="300">
+                    <div class="text-center mb-6">
+                        <div class="inline-block px-4 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full text-sm font-semibold mb-4">
+                            PREMIUM
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Enterprise Features</h3>
+                        <p class="text-gray-600 text-sm mb-6">Advanced automation and multi-tenant capabilities</p>
+                    </div>
+
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">All Standard Features +</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Barcode/QR Scanning</div>
+                                <div class="text-sm text-gray-600">Fast stock transactions with scanners</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Mobile Apps</div>
+                                <div class="text-sm text-gray-600">iOS/Android for field operations</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">WhatsApp/SMS Integration</div>
+                                <div class="text-sm text-gray-600">Automated recovery reminders</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Advanced Analytics</div>
+                                <div class="text-sm text-gray-600">AI-powered demand forecasting</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">FBR E-Invoice Integration</div>
+                                <div class="text-sm text-gray-600">Pakistan tax compliance automation</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Multi-Currency Support</div>
+                                <div class="text-sm text-gray-600">International transactions</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Customer/Supplier Portals</div>
+                                <div class="text-sm text-gray-600">Self-service order & shipment tracking</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Multi-Tenant SaaS</div>
+                                <div class="text-sm text-gray-600">Host multiple businesses</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            <div>
+                                <div class="font-semibold text-gray-900">Priority Support & SLA</div>
+                                <div class="text-sm text-gray-600">99.9% uptime guarantee</div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div class="text-center mb-6 pt-6 border-t border-gray-200">
+                        <div class="text-4xl font-bold text-gray-900">$3,400</div>
+                        <div class="text-sm text-gray-500 mt-1">Enterprise Tier • 10-12 weeks delivery</div>
+                    </div>
+
+                    <button class="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold transition shadow-lg">
+                        Contact Sales
+                    </button>
+                </div>
+            </div>
+
+            <!-- What's Included -->
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 mb-16" data-aos="fade-up">
+                <h3 class="text-2xl font-bold text-white mb-6 text-center">All Tiers Include</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="flex items-start gap-4">
+                        <i data-lucide="server" class="w-8 h-8 text-yellow-300 flex-shrink-0"></i>
+                        <div>
+                            <div class="font-semibold text-white mb-1">On-Premise Deployment</div>
+                            <div class="text-sm text-white/80">Host on your own servers with full data control</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <i data-lucide="graduation-cap" class="w-8 h-8 text-yellow-300 flex-shrink-0"></i>
+                        <div>
+                            <div class="font-semibold text-white mb-1">Complete Training</div>
+                            <div class="text-sm text-white/80">Onsite training for your team included</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <i data-lucide="database" class="w-8 h-8 text-yellow-300 flex-shrink-0"></i>
+                        <div>
+                            <div class="font-semibold text-white mb-1">Data Migration Support</div>
+                            <div class="text-sm text-white/80">Import existing data from Excel/other systems</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <i data-lucide="headphones" class="w-8 h-8 text-yellow-300 flex-shrink-0"></i>
+                        <div>
+                            <div class="font-semibold text-white mb-1">Lifetime Support</div>
+                            <div class="text-sm text-white/80">Bug fixes and maintenance support included</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <i data-lucide="arrow-up-circle" class="w-8 h-8 text-yellow-300 flex-shrink-0"></i>
+                        <div>
+                            <div class="font-semibold text-white mb-1">Free Upgrades</div>
+                            <div class="text-sm text-white/80">Upgrade between tiers anytime as you grow</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <i data-lucide="shield-check" class="w-8 h-8 text-yellow-300 flex-shrink-0"></i>
+                        <div>
+                            <div class="font-semibold text-white mb-1">Source Code Access</div>
+                            <div class="text-sm text-white/80">Full source code provided for customization</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="text-center bg-white rounded-2xl p-12" data-aos="fade-up">
+                <h3 class="text-3xl font-bold text-gray-900 mb-4">Ready to Transform Your Business?</h3>
+                <p class="text-gray-600 mb-8 max-w-2xl mx-auto">
+                    Schedule a free consultation to discuss your requirements and see which tier is the perfect fit for your business.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="dashboard.html" class="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2">
+                        <i data-lucide="monitor" class="w-5 h-5"></i>
+                        View Live Demo
+                    </a>
+                    <a href="#contact" class="px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition shadow-lg flex items-center justify-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5"></i>
+                        Schedule Consultation
+                    </a>
+                    <a href="proposal.html" class="px-8 py-4 bg-white hover:bg-gray-50 text-purple-600 rounded-lg font-semibold transition border-2 border-purple-600 flex items-center justify-center gap-2">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                        View Proposal
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Section -->
+    <div id="contact" class="bg-white py-16 px-6">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl font-bold text-gray-900 mb-8">Get in Touch</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <i data-lucide="phone" class="w-12 h-12 text-purple-600 mx-auto mb-4"></i>
+                    <div class="font-semibold text-gray-900 mb-2">Phone</div>
+                    <div class="text-gray-600">+92 300 1234567</div>
+                </div>
+                <div>
+                    <i data-lucide="mail" class="w-12 h-12 text-purple-600 mx-auto mb-4"></i>
+                    <div class="font-semibold text-gray-900 mb-2">Email</div>
+                    <div class="text-gray-600">info@hishamtraders.com</div>
+                </div>
+                <div>
+                    <i data-lucide="map-pin" class="w-12 h-12 text-purple-600 mx-auto mb-4"></i>
+                    <div class="font-semibold text-gray-900 mb-2">Location</div>
+                    <div class="text-gray-600">Karachi, Pakistan</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 100
+        });
+
+        // Initialize Lucide icons
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

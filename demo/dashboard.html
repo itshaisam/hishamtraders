@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Demo - Sinnextech ERP</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border-left: 4px solid;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 1s ease;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-gray-900">Sinnextech</h1>
+                        <p class="text-xs text-gray-500">ERP Dashboard Demo</p>
+                    </div>
+                </div>
+                <a href="presentation.html" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition">
+                    ← Back to Presentation
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Dashboard Tabs -->
+        <div class="flex flex-wrap gap-4 mb-8">
+            <button onclick="showDashboard('admin')" id="tab-admin" class="dashboard-tab px-6 py-3 rounded-lg font-semibold transition bg-blue-600 text-white shadow-lg flex items-center gap-2">
+                <i data-lucide="user-cog" class="w-5 h-5"></i>
+                Admin Dashboard
+            </button>
+            <button onclick="showDashboard('warehouse')" id="tab-warehouse" class="dashboard-tab px-6 py-3 rounded-lg font-semibold transition bg-gray-200 text-gray-700 hover:bg-gray-300 flex items-center gap-2">
+                <i data-lucide="package" class="w-5 h-5"></i>
+                Warehouse Manager
+            </button>
+            <button onclick="showDashboard('sales')" id="tab-sales" class="dashboard-tab px-6 py-3 rounded-lg font-semibold transition bg-gray-200 text-gray-700 hover:bg-gray-300 flex items-center gap-2">
+                <i data-lucide="briefcase" class="w-5 h-5"></i>
+                Sales Officer
+            </button>
+            <button onclick="showDashboard('accountant')" id="tab-accountant" class="dashboard-tab px-6 py-3 rounded-lg font-semibold transition bg-gray-200 text-gray-700 hover:bg-gray-300 flex items-center gap-2">
+                <i data-lucide="dollar-sign" class="w-5 h-5"></i>
+                Accountant
+            </button>
+            <button onclick="showDashboard('recovery')" id="tab-recovery" class="dashboard-tab px-6 py-3 rounded-lg font-semibold transition bg-gray-200 text-gray-700 hover:bg-gray-300 flex items-center gap-2">
+                <i data-lucide="phone" class="w-5 h-5"></i>
+                Recovery Agent
+            </button>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="dashboard-admin" class="dashboard-content">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h2>
+                <p class="text-gray-600">Complete system overview and business intelligence</p>
+            </div>
+
+            <!-- Top Metrics - 6 Cards -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div class="metric-card border-blue-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">Monthly Revenue</div>
+                        <i data-lucide="trending-up" class="w-5 h-5 text-blue-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900">PKR 8.2M</div>
+                    <div class="text-xs text-green-600 mt-2">↑ 18.3% vs last month</div>
+                </div>
+                <div class="metric-card border-green-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">Total Stock Value</div>
+                        <i data-lucide="package" class="w-5 h-5 text-green-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900">PKR 24.5M</div>
+                    <div class="text-xs text-green-600 mt-2">↑ 12% inventory growth</div>
+                </div>
+                <div class="metric-card border-purple-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">Outstanding A/R</div>
+                        <i data-lucide="dollar-sign" class="w-5 h-5 text-purple-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900">PKR 6.8M</div>
+                    <div class="text-xs text-orange-600 mt-2">Avg DSO: 32 days</div>
+                </div>
+                <div class="metric-card border-orange-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">Active Clients</div>
+                        <i data-lucide="users" class="w-5 h-5 text-orange-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900">147</div>
+                    <div class="text-xs text-green-600 mt-2">+12 new this month</div>
+                </div>
+                <div class="metric-card border-red-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">Pending Approvals</div>
+                        <i data-lucide="clipboard-list" class="w-5 h-5 text-red-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900">11</div>
+                    <div class="text-xs text-orange-600 mt-2">7 GP, 3 PO, 1 Invoice</div>
+                </div>
+                <div class="metric-card border-indigo-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">System Users</div>
+                        <i data-lucide="user-cog" class="w-5 h-5 text-indigo-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900">24</div>
+                    <div class="text-xs text-gray-500 mt-2">18 active today</div>
+                </div>
+            </div>
+
+            <!-- Revenue & Sales Trends -->
+            <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-blue-600"></i>
+                        Revenue vs Target (Last 6 Months)
+                    </h3>
+                    <div class="flex items-end justify-between h-48 gap-3">
+                        <div class="flex-1 flex flex-col justify-end items-center gap-2">
+                            <div class="text-xs text-gray-600">May</div>
+                            <div class="w-full bg-blue-200 rounded-t relative" style="height: 70%">
+                                <div class="w-full bg-blue-500 rounded-t absolute bottom-0" style="height: 85%"></div>
+                            </div>
+                            <div class="text-xs font-semibold text-gray-900">6.2M</div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end items-center gap-2">
+                            <div class="text-xs text-gray-600">Jun</div>
+                            <div class="w-full bg-blue-200 rounded-t relative" style="height: 75%">
+                                <div class="w-full bg-blue-500 rounded-t absolute bottom-0" style="height: 90%"></div>
+                            </div>
+                            <div class="text-xs font-semibold text-gray-900">6.5M</div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end items-center gap-2">
+                            <div class="text-xs text-gray-600">Jul</div>
+                            <div class="w-full bg-blue-200 rounded-t relative" style="height: 80%">
+                                <div class="w-full bg-blue-500 rounded-t absolute bottom-0" style="height: 88%"></div>
+                            </div>
+                            <div class="text-xs font-semibold text-gray-900">7.1M</div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end items-center gap-2">
+                            <div class="text-xs text-gray-600">Aug</div>
+                            <div class="w-full bg-blue-200 rounded-t relative" style="height: 85%">
+                                <div class="w-full bg-blue-500 rounded-t absolute bottom-0" style="height: 92%"></div>
+                            </div>
+                            <div class="text-xs font-semibold text-gray-900">7.4M</div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end items-center gap-2">
+                            <div class="text-xs text-gray-600">Sep</div>
+                            <div class="w-full bg-blue-200 rounded-t relative" style="height: 88%">
+                                <div class="w-full bg-blue-500 rounded-t absolute bottom-0" style="height: 95%"></div>
+                            </div>
+                            <div class="text-xs font-semibold text-gray-900">7.8M</div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end items-center gap-2">
+                            <div class="text-xs text-gray-600">Oct</div>
+                            <div class="w-full bg-green-200 rounded-t relative" style="height: 100%">
+                                <div class="w-full bg-green-500 rounded-t absolute bottom-0" style="height: 102%"></div>
+                            </div>
+                            <div class="text-xs font-semibold text-green-700">8.2M</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 mt-4 text-xs">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-blue-500 rounded"></div>
+                            <span class="text-gray-600">Actual</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-blue-200 rounded"></div>
+                            <span class="text-gray-600">Target</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-5 h-5 text-purple-600"></i>
+                        Top Performing Products
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-700 font-medium">Rice Basmati 25kg</span>
+                                <span class="text-gray-900 font-semibold">PKR 2.4M</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 85%; background: linear-gradient(90deg, #8b5cf6, #6d28d9);"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-700 font-medium">Cooking Oil 5L</span>
+                                <span class="text-gray-900 font-semibold">PKR 1.8M</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 65%; background: linear-gradient(90deg, #3b82f6, #1e40af);"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-700 font-medium">Sugar 50kg</span>
+                                <span class="text-gray-900 font-semibold">PKR 1.5M</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 55%; background: linear-gradient(90deg, #10b981, #047857);"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-700 font-medium">Wheat Flour 20kg</span>
+                                <span class="text-gray-900 font-semibold">PKR 1.2M</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 45%; background: linear-gradient(90deg, #f59e0b, #d97706);"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-700 font-medium">Lentils 10kg</span>
+                                <span class="text-gray-900 font-semibold">PKR 850K</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 32%; background: linear-gradient(90deg, #ef4444, #dc2626);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity & Alerts -->
+            <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="activity" class="w-5 h-5 text-blue-600"></i>
+                        Recent Activity Log
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                            <i data-lucide="file-text" class="w-5 h-5 text-blue-600"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">Invoice #INV-2025-1032 created</div>
+                                <div class="text-xs text-gray-500">by Ahmad Khan • Sales • 8 mins ago</div>
+                            </div>
+                            <div class="text-sm font-semibold text-blue-600">PKR 45K</div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">Payment received</div>
+                                <div class="text-xs text-gray-500">Al-Madina Traders • 15 mins ago</div>
+                            </div>
+                            <div class="text-sm font-semibold text-green-600">PKR 125K</div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
+                            <i data-lucide="package-check" class="w-5 h-5 text-purple-600"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">PO #2025-148 received</div>
+                                <div class="text-xs text-gray-500">550 units • Warehouse Main • 1 hour ago</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
+                            <i data-lucide="clipboard-check" class="w-5 h-5 text-orange-600"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">Gate Pass #GP-089 approved</div>
+                                <div class="text-xs text-gray-500">By Hassan Ali • Admin • 2 hours ago</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <i data-lucide="user-plus" class="w-5 h-5 text-gray-600"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">New client registered</div>
+                                <div class="text-xs text-gray-500">Metro Cash & Carry • 3 hours ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-orange-600"></i>
+                        Critical Alerts & Notifications
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4 text-red-600"></i>
+                                <span class="text-sm font-semibold text-red-900">Out of Stock</span>
+                            </div>
+                            <div class="text-xs text-gray-700">3 products are completely out of stock</div>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="package-x" class="w-4 h-4 text-orange-600"></i>
+                                <span class="text-sm font-semibold text-orange-900">Low Stock Alert</span>
+                            </div>
+                            <div class="text-xs text-gray-700">12 products below reorder level</div>
+                        </div>
+                        <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="calendar-x" class="w-4 h-4 text-yellow-600"></i>
+                                <span class="text-sm font-semibold text-yellow-900">Expiring Soon</span>
+                            </div>
+                            <div class="text-xs text-gray-700">8 batches expiring in next 30 days</div>
+                        </div>
+                        <div class="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="clock" class="w-4 h-4 text-purple-600"></i>
+                                <span class="text-sm font-semibold text-purple-900">Overdue Payments</span>
+                            </div>
+                            <div class="text-xs text-gray-700">23 invoices overdue totaling PKR 2.3M</div>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="credit-card" class="w-4 h-4 text-blue-600"></i>
+                                <span class="text-sm font-semibold text-blue-900">Credit Limit</span>
+                            </div>
+                            <div class="text-xs text-gray-700">5 clients near or exceeding credit limits</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Health & Performance -->
+            <div class="dashboard-card">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i data-lucide="server" class="w-5 h-5 text-indigo-600"></i>
+                    System Health & Performance
+                </h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">Database Storage</span>
+                            <span class="font-semibold text-gray-900">68%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 68%; background: linear-gradient(90deg, #3b82f6, #1e40af);"></div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">4.2 GB / 6.2 GB</div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">API Response</span>
+                            <span class="font-semibold text-green-600">Excellent</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900">127ms</div>
+                        <div class="text-xs text-gray-500 mt-1">Avg. response time</div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">System Uptime</span>
+                            <span class="font-semibold text-green-600">99.8%</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900">29d 18h</div>
+                        <div class="text-xs text-gray-500 mt-1">Last 30 days</div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="text-gray-600">Active Sessions</span>
+                            <span class="font-semibold text-blue-600">18</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900">24</div>
+                        <div class="text-xs text-gray-500 mt-1">Total users</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warehouse Dashboard -->
+        <div id="dashboard-warehouse" class="dashboard-content hidden">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Warehouse Manager Dashboard</h2>
+                <p class="text-gray-600">Inventory status, stock movements, and warehouse operations</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card border-blue-500">
+                    <div class="text-sm text-gray-600 mb-1">Low Stock Items</div>
+                    <div class="text-3xl font-bold text-orange-600">12</div>
+                    <div class="text-xs text-gray-500 mt-2">Reorder required</div>
+                </div>
+                <div class="metric-card border-red-500">
+                    <div class="text-sm text-gray-600 mb-1">Out of Stock</div>
+                    <div class="text-3xl font-bold text-red-600">3</div>
+                    <div class="text-xs text-gray-500 mt-2">Urgent attention</div>
+                </div>
+                <div class="metric-card border-green-500">
+                    <div class="text-sm text-gray-600 mb-1">Pending Receipts</div>
+                    <div class="text-3xl font-bold text-gray-900">7</div>
+                    <div class="text-xs text-gray-500 mt-2">POs to receive</div>
+                </div>
+                <div class="metric-card border-purple-500">
+                    <div class="text-sm text-gray-600 mb-1">Gate Passes (Pending)</div>
+                    <div class="text-3xl font-bold text-gray-900">5</div>
+                    <div class="text-xs text-orange-600 mt-2">Awaiting approval</div>
+                </div>
+            </div>
+
+            <div class="dashboard-card mb-8">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Stock Status by Warehouse</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="text-left p-3 font-semibold text-gray-700">Warehouse</th>
+                                <th class="text-right p-3 font-semibold text-gray-700">Total Items</th>
+                                <th class="text-right p-3 font-semibold text-gray-700">Stock Value</th>
+                                <th class="text-center p-3 font-semibold text-gray-700">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t hover:bg-gray-50">
+                                <td class="p-3 font-medium">Main Warehouse - Karachi</td>
+                                <td class="p-3 text-right">1,245</td>
+                                <td class="p-3 text-right">PKR 15.2M</td>
+                                <td class="p-3 text-center"><span class="badge badge-success">Healthy</span></td>
+                            </tr>
+                            <tr class="border-t hover:bg-gray-50">
+                                <td class="p-3 font-medium">Warehouse 2 - Lahore</td>
+                                <td class="p-3 text-right">892</td>
+                                <td class="p-3 text-right">PKR 6.8M</td>
+                                <td class="p-3 text-center"><span class="badge badge-success">Healthy</span></td>
+                            </tr>
+                            <tr class="border-t hover:bg-gray-50">
+                                <td class="p-3 font-medium">Warehouse 3 - Islamabad</td>
+                                <td class="p-3 text-right">467</td>
+                                <td class="p-3 text-right">PKR 2.5M</td>
+                                <td class="p-3 text-center"><span class="badge badge-warning">Low Stock</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Near Expiry Items (60 days)</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">SKU-2450 - Ceramic Tiles</div>
+                                <div class="text-xs text-gray-600">Batch: 20240915-012 • Qty: 120</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-orange-600 font-semibold">45 days</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">SKU-1820 - Wall Paint</div>
+                                <div class="text-xs text-gray-600">Batch: 20240920-008 • Qty: 85</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-orange-600 font-semibold">52 days</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-left transition">
+                            <i data-lucide="package-plus" class="w-8 h-8 text-blue-600 mb-2"></i>
+                            <div class="text-sm font-semibold text-gray-900">Record Receipt</div>
+                        </button>
+                        <button class="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition">
+                            <i data-lucide="file-badge" class="w-8 h-8 text-purple-600 mb-2"></i>
+                            <div class="text-sm font-semibold text-gray-900">Issue Gate Pass</div>
+                        </button>
+                        <button class="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition">
+                            <i data-lucide="repeat" class="w-8 h-8 text-green-600 mb-2"></i>
+                            <div class="text-sm font-semibold text-gray-900">Stock Transfer</div>
+                        </button>
+                        <button class="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg text-left transition">
+                            <i data-lucide="bar-chart-3" class="w-8 h-8 text-orange-600 mb-2"></i>
+                            <div class="text-sm font-semibold text-gray-900">Inventory Report</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Dashboard -->
+        <div id="dashboard-sales" class="dashboard-content hidden">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Sales Officer Dashboard</h2>
+                <p class="text-gray-600">Sales performance, client management, and revenue tracking</p>
+            </div>
+
+            <!-- Top Metrics - 6 Cards -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div class="metric-card border-green-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">Today's Sales</div>
+                        <i data-lucide="trending-up" class="w-5 h-5 text-green-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900">PKR 485K</div>
+                    <div class="text-xs text-green-600 mt-2">8 invoices • Target: 500K</div>
+                </div>
+                <div class="metric-card border-blue-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">Monthly Sales</div>
+                        <i data-lucide="calendar" class="w-5 h-5 text-blue-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900">PKR 12.4M</div>
+                    <div class="text-xs text-green-600 mt-2">↑ 18.3% vs last month</div>
+                </div>
+                <div class="metric-card border-purple-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">Quarterly Target</div>
+                        <i data-lucide="target" class="w-5 h-5 text-purple-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900">82%</div>
+                    <div class="text-xs text-gray-500 mt-2">PKR 32.8M / 40M</div>
+                </div>
+                <div class="metric-card border-orange-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">Active Clients</div>
+                        <i data-lucide="users" class="w-5 h-5 text-orange-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900">147</div>
+                    <div class="text-xs text-green-600 mt-2">+8 new this month</div>
+                </div>
+                <div class="metric-card border-red-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">Credit Warnings</div>
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-red-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-orange-600">6</div>
+                    <div class="text-xs text-gray-500 mt-2">Clients near limit</div>
+                </div>
+                <div class="metric-card border-indigo-500">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm text-gray-600">Avg Invoice</div>
+                        <i data-lucide="receipt" class="w-5 h-5 text-indigo-500"></i>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900">PKR 62K</div>
+                    <div class="text-xs text-gray-500 mt-2">Last 30 days</div>
+                </div>
+            </div>
+
+            <!-- Sales Performance & Top Products -->
+            <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-blue-600"></i>
+                        Weekly Sales Performance
+                    </h3>
+                    <div class="flex items-end justify-between h-40 gap-2">
+                        <div class="flex-1 flex flex-col justify-end items-center gap-1">
+                            <div class="text-xs text-gray-600">Mon</div>
+                            <div class="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t" style="height: 65%"></div>
+                            <div class="text-xs font-semibold text-gray-900">1.2M</div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end items-center gap-1">
+                            <div class="text-xs text-gray-600">Tue</div>
+                            <div class="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t" style="height: 75%"></div>
+                            <div class="text-xs font-semibold text-gray-900">1.5M</div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end items-center gap-1">
+                            <div class="text-xs text-gray-600">Wed</div>
+                            <div class="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t" style="height: 85%"></div>
+                            <div class="text-xs font-semibold text-gray-900">1.7M</div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end items-center gap-1">
+                            <div class="text-xs text-gray-600">Thu</div>
+                            <div class="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t" style="height: 70%"></div>
+                            <div class="text-xs font-semibold text-gray-900">1.4M</div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end items-center gap-1">
+                            <div class="text-xs text-gray-600">Fri</div>
+                            <div class="w-full bg-gradient-to-t from-green-500 to-green-400 rounded-t" style="height: 100%"></div>
+                            <div class="text-xs font-semibold text-green-700">2.0M</div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end items-center gap-1">
+                            <div class="text-xs text-gray-600">Sat</div>
+                            <div class="w-full bg-gradient-to-t from-purple-500 to-purple-400 rounded-t" style="height: 55%"></div>
+                            <div class="text-xs font-semibold text-gray-900">1.1M</div>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end items-center gap-1">
+                            <div class="text-xs text-gray-600">Sun</div>
+                            <div class="w-full bg-gradient-to-t from-gray-400 to-gray-300 rounded-t" style="height: 25%"></div>
+                            <div class="text-xs font-semibold text-gray-900">0.5M</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="package" class="w-5 h-5 text-purple-600"></i>
+                        Top Selling Products
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
+                            <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white font-bold">1</div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">Rice Basmati 25kg</div>
+                                <div class="text-xs text-gray-500">342 units • PKR 2.4M</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-bold text-purple-600">↑ 24%</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">2</div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">Cooking Oil 5L</div>
+                                <div class="text-xs text-gray-500">298 units • PKR 1.8M</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-bold text-blue-600">↑ 18%</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
+                            <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold">3</div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">Sugar 50kg</div>
+                                <div class="text-xs text-gray-500">245 units • PKR 1.5M</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-bold text-green-600">↑ 12%</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <div class="w-10 h-10 bg-gray-500 rounded-lg flex items-center justify-center text-white font-bold">4</div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-900">Wheat Flour 20kg</div>
+                                <div class="text-xs text-gray-500">189 units • PKR 980K</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-bold text-gray-600">↑ 8%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Invoices & Client Alerts -->
+            <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="file-text" class="w-5 h-5 text-blue-600"></i>
+                        Recent Invoices
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="text-left p-2 font-semibold text-gray-700">Invoice</th>
+                                    <th class="text-left p-2 font-semibold text-gray-700">Client</th>
+                                    <th class="text-right p-2 font-semibold text-gray-700">Amount</th>
+                                    <th class="text-center p-2 font-semibold text-gray-700">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t hover:bg-gray-50">
+                                    <td class="p-2 font-medium text-blue-600">INV-1045</td>
+                                    <td class="p-2">Al-Madina Traders</td>
+                                    <td class="p-2 text-right font-semibold">125,000</td>
+                                    <td class="p-2 text-center"><span class="badge badge-success">Paid</span></td>
+                                </tr>
+                                <tr class="border-t hover:bg-gray-50">
+                                    <td class="p-2 font-medium text-blue-600">INV-1044</td>
+                                    <td class="p-2">Royal Hardware</td>
+                                    <td class="p-2 text-right font-semibold">87,500</td>
+                                    <td class="p-2 text-center"><span class="badge badge-warning">Pending</span></td>
+                                </tr>
+                                <tr class="border-t hover:bg-gray-50">
+                                    <td class="p-2 font-medium text-blue-600">INV-1043</td>
+                                    <td class="p-2">Metro Cash & Carry</td>
+                                    <td class="p-2 text-right font-semibold">245,000</td>
+                                    <td class="p-2 text-center"><span class="badge badge-success">Paid</span></td>
+                                </tr>
+                                <tr class="border-t hover:bg-gray-50">
+                                    <td class="p-2 font-medium text-blue-600">INV-1042</td>
+                                    <td class="p-2">Elite Distributors</td>
+                                    <td class="p-2 text-right font-semibold">156,000</td>
+                                    <td class="p-2 text-center"><span class="badge badge-warning">Pending</span></td>
+                                </tr>
+                                <tr class="border-t hover:bg-gray-50">
+                                    <td class="p-2 font-medium text-blue-600">INV-1041</td>
+                                    <td class="p-2">Super Mart</td>
+                                    <td class="p-2 text-right font-semibold">92,300</td>
+                                    <td class="p-2 text-center"><span class="badge badge-success">Paid</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="alert-circle" class="w-5 h-5 text-orange-600"></i>
+                        Client Alerts & Actions
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="credit-card" class="w-4 h-4 text-red-600"></i>
+                                <span class="text-sm font-semibold text-red-900">Credit Limit Exceeded</span>
+                            </div>
+                            <div class="text-xs text-gray-700 mb-2">City Traders - PKR 850K / 800K limit</div>
+                            <button class="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">View Details</button>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="alert-triangle" class="w-4 h-4 text-orange-600"></i>
+                                <span class="text-sm font-semibold text-orange-900">Near Credit Limit (90%)</span>
+                            </div>
+                            <div class="text-xs text-gray-700 mb-2">5 clients approaching credit limits</div>
+                            <button class="text-xs bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-700">View List</button>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="user-plus" class="w-4 h-4 text-blue-600"></i>
+                                <span class="text-sm font-semibold text-blue-900">New Clients This Month</span>
+                            </div>
+                            <div class="text-xs text-gray-700 mb-2">8 new clients registered • Total value: PKR 1.2M</div>
+                            <button class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">View Clients</button>
+                        </div>
+                        <div class="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i data-lucide="star" class="w-4 h-4 text-purple-600"></i>
+                                <span class="text-sm font-semibold text-purple-900">Top Clients This Month</span>
+                            </div>
+                            <div class="text-xs text-gray-700">Metro Cash - PKR 2.4M • Al-Madina - PKR 1.8M</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="dashboard-card">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i data-lucide="zap" class="w-5 h-5 text-yellow-600"></i>
+                    Quick Actions
+                </h3>
+                <div class="grid md:grid-cols-4 gap-3">
+                    <button class="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-left transition border border-blue-200">
+                        <i data-lucide="plus-circle" class="w-6 h-6 text-blue-600 mb-2"></i>
+                        <div class="text-sm font-semibold text-gray-900">New Invoice</div>
+                        <div class="text-xs text-gray-600">Create sales invoice</div>
+                    </button>
+                    <button class="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition border border-green-200">
+                        <i data-lucide="user-plus" class="w-6 h-6 text-green-600 mb-2"></i>
+                        <div class="text-sm font-semibold text-gray-900">Add Client</div>
+                        <div class="text-xs text-gray-600">Register new client</div>
+                    </button>
+                    <button class="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition border border-purple-200">
+                        <i data-lucide="search" class="w-6 h-6 text-purple-600 mb-2"></i>
+                        <div class="text-sm font-semibold text-gray-900">Check Stock</div>
+                        <div class="text-xs text-gray-600">Product availability</div>
+                    </button>
+                    <button class="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg text-left transition border border-orange-200">
+                        <i data-lucide="download" class="w-6 h-6 text-orange-600 mb-2"></i>
+                        <div class="text-sm font-semibold text-gray-900">Export Report</div>
+                        <div class="text-xs text-gray-600">Download sales data</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accountant Dashboard -->
+        <div id="dashboard-accountant" class="dashboard-content hidden">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Accountant Dashboard</h2>
+                <p class="text-gray-600">Financial overview, receivables, payables, and cash flow</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card border-green-500">
+                    <div class="text-sm text-gray-600 mb-1">Total Receivables</div>
+                    <div class="text-3xl font-bold text-gray-900">PKR 8.4M</div>
+                    <div class="text-xs text-gray-500 mt-2">From 142 clients</div>
+                </div>
+                <div class="metric-card border-red-500">
+                    <div class="text-sm text-gray-600 mb-1">Total Payables</div>
+                    <div class="text-3xl font-bold text-gray-900">PKR 3.2M</div>
+                    <div class="text-xs text-gray-500 mt-2">To 18 suppliers</div>
+                </div>
+                <div class="metric-card border-blue-500">
+                    <div class="text-sm text-gray-600 mb-1">Cash Flow (Month)</div>
+                    <div class="text-3xl font-bold text-green-600">+PKR 2.1M</div>
+                    <div class="text-xs text-gray-500 mt-2">Net positive</div>
+                </div>
+                <div class="metric-card border-purple-500">
+                    <div class="text-sm text-gray-600 mb-1">Expenses (Month)</div>
+                    <div class="text-3xl font-bold text-gray-900">PKR 1.8M</div>
+                    <div class="text-xs text-orange-600 mt-2">+8% vs last month</div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Revenue vs Expenses</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                            <div>
+                                <div class="text-sm text-gray-600">Revenue (Oct)</div>
+                                <div class="text-2xl font-bold text-blue-600">PKR 12.4M</div>
+                            </div>
+                            <div class="text-green-600 font-semibold">+18%</div>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+                            <div>
+                                <div class="text-sm text-gray-600">Expenses (Oct)</div>
+                                <div class="text-2xl font-bold text-red-600">PKR 9.6M</div>
+                            </div>
+                            <div class="text-orange-600 font-semibold">+8%</div>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border-2 border-green-500">
+                            <div>
+                                <div class="text-sm text-gray-600">Net Profit (Oct)</div>
+                                <div class="text-2xl font-bold text-green-600">PKR 2.8M</div>
+                            </div>
+                            <div class="text-green-600 font-semibold">22.6% margin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Receivables Aging</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Current</span>
+                                <span class="font-semibold">PKR 4.2M (50%)</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 50%; background: linear-gradient(90deg, #10b981, #059669);"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">1-7 Days</span>
+                                <span class="font-semibold">PKR 2.1M (25%)</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 25%; background: linear-gradient(90deg, #3b82f6, #1e40af);"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">8-30 Days</span>
+                                <span class="font-semibold">PKR 1.5M (18%)</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 18%; background: linear-gradient(90deg, #f59e0b, #d97706);"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">30+ Days</span>
+                                <span class="font-semibold text-red-600">PKR 600K (7%)</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 7%; background: linear-gradient(90deg, #ef4444, #dc2626);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Top Overdue Clients</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="text-left p-3 font-semibold text-gray-700">Client</th>
+                                <th class="text-right p-3 font-semibold text-gray-700">Outstanding</th>
+                                <th class="text-right p-3 font-semibold text-gray-700">Days Overdue</th>
+                                <th class="text-center p-3 font-semibold text-gray-700">Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-t hover:bg-gray-50">
+                                <td class="p-3 font-medium">Elite Builders Ltd</td>
+                                <td class="p-3 text-right">PKR 285,000</td>
+                                <td class="p-3 text-right text-red-600">42</td>
+                                <td class="p-3 text-center"><span class="badge badge-danger">High</span></td>
+                            </tr>
+                            <tr class="border-t hover:bg-gray-50">
+                                <td class="p-3 font-medium">Modern Hardware</td>
+                                <td class="p-3 text-right">PKR 175,000</td>
+                                <td class="p-3 text-right text-orange-600">28</td>
+                                <td class="p-3 text-center"><span class="badge badge-warning">Medium</span></td>
+                            </tr>
+                            <tr class="border-t hover:bg-gray-50">
+                                <td class="p-3 font-medium">Summit Traders</td>
+                                <td class="p-3 text-right">PKR 140,000</td>
+                                <td class="p-3 text-right text-orange-600">18</td>
+                                <td class="p-3 text-center"><span class="badge badge-warning">Medium</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recovery Agent Dashboard -->
+        <div id="dashboard-recovery" class="dashboard-content hidden">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Recovery Agent Dashboard</h2>
+                <p class="text-gray-600">Collection schedule, overdue accounts, and payment tracking</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card border-green-500">
+                    <div class="text-sm text-gray-600 mb-1">Collected This Week</div>
+                    <div class="text-3xl font-bold text-green-600">PKR 2.4M</div>
+                    <div class="text-xs text-gray-500 mt-2">From 12 clients</div>
+                </div>
+                <div class="metric-card border-blue-500">
+                    <div class="text-sm text-gray-600 mb-1">Collected This Month</div>
+                    <div class="text-3xl font-bold text-gray-900">PKR 8.7M</div>
+                    <div class="text-xs text-green-600 mt-2">+22% vs last month</div>
+                </div>
+                <div class="metric-card border-orange-500">
+                    <div class="text-sm text-gray-600 mb-1">Today's Schedule</div>
+                    <div class="text-3xl font-bold text-gray-900">18</div>
+                    <div class="text-xs text-gray-500 mt-2">Clients to visit</div>
+                </div>
+                <div class="metric-card border-red-500">
+                    <div class="text-sm text-gray-600 mb-1">Critical Overdues</div>
+                    <div class="text-3xl font-bold text-red-600">6</div>
+                    <div class="text-xs text-gray-500 mt-2">30+ days overdue</div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 dashboard-card">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-gray-900">Today's Collection Schedule</h3>
+                        <div class="text-sm">
+                            <span class="text-gray-600">Today: </span>
+                            <span class="font-bold text-blue-600">Monday, Oct 31</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="p-4 bg-red-50 border-l-4 border-red-600 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="font-bold text-gray-900">Elite Builders Ltd</div>
+                                <div class="font-bold text-red-600">PKR 285,000</div>
+                            </div>
+                            <div class="flex items-center gap-4 text-sm text-gray-600">
+                                <span>📍 DHA Phase 5, Karachi</span>
+                                <span>📞 0321-1234567</span>
+                                <span class="text-red-600 font-semibold">42 days overdue</span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-blue-50 border-l-4 border-blue-600 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="font-bold text-gray-900">Al-Madina Traders</div>
+                                <div class="font-bold text-orange-600">PKR 425,000</div>
+                            </div>
+                            <div class="flex items-center gap-4 text-sm text-gray-600">
+                                <span>📍 Gulshan-e-Iqbal, Karachi</span>
+                                <span>📞 0321-1234567</span>
+                                <span class="text-orange-600 font-semibold">12 days overdue</span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-gray-50 border-l-4 border-gray-300 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="font-bold text-gray-900">Royal Hardware Store</div>
+                                <div class="font-bold text-gray-900">PKR 185,000</div>
+                            </div>
+                            <div class="flex items-center gap-4 text-sm text-gray-600">
+                                <span>📍 Johar Town, Lahore</span>
+                                <span>📞 0300-9876543</span>
+                                <span class="text-green-600 font-semibold">Current</span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-gray-50 border-l-4 border-gray-300 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="font-bold text-gray-900">Metro Builders Pvt Ltd</div>
+                                <div class="font-bold text-orange-600">PKR 325,000</div>
+                            </div>
+                            <div class="flex items-center gap-4 text-sm text-gray-600">
+                                <span>📍 F-7, Islamabad</span>
+                                <span>📞 0333-5551234</span>
+                                <span class="text-orange-600 font-semibold">5 days overdue</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="dashboard-card">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Weekly Target</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-600">Progress</span>
+                                    <span class="font-semibold">PKR 2.4M / PKR 4M</span>
+                                </div>
+                                <div class="progress-bar h-3">
+                                    <div class="progress-fill" style="width: 60%"></div>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">60% achieved</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Priority Actions</h3>
+                        <div class="space-y-2">
+                            <button class="w-full p-3 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-left transition">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                                    <div class="text-sm font-semibold text-gray-900">6 critical overdues</div>
+                                </div>
+                            </button>
+                            <button class="w-full p-3 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg text-left transition">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                    <div class="text-sm font-semibold text-gray-900">18 scheduled today</div>
+                                </div>
+                            </button>
+                            <button class="w-full p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-left transition">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <div class="text-sm font-semibold text-gray-900">Record payments</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard Tab Switching
+        function showDashboard(role) {
+            // Hide all dashboards
+            document.querySelectorAll('.dashboard-content').forEach(d => d.classList.add('hidden'));
+
+            // Show selected dashboard
+            document.getElementById('dashboard-' + role).classList.remove('hidden');
+
+            // Update tab styles
+            document.querySelectorAll('.dashboard-tab').forEach(tab => {
+                tab.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                tab.classList.add('bg-gray-200', 'text-gray-700');
+            });
+
+            document.getElementById('tab-' + role).classList.remove('bg-gray-200', 'text-gray-700');
+            document.getElementById('tab-' + role).classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+
+            // Re-initialize Lucide icons after switching
+            lucide.createIcons();
+        }
+
+        // Initialize Lucide icons on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

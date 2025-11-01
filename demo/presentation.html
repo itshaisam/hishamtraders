@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinnextech ERP - Interactive Demo</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .gradient-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        }
+
+        .gradient-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .gradient-purple {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        }
+
+        .gradient-orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6366f1;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-dot.active {
+            background: #4f46e5;
+            width: 32px;
+            border-radius: 6px;
+            border: 2px solid white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border-left: 4px solid;
+        }
+
+        .table-demo {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 1s ease;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+
+        .workflow-step {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .workflow-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .section {
+            min-height: 100vh;
+            padding: 6rem 2rem 3rem 2rem;
+            display: flex;
+            align-items: center;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+
+        .section.full-height {
+            min-height: 100vh;
+        }
+
+        /* Navigation offset to account for fixed navbar */
+        .section {
+            padding-top: 5rem;
+        }
+
+        @media (max-width: 768px) {
+            .section {
+                padding: 5rem 1rem 2rem 1rem;
+                scroll-snap-align: start;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-gray-900">Sinnextech</h1>
+                        <p class="text-xs text-gray-500">ERP Solutions by sinnextech.com</p>
+                    </div>
+                </div>
+                <div class="hidden md:flex gap-6 items-center">
+                    <a href="#hero" class="text-sm font-medium text-gray-700 hover:text-blue-600 transition">Home</a>
+                    <a href="#features" class="text-sm font-medium text-gray-700 hover:text-blue-600 transition">Features</a>
+                    <a href="dashboard.html" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-semibold hover:shadow-lg transition">View Dashboards</a>
+                    <a href="#contact" class="text-sm font-medium text-gray-700 hover:text-blue-600 transition">Contact</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Progress Indicator -->
+    <div class="fixed right-8 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col gap-3" id="navDots">
+        <div class="nav-dot active" data-section="hero" title="Home"></div>
+        <div class="nav-dot" data-section="features" title="Features"></div>
+        <div class="nav-dot" data-section="inventory" title="Inventory"></div>
+        <div class="nav-dot" data-section="sales" title="Sales"></div>
+        <div class="nav-dot" data-section="recovery" title="Recovery"></div>
+        <div class="nav-dot" data-section="reports" title="Reports"></div>
+        <div class="nav-dot" data-section="import" title="Import"></div>
+        <div class="nav-dot" data-section="warehouse" title="Warehouse"></div>
+        <div class="nav-dot" data-section="users" title="Users"></div>
+        <div class="nav-dot" data-section="pricing-final" title="Pricing"></div>
+        <div class="nav-dot" data-section="contact" title="Contact"></div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="hero" class="section full-height gradient-bg justify-center relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+            <div class="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto text-center relative z-10" data-aos="fade-up">
+            <h1 class="text-5xl md:text-7xl font-bold text-white mb-6">
+                Transform Your<br/>Import-Distribution Business
+            </h1>
+            <p class="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto">
+                Complete ERP solution for importers and wholesalers with multi-warehouse management,
+                purchase tracking, sales management, and intelligent recovery systems
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#features" class="px-8 py-4 bg-white text-purple-600 rounded-lg font-semibold hover:shadow-xl transition">
+                    Explore Features
+                </a>
+                <a href="dashboard.html" class="px-8 py-4 bg-white/20 text-white rounded-lg font-semibold hover:bg-white/30 transition backdrop-blur-sm border-2 border-white/30">
+                    View Live Dashboards →
+                </a>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16 max-w-4xl mx-auto">
+                <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+                    <div class="text-4xl font-bold text-white">40%</div>
+                    <div class="text-white/80 text-sm mt-2">Efficiency Increase</div>
+                </div>
+                <div class="text-center" data-aos="fade-up" data-aos-delay="200">
+                    <div class="text-4xl font-bold text-white">25%</div>
+                    <div class="text-white/80 text-sm mt-2">Better Inventory Turnover</div>
+                </div>
+                <div class="text-center" data-aos="fade-up" data-aos-delay="300">
+                    <div class="text-4xl font-bold text-white">60%</div>
+                    <div class="text-white/80 text-sm mt-2">Fewer Stockouts</div>
+                </div>
+                <div class="text-center" data-aos="fade-up" data-aos-delay="400">
+                    <div class="text-4xl font-bold text-white">30%</div>
+                    <div class="text-white/80 text-sm mt-2">Faster Cash Recovery</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Overview -->
+    <section id="features" class="section bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Complete Feature Set</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Everything you need to manage your import-distribution business from purchase to payment
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-100" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon gradient-blue">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Multi-Warehouse Inventory</h3>
+                    <p class="text-gray-600 mb-4">
+                        Track inventory across multiple warehouses with bin-level location tracking,
+                        batch/lot management, and real-time stock visibility
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Bin location tracking
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Batch/lot traceability
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Low stock alerts
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-100" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon gradient-purple">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Purchase Order Management</h3>
+                    <p class="text-gray-600 mb-4">
+                        Complete purchase workflow from PO creation to goods receipt with import
+                        documentation and landed cost calculation
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Import documentation
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Landed cost tracking
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Customs & shipping costs
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-100" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon gradient-green">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Sales & Invoicing</h3>
+                    <p class="text-gray-600 mb-4">
+                        Create professional invoices with automatic inventory deduction,
+                        tax calculation, and credit limit enforcement
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Credit limit control
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Auto tax calculation
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Sales returns handling
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-100" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon gradient-orange">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Payment & Recovery</h3>
+                    <p class="text-gray-600 mb-4">
+                        Intelligent recovery system with weekly schedules, aging analysis,
+                        and automated overdue alerts
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Weekly recovery schedule
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Aging analysis
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Overdue alerts
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-100" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon bg-gradient-to-br from-pink-500 to-rose-500">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Gate Pass System</h3>
+                    <p class="text-gray-600 mb-4">
+                        Controlled inventory outbound with configurable auto/manual approval
+                        and complete shipment tracking
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Auto/manual modes
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Approval workflow
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Complete audit trail
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="card-hover bg-white rounded-xl p-8 border border-gray-100" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon bg-gradient-to-br from-cyan-500 to-blue-500">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Reports & Analytics</h3>
+                    <p class="text-gray-600 mb-4">
+                        Comprehensive reporting suite with inventory, sales, financial,
+                        and recovery reports - all exportable to Excel
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Real-time dashboards
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Excel export
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Custom filters
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Inventory Management Demo -->
+    <section id="inventory" class="section bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <div class="inline-block px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold mb-4">BASIC TIER</div>
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Inventory Management</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Complete visibility and control over your inventory across multiple warehouses
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-center mb-16">
+                <div data-aos="fade-right">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6">Multi-Warehouse Tracking</h3>
+                    <div class="space-y-4">
+                        <div class="workflow-step">
+                            <div class="workflow-number">1</div>
+                            <div>
+                                <div class="font-semibold text-gray-900">Define Warehouses & Bins</div>
+                                <div class="text-sm text-gray-600">Set up multiple warehouses with specific bin locations (A-01-05 format)</div>
+                            </div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="workflow-number">2</div>
+                            <div>
+                                <div class="font-semibold text-gray-900">Assign Products to Locations</div>
+                                <div class="text-sm text-gray-600">Track exactly which bin contains which products</div>
+                            </div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="workflow-number">3</div>
+                            <div>
+                                <div class="font-semibold text-gray-900">Real-Time Stock Updates</div>
+                                <div class="text-sm text-gray-600">Automatic updates on purchases, sales, transfers, and adjustments</div>
+                            </div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="workflow-number">4</div>
+                            <div>
+                                <div class="font-semibold text-gray-900">Batch/Lot Traceability</div>
+                                <div class="text-sm text-gray-600">Track products from receipt to sale with complete audit trail</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-aos="fade-left">
+                    <div class="table-demo">
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white font-semibold">
+                            Live Inventory Status
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="text-left p-3 font-semibold text-gray-700">SKU</th>
+                                        <th class="text-left p-3 font-semibold text-gray-700">Product</th>
+                                        <th class="text-left p-3 font-semibold text-gray-700">Warehouse</th>
+                                        <th class="text-right p-3 font-semibold text-gray-700">Qty</th>
+                                        <th class="text-center p-3 font-semibold text-gray-700">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-t hover:bg-gray-50">
+                                        <td class="p-3 font-mono text-xs">SKU-2450</td>
+                                        <td class="p-3">Premium Wall Tiles</td>
+                                        <td class="p-3 text-sm text-gray-600">Karachi</td>
+                                        <td class="p-3 text-right font-semibold">1,245</td>
+                                        <td class="p-3 text-center"><span class="badge badge-success">In Stock</span></td>
+                                    </tr>
+                                    <tr class="border-t hover:bg-gray-50">
+                                        <td class="p-3 font-mono text-xs">SKU-1820</td>
+                                        <td class="p-3">Ceramic Basin</td>
+                                        <td class="p-3 text-sm text-gray-600">Lahore</td>
+                                        <td class="p-3 text-right font-semibold">45</td>
+                                        <td class="p-3 text-center"><span class="badge badge-warning">Low Stock</span></td>
+                                    </tr>
+                                    <tr class="border-t hover:bg-gray-50">
+                                        <td class="p-3 font-mono text-xs">SKU-3150</td>
+                                        <td class="p-3">Bath Fixtures</td>
+                                        <td class="p-3 text-sm text-gray-600">Islamabad</td>
+                                        <td class="p-3 text-right font-semibold text-red-600">0</td>
+                                        <td class="p-3 text-center"><span class="badge badge-danger">Out of Stock</span></td>
+                                    </tr>
+                                    <tr class="border-t hover:bg-gray-50">
+                                        <td class="p-3 font-mono text-xs">SKU-4280</td>
+                                        <td class="p-3">Kitchen Sink</td>
+                                        <td class="p-3 text-sm text-gray-600">Karachi</td>
+                                        <td class="p-3 text-right font-semibold">892</td>
+                                        <td class="p-3 text-center"><span class="badge badge-success">In Stock</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6" data-aos="fade-up">
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl border border-blue-200">
+                    <div class="mb-4">
+                        <i data-lucide="bell" class="w-10 h-10 text-blue-600"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">Smart Alerts</h4>
+                    <p class="text-sm text-gray-600">
+                        Automatic notifications for low stock, out of stock, near expiry items, and more
+                    </p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-2xl border border-purple-200">
+                    <div class="mb-4">
+                        <i data-lucide="activity" class="w-10 h-10 text-purple-600"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">Stock Movements</h4>
+                    <p class="text-sm text-gray-600">
+                        Complete audit trail of all inventory movements with who, when, why, and reference documents
+                    </p>
+                </div>
+                <div class="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl border border-green-200">
+                    <div class="mb-4">
+                        <i data-lucide="repeat" class="w-10 h-10 text-green-600"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">Stock Transfers</h4>
+                    <p class="text-sm text-gray-600">
+                        Transfer inventory between warehouses with approval workflow and real-time tracking
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sales & Client Management -->
+    <section id="sales" class="section bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <div class="inline-block px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold mb-4">BASIC TIER</div>
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Sales & Client Management</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Streamlined sales process with built-in credit control and customer management
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-start">
+                <div data-aos="fade-right">
+                    <div class="dashboard-card mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Invoice Creation Workflow</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
+                                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold flex-shrink-0">1</div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">Select Client</div>
+                                    <div class="text-sm text-gray-600">System shows credit limit utilization and payment history</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
+                                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold flex-shrink-0">2</div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">Add Products</div>
+                                    <div class="text-sm text-gray-600">Search products with real-time stock availability check</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
+                                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold flex-shrink-0">3</div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">Auto Calculations</div>
+                                    <div class="text-sm text-gray-600">Tax, discounts, totals calculated automatically</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                                <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-bold flex-shrink-0">✓</div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">Invoice Saved</div>
+                                    <div class="text-sm text-gray-600">Inventory auto-deducted, client balance updated, gate pass created</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200">
+                            <i data-lucide="alert-triangle" class="w-8 h-8 text-yellow-500 mb-2"></i>
+                            <div class="text-sm text-gray-600 mb-1">Credit Limit Enforcement</div>
+                            <div class="font-bold text-gray-900">Automatic Warnings</div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl border border-gray-200">
+                            <i data-lucide="calculator" class="w-8 h-8 text-green-600 mb-2"></i>
+                            <div class="text-sm text-gray-600 mb-1">Tax Calculation</div>
+                            <div class="font-bold text-gray-900">GST & Withholding</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-aos="fade-left">
+                    <div class="dashboard-card mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Client Credit Management</h3>
+
+                        <div class="p-4 bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-lg mb-4">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-12 h-12 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-xl">A</div>
+                                <div>
+                                    <div class="font-bold text-gray-900">Al-Madina Traders</div>
+                                    <div class="text-sm text-gray-600">Credit Client • Weekly Payment Terms</div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 mb-3">
+                                <div>
+                                    <div class="text-xs text-gray-600">Credit Limit</div>
+                                    <div class="text-lg font-bold text-gray-900">PKR 500,000</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-600">Current Balance</div>
+                                    <div class="text-lg font-bold text-orange-600">PKR 425,000</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Credit Utilization</span>
+                                    <span class="font-bold text-orange-600">85%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 85%; background: linear-gradient(90deg, #f59e0b, #d97706);"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 text-sm text-orange-700 bg-orange-200 px-3 py-2 rounded">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
+                                </svg>
+                                <span class="font-semibold">Warning: Client approaching credit limit</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Payment Terms</div>
+                                    <div class="text-xs text-gray-600">7 days net</div>
+                                </div>
+                                <div class="text-sm font-semibold text-gray-900">Weekly</div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Recovery Day</div>
+                                    <div class="text-xs text-gray-600">Scheduled collection</div>
+                                </div>
+                                <div class="text-sm font-semibold text-gray-900">Monday</div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">Tax Status</div>
+                                    <div class="text-xs text-gray-600">Withholding tax applicable</div>
+                                </div>
+                                <div><span class="badge badge-info">1% WHT</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recovery Management -->
+    <section id="recovery" class="section bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <div class="inline-block px-4 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-purple-700 rounded-full text-sm font-semibold mb-4">STANDARD TIER</div>
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Recovery Management</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Reduce DSO by 30% with intelligent recovery schedules and aging analysis
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8 mb-12">
+                <div class="lg:col-span-2" data-aos="fade-right">
+                    <div class="dashboard-card">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-gray-900">Weekly Recovery Schedule</h3>
+                            <div class="text-sm">
+                                <span class="text-gray-600">Today: </span>
+                                <span class="font-bold text-blue-600">Monday, Oct 31</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-7 gap-2 mb-6">
+                            <div class="text-center">
+                                <div class="text-xs text-gray-500 mb-2">Mon</div>
+                                <div class="bg-blue-600 text-white rounded-lg p-2 font-bold text-sm">18</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-500 mb-2">Tue</div>
+                                <div class="bg-gray-100 text-gray-600 rounded-lg p-2 font-bold text-sm">12</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-500 mb-2">Wed</div>
+                                <div class="bg-gray-100 text-gray-600 rounded-lg p-2 font-bold text-sm">15</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-500 mb-2">Thu</div>
+                                <div class="bg-gray-100 text-gray-600 rounded-lg p-2 font-bold text-sm">20</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-500 mb-2">Fri</div>
+                                <div class="bg-gray-100 text-gray-600 rounded-lg p-2 font-bold text-sm">16</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-500 mb-2">Sat</div>
+                                <div class="bg-gray-100 text-gray-600 rounded-lg p-2 font-bold text-sm">8</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-500 mb-2">Sun</div>
+                                <div class="bg-gray-100 text-gray-400 rounded-lg p-2 font-bold text-sm">-</div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="p-4 bg-blue-50 border-l-4 border-blue-600 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="font-bold text-gray-900">Al-Madina Traders</div>
+                                    <div class="font-bold text-red-600">PKR 425,000</div>
+                                </div>
+                                <div class="flex items-center gap-4 text-sm text-gray-600">
+                                    <span>📍 Gulshan-e-Iqbal, Karachi</span>
+                                    <span>📞 0321-1234567</span>
+                                    <span class="text-red-600 font-semibold">12 days overdue</span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-gray-50 border-l-4 border-gray-300 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="font-bold text-gray-900">Royal Hardware Store</div>
+                                    <div class="font-bold text-gray-900">PKR 185,000</div>
+                                </div>
+                                <div class="flex items-center gap-4 text-sm text-gray-600">
+                                    <span>📍 Johar Town, Lahore</span>
+                                    <span>📞 0300-9876543</span>
+                                    <span class="text-green-600 font-semibold">Current</span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 bg-gray-50 border-l-4 border-gray-300 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="font-bold text-gray-900">Metro Builders Pvt Ltd</div>
+                                    <div class="font-bold text-orange-600">PKR 325,000</div>
+                                </div>
+                                <div class="flex items-center gap-4 text-sm text-gray-600">
+                                    <span>📍 F-7, Islamabad</span>
+                                    <span>📞 0333-5551234</span>
+                                    <span class="text-orange-600 font-semibold">5 days overdue</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-aos="fade-left">
+                    <div class="dashboard-card mb-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Collection Stats</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="text-sm text-gray-600 mb-1">This Week</div>
+                                <div class="text-2xl font-bold text-green-600">PKR 2.4M</div>
+                                <div class="text-xs text-gray-500">From 12 clients</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600 mb-1">This Month</div>
+                                <div class="text-2xl font-bold text-gray-900">PKR 8.7M</div>
+                                <div class="text-xs text-green-600">+22% vs last month</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-600 mb-1">Avg Collection Time</div>
+                                <div class="text-2xl font-bold text-gray-900">18 days</div>
+                                <div class="text-xs text-green-600">-5 days vs target</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Priority Actions</h3>
+                        <div class="space-y-2">
+                            <button class="w-full p-3 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-left transition">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                                    <div class="text-sm font-semibold text-gray-900">Follow up 6 critical overdues</div>
+                                </div>
+                            </button>
+                            <button class="w-full p-3 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg text-left transition">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                    <div class="text-sm font-semibold text-gray-900">Review 8 approaching limits</div>
+                                </div>
+                            </button>
+                            <button class="w-full p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-left transition">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                    <div class="text-sm font-semibold text-gray-900">Record today's collections</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reports & Analytics -->
+    <section id="reports" class="section bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <div class="inline-block px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold mb-4">BASIC TIER</div>
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Comprehensive Reporting</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    All business data at your fingertips with Excel export capability
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-gray-200 card-hover" data-aos="fade-up" data-aos-delay="100">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Inventory Reports</h4>
+                            <div class="text-sm text-gray-500">4 report types</div>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                            Current stock by warehouse
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                            Inventory movements
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                            Stock valuation
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                            Low stock alerts
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-gray-200 card-hover" data-aos="fade-up" data-aos-delay="200">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Sales Reports</h4>
+                            <div class="text-sm text-gray-500">5 report types</div>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                            Sales by date range
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                            Sales by client
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                            Sales by product
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                            Monthly revenue trends
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-gray-200 card-hover" data-aos="fade-up" data-aos-delay="300">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Financial Reports</h4>
+                            <div class="text-sm text-gray-500">6 report types</div>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+                            Cash flow statement
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+                            Profit & Loss
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+                            Expense breakdown
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+                            Tax summary
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-gray-200 card-hover" data-aos="fade-up" data-aos-delay="100">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Purchase Reports</h4>
+                            <div class="text-sm text-gray-500">3 report types</div>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                            PO summary by supplier
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                            Import cost analysis
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                            Supplier performance
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-gray-200 card-hover" data-aos="fade-up" data-aos-delay="200">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Recovery Reports</h4>
+                            <div class="text-sm text-gray-500">4 report types</div>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                            Aging analysis
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                            Outstanding receivables
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                            Collection performance
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                            Recovery agent stats
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-gray-200 card-hover" data-aos="fade-up" data-aos-delay="300">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-lg bg-cyan-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Audit Reports</h4>
+                            <div class="text-sm text-gray-500">Complete transparency</div>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-cyan-500 rounded-full"></div>
+                            User activity logs
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-cyan-500 rounded-full"></div>
+                            Change history
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-cyan-500 rounded-full"></div>
+                            Gate pass tracking
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-12 text-center" data-aos="fade-up">
+                <div class="inline-flex items-center gap-3 bg-white px-8 py-4 rounded-full shadow-lg border border-gray-200">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="font-semibold text-gray-900">All reports exportable to Excel with one click</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Import Management Section -->
+    <section id="import" class="section bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <div class="inline-block px-4 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-purple-700 rounded-full text-sm font-semibold mb-4">STANDARD TIER</div>
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Import & Procurement</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Streamline your international procurement with comprehensive import tracking and landed cost calculation
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-center mb-16">
+                <div data-aos="fade-right">
+                    <div class="space-y-6">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <i data-lucide="ship" class="w-6 h-6 text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">Import Documentation</h3>
+                                <p class="text-gray-600">Track customs clearance, duty payments, shipping costs, and all import-related expenses in one place</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                <i data-lucide="calculator" class="w-6 h-6 text-green-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">Landed Cost Calculation</h3>
+                                <p class="text-gray-600">Automatically calculate true product cost including customs duty, taxes, freight, and handling charges</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                                <i data-lucide="file-check" class="w-6 h-6 text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">LC & Payment Terms</h3>
+                                <p class="text-gray-600">Manage Letters of Credit, payment schedules, and supplier payment terms with full audit trail</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-aos="fade-left">
+                    <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 border border-blue-100">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Sample Import Calculation</h3>
+                        <div class="space-y-3 bg-white rounded-xl p-6">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">FOB Price (1000 units)</span>
+                                <span class="font-semibold text-gray-900">$12,000</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Freight & Insurance</span>
+                                <span class="font-semibold text-gray-900">$850</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Customs Duty (15%)</span>
+                                <span class="font-semibold text-gray-900">$1,928</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Sales Tax (17%)</span>
+                                <span class="font-semibold text-gray-900">$2,512</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Handling & Clearing</span>
+                                <span class="font-semibold text-gray-900">$450</span>
+                            </div>
+                            <div class="border-t pt-3 mt-3 flex justify-between">
+                                <span class="font-bold text-gray-900">Total Landed Cost</span>
+                                <span class="font-bold text-blue-600 text-lg">$17,740</span>
+                            </div>
+                            <div class="flex justify-between text-sm bg-blue-50 p-3 rounded-lg">
+                                <span class="text-gray-700">Per Unit Cost</span>
+                                <span class="font-bold text-blue-600">$17.74</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Warehouse & Operations Section -->
+    <section id="warehouse" class="section bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <div class="inline-block px-4 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-purple-700 rounded-full text-sm font-semibold mb-4">STANDARD TIER</div>
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Warehouse Operations</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Multi-warehouse management with bin locations, batch tracking, and automated workflows
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8 mb-12">
+                <div class="bg-white rounded-2xl p-8 shadow-lg" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-6">
+                        <i data-lucide="warehouse" class="w-8 h-8 text-blue-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Multi-Warehouse</h3>
+                    <p class="text-gray-600 mb-6">Manage unlimited warehouses with rack-level bin locations (e.g., A-01-05 format) for precise stock placement</p>
+                    <ul class="space-y-2 text-sm text-gray-700">
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Inter-warehouse transfers
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Bin location tracking
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Stock movement history
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-lg" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mb-6">
+                        <i data-lucide="barcode" class="w-8 h-8 text-purple-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Batch & Lot Tracking</h3>
+                    <p class="text-gray-600 mb-6">Complete traceability with batch numbers, manufacturing dates, and expiry tracking for food & pharma products</p>
+                    <ul class="space-y-2 text-sm text-gray-700">
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Expiry date alerts
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            FIFO/LIFO support
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Batch-wise reports
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-lg" data-aos="fade-up" data-aos-delay="300">
+                    <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-6">
+                        <i data-lucide="clipboard-check" class="w-8 h-8 text-green-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Gate Pass System</h3>
+                    <p class="text-gray-600 mb-6">Digital gate pass management with auto/manual approval workflows and delivery tracking</p>
+                    <ul class="space-y-2 text-sm text-gray-700">
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Digital approvals
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Vehicle & driver info
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Return tracking
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- User Management & Security Section -->
+    <section id="users" class="section bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <div class="inline-block px-4 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-full text-sm font-semibold mb-4">PREMIUM TIER</div>
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">User Management & Security</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Role-based access control with comprehensive audit trails and activity logging
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div data-aos="fade-right">
+                    <h3 class="text-3xl font-bold text-gray-900 mb-6">5 Pre-Configured User Roles</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-white rounded-xl border border-blue-100">
+                            <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                                <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-900">Admin</div>
+                                <div class="text-sm text-gray-600">Full system access and configuration</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50 to-white rounded-xl border border-purple-100">
+                            <div class="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+                                <i data-lucide="package" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-900">Warehouse Manager</div>
+                                <div class="text-sm text-gray-600">Inventory, receipts, gate passes</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-white rounded-xl border border-green-100">
+                            <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                                <i data-lucide="briefcase" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-900">Sales Officer</div>
+                                <div class="text-sm text-gray-600">Invoicing, client management</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50 to-white rounded-xl border border-orange-100">
+                            <div class="w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center">
+                                <i data-lucide="calculator" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-900">Accountant</div>
+                                <div class="text-sm text-gray-600">Financial reports, payments</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-gradient-to-r from-red-50 to-white rounded-xl border border-red-100">
+                            <div class="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
+                                <i data-lucide="phone" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-900">Recovery Agent</div>
+                                <div class="text-sm text-gray-600">Payment collection, aging reports</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-aos="fade-left">
+                    <div class="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-8 border border-gray-200">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6">Complete Audit Trail</h3>
+                        <div class="space-y-4">
+                            <div class="bg-white rounded-xl p-4 border border-gray-200">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i data-lucide="user" class="w-5 h-5 text-blue-600"></i>
+                                    <span class="font-semibold text-gray-900">Who</span>
+                                </div>
+                                <p class="text-sm text-gray-600">Track every user action with full identity logging</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 border border-gray-200">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i data-lucide="activity" class="w-5 h-5 text-green-600"></i>
+                                    <span class="font-semibold text-gray-900">What</span>
+                                </div>
+                                <p class="text-sm text-gray-600">Log all create, update, delete operations</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 border border-gray-200">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i data-lucide="clock" class="w-5 h-5 text-purple-600"></i>
+                                    <span class="font-semibold text-gray-900">When</span>
+                                </div>
+                                <p class="text-sm text-gray-600">Timestamp all changes with date and time</p>
+                            </div>
+                            <div class="bg-white rounded-xl p-4 border border-gray-200">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i data-lucide="file-diff" class="w-5 h-5 text-orange-600"></i>
+                                    <span class="font-semibold text-gray-900">Changes</span>
+                                </div>
+                                <p class="text-sm text-gray-600">View before/after values for all modifications</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard CTA Section -->
+    <section id="pricing-final" class="section bg-gradient-to-br from-blue-600 to-purple-700">
+        <div class="max-w-4xl mx-auto text-center">
+            <div data-aos="fade-up">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Experience the System Live</h2>
+                <p class="text-xl text-white/90 mb-12 max-w-2xl mx-auto">
+                    See the power of our ERP system in action. Explore interactive dashboards for different roles and understand how it can transform your business operations.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="dashboard.html" class="px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold text-lg hover:bg-gray-100 transition">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5 inline-block mr-2"></i>
+                        View Live Dashboards
+                    </a>
+                    <a href="pricing.html" class="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white rounded-lg font-semibold text-lg hover:bg-white/20 transition">
+                        <i data-lucide="tag" class="w-5 h-5 inline-block mr-2"></i>
+                        View Pricing
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact / CTA Section -->
+    <section id="contact" class="section full-height gradient-bg justify-center">
+        <div class="max-w-4xl mx-auto text-center">
+            <div data-aos="fade-up">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Ready to Transform Your Business?</h2>
+                <p class="text-xl text-white/90 mb-8">
+                    Join the digital revolution in import-distribution management.
+                    Experience 40% efficiency gains and 30% faster cash recovery.
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-8 mb-12">
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                        <div class="mb-3">
+                            <i data-lucide="zap" class="w-12 h-12 text-white"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-white mb-2">Quick Setup</div>
+                        <div class="text-white/80">Get started in days, not months</div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                        <div class="mb-3">
+                            <i data-lucide="dollar-sign" class="w-12 h-12 text-white"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-white mb-2">Flexible Pricing</div>
+                        <div class="text-white/80">Three tiers to match your budget</div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                        <div class="mb-3">
+                            <i data-lucide="target" class="w-12 h-12 text-white"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-white mb-2">Proven ROI</div>
+                        <div class="text-white/80">Measurable business impact</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button class="px-8 py-4 bg-white text-purple-600 rounded-lg font-semibold text-lg hover:shadow-xl transition">
+                        Schedule a Demo
+                    </button>
+                    <button class="px-8 py-4 bg-white/20 text-white rounded-lg font-semibold text-lg hover:bg-white/30 transition backdrop-blur-sm border border-white/30">
+                        Contact Sales
+                    </button>
+                </div>
+
+                <div class="mt-12 text-white/70 text-sm">
+                    <p>Built for: Import-Distribution Businesses • Wholesalers • Trading Companies</p>
+                    <p class="mt-2">Technology: Node.js • React • TypeScript • MySQL • Tailwind CSS</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                </div>
+                <div class="text-xl font-bold">Sinnextech</div>
+            </div>
+            <p class="text-gray-400 text-sm">
+                © 2025 Sinnextech. All rights reserved. | ERP Solutions - sinnextech.com
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 100
+        });
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+
+        // Navigation dots
+        const sections = document.querySelectorAll('.section');
+        const navDots = document.querySelectorAll('.nav-dot');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (window.pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navDots.forEach(dot => {
+                dot.classList.remove('active');
+                if (dot.getAttribute('data-section') === current) {
+                    dot.classList.add('active');
+                }
+            });
+        });
+
+        // Click navigation dots
+        navDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const section = dot.getAttribute('data-section');
+                document.getElementById(section).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
