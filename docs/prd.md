@@ -1,5 +1,30 @@
 # Hisham Traders Import-Distribution Management Platform - Product Requirements Document (PRD)
 
+**Status:** ✅ MVP Planning Complete | 🔄 Phase 2 Planned
+**Last Updated:** 2025-01-15
+
+---
+
+## 📋 Quick Navigation
+
+### MVP (6-Week Delivery)
+- **[Epic 1: Foundation, Authentication & Audit](./prd/epic-1-foundation-auth-audit.md)** - Week 1 (Audit logging from Day 1 ⭐)
+- **[Epic 2: Import & Container Tracking + Inventory](./prd/epic-2-import-inventory.md)** - Weeks 1-2
+- **[Epic 3: Sales & Client Management + Payments](./prd/epic-3-sales-payments.md)** - Weeks 3-4
+- **[Epic 4: Dashboards & Reports](./prd/epic-4-dashboards-reports.md)** - Weeks 5-6
+
+### Phase 2 (Post-MVP Expansion)
+- **[Epic 5: Account Heads & General Ledger](./prd/epic-5-account-heads-gl.md)** - Full double-entry bookkeeping, FBR compliance
+- **[Epic 6: Advanced Inventory Operations](./prd/epic-6-advanced-inventory.md)** - Gate passes ⭐, transfers, batch/expiry tracking
+- **[Epic 7: Recovery & Collection Management](./prd/epic-7-recovery-management.md)** - Weekly schedules, aging analysis, agent performance
+- **[Epic 8: Audit Trail Viewer & Advanced Features](./prd/epic-8-audit-advanced.md)** - Audit UI, barcode scanning, mobile optimization
+
+### Supporting Documentation
+- **[MVP Roadmap](./planning/mvp-roadmap.md)** - 6-week implementation plan
+- **[Phase 2 Roadmap](./planning/phase-2-roadmap.md)** - 12-16 week advanced features plan
+- **[Architecture Overview](./architecture/architecture.md)** - System architecture and tech stack
+- **[Audit Logging Architecture](./architecture/audit-logging.md)** - Automatic audit trail from Day 1
+
 ---
 
 ## Goals and Background Context

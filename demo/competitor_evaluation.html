@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Evaluation - Live Demo Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .eval-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-good { background: #d1fae5; color: #065f46; }
+        .status-bad { background: #fee2e2; color: #991b1b; }
+        .status-neutral { background: #e5e7eb; color: #374151; }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            cursor: pointer;
+        }
+        .checkbox-label:hover {
+            background: #f3f4f6;
+        }
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .notes-area {
+            width: 100%;
+            min-height: 60px;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+        .quick-note {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            max-width: 300px;
+            display: none;
+        }
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        @media print {
+            .print-btn { display: none; }
+            .quick-note { display: none; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-4">
+    <button class="print-btn" onclick="window.print()">📄 Print/Save PDF</button>
+
+    <div class="max-w-5xl mx-auto">
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Live Demo Evaluation</h1>
+            <p class="text-gray-600">Quick assessment checklist - Check features as they demonstrate</p>
+            <div class="mt-4 grid grid-cols-3 gap-4 text-sm">
+                <div>
+                    <label class="font-semibold">Competitor Name:</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full" placeholder="Company name">
+                </div>
+                <div>
+                    <label class="font-semibold">Their Price:</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full" placeholder="PKR/USD">
+                </div>
+                <div>
+                    <label class="font-semibold">Date:</label>
+                    <input type="date" class="border rounded px-2 py-1 w-full">
+                </div>
+            </div>
+        </div>
+
+        <!-- CORE INVENTORY FEATURES -->
+        <div class="section-header">📦 INVENTORY MANAGEMENT</div>
+        <div class="eval-card">
+            <h3 class="font-bold mb-2">Essential Features</h3>
+            <label class="checkbox-label">
+                <input type="checkbox"> Multi-warehouse support
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Bin location tracking (A-01-05 format)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Real-time stock updates
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Batch/Lot tracking with expiry dates
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Low stock alerts
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Stock transfer between warehouses
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Complete audit trail
+            </label>
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Notes / Issues:</label>
+                <textarea class="notes-area" placeholder="What's missing? How does it work?"></textarea>
+            </div>
+        </div>
+
+        <!-- IMPORT MANAGEMENT -->
+        <div class="section-header">🚢 IMPORT & PROCUREMENT</div>
+        <div class="eval-card">
+            <label class="checkbox-label">
+                <input type="checkbox"> Import documentation tracking
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Landed cost calculation (customs, taxes, shipping)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Supplier management
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Purchase order workflow
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Multi-currency support
+            </label>
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Notes / Issues:</label>
+                <textarea class="notes-area" placeholder="Do they have import features? How complete?"></textarea>
+            </div>
+        </div>
+
+        <!-- SALES & CLIENT MANAGEMENT -->
+        <div class="section-header">💰 SALES & CLIENT MANAGEMENT</div>
+        <div class="eval-card">
+            <label class="checkbox-label">
+                <input type="checkbox"> Sales invoicing with auto stock deduction
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Credit limit enforcement
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Client balance tracking
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Payment tracking
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Multiple payment methods
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Discount management
+            </label>
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Notes / Issues:</label>
+                <textarea class="notes-area" placeholder="How do they handle sales? Credit control?"></textarea>
+            </div>
+        </div>
+
+        <!-- RECOVERY MANAGEMENT -->
+        <div class="section-header">📞 RECOVERY MANAGEMENT</div>
+        <div class="eval-card">
+            <label class="checkbox-label">
+                <input type="checkbox"> Weekly recovery schedule
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Aging analysis (30/60/90 days)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Automated reminders (WhatsApp/SMS/Email)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Recovery agent role/dashboard
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Collection performance tracking
+            </label>
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Notes / Issues:</label>
+                <textarea class="notes-area" placeholder="Do they have recovery features? How good?"></textarea>
+            </div>
+        </div>
+
+        <!-- REPORTING & ANALYTICS -->
+        <div class="section-header">📊 REPORTING & ANALYTICS</div>
+        <div class="eval-card">
+            <label class="checkbox-label">
+                <input type="checkbox"> Sales reports
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Inventory reports
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Payment/collection reports
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Profitability analysis
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Excel export
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Custom report builder
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Real-time dashboards
+            </label>
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Notes / Issues:</label>
+                <textarea class="notes-area" placeholder="What reports do they show? Quality?"></textarea>
+            </div>
+        </div>
+
+        <!-- USER MANAGEMENT & SECURITY -->
+        <div class="section-header">🔐 USER MANAGEMENT & SECURITY</div>
+        <div class="eval-card">
+            <label class="checkbox-label">
+                <input type="checkbox"> Multiple user roles (Admin, Sales, Warehouse, etc.)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Role-based permissions
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Activity logging
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Data backup system
+            </label>
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Notes / Issues:</label>
+                <textarea class="notes-area" placeholder="How many users? Security features?"></textarea>
+            </div>
+        </div>
+
+        <!-- TECHNICAL ASPECTS -->
+        <div class="section-header">⚙️ TECHNICAL & DEPLOYMENT</div>
+        <div class="eval-card">
+            <h3 class="font-bold mb-2">System Architecture</h3>
+            <label class="checkbox-label">
+                <input type="checkbox"> On-premise deployment (owns the code)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Cloud-based (monthly fee)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Mobile responsive
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Mobile apps (iOS/Android)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Source code access
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> API integrations available
+            </label>
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Deployment Model & Costs:</label>
+                <textarea class="notes-area" placeholder="One-time or monthly? Hosting costs? Hidden fees?"></textarea>
+            </div>
+        </div>
+
+        <!-- SUPPORT & MAINTENANCE -->
+        <div class="section-header">🛠️ SUPPORT & MAINTENANCE</div>
+        <div class="eval-card">
+            <h3 class="font-bold mb-3">Initial Support & Training</h3>
+            <label class="checkbox-label">
+                <input type="checkbox"> Training included (how many hours/days?)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> On-site training provided
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Remote training available
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Documentation/user manuals provided
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Video tutorials available
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Data migration assistance included
+            </label>
+
+            <div class="mt-4 mb-3">
+                <h3 class="font-bold mb-2">Support Channels</h3>
+            </div>
+            <label class="checkbox-label">
+                <input type="checkbox"> Phone support
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Email support
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> WhatsApp support
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Live chat support
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Remote desktop support
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> On-site support (emergency)
+            </label>
+
+            <div class="mt-4 mb-3">
+                <h3 class="font-bold mb-2">Support Terms</h3>
+            </div>
+            <label class="checkbox-label">
+                <input type="checkbox"> 24/7 support available
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Business hours support only (what hours?)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Local support team (Pakistan-based)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Dedicated account manager
+            </label>
+
+            <div class="mt-4 mb-3">
+                <h3 class="font-bold mb-2">Updates & Maintenance</h3>
+            </div>
+            <label class="checkbox-label">
+                <input type="checkbox"> Bug fixes included (for how long?)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Free updates/upgrades
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Security patches included
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Feature updates included
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Guaranteed response time (SLA)
+            </label>
+
+            <div class="mt-4 grid grid-cols-2 gap-4">
+                <div>
+                    <label class="font-semibold text-sm">Response Time (Critical Issues):</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full mt-1" placeholder="Hours/days">
+                </div>
+                <div>
+                    <label class="font-semibold text-sm">Response Time (Normal Issues):</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full mt-1" placeholder="Hours/days">
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Support Duration & Cost:</label>
+                <textarea class="notes-area" placeholder="How many months/years of free support? What happens after? Annual maintenance cost?"></textarea>
+            </div>
+        </div>
+
+        <!-- CUSTOMIZATION & FLEXIBILITY -->
+        <div class="section-header">🎨 CUSTOMIZATION & FLEXIBILITY</div>
+        <div class="eval-card">
+            <h3 class="font-bold mb-3">What Can Be Customized?</h3>
+            <label class="checkbox-label">
+                <input type="checkbox"> Custom reports can be added
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Custom fields in forms
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Custom workflows/approvals
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> UI/branding customization (logo, colors)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> New features can be added
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Integration with other systems
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Source code access for modifications
+            </label>
+
+            <div class="mt-4 mb-3">
+                <h3 class="font-bold mb-2">Customization Costs</h3>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="font-semibold text-sm">Custom Report Cost:</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full mt-1" placeholder="PKR/USD per report">
+                </div>
+                <div>
+                    <label class="font-semibold text-sm">Custom Feature Cost:</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full mt-1" placeholder="PKR/USD or hourly rate">
+                </div>
+                <div>
+                    <label class="font-semibold text-sm">Integration Cost:</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full mt-1" placeholder="PKR/USD per integration">
+                </div>
+                <div>
+                    <label class="font-semibold text-sm">Hourly Development Rate:</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full mt-1" placeholder="PKR/USD per hour">
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Customization Limitations & Process:</label>
+                <textarea class="notes-area" placeholder="What can't be customized? How long do customizations take? Who owns custom code?"></textarea>
+            </div>
+
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Training Cost for New Features/Updates:</label>
+                <textarea class="notes-area" placeholder="Do they charge for training when they add new features or after updates?"></textarea>
+            </div>
+        </div>
+
+        <!-- PRICING BREAKDOWN -->
+        <div class="section-header">💵 PRICING BREAKDOWN</div>
+        <div class="eval-card">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="font-semibold text-sm">Initial Cost:</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full mt-1" placeholder="PKR/USD">
+                </div>
+                <div>
+                    <label class="font-semibold text-sm">Monthly Fee (if any):</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full mt-1" placeholder="PKR/USD">
+                </div>
+                <div>
+                    <label class="font-semibold text-sm">Hosting Cost:</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full mt-1" placeholder="PKR/USD">
+                </div>
+                <div>
+                    <label class="font-semibold text-sm">Annual Maintenance:</label>
+                    <input type="text" class="border rounded px-2 py-1 w-full mt-1" placeholder="PKR/USD">
+                </div>
+            </div>
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Hidden Costs / Additional Fees:</label>
+                <textarea class="notes-area" placeholder="Per user fees? Data migration? Customization charges?"></textarea>
+            </div>
+        </div>
+
+        <!-- RED FLAGS / CONCERNS -->
+        <div class="section-header">⚠️ RED FLAGS / CONCERNS</div>
+        <div class="eval-card">
+            <label class="checkbox-label">
+                <input type="checkbox"> Software looks outdated/old UI
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Slow performance during demo
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Missing critical features
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> No source code access
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Locked into monthly payments
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Poor support reputation
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Cannot customize
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox"> Data migration issues
+            </label>
+            <div class="mt-3">
+                <label class="text-sm font-semibold">Major Concerns:</label>
+                <textarea class="notes-area" placeholder="What are the deal-breakers? What seems suspicious?"></textarea>
+            </div>
+        </div>
+
+        <!-- COMPETITIVE ADVANTAGES (YOUR SYSTEM) -->
+        <div class="section-header">✅ OUR ADVANTAGES (What We Have That They Don't)</div>
+        <div class="eval-card">
+            <textarea class="notes-area" style="min-height: 120px;" placeholder="List features/benefits we offer that they're missing. This is your counter-pitch material."></textarea>
+        </div>
+
+        <!-- FINAL ASSESSMENT -->
+        <div class="section-header">📝 OVERALL ASSESSMENT</div>
+        <div class="eval-card">
+            <div class="mb-3">
+                <label class="font-semibold">Overall Quality Rating:</label>
+                <div class="flex gap-2 mt-2">
+                    <label class="checkbox-label"><input type="radio" name="rating"> Excellent</label>
+                    <label class="checkbox-label"><input type="radio" name="rating"> Good</label>
+                    <label class="checkbox-label"><input type="radio" name="rating"> Average</label>
+                    <label class="checkbox-label"><input type="radio" name="rating"> Poor</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="font-semibold">Recommendation:</label>
+                <div class="flex gap-2 mt-2">
+                    <label class="checkbox-label"><input type="radio" name="recommend"> Better than ours</label>
+                    <label class="checkbox-label"><input type="radio" name="recommend"> Competitive</label>
+                    <label class="checkbox-label"><input type="radio" name="recommend"> We're better</label>
+                </div>
+            </div>
+            <label class="text-sm font-semibold">Final Notes / Summary:</label>
+            <textarea class="notes-area" style="min-height: 100px;" placeholder="Key takeaways, next steps, counter-arguments to prepare..."></textarea>
+        </div>
+
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mt-6 mb-6">
+            <p class="text-sm text-blue-800">
+                <strong>💡 TIP:</strong> After the demo, save this page as PDF (Ctrl+P) to keep your evaluation.
+                Use your notes to prepare a comparison document for the client showing why our solution is better.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
