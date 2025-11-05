@@ -34,15 +34,15 @@
 
 ---
 
-### Story 1.2: Database Setup with Prisma and PostgreSQL
+### Story 1.2: Database Setup with Prisma and MySQL
 
 **As a** developer,
-**I want** Prisma ORM integrated with PostgreSQL database and initial schema defined,
+**I want** Prisma ORM integrated with MySQL database and initial schema defined,
 **So that** the application can persist data with type-safe database access.
 
 **Acceptance Criteria:**
 1. Prisma installed and initialized in monorepo
-2. PostgreSQL 15 database connection configured via environment variables
+2. MySQL 8+ database connection configured via environment variables
 3. Initial Prisma schema defined with User, AuditLog tables
 4. **AuditLog table created from Day 1** for tracking all system activity
 5. Database schema includes tenantId field on core tables for multi-tenant readiness (not enforced in MVP)
@@ -306,12 +306,12 @@ export async function auditMiddleware(req, res, next) {
 **So that** environment setup is fast and consistent across team members.
 
 **Acceptance Criteria:**
-1. docker-compose.yml created with services: postgres, api, web
-2. PostgreSQL service configured with persistent volume and environment variables
+1. docker-compose.yml created with services: mysql, api, web
+2. MySQL service configured with persistent volume and environment variables
 3. API service mounts source code for hot reload
 4. Web service runs Vite dev server with hot module replacement
-5. Services networked together (web can call api, api can reach postgres)
-6. Ports exposed: 5173 (web), 3001 (api), 5432 (postgres)
+5. Services networked together (web can call api, api can reach mysql)
+6. Ports exposed: 5173 (web), 3001 (api), 3306 (mysql)
 7. docker-compose up starts all services
 8. docker-compose down stops and removes containers
 9. Environment variables passed via .env files
@@ -329,7 +329,7 @@ export async function auditMiddleware(req, res, next) {
 
 ## Epic 1 Deliverables
 
-✅ Development environment running (Docker, PostgreSQL, Node.js, React)
+✅ Development environment running (Docker, MySQL, Node.js, React)
 ✅ User authentication with JWT
 ✅ **Audit logging infrastructure operational from Day 1**
 ✅ Role-based access control
