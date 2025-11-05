@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-**Chosen Stack:** Node.js + TypeScript + React + PostgreSQL
+**Chosen Stack:** Node.js + TypeScript + React + MySQL
 
 **Key Reasons:**
 - **30-40% faster development** compared to Java
@@ -488,42 +488,29 @@ const logger = winston.createLogger({
 
 ## Database
 
-### PostgreSQL 15
+### MySQL 8+
 
-**Why PostgreSQL (not MySQL/MongoDB):**
-- **ACID compliant** (data integrity guaranteed)
-- **Advanced features** (JSON columns, full-text search, CTEs)
-- **Better for complex queries** (joins, aggregations)
+**Why MySQL:**
+- **ACID compliant** (data integrity guaranteed with InnoDB)
+- **Mature and stable** (widely used in production)
+- **Good performance** (excellent for reads and writes)
 - **Open source and free**
 - **Excellent Prisma support**
+- **Wide adoption** (easy to find hosting and expertise)
 
-**MySQL Alternative:**
-- MVP originally specified MySQL 8+
-- **Recommendation:** Switch to PostgreSQL for better features
-- **If MySQL required:** Prisma supports MySQL equally well
+**MySQL 8+ Features:**
+- Window functions
+- CTE (WITH queries)
+- JSON support
+- Full ACID compliance with InnoDB
+- Better optimizer and query performance
 
 **MongoDB NOT suitable:**
 - ERP needs ACID transactions (inventory must be consistent)
 - Relational data (products, invoices, clients are highly connected)
 - No foreign key constraints (data integrity risk)
 
----
-
-### Why PostgreSQL Over MySQL
-
-| Feature              | PostgreSQL | MySQL |
-|---------------------|------------|-------|
-| ACID Compliance     | ✅ Full    | ✅ Full (InnoDB) |
-| JSON Support        | ✅ Native JSONB | ⚠️ Limited |
-| Full-Text Search    | ✅ Built-in | ❌ Requires extension |
-| Window Functions    | ✅ Yes | ✅ Yes (8.0+) |
-| CTE (WITH queries)  | ✅ Yes | ✅ Yes (8.0+) |
-| Performance (reads) | ✅ Excellent | ✅ Excellent |
-| Performance (writes)| ✅ Excellent | ✅ Excellent |
-| Extensions          | ✅ Many (PostGIS, etc.) | ⚠️ Limited |
-| License             | ✅ PostgreSQL (permissive) | ⚠️ GPL/Commercial |
-
-**Verdict:** PostgreSQL is more feature-rich, but MySQL works fine for MVP.
+**Verdict:** MySQL 8+ is perfect for MVP with excellent performance and reliability.
 
 ---
 
@@ -589,26 +576,25 @@ hishamtraders/
 
 **Why Docker:**
 - **Consistent environment** (same on all machines)
-- **Easy PostgreSQL setup** (no manual install)
+- **Easy MySQL setup** (no manual install)
 - **Isolated services**
 
 **docker-compose.yml:**
 ```yaml
 version: '3.8'
 services:
-  postgres:
-    image: postgres:15
+  mysql:
+    image: mysql:8
     ports:
-      - '5432:5432'
+      - '3306:3306'
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: hisham_erp
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: hisham_erp
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
 
 volumes:
-  postgres_data:
+  mysql_data:
 ```
 
 ---

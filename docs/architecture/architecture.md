@@ -54,7 +54,7 @@ The Hisham Traders ERP is a **full-stack web application** built using modern Ja
                      │ Prisma ORM
 ┌────────────────────▼────────────────────────────────────────┐
 │                       DATA LAYER                             │
-│             PostgreSQL 15 (Primary Database)                 │
+│             MySQL 8+ (Primary Database)                      │
 │                                                              │
 │  Tables: User, Product, Client, Invoice, Payment,           │
 │          PurchaseOrder, Inventory, AuditLog, etc.           │
@@ -105,7 +105,7 @@ The Hisham Traders ERP is a **full-stack web application** built using modern Ja
      │
      ▼
 ┌────────────────────┐
-│   PostgreSQL       │  8. Return data
+│      MySQL         │  8. Return data
 └────┬───────────────┘
      │
      ▼
@@ -136,7 +136,7 @@ The Hisham Traders ERP is a **full-stack web application** built using modern Ja
      │ 1. Find user by email
      ▼
 ┌──────────────┐
-│  PostgreSQL  │
+│    MySQL     │
 └────┬─────────┘
      │ User record
      ▼
@@ -270,7 +270,7 @@ The Hisham Traders ERP is a **full-stack web application** built using modern Ja
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| RDBMS | PostgreSQL 15 | Primary database |
+| RDBMS | MySQL 8+ | Primary database |
 | Migrations | Prisma Migrate | Schema versioning |
 | Admin Tool | Prisma Studio | Visual database browser |
 
@@ -442,7 +442,7 @@ The Hisham Traders ERP is a **full-stack web application** built using modern Ja
 
 ### Database Monitoring
 
-- **PostgreSQL Stats:** pg_stat_statements extension
+- **MySQL Stats:** Performance schema and slow query log
 - **Slow Query Log:** Queries > 1 second
 - **Connection Pool:** Monitor active connections
 
@@ -538,15 +538,15 @@ main (production)
 
 ---
 
-### Why PostgreSQL (Recommended) Over MySQL?
+### Why MySQL 8+?
 
 **Advantages:**
-- ✅ Better JSON support (JSONB with indexes)
-- ✅ Advanced features (window functions, CTEs, full-text search)
-- ✅ More permissive license (PostgreSQL vs GPL)
-- ✅ Better for complex queries
-
-**Note:** MVP requirements specified MySQL, but PostgreSQL is recommended. Prisma supports both equally well, so switching is trivial.
+- ✅ Full ACID compliance with InnoDB
+- ✅ Modern features (window functions, CTEs, JSON support)
+- ✅ Excellent performance for reads and writes
+- ✅ Wide adoption and strong community support
+- ✅ Mature and battle-tested in production
+- ✅ Excellent Prisma support
 
 ---
 
@@ -558,7 +558,7 @@ main (production)
 - ❌ No foreign key constraints (data integrity risk)
 - ❌ Complex joins are harder in NoSQL
 
-**Verdict:** PostgreSQL/MySQL are correct choices for ERP.
+**Verdict:** MySQL is the correct choice for this ERP system.
 
 ---
 

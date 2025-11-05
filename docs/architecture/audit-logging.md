@@ -346,7 +346,7 @@ return res.json(data);
 ### Optimization Strategies
 
 1. **Batch writes** (optional for high-volume): Queue audit logs and write in batches every 5 seconds
-2. **Separate database** (future): Move audit logs to dedicated PostgreSQL instance
+2. **Separate database** (future): Move audit logs to dedicated MySQL instance
 3. **Archive old logs**: Move logs > 2 years to cold storage (S3, glacier)
 4. **Partitioning** (future): Partition audit_log table by timestamp for faster queries
 
