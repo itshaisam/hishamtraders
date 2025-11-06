@@ -9,16 +9,25 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "db:generate": "pnpm --filter @hishamtraders/api db:generate",
+    "db:migrate": "pnpm --filter @hishamtraders/api db:migrate",
+    "db:seed": "pnpm --filter @hishamtraders/api db:seed",
+    "db:reset": "pnpm --filter @hishamtraders/api db:reset",
+    "db:studio": "pnpm --filter @hishamtraders/api db:studio"
   },
   "devDependencies": {
+    "@prisma/client": "^6.19.0",
+    "@types/bcrypt": "^5.0.2",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "bcrypt": "^5.1.1",
     "eslint": "^8.50.0",
     "eslint-config-prettier": "^9.0.0",
     "husky": "^8.0.3",
     "lint-staged": "^15.0.0",
     "prettier": "^3.0.3",
+    "prisma": "^6.19.0",
     "typescript": "^5.3.0"
   },
   "engines": {

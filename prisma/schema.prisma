@@ -1,0 +1,69 @@
+// Prisma Schema for Hisham Traders ERP
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============================================================================
+// CORE TABLES (Epic 1)
+// ============================================================================
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique // ADMIN, WAREHOUSE_MANAGER, SALES_OFFICER, ACCOUNTANT, RECOVERY_AGENT
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+
+  @@map("roles")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  roleId       String
+  status       String    @default("active") // active, inactive
+  lastLoginAt  DateTime?
+  tenantId     String?   // For multi-tenant Phase 3 (not enforced in MVP)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  role      Role        @relation(fields: [roleId], references: [id])
+  auditLogs AuditLog[]
+
+  @@index([email])
+  @@index([roleId])
+  @@index([status])
+  @@index([tenantId])
+  @@map("users")
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  userId        String
+  action        String   // CREATE, UPDATE, DELETE, VIEW, LOGIN, LOGOUT
+  entityType    String   // User, Product, Invoice, Payment, etc.
+  entityId      String?
+  timestamp     DateTime @default(now())
+  ipAddress     String?
+  userAgent     String?
+  changedFields Json?    // { field: { old: value, new: value } }
+  notes         String?  @db.Text
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@map("audit_logs")
+}
