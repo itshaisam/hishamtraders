@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 
@@ -44,6 +45,7 @@ app.use('/api/v1', auditMiddleware);
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1', dashboardRoutes);
 
 // Start server
 app.listen(PORT, () => {

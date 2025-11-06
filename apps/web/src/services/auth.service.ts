@@ -14,6 +14,11 @@ export interface LoginResponse {
       name: string;
       roleId: string;
       status: string;
+      role: {
+        id: string;
+        name: string;
+        description: string;
+      };
     };
     token: string;
   };

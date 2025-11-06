@@ -183,6 +183,7 @@ export class UserService {
     });
 
     // Remove password hash from response
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _, ...userWithoutPassword } = user;
 
     return userWithoutPassword;
@@ -276,6 +277,7 @@ export class UserService {
     }
 
     // Remove password hash from response
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _, ...userWithoutPassword } = user;
 
     return userWithoutPassword;

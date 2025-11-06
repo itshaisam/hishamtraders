@@ -7,6 +7,11 @@ interface User {
   name: string;
   roleId: string;
   status: string;
+  role: {
+    id: string;
+    name: string;
+    description: string;
+  };
 }
 
 interface AuthState {

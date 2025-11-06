@@ -72,6 +72,11 @@ export class AuthService {
         name: user.name,
         roleId: user.roleId,
         status: user.status,
+        role: {
+          id: user.role.id,
+          name: user.role.name,
+          description: user.role.description,
+        },
       },
       token,
     };
