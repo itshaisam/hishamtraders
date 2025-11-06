@@ -5,7 +5,7 @@
 **Priority:** Critical
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Story 1.2 (Database Setup)
-**Status:** Ready for Development
+**Status:** Completed
 
 ---
 
@@ -20,23 +20,23 @@
 ## Acceptance Criteria
 
 ### Backend Authentication
-- [ ] 1. User table includes email, passwordHash, roleId, status (active/inactive), lastLoginAt
-- [ ] 2. POST /api/v1/auth/login endpoint accepts email and password
-- [ ] 3. Password hashed with bcrypt (min 10 rounds) before storage
-- [ ] 4. Login validates credentials and returns JWT token with user info and role
-- [ ] 5. JWT includes userId, email, roleId, tenantId (null for MVP), expires in 24 hours
-- [ ] 6. POST /api/v1/auth/logout endpoint clears session/token
-- [ ] 7. GET /api/v1/auth/me endpoint returns current user profile (requires valid JWT)
-- [ ] 8. Invalid credentials return 401 Unauthorized with appropriate error message
+- [x] 1. User table includes email, passwordHash, roleId, status (active/inactive), lastLoginAt
+- [x] 2. POST /api/v1/auth/login endpoint accepts email and password
+- [x] 3. Password hashed with bcrypt (min 10 rounds) before storage
+- [x] 4. Login validates credentials and returns JWT token with user info and role
+- [x] 5. JWT includes userId, email, roleId, tenantId (null for MVP), expires in 24 hours
+- [x] 6. POST /api/v1/auth/logout endpoint clears session/token
+- [x] 7. GET /api/v1/auth/me endpoint returns current user profile (requires valid JWT)
+- [x] 8. Invalid credentials return 401 Unauthorized with appropriate error message
 
 ### Frontend Authentication
-- [ ] 9. Login frontend page created with email/password form (responsive design)
-- [ ] 10. Frontend stores JWT in localStorage and includes in API requests
-- [ ] 11. Frontend redirects to dashboard on successful login
-- [ ] 12. Frontend displays login errors appropriately
+- [x] 9. Login frontend page created with email/password form (responsive design)
+- [x] 10. Frontend stores JWT in localStorage and includes in API requests
+- [x] 11. Frontend redirects to dashboard on successful login
+- [x] 12. Frontend displays login errors appropriately
 
 ### Audit Logging
-- [ ] 13. **Login/logout events automatically logged to AuditLog**
+- [x] 13. **Login/logout events automatically logged to AuditLog**
 
 ---
 

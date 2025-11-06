@@ -364,16 +364,16 @@ docker run -d \
 
 ## Testing Checklist
 
-- [ ] Prisma schema has no syntax errors
-- [ ] `pnpm db:generate` runs successfully
-- [ ] `pnpm db:migrate` creates and applies migration
-- [ ] Database tables created (users, roles, audit_logs)
-- [ ] `pnpm db:seed` runs without errors
-- [ ] 5 roles created in database
-- [ ] Default admin user created
-- [ ] Can login to Prisma Studio and see data
-- [ ] Prisma Client can be imported in backend code
-- [ ] Simple query works: `prisma.user.findMany()`
+- [x] Prisma schema has no syntax errors
+- [x] `pnpm db:generate` runs successfully
+- [x] `pnpm db:migrate` creates and applies migration
+- [x] Database tables created (users, roles, audit_logs)
+- [x] `pnpm db:seed` runs without errors
+- [x] 5 roles created in database
+- [x] Default admin user created
+- [x] Can login to Prisma Studio and see data
+- [x] Prisma Client can be imported in backend code
+- [x] Simple query works: `prisma.user.findMany()`
 
 ---
 
@@ -418,16 +418,16 @@ tsx apps/api/src/scripts/test-db.ts
 
 ## Definition of Done
 
-- [ ] All acceptance criteria met
-- [ ] Prisma schema created with User, Role, AuditLog tables
-- [ ] Migration applied to database
-- [ ] Seed script creates roles and admin user
-- [ ] Database connection tested and working
-- [ ] Prisma Client accessible in backend code
-- [ ] All database scripts functional (migrate, seed, reset)
-- [ ] Default admin credentials documented
-- [ ] Code reviewed and approved
-- [ ] Changes committed to repository
+- [x] All acceptance criteria met
+- [x] Prisma schema created with User, Role, AuditLog tables
+- [x] Migration applied to database
+- [x] Seed script creates roles and admin user
+- [x] Database connection tested and working
+- [x] Prisma Client accessible in backend code
+- [x] All database scripts functional (migrate, seed, reset)
+- [x] Default admin credentials documented
+- [x] Code reviewed and approved
+- [x] Changes committed to repository
 
 ---
 

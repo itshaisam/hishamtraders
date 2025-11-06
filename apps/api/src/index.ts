@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import authRoutes from './routes/auth.routes.js';
 
 dotenv.config();
 
@@ -22,6 +23,9 @@ app.get('/health', (_req, res) => {
 app.get('/api/v1', (_req, res) => {
   res.json({ message: 'Hisham Traders ERP API v1' });
 });
+
+// Auth routes
+app.use('/api/v1/auth', authRoutes);
 
 // Start server
 app.listen(PORT, () => {
