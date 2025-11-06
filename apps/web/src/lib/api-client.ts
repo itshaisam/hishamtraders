@@ -1,4 +1,5 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { useAuthStore } from '../stores/auth.store';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
@@ -24,7 +25,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle 401 errors
+// Response interceptor - Handle 401 and 403 errors
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -32,7 +33,13 @@ apiClient.interceptors.response.use(
       // Clear auth state and redirect to login
       useAuthStore.getState().clearAuth();
       window.location.href = '/login';
+      toast.error('Session expired. Please login again.');
     }
+
+    if (error.response?.status === 403) {
+      toast.error("Access denied. You don't have permission to perform this action.");
+    }
+
     return Promise.reject(error);
   }
 );
