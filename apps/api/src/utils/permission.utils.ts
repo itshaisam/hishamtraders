@@ -21,7 +21,7 @@ export function hasPermission(
     return false;
   }
 
-  return allowedRoles.includes(roleName);
+  return (allowedRoles as readonly string[]).includes(roleName);
 }
 
 /**
@@ -34,7 +34,7 @@ export function getRolePermissions(roleName: RoleName) {
     permissions[resource] = [];
 
     for (const [action, allowedRoles] of Object.entries(actions)) {
-      if (allowedRoles.includes(roleName)) {
+      if ((allowedRoles as readonly string[]).includes(roleName)) {
         permissions[resource].push(action);
       }
     }

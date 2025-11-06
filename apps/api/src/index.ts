@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes.js';
+import userRoutes from './routes/user.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 
@@ -40,8 +41,9 @@ app.use((req, res, next) => {
 // Audit middleware (logs all mutating operations)
 app.use('/api/v1', auditMiddleware);
 
-// Auth routes
+// Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
 
 // Start server
 app.listen(PORT, () => {

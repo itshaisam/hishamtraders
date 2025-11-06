@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Story 1.3 (Authentication), Story 1.5 (Authorization)
-**Status:** Ready for Development
+**Status:** Completed ✅
 
 ---
 
@@ -20,17 +20,17 @@
 ## Acceptance Criteria
 
 ### Backend API
-- [ ] 1. GET /api/v1/users returns paginated list of users with role info
-- [ ] 2. POST /api/v1/users creates new user with email, name, roleId, password
-- [ ] 3. PUT /api/v1/users/:id updates user details (email, name, roleId, status)
-- [ ] 4. DELETE /api/v1/users/:id soft-deletes user (sets status=inactive)
-- [ ] 5. User table includes: id, email (unique), name, passwordHash, roleId, status, createdAt, lastLoginAt
-- [ ] 6. Email validation ensures valid format and uniqueness
-- [ ] 7. Default password sent to new user (or requires password reset on first login)
-- [ ] 8. Admin cannot delete/deactivate their own account
+- [x] 1. GET /api/v1/users returns paginated list of users with role info
+- [x] 2. POST /api/v1/users creates new user with email, name, roleId, password
+- [x] 3. PUT /api/v1/users/:id updates user details (email, name, roleId, status)
+- [x] 4. DELETE /api/v1/users/:id soft-deletes user (sets status=inactive)
+- [x] 5. User table includes: id, email (unique), name, passwordHash, roleId, status, createdAt, lastLoginAt
+- [x] 6. Email validation ensures valid format and uniqueness
+- [x] 7. Default password sent to new user (or requires password reset on first login)
+- [x] 8. Admin cannot delete/deactivate their own account
 
 ### Audit Logging
-- [ ] 9. **Role changes logged in audit trail**
+- [x] 9. **Role changes logged in audit trail**
 
 ### Frontend UI
 - [ ] 10. Frontend User Management page lists users with filters (role, status)
