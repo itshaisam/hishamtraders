@@ -14,6 +14,11 @@ architecture:
   architectureVersion: v4
   architectureSharded: true
   architectureShardedLocation: docs/architecture
+design:
+  designFile: docs/design/design-system.md
+  designVersion: v1
+  designSharded: true
+  designShardedLocation: docs/design
 customTechnicalDocuments: null
 devLoadAlwaysFiles:
   - docs/architecture/coding-standards.md
