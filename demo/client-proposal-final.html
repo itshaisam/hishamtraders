@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hisham Traders ERP - Final Proposal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+
+        @media print {
+            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
+            @page { margin: 0.5in; }
+        }
+    </style>
+</head>
+<body class="bg-white">
+
+    <!-- Print Button -->
+    <div class="no-print fixed top-4 right-4 z-50">
+        <button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 flex items-center gap-2 font-semibold">
+            <i data-lucide="printer" class="w-5 h-5"></i>
+            Print PDF
+        </button>
+    </div>
+
+    <!-- PAGE 1: COVER -->
+    <div class="min-h-screen flex items-center justify-center page-break" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="text-center text-white px-8">
+            <div class="w-32 h-32 mx-auto bg-white/20 backdrop-blur rounded-3xl flex items-center justify-center mb-8">
+                <i data-lucide="package" class="w-16 h-16 text-white"></i>
+            </div>
+
+            <h1 class="text-6xl font-bold mb-4">Project Proposal</h1>
+            <div class="w-32 h-1 bg-white/60 mx-auto mb-8"></div>
+
+            <div class="text-4xl font-semibold mb-12">
+                Hisham Traders<br/>
+                <span class="text-3xl font-normal text-white/90">ERP Management System</span>
+            </div>
+
+            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 max-w-lg mx-auto border border-white/30">
+                <div class="space-y-4 text-left text-lg">
+                    <div class="flex justify-between">
+                        <span class="text-white/80">Client:</span>
+                        <span class="font-semibold">[Client Name]</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-white/80">Date:</span>
+                        <span class="font-semibold">January 2025</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-white/80">Valid Until:</span>
+                        <span class="font-semibold">February 2025</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 2: WHAT YOU GET -->
+    <div class="min-h-screen p-16 page-break">
+        <div class="max-w-5xl mx-auto">
+
+            <div class="mb-12">
+                <h2 class="text-5xl font-bold text-gray-900 mb-4">What You Get</h2>
+                <div class="w-24 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+
+                <!-- Feature 1 -->
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 border-2 border-blue-200">
+                    <div class="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
+                        <i data-lucide="package-check" class="w-10 h-10 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Inventory Management</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Multi-warehouse stock tracking</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Real-time inventory updates</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Low stock alerts</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Batch/lot tracking</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 border-2 border-green-200">
+                    <div class="w-16 h-16 bg-green-600 rounded-xl flex items-center justify-center mb-4">
+                        <i data-lucide="truck" class="w-10 h-10 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Purchase & Import</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Purchase order management</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Container tracking</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Landed cost calculation</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Supplier management</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-8 border-2 border-purple-200">
+                    <div class="w-16 h-16 bg-purple-600 rounded-xl flex items-center justify-center mb-4">
+                        <i data-lucide="shopping-cart" class="w-10 h-10 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Sales & Invoicing</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Create sales invoices</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Auto stock deduction</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Client management</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Credit limit control</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 border-2 border-orange-200">
+                    <div class="w-16 h-16 bg-orange-600 rounded-xl flex items-center justify-center mb-4">
+                        <i data-lucide="dollar-sign" class="w-10 h-10 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Payments & Recovery</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Payment tracking</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Recovery schedule</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Aging reports</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Payment reminders</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-8 border-2 border-red-200">
+                    <div class="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mb-4">
+                        <i data-lucide="bar-chart-3" class="w-10 h-10 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Reports & Analytics</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Stock reports</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Sales analytics</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Excel export</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Dashboards</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-8 border-2 border-indigo-200">
+                    <div class="w-16 h-16 bg-indigo-600 rounded-xl flex items-center justify-center mb-4">
+                        <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Security & Users</h3>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5"></i>
+                            <span>5 user roles</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Permission control</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Complete audit trail</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i data-lucide="check" class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5"></i>
+                            <span>Secure login</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Additional Inclusions -->
+            <div class="bg-gray-50 rounded-2xl p-8 border-2 border-gray-200">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <i data-lucide="gift" class="w-8 h-8 text-blue-600"></i>
+                    Also Included
+                </h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">On-Premise Setup</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">5 Days Training</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">Data Migration</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">90 Days Support</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">Documentation</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">Bug Fixes</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- PAGE 3: PRICING -->
+    <div class="min-h-screen p-16 page-break bg-gradient-to-br from-gray-50 to-blue-50">
+        <div class="max-w-4xl mx-auto">
+
+            <div class="mb-12">
+                <h2 class="text-5xl font-bold text-gray-900 mb-4">Investment</h2>
+                <div class="w-24 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+            </div>
+
+            <!-- Main Pricing Card -->
+            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden mb-8">
+
+                <!-- Header -->
+                <div class="bg-gradient-to-br from-blue-600 to-purple-600 text-white p-10 text-center">
+                    <h3 class="text-3xl font-bold mb-3">Complete ERP Package</h3>
+                    <p class="text-xl text-white/90">Everything you need to run your business</p>
+                </div>
+
+                <!-- Pricing Details -->
+                <div class="p-10">
+
+                    <!-- Original Price (Strikethrough) -->
+                    <div class="text-center mb-8 pb-8 border-b-2 border-gray-200">
+                        <div class="text-gray-500 mb-2">Regular Price:</div>
+                        <div class="text-4xl font-bold text-gray-400 line-through">PKR 420,000</div>
+                    </div>
+
+                    <!-- Discount Banner -->
+                    <div class="bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl p-6 mb-8 text-center">
+                        <div class="text-2xl font-bold mb-1">Special Discount Applied!</div>
+                        <div class="text-5xl font-bold">PKR 170,000 OFF</div>
+                    </div>
+
+                    <!-- Final Price -->
+                    <div class="text-center mb-8">
+                        <div class="text-gray-700 mb-3 text-xl">Your Final Price:</div>
+                        <div class="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3">
+                            PKR 250,000
+                        </div>
+                        <div class="text-gray-600 text-lg">
+                            Save 40% on original price
+                        </div>
+                    </div>
+
+                    <!-- What's Included Summary -->
+                    <div class="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
+                        <h4 class="font-bold text-gray-900 mb-4 text-lg text-center">Complete Package Includes:</h4>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm text-gray-700">
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                                <span>Multi-warehouse inventory system</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                                <span>Purchase order & import tracking</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                                <span>Sales invoicing with auto updates</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                                <span>Payment tracking & recovery</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                                <span>Complete reporting suite</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                                <span>5 user roles with security</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                                <span>On-premise installation</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                                <span>5 days comprehensive training</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                                <span>Data migration support</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <i data-lucide="check" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                                <span>90 days post-launch support</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Payment Terms -->
+            <div class="bg-white rounded-2xl p-8 shadow-lg border-2 border-gray-200">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <i data-lucide="credit-card" class="w-7 h-7 text-blue-600"></i>
+                    Payment Terms
+                </h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center p-6 bg-blue-50 rounded-xl border-2 border-blue-200">
+                        <div class="text-4xl font-bold text-blue-600 mb-2">30%</div>
+                        <div class="font-semibold text-gray-900 mb-1">Down Payment</div>
+                        <div class="text-sm text-gray-600">PKR 75,000</div>
+                        <div class="text-xs text-gray-500 mt-2">Upon contract signing</div>
+                    </div>
+                    <div class="text-center p-6 bg-purple-50 rounded-xl border-2 border-purple-200">
+                        <div class="text-4xl font-bold text-purple-600 mb-2">40%</div>
+                        <div class="font-semibold text-gray-900 mb-1">Milestone</div>
+                        <div class="text-sm text-gray-600">PKR 100,000</div>
+                        <div class="text-xs text-gray-500 mt-2">Upon UAT completion</div>
+                    </div>
+                    <div class="text-center p-6 bg-green-50 rounded-xl border-2 border-green-200">
+                        <div class="text-4xl font-bold text-green-600 mb-2">30%</div>
+                        <div class="font-semibold text-gray-900 mb-1">Final Payment</div>
+                        <div class="text-sm text-gray-600">PKR 75,000</div>
+                        <div class="text-xs text-gray-500 mt-2">Upon go-live</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="mt-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white text-center">
+                <h3 class="text-2xl font-bold mb-2">Delivery Timeline</h3>
+                <div class="text-5xl font-bold mb-2">6-8 Weeks</div>
+                <p class="text-white/90">From contract signing to go-live</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- PAGE 4: NEXT STEPS -->
+    <div class="min-h-screen p-16 bg-white flex items-center justify-center">
+        <div class="max-w-4xl mx-auto text-center">
+
+            <div class="mb-12">
+                <h2 class="text-5xl font-bold text-gray-900 mb-4">Ready to Start?</h2>
+                <div class="w-24 h-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mx-auto"></div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="mb-12">
+                <div class="grid md:grid-cols-4 gap-6 mb-12">
+                    <div class="bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
+                        <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">1</div>
+                        <h3 class="font-bold text-gray-900 mb-2">Sign Agreement</h3>
+                        <p class="text-sm text-gray-600">Review and sign this proposal</p>
+                    </div>
+                    <div class="bg-purple-50 rounded-2xl p-6 border-2 border-purple-200">
+                        <div class="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">2</div>
+                        <h3 class="font-bold text-gray-900 mb-2">Make Payment</h3>
+                        <p class="text-sm text-gray-600">30% down payment to start</p>
+                    </div>
+                    <div class="bg-green-50 rounded-2xl p-6 border-2 border-green-200">
+                        <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">3</div>
+                        <h3 class="font-bold text-gray-900 mb-2">We Build</h3>
+                        <p class="text-sm text-gray-600">6-8 weeks development</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-2xl p-6 border-2 border-orange-200">
+                        <div class="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">✓</div>
+                        <h3 class="font-bold text-gray-900 mb-2">Go Live</h3>
+                        <p class="text-sm text-gray-600">Training & launch support</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-10 text-white mb-12">
+                <h3 class="text-3xl font-bold mb-6">Contact Us</h3>
+                <div class="grid md:grid-cols-2 gap-6 text-lg">
+                    <div class="flex items-center justify-center gap-3">
+                        <i data-lucide="mail" class="w-6 h-6"></i>
+                        <span>info@hishamtraders.com</span>
+                    </div>
+                    <div class="flex items-center justify-center gap-3">
+                        <i data-lucide="phone" class="w-6 h-6"></i>
+                        <span>+92-XXX-XXXXXXX</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signature Section -->
+            <div class="bg-gray-50 rounded-2xl p-8 border-2 border-gray-200 text-left">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Agreement</h3>
+                <div class="grid md:grid-cols-2 gap-8 mb-6">
+                    <div>
+                        <div class="font-semibold text-gray-900 mb-3">Client:</div>
+                        <div class="space-y-3 text-sm text-gray-700">
+                            <div>Name: _________________________</div>
+                            <div>Company: Hisham Traders</div>
+                            <div>Date: _________________________</div>
+                            <div>Signature: _________________________</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-900 mb-3">Service Provider:</div>
+                        <div class="space-y-3 text-sm text-gray-700">
+                            <div>Company: Hisham Traders Tech</div>
+                            <div>Date: January 2025</div>
+                            <div>Contact: info@hishamtraders.com</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center text-sm text-gray-500 pt-6 border-t border-gray-300">
+                    This proposal is valid for 30 days. All prices in PKR.
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

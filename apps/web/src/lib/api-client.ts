@@ -25,21 +25,59 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle 401 and 403 errors
+// Response interceptor - Handle errors globally
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Clear auth state and redirect to login
+    const status = error.response?.status;
+    const message = error.response?.data?.message || 'An error occurred';
+
+    // Handle 401 - Unauthorized
+    if (status === 401) {
       useAuthStore.getState().clearAuth();
       window.location.href = '/login';
       toast.error('Session expired. Please login again.');
+      return Promise.reject(error);
     }
 
-    if (error.response?.status === 403) {
+    // Handle 403 - Forbidden
+    if (status === 403) {
       toast.error("Access denied. You don't have permission to perform this action.");
+      return Promise.reject(error);
     }
 
+    // Handle 404 - Not Found
+    if (status === 404) {
+      toast.error(message || 'Resource not found');
+      return Promise.reject(error);
+    }
+
+    // Handle 409 - Conflict
+    if (status === 409) {
+      toast.error(message || 'This record already exists');
+      return Promise.reject(error);
+    }
+
+    // Handle 422 - Validation Error
+    if (status === 422) {
+      toast.error('Please check your input and try again');
+      return Promise.reject(error);
+    }
+
+    // Handle 500 - Server Error
+    if (status >= 500) {
+      toast.error('Server error. Please try again later.');
+      return Promise.reject(error);
+    }
+
+    // Handle network errors
+    if (!error.response) {
+      toast.error('Network error. Please check your connection.');
+      return Promise.reject(error);
+    }
+
+    // Default error
+    toast.error(message);
     return Promise.reject(error);
   }
 );

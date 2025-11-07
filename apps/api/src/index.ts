@@ -7,6 +7,8 @@ import userRoutes from './routes/user.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
+import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
+import logger from './lib/logger.js';
 
 dotenv.config();
 
@@ -47,10 +49,32 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1', dashboardRoutes);
 
+// 404 handler (must be after all routes)
+app.use(notFoundHandler);
+
+// Error handler (must be last)
+app.use(errorHandler);
+
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/health`);
-  console.log(`📍 API v1: http://localhost:${PORT}/api/v1`);
-  console.log(`✅ Audit logging enabled`);
+  logger.info(`🚀 Server running on port ${PORT}`);
+  logger.info(`📍 Health check: http://localhost:${PORT}/health`);
+  logger.info(`📍 API v1: http://localhost:${PORT}/api/v1`);
+  logger.info(`✅ Audit logging enabled`);
+  logger.info(`✅ Error handling enabled`);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason: Error) => {
+  logger.error('Unhandled Rejection:', { error: reason.message, stack: reason.stack });
+  // Don't exit in production, just log
+  if (process.env.NODE_ENV === 'development') {
+    process.exit(1);
+  }
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error: Error) => {
+  logger.error('Uncaught Exception:', { error: error.message, stack: error.stack });
+  process.exit(1);
 });

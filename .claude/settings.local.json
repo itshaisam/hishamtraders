@@ -6,7 +6,11 @@
       "Bash(pnpm install:*)",
       "Bash(npm install:*)",
       "Bash(test:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(pnpm add:*)",
+      "Bash(python generate_proposal.py:*)",
+      "Bash(pnpm run lint)",
+      "Bash(pnpm run build:*)"
     ],
     "deny": [],
     "ask": []

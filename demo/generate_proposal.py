@@ -88,6 +88,28 @@ def generate_simplified_proposal():
     print(f"[OK] Simplified Proposal created: {output_path}")
     return output_path
 
+def generate_client_final_proposal():
+    """Generate the final client proposal with discount pricing"""
+    print("Generating Final Client Proposal (PKR 250K with discount)...")
+
+    template_path = "E:\\pProjects\\hishamtraders\\demo\\client-proposal-final.html"
+    output_path = "E:\\pProjects\\hishamtraders\\demo\\client-proposal-final-generated.html"
+
+    # Read template
+    with open(template_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    # Update dates
+    content = content.replace('January 2025', get_current_date())
+    content = content.replace('February 2025', get_expiry_date())
+
+    # Write output
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+    print(f"[OK] Final Client Proposal created: {output_path}")
+    return output_path
+
 def create_readme():
     """Create a README file explaining the different proposals"""
     readme_content = f"""# Hisham Traders ERP - Proposal Documents
@@ -95,7 +117,26 @@ Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 ## Available Proposals
 
-### 1. Visual Features Overview (features-visual-generated.html)
+### 1. Final Client Proposal - PKR 250K (client-proposal-final-generated.html) ⭐ RECOMMENDED
+**Purpose:** Clean, simple proposal showing the agreed pricing with discount
+**Features:**
+- 4-page clean design
+- Visual feature cards with icons
+- Shows original price PKR 420K with discount to PKR 250K
+- Clear payment terms breakdown
+- Simple and easy to understand
+- Perfect for client who agreed to basic package with extra features
+
+**Pricing:**
+- Original: PKR 420,000
+- Discount: PKR 170,000 OFF (40% savings)
+- Final: PKR 250,000
+
+**Best For:** CURRENT CLIENT - Use this one!
+
+---
+
+### 2. Visual Features Overview (features-visual-generated.html)
 **Purpose:** For non-English speaking clients or visual learners
 **Features:**
 - Icon-based feature presentation
@@ -108,7 +149,7 @@ Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 ---
 
-### 2. Formal Business Proposal (formal-proposal-generated.html)
+### 3. Formal Business Proposal (formal-proposal-generated.html)
 **Purpose:** Professional business proposal document
 **Features:**
 - 5-page structured format
@@ -122,7 +163,7 @@ Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 ---
 
-### 3. Simplified Proposal (proposal-simplified-generated.html)
+### 4. Simplified Proposal (proposal-simplified-generated.html)
 **Purpose:** Comprehensive but accessible proposal
 **Features:**
 - System overview with benefits
@@ -182,6 +223,7 @@ def main():
     files_created = []
 
     try:
+        files_created.append(generate_client_final_proposal())
         files_created.append(generate_visual_features())
         files_created.append(generate_formal_proposal())
         files_created.append(generate_simplified_proposal())

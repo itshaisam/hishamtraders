@@ -1,9 +1,28 @@
 # Hisham Traders ERP - Proposal Documents
-Generated on: 2025-11-07 11:37:21
+Generated on: 2025-11-07 22:59:50
 
 ## Available Proposals
 
-### 1. Visual Features Overview (features-visual-generated.html)
+### 1. Final Client Proposal - PKR 250K (client-proposal-final-generated.html) ⭐ RECOMMENDED
+**Purpose:** Clean, simple proposal showing the agreed pricing with discount
+**Features:**
+- 4-page clean design
+- Visual feature cards with icons
+- Shows original price PKR 420K with discount to PKR 250K
+- Clear payment terms breakdown
+- Simple and easy to understand
+- Perfect for client who agreed to basic package with extra features
+
+**Pricing:**
+- Original: PKR 420,000
+- Discount: PKR 170,000 OFF (40% savings)
+- Final: PKR 250,000
+
+**Best For:** CURRENT CLIENT - Use this one!
+
+---
+
+### 2. Visual Features Overview (features-visual-generated.html)
 **Purpose:** For non-English speaking clients or visual learners
 **Features:**
 - Icon-based feature presentation
@@ -16,7 +35,7 @@ Generated on: 2025-11-07 11:37:21
 
 ---
 
-### 2. Formal Business Proposal (formal-proposal-generated.html)
+### 3. Formal Business Proposal (formal-proposal-generated.html)
 **Purpose:** Professional business proposal document
 **Features:**
 - 5-page structured format
@@ -30,7 +49,7 @@ Generated on: 2025-11-07 11:37:21
 
 ---
 
-### 3. Simplified Proposal (proposal-simplified-generated.html)
+### 4. Simplified Proposal (proposal-simplified-generated.html)
 **Purpose:** Comprehensive but accessible proposal
 **Features:**
 - System overview with benefits
