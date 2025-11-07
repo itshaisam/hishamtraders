@@ -1,0 +1,344 @@
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuthStore } from '../stores/auth.store';
+import { usePermission } from '../hooks/usePermission';
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  DollarSign,
+  Users,
+  FileText,
+  BarChart3,
+  Settings,
+  HelpCircle,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Warehouse,
+  ClipboardList,
+} from 'lucide-react';
+
+export default function Sidebar() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+  const location = useLocation();
+  const { user, clearAuth } = useAuthStore();
+  const { hasRole, isAdmin } = usePermission();
+
+  const handleLogout = () => {
+    clearAuth();
+    window.location.href = '/login';
+  };
+
+  const toggleMenu = (menuName: string) => {
+    setExpandedMenus((prev) =>
+      prev.includes(menuName)
+        ? prev.filter((m) => m !== menuName)
+        : [...prev, menuName]
+    );
+  };
+
+  const isActive = (path: string) => location.pathname === path;
+  const isMenuExpanded = (menuName: string) => expandedMenus.includes(menuName);
+
+  return (
+    <div
+      className={`bg-white h-screen fixed left-0 top-0 border-r border-gray-200 transition-all duration-300 ${
+        isCollapsed ? 'w-16' : 'w-60'
+      }`}
+    >
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+        {!isCollapsed && (
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">Hisham Traders</h1>
+            <p className="text-xs text-gray-500">ERP System</p>
+          </div>
+        )}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="p-1 hover:bg-gray-100 rounded transition"
+        >
+          {isCollapsed ? (
+            <ChevronRight size={20} className="text-gray-600" />
+          ) : (
+            <ChevronLeft size={20} className="text-gray-600" />
+          )}
+        </button>
+      </div>
+
+      {/* User Info */}
+      {!isCollapsed && (
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+              {user?.name.charAt(0)}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+              <p className="text-xs text-gray-500">{user?.role?.name}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto p-2">
+        {/* Dashboard */}
+        <Link
+          to="/dashboard"
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+            isActive('/dashboard')
+              ? 'bg-blue-50 text-blue-600'
+              : 'text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          <LayoutDashboard size={20} />
+          {!isCollapsed && <span className="text-sm font-medium">Dashboard</span>}
+        </Link>
+
+        {/* Inventory Menu */}
+        {hasRole(['ADMIN', 'WAREHOUSE_MANAGER', 'SALES_OFFICER']) && (
+          <div className="mt-2">
+            <button
+              onClick={() => toggleMenu('inventory')}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <Package size={20} />
+                {!isCollapsed && <span className="text-sm font-medium">Inventory</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    isMenuExpanded('inventory') ? 'rotate-180' : ''
+                  }`}
+                />
+              )}
+            </button>
+            {isMenuExpanded('inventory') && !isCollapsed && (
+              <div className="ml-6 mt-1 space-y-1">
+                <Link
+                  to="/products"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Products
+                </Link>
+                <Link
+                  to="/stock-levels"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Stock Levels
+                </Link>
+                <Link
+                  to="/warehouses"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Warehouses & Bins
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Purchases Menu */}
+        {hasRole(['ADMIN', 'WAREHOUSE_MANAGER']) && (
+          <div className="mt-2">
+            <button
+              onClick={() => toggleMenu('purchases')}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <ShoppingCart size={20} />
+                {!isCollapsed && <span className="text-sm font-medium">Purchases</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    isMenuExpanded('purchases') ? 'rotate-180' : ''
+                  }`}
+                />
+              )}
+            </button>
+            {isMenuExpanded('purchases') && !isCollapsed && (
+              <div className="ml-6 mt-1 space-y-1">
+                <Link
+                  to="/purchase-orders"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Purchase Orders
+                </Link>
+                <Link
+                  to="/suppliers"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Suppliers
+                </Link>
+                <Link
+                  to="/goods-receipt"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Goods Receipt
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Sales Menu */}
+        {hasRole(['ADMIN', 'SALES_OFFICER', 'ACCOUNTANT']) && (
+          <div className="mt-2">
+            <button
+              onClick={() => toggleMenu('sales')}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <FileText size={20} />
+                {!isCollapsed && <span className="text-sm font-medium">Sales</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    isMenuExpanded('sales') ? 'rotate-180' : ''
+                  }`}
+                />
+              )}
+            </button>
+            {isMenuExpanded('sales') && !isCollapsed && (
+              <div className="ml-6 mt-1 space-y-1">
+                <Link
+                  to="/clients"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Clients
+                </Link>
+                <Link
+                  to="/invoices"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Invoices
+                </Link>
+                <Link
+                  to="/returns"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Returns
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Payments Menu */}
+        {hasRole(['ADMIN', 'ACCOUNTANT', 'RECOVERY_AGENT']) && (
+          <div className="mt-2">
+            <button
+              onClick={() => toggleMenu('payments')}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <DollarSign size={20} />
+                {!isCollapsed && <span className="text-sm font-medium">Payments</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    isMenuExpanded('payments') ? 'rotate-180' : ''
+                  }`}
+                />
+              )}
+            </button>
+            {isMenuExpanded('payments') && !isCollapsed && (
+              <div className="ml-6 mt-1 space-y-1">
+                <Link
+                  to="/client-payments"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Client Payments
+                </Link>
+                {hasRole(['ADMIN', 'ACCOUNTANT']) && (
+                  <>
+                    <Link
+                      to="/supplier-payments"
+                      className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                    >
+                      Supplier Payments
+                    </Link>
+                    <Link
+                      to="/expenses"
+                      className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                    >
+                      Expenses
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Reports */}
+        <Link
+          to="/reports"
+          className="mt-2 flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+        >
+          <BarChart3 size={20} />
+          {!isCollapsed && <span className="text-sm font-medium">Reports</span>}
+        </Link>
+
+        {/* Users (Admin only) */}
+        {isAdmin() && (
+          <Link
+            to="/users"
+            className="mt-2 flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+          >
+            <Users size={20} />
+            {!isCollapsed && <span className="text-sm font-medium">Users</span>}
+          </Link>
+        )}
+
+        {/* Audit Trail (Admin only) */}
+        {isAdmin() && (
+          <Link
+            to="/audit-trail"
+            className="mt-2 flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+          >
+            <ClipboardList size={20} />
+            {!isCollapsed && <span className="text-sm font-medium">Audit Trail</span>}
+          </Link>
+        )}
+      </nav>
+
+      {/* Footer Actions */}
+      <div className="border-t border-gray-200 p-2">
+        <Link
+          to="/settings"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+        >
+          <Settings size={20} />
+          {!isCollapsed && <span className="text-sm font-medium">Settings</span>}
+        </Link>
+        <Link
+          to="/help"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+        >
+          <HelpCircle size={20} />
+          {!isCollapsed && <span className="text-sm font-medium">Help</span>}
+        </Link>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition"
+        >
+          <LogOut size={20} />
+          {!isCollapsed && <span className="text-sm font-medium">Logout</span>}
+        </button>
+      </div>
+    </div>
+  );
+}

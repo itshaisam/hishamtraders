@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP System - Visual Features Overview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+
+        @media print {
+            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
+            @page { margin: 0.5in; }
+        }
+
+        .feature-card {
+            transition: transform 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100">
+
+    <!-- Print Button -->
+    <div class="no-print fixed top-4 right-4 z-50">
+        <button onclick="window.print()" class="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 flex items-center gap-2 font-semibold">
+            <i data-lucide="printer" class="w-5 h-5"></i>
+            Print
+        </button>
+    </div>
+
+    <!-- Cover -->
+    <div class="min-h-screen flex items-center justify-center p-8 page-break">
+        <div class="text-center max-w-4xl">
+            <!-- Logo Icon -->
+            <div class="mb-8">
+                <div class="w-32 h-32 mx-auto bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl">
+                    <i data-lucide="package" class="w-16 h-16 text-white"></i>
+                </div>
+            </div>
+
+            <!-- Title -->
+            <h1 class="text-6xl font-bold text-gray-900 mb-6">
+                Hisham Traders<br/>
+                <span class="text-blue-600">ERP System</span>
+            </h1>
+
+            <div class="text-2xl text-gray-600 font-semibold mb-12">
+                Complete Business Management Solution
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-3 gap-8 max-w-3xl mx-auto">
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="text-5xl font-bold text-blue-600 mb-2">8+</div>
+                    <div class="text-gray-700 font-semibold">Modules</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="text-5xl font-bold text-green-600 mb-2">40%</div>
+                    <div class="text-gray-700 font-semibold">Faster</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="text-5xl font-bold text-purple-600 mb-2">5</div>
+                    <div class="text-gray-700 font-semibold">User Roles</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Features - Visual Icons -->
+    <div class="min-h-screen p-12 page-break">
+        <div class="max-w-7xl mx-auto">
+
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-bold text-gray-900 mb-4">Core Features</h2>
+                <div class="w-24 h-2 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <!-- Feature 1: Inventory -->
+                <div class="feature-card bg-white rounded-2xl p-8 shadow-lg border-2 border-blue-100">
+                    <div class="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                        <i data-lucide="package-check" class="w-12 h-12 text-blue-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 text-center mb-4">Inventory</h3>
+                    <div class="space-y-3 text-gray-700">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Multi-Warehouse</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Real-Time Tracking</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Low Stock Alerts</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Batch Tracking</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Purchase/Import -->
+                <div class="feature-card bg-white rounded-2xl p-8 shadow-lg border-2 border-green-100">
+                    <div class="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                        <i data-lucide="truck" class="w-12 h-12 text-green-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 text-center mb-4">Import</h3>
+                    <div class="space-y-3 text-gray-700">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Purchase Orders</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Container Tracking</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Landed Cost</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Supplier Mgmt</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Sales -->
+                <div class="feature-card bg-white rounded-2xl p-8 shadow-lg border-2 border-purple-100">
+                    <div class="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                        <i data-lucide="shopping-cart" class="w-12 h-12 text-purple-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 text-center mb-4">Sales</h3>
+                    <div class="space-y-3 text-gray-700">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Invoice Creation</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Auto Stock Update</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Client Management</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Price Lists</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 4: Payments -->
+                <div class="feature-card bg-white rounded-2xl p-8 shadow-lg border-2 border-orange-100">
+                    <div class="w-20 h-20 bg-orange-100 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                        <i data-lucide="dollar-sign" class="w-12 h-12 text-orange-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 text-center mb-4">Payments</h3>
+                    <div class="space-y-3 text-gray-700">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Credit Limits</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Payment Tracking</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Aging Reports</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Balance Alerts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 5: Reports -->
+                <div class="feature-card bg-white rounded-2xl p-8 shadow-lg border-2 border-red-100">
+                    <div class="w-20 h-20 bg-red-100 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                        <i data-lucide="bar-chart-3" class="w-12 h-12 text-red-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 text-center mb-4">Reports</h3>
+                    <div class="space-y-3 text-gray-700">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Stock Reports</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Sales Analytics</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Excel Export</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Dashboards</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 6: Recovery -->
+                <div class="feature-card bg-white rounded-2xl p-8 shadow-lg border-2 border-yellow-100">
+                    <div class="w-20 h-20 bg-yellow-100 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                        <i data-lucide="alarm-clock" class="w-12 h-12 text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 text-center mb-4">Recovery</h3>
+                    <div class="space-y-3 text-gray-700">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Weekly Schedule</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Overdue Alerts</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Agent Assignment</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Collection Tracking</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 7: Security -->
+                <div class="feature-card bg-white rounded-2xl p-8 shadow-lg border-2 border-indigo-100">
+                    <div class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                        <i data-lucide="shield-check" class="w-12 h-12 text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 text-center mb-4">Security</h3>
+                    <div class="space-y-3 text-gray-700">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">5 User Roles</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Permissions</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Audit Trail</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Secure Login</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 8: Gate Pass -->
+                <div class="feature-card bg-white rounded-2xl p-8 shadow-lg border-2 border-teal-100">
+                    <div class="w-20 h-20 bg-teal-100 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                        <i data-lucide="clipboard-check" class="w-12 h-12 text-teal-600"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 text-center mb-4">Gate Pass</h3>
+                    <div class="space-y-3 text-gray-700">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Auto Approval</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Manual Review</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">Delivery Track</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 flex-shrink-0"></i>
+                            <span class="font-semibold">History Log</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Benefits Visual -->
+    <div class="min-h-screen p-12 page-break bg-gradient-to-br from-blue-50 to-purple-50">
+        <div class="max-w-6xl mx-auto">
+
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-bold text-gray-900 mb-4">Key Benefits</h2>
+                <div class="w-24 h-2 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12">
+
+                <!-- Benefit 1 -->
+                <div class="bg-white rounded-3xl p-10 shadow-2xl">
+                    <div class="flex items-center gap-6 mb-6">
+                        <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="trending-up" class="w-12 h-12 text-white"></i>
+                        </div>
+                        <div>
+                            <div class="text-5xl font-bold text-blue-600 mb-1">40%</div>
+                            <div class="text-xl font-semibold text-gray-700">Faster Operations</div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-lg">Automation reduces manual work and speeds up all business processes</p>
+                </div>
+
+                <!-- Benefit 2 -->
+                <div class="bg-white rounded-3xl p-10 shadow-2xl">
+                    <div class="flex items-center gap-6 mb-6">
+                        <div class="w-24 h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="package" class="w-12 h-12 text-white"></i>
+                        </div>
+                        <div>
+                            <div class="text-5xl font-bold text-green-600 mb-1">25%</div>
+                            <div class="text-xl font-semibold text-gray-700">Better Inventory</div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-lg">Improved stock control with 60% fewer stockout incidents</p>
+                </div>
+
+                <!-- Benefit 3 -->
+                <div class="bg-white rounded-3xl p-10 shadow-2xl">
+                    <div class="flex items-center gap-6 mb-6">
+                        <div class="w-24 h-24 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="dollar-sign" class="w-12 h-12 text-white"></i>
+                        </div>
+                        <div>
+                            <div class="text-5xl font-bold text-purple-600 mb-1">30%</div>
+                            <div class="text-xl font-semibold text-gray-700">Faster Recovery</div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-lg">Get paid faster - reduce DSO from 45 to 32 days</p>
+                </div>
+
+                <!-- Benefit 4 -->
+                <div class="bg-white rounded-3xl p-10 shadow-2xl">
+                    <div class="flex items-center gap-6 mb-6">
+                        <div class="w-24 h-24 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="eye" class="w-12 h-12 text-white"></i>
+                        </div>
+                        <div>
+                            <div class="text-5xl font-bold text-orange-600 mb-1">100%</div>
+                            <div class="text-xl font-semibold text-gray-700">Real-Time Data</div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-lg">Complete visibility across all warehouses and operations</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Visual -->
+    <div class="min-h-screen p-12 page-break">
+        <div class="max-w-6xl mx-auto">
+
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-bold text-gray-900 mb-4">Investment</h2>
+                <div class="w-24 h-2 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+
+                <!-- Package 1 -->
+                <div class="bg-white rounded-3xl p-8 shadow-xl border-2 border-gray-200">
+                    <div class="text-center mb-6">
+                        <div class="inline-block px-4 py-2 bg-gray-100 rounded-full text-sm font-bold text-gray-700 mb-4">BASIC</div>
+                        <div class="text-4xl font-bold text-gray-900 mb-2">PKR 250K</div>
+                        <div class="text-gray-600">Essential Features</div>
+                    </div>
+                    <div class="space-y-4 mb-8">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6 text-green-500"></i>
+                            <span class="font-semibold">Single Warehouse</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6 text-green-500"></i>
+                            <span class="font-semibold">Basic Inventory</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6 text-green-500"></i>
+                            <span class="font-semibold">Sales & Invoicing</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6 text-green-500"></i>
+                            <span class="font-semibold">3 User Roles</span>
+                        </div>
+                    </div>
+                    <div class="text-center text-sm text-gray-500">
+                        4-6 weeks delivery
+                    </div>
+                </div>
+
+                <!-- Package 2 - Recommended -->
+                <div class="bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl p-8 shadow-2xl border-4 border-blue-500 transform scale-105">
+                    <div class="text-center mb-6">
+                        <div class="inline-block px-4 py-2 bg-white/20 backdrop-blur rounded-full text-sm font-bold text-white mb-4">RECOMMENDED</div>
+                        <div class="text-5xl font-bold text-white mb-2">PKR 450K</div>
+                        <div class="text-white/90 font-semibold">Complete ERP</div>
+                    </div>
+                    <div class="space-y-4 mb-8 text-white">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6"></i>
+                            <span class="font-semibold">Multi-Warehouse</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6"></i>
+                            <span class="font-semibold">Import Tracking</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6"></i>
+                            <span class="font-semibold">Credit Control</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6"></i>
+                            <span class="font-semibold">Recovery System</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6"></i>
+                            <span class="font-semibold">5 User Roles</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6"></i>
+                            <span class="font-semibold">Gate Pass System</span>
+                        </div>
+                    </div>
+                    <div class="text-center text-sm text-white/80">
+                        6-8 weeks delivery
+                    </div>
+                </div>
+
+                <!-- Package 3 -->
+                <div class="bg-white rounded-3xl p-8 shadow-xl border-2 border-purple-200">
+                    <div class="text-center mb-6">
+                        <div class="inline-block px-4 py-2 bg-purple-100 rounded-full text-sm font-bold text-purple-700 mb-4">ENTERPRISE</div>
+                        <div class="text-4xl font-bold text-gray-900 mb-2">PKR 950K</div>
+                        <div class="text-gray-600">Advanced Features</div>
+                    </div>
+                    <div class="space-y-4 mb-8">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6 text-purple-500"></i>
+                            <span class="font-semibold">Everything in Pro</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6 text-purple-500"></i>
+                            <span class="font-semibold">Barcode Scanning</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6 text-purple-500"></i>
+                            <span class="font-semibold">Mobile Apps</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6 text-purple-500"></i>
+                            <span class="font-semibold">WhatsApp/SMS</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="check" class="w-6 h-6 text-purple-500"></i>
+                            <span class="font-semibold">FBR Integration</span>
+                        </div>
+                    </div>
+                    <div class="text-center text-sm text-gray-500">
+                        10-12 weeks delivery
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- All Packages Include -->
+            <div class="mt-12 bg-blue-50 rounded-2xl p-8 border-2 border-blue-200">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">All Packages Include</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">On-Premise Installation</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">5 Days Training</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">Data Migration</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">90 Days Support</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">Documentation</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500 flex-shrink-0"></i>
+                        <span class="font-semibold text-gray-700">Source Code Access</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Contact Page -->
+    <div class="min-h-screen flex items-center justify-center p-12 bg-gradient-to-br from-blue-600 to-purple-600">
+        <div class="text-center text-white max-w-3xl">
+            <h2 class="text-5xl font-bold mb-8">Ready to Start?</h2>
+            <div class="text-2xl mb-12">Contact us for a free demo and consultation</div>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/20">
+                    <i data-lucide="mail" class="w-12 h-12 mx-auto mb-4"></i>
+                    <div class="text-xl font-semibold mb-2">Email</div>
+                    <div class="text-white/80">info@hishamtraders.com</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/20">
+                    <i data-lucide="phone" class="w-12 h-12 mx-auto mb-4"></i>
+                    <div class="text-xl font-semibold mb-2">Phone</div>
+                    <div class="text-white/80">+92-XXX-XXXXXXX</div>
+                </div>
+            </div>
+
+            <div class="text-white/60 text-sm">
+                This proposal is valid for 30 days
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

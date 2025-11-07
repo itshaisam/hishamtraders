@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hisham Traders ERP - Business Proposal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        @media print {
+            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
+            @page { margin: 0.5in; }
+        }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Print Button -->
+    <div class="no-print fixed top-4 right-4 z-50">
+        <button onclick="window.print()" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 flex items-center gap-2">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            Print / Save PDF
+        </button>
+    </div>
+
+    <!-- Cover Page -->
+    <div class="min-h-screen gradient-bg flex items-center justify-center page-break">
+        <div class="text-center text-white px-8">
+            <div class="mb-8">
+                <div class="w-24 h-24 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6">
+                    <i data-lucide="box" class="w-12 h-12 text-white"></i>
+                </div>
+                <h1 class="text-6xl font-bold mb-4">Business Proposal</h1>
+                <div class="w-24 h-1 bg-white/50 mx-auto mb-8"></div>
+            </div>
+
+            <div class="text-3xl font-semibold mb-8">
+                Hisham Traders ERP<br/>
+                Import-Distribution Management System
+            </div>
+
+            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto border border-white/20">
+                <div class="grid grid-cols-2 gap-6 text-left">
+                    <div>
+                        <div class="text-sm text-white/70 mb-1">Date:</div>
+                        <div class="font-semibold">November 2025</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-white/70 mb-1">Valid Until:</div>
+                        <div class="font-semibold">December 2025</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Overview -->
+    <div class="min-h-screen bg-white p-16 page-break">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-4xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                <i data-lucide="layout-dashboard" class="w-10 h-10 text-blue-600"></i>
+                System Overview
+            </h2>
+
+            <div class="mb-10">
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">The Challenge</h3>
+                <p class="text-gray-700 leading-relaxed">
+                    Import-distribution businesses struggle with: manual inventory tracking causing stockouts,
+                    fragmented purchase order management, lack of real-time visibility, inefficient credit management,
+                    and time-consuming manual reporting.
+                </p>
+            </div>
+
+            <div class="mb-10">
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">The Solution</h3>
+                <p class="text-gray-700 leading-relaxed mb-6">
+                    A complete, purpose-built ERP system designed specifically for import-distribution operations.
+                    End-to-end digitalization from procurement to payment collection with industry-specific features.
+                </p>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <i data-lucide="trending-up" class="w-6 h-6 text-blue-600"></i>
+                            <div class="text-xl font-bold text-gray-900">40% Faster</div>
+                        </div>
+                        <p class="text-sm text-gray-600">Operations through automation</p>
+                    </div>
+                    <div class="bg-green-50 p-6 rounded-xl border border-green-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <i data-lucide="package" class="w-6 h-6 text-green-600"></i>
+                            <div class="text-xl font-bold text-gray-900">25% Better</div>
+                        </div>
+                        <p class="text-sm text-gray-600">Inventory turnover & control</p>
+                    </div>
+                    <div class="bg-purple-50 p-6 rounded-xl border border-purple-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <i data-lucide="dollar-sign" class="w-6 h-6 text-purple-600"></i>
+                            <div class="text-xl font-bold text-gray-900">30% Faster</div>
+                        </div>
+                        <p class="text-sm text-gray-600">Cash recovery (DSO reduction)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">System Modules</h3>
+
+                <!-- Phase 1: Core System (Base Package) -->
+                <div class="mb-8">
+                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-t-xl">
+                        <h4 class="text-xl font-bold">Phase 1: Core System (Base Package)</h4>
+                        <p class="text-sm text-white/80">6-8 Week Delivery - Essential Operations</p>
+                    </div>
+                    <div class="bg-white border-2 border-blue-200 rounded-b-xl p-6 grid md:grid-cols-2 gap-6">
+                        <!-- Module 1 -->
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="shield-check" class="w-5 h-5 text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 mb-1">1. Foundation & Authentication</div>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• 5 Role-based access (Admin, Warehouse, Sales, Accountant, Recovery)</li>
+                                        <li>• Complete audit trail from Day 1</li>
+                                        <li>• User management with permissions</li>
+                                        <li>• Role-specific dashboards</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Module 2 -->
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="truck" class="w-5 h-5 text-green-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 mb-1">2. Import & Inventory</div>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• Purchase orders with container tracking</li>
+                                        <li>• Landed cost calculation (product + customs + shipping)</li>
+                                        <li>• Multi-warehouse inventory management</li>
+                                        <li>• Stock receiving & adjustments with audit trail</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Module 3 -->
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="shopping-cart" class="w-5 h-5 text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 mb-1">3. Sales & Payments</div>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• Client management with credit limits</li>
+                                        <li>• Sales invoices with auto stock deduction</li>
+                                        <li>• Credit limit enforcement & warnings</li>
+                                        <li>• Payment tracking (clients & suppliers)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Module 4 -->
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="bar-chart-3" class="w-5 h-5 text-orange-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 mb-1">4. Reports & Dashboards</div>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• Stock reports (current, valuation, movements)</li>
+                                        <li>• Sales & payment reports</li>
+                                        <li>• Import cost analysis</li>
+                                        <li>• Excel export for all reports</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 2: Advanced Features (Optional Add-ons) -->
+                <div>
+                    <div class="bg-gradient-to-r from-gray-700 to-gray-900 text-white px-6 py-3 rounded-t-xl">
+                        <h4 class="text-xl font-bold">Phase 2: Advanced Features (Optional Add-ons)</h4>
+                        <p class="text-sm text-white/80">Additional 4-6 Weeks - Advanced Operations</p>
+                    </div>
+                    <div class="bg-white border-2 border-gray-300 rounded-b-xl p-6 grid md:grid-cols-2 gap-6">
+                        <!-- Module 5 -->
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="book-open" class="w-5 h-5 text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 mb-1">5. General Ledger & Accounting</div>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• Double-entry accounting with Chart of Accounts</li>
+                                        <li>• Auto journal entries from transactions</li>
+                                        <li>• Trial balance & balance sheet</li>
+                                        <li>• Multi-bank account tracking</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Module 6 -->
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="package-check" class="w-5 h-5 text-green-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 mb-1">6. Advanced Inventory</div>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• Gate pass system (auto/manual approval)</li>
+                                        <li>• Stock transfers between warehouses</li>
+                                        <li>• Bin location & batch tracking</li>
+                                        <li>• Physical stock count & cycle counting</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Module 7 -->
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 mb-1">7. Recovery Management</div>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• Aging analysis & overdue tracking</li>
+                                        <li>• Weekly recovery schedules</li>
+                                        <li>• Payment reminders & follow-ups</li>
+                                        <li>• Collection agent assignment</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Module 8 -->
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="search" class="w-5 h-5 text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 mb-1">8. Advanced Audit & Compliance</div>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• Advanced audit trail viewer with filters</li>
+                                        <li>• Change history comparison</li>
+                                        <li>• Compliance reporting</li>
+                                        <li>• User activity analytics</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Page -->
+    <div class="min-h-screen bg-gray-50 p-16 page-break">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-4xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                <i data-lucide="dollar-sign" class="w-10 h-10 text-blue-600"></i>
+                Investment & Pricing
+            </h2>
+
+            <!-- Base Package -->
+            <div class="mb-8">
+                <div class="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-8 shadow-2xl text-white mb-6">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <div class="inline-block px-4 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-3">RECOMMENDED</div>
+                            <h3 class="text-3xl font-bold mb-2">Base Package (Modules 1-4)</h3>
+                            <p class="text-white/90 text-lg">Complete Core ERP System</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-4xl font-bold">PKR 400,000</div>
+                            <div class="text-sm text-white/80">6-8 Weeks Delivery</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                        <h4 class="font-semibold mb-4 text-lg">Includes:</h4>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                Foundation & Authentication (Module 1)
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                Import & Inventory (Module 2)
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                Sales & Payments (Module 3)
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                Reports & Dashboards (Module 4)
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                On-premise installation & setup
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                5 days comprehensive training
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                Data migration support
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                90 days post-launch support
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                Complete system documentation
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                Bug fixes & updates (90 days)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Optional Add-ons -->
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">Optional Add-on Modules</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl p-6 border-2 border-gray-200 shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h4 class="text-xl font-bold text-gray-900">Module 5: GL & Accounting</h4>
+                                <p class="text-sm text-gray-600">Full double-entry system</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-gray-900">+PKR 80K</div>
+                                <div class="text-xs text-gray-500">2-3 weeks</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 border-2 border-gray-200 shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h4 class="text-xl font-bold text-gray-900">Module 6: Advanced Inventory</h4>
+                                <p class="text-sm text-gray-600">Gate pass, transfers, bins</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-gray-900">+PKR 60K</div>
+                                <div class="text-xs text-gray-500">2 weeks</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 border-2 border-gray-200 shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h4 class="text-xl font-bold text-gray-900">Module 7: Recovery System</h4>
+                                <p class="text-sm text-gray-600">Advanced collections</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-gray-900">+PKR 50K</div>
+                                <div class="text-xs text-gray-500">1-2 weeks</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 border-2 border-gray-200 shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h4 class="text-xl font-bold text-gray-900">Module 8: Advanced Audit</h4>
+                                <p class="text-sm text-gray-600">Enhanced audit viewer</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-gray-900">+PKR 40K</div>
+                                <div class="text-xs text-gray-500">1 week</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-blue-50 rounded-xl p-6 border border-blue-200">
+                    <div class="flex items-start gap-4">
+                        <i data-lucide="info" class="w-6 h-6 text-blue-600 flex-shrink-0 mt-1"></i>
+                        <div>
+                            <div class="font-semibold text-gray-900 mb-2">Bundle Discount Available</div>
+                            <p class="text-sm text-gray-700">
+                                Add all 4 optional modules for <strong>PKR 200K</strong> (save PKR 30K).
+                                Total investment: <strong>PKR 600K</strong> for complete system (Modules 1-8).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Services -->
+            <div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">Additional Services & Support</h3>
+                <div class="bg-white rounded-xl border-2 border-gray-200 shadow-lg overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Service</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Description</th>
+                                <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-gray-900">Extended Support</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">12 months post-launch support & updates</td>
+                                <td class="px-6 py-4 text-right font-semibold text-gray-900">PKR 60K/year</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-gray-900">Additional Training</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">Extra training days (per day)</td>
+                                <td class="px-6 py-4 text-right font-semibold text-gray-900">PKR 8K/day</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-gray-900">Custom Reports</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">Bespoke report development (per report)</td>
+                                <td class="px-6 py-4 text-right font-semibold text-gray-900">PKR 15K each</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-gray-900">Custom Features</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">Additional feature development</td>
+                                <td class="px-6 py-4 text-right font-semibold text-gray-900">PKR 100K/week</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-gray-900">On-site Support</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">On-location support visit (per day)</td>
+                                <td class="px-6 py-4 text-right font-semibold text-gray-900">PKR 12K/day</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-gray-900">Priority Support SLA</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">4-hour response time, dedicated support</td>
+                                <td class="px-6 py-4 text-right font-semibold text-gray-900">PKR 25K/month</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-gray-900">Source Code Buyout</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">Complete source code ownership & rights</td>
+                                <td class="px-6 py-4 text-right font-semibold text-gray-900">PKR 150K</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Payment Terms -->
+            <div class="mt-8 bg-gray-100 rounded-xl p-6 border border-gray-300">
+                <h4 class="font-semibold text-gray-900 mb-4 text-lg">Payment Terms</h4>
+                <div class="grid md:grid-cols-3 gap-6 text-sm text-gray-700">
+                    <div>
+                        <div class="font-bold text-gray-900 mb-2">30% Down Payment</div>
+                        <p class="text-gray-600">Upon contract signing & project kickoff</p>
+                    </div>
+                    <div>
+                        <div class="font-bold text-gray-900 mb-2">40% Milestone Payment</div>
+                        <p class="text-gray-600">Upon completion of development & UAT</p>
+                    </div>
+                    <div>
+                        <div class="font-bold text-gray-900 mb-2">30% Final Payment</div>
+                        <p class="text-gray-600">Upon successful go-live & handover</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technology & Implementation -->
+    <div class="min-h-screen bg-white p-16 page-break">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-4xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                <i data-lucide="code-2" class="w-10 h-10 text-blue-600"></i>
+                Technology & Implementation
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-10">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Technology Stack</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="monitor" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-1"></i>
+                            <div>
+                                <div class="font-semibold text-gray-900">Frontend</div>
+                                <div class="text-sm text-gray-600">React 18, TypeScript, Tailwind CSS, Vite</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="server" class="w-5 h-5 text-green-600 flex-shrink-0 mt-1"></i>
+                            <div>
+                                <div class="font-semibold text-gray-900">Backend</div>
+                                <div class="text-sm text-gray-600">Node.js 20, Express.js, Prisma ORM</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="database" class="w-5 h-5 text-purple-600 flex-shrink-0 mt-1"></i>
+                            <div>
+                                <div class="font-semibold text-gray-900">Database</div>
+                                <div class="text-sm text-gray-600">PostgreSQL 15 (or MySQL 8)</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="cloud" class="w-5 h-5 text-orange-600 flex-shrink-0 mt-1"></i>
+                            <div>
+                                <div class="font-semibold text-gray-900">Deployment</div>
+                                <div class="text-sm text-gray-600">Docker, Nginx, PM2, On-premise</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Key Features</h3>
+                    <div class="space-y-2 text-sm text-gray-700">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Responsive design (desktop, tablet, mobile)
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Complete audit trail & change history
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Excel export for all reports
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Real-time data updates
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Secure JWT authentication
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Automated backups
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            SSL/TLS encryption
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                            Type-safe codebase (TypeScript)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold text-gray-900 mb-4">Implementation Timeline</h3>
+                <div class="space-y-4">
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 font-bold text-blue-600">1</div>
+                        <div class="flex-1 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="font-semibold text-gray-900 mb-1">Week 1-2: Requirements & Planning</div>
+                            <div class="text-sm text-gray-600">Requirements gathering, system configuration, workflow design, data migration planning</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 font-bold text-blue-600">2</div>
+                        <div class="flex-1 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="font-semibold text-gray-900 mb-1">Week 3-6: Development</div>
+                            <div class="text-sm text-gray-600">System development, database setup, feature implementation, data migration</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 font-bold text-blue-600">3</div>
+                        <div class="flex-1 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="font-semibold text-gray-900 mb-1">Week 7: UAT & Training</div>
+                            <div class="text-sm text-gray-600">User acceptance testing, comprehensive training (5 days), documentation handover</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 font-bold text-green-600">✓</div>
+                        <div class="flex-1 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div class="font-semibold text-gray-900 mb-1">Week 8: Go-Live & Support</div>
+                            <div class="text-sm text-gray-600">System launch, production deployment, stabilization, 90 days support begins</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-10 bg-blue-50 rounded-xl p-6 border border-blue-200">
+                <div class="flex items-start gap-4">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-blue-600 flex-shrink-0"></i>
+                    <div>
+                        <h4 class="font-bold text-gray-900 mb-2 text-lg">Our Commitment</h4>
+                        <p class="text-sm text-gray-700 mb-3">
+                            We guarantee a production-ready system with complete functionality as specified.
+                            All bugs discovered during the 90-day support period will be fixed at no additional cost.
+                        </p>
+                        <div class="grid md:grid-cols-3 gap-3 text-sm text-gray-700">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check-circle" class="w-4 h-4 text-green-500"></i>
+                                Quality assurance
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check-circle" class="w-4 h-4 text-green-500"></i>
+                                On-time delivery
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="check-circle" class="w-4 h-4 text-green-500"></i>
+                                Post-launch support
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms & Conditions -->
+    <div class="min-h-screen bg-gray-50 p-16">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-4xl font-bold text-gray-900 mb-8 flex items-center gap-3">
+                <i data-lucide="file-text" class="w-10 h-10 text-blue-600"></i>
+                Terms & Conditions
+            </h2>
+
+            <div class="bg-white rounded-xl p-8 border border-gray-200 shadow-lg space-y-6">
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">1. Scope of Work</h3>
+                    <p class="text-sm text-gray-600">
+                        This proposal covers development and delivery of the ERP system as described in the modules section.
+                        Any additional features or modifications beyond the agreed scope will be quoted separately.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">2. Timeline</h3>
+                    <p class="text-sm text-gray-600">
+                        Timelines are estimates based on standard implementation. Actual delivery may vary based on client
+                        responsiveness, complexity of data migration, and scope changes.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">3. Support Period</h3>
+                    <p class="text-sm text-gray-600">
+                        90 days post-launch support covers bug fixes, system issues, and minor adjustments. New feature requests
+                        or major changes will be quoted separately.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">4. Infrastructure Requirements</h3>
+                    <p class="text-sm text-gray-600">
+                        Client must provide: Server with minimum 4GB RAM, 50GB storage, Ubuntu/Windows Server OS, and reliable internet connection.
+                        We can provide server procurement assistance if needed.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">5. Data Migration</h3>
+                    <p class="text-sm text-gray-600">
+                        We will migrate data from Excel/existing systems as agreed during planning phase.
+                        Client is responsible for data accuracy and providing data in agreed format.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">6. Training</h3>
+                    <p class="text-sm text-gray-600">
+                        5 days comprehensive training included for up to 10 users. Additional training sessions can be arranged at PKR 8K/day.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">7. Intellectual Property</h3>
+                    <p class="text-sm text-gray-600">
+                        Client receives perpetual license to use the system. Source code ownership requires separate buyout agreement (PKR 150K).
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">8. Warranty</h3>
+                    <p class="text-sm text-gray-600">
+                        We warrant that the system will function as specified during the 90-day support period. All discovered bugs will be fixed promptly.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-gray-900 mb-2">9. Acceptance</h3>
+                    <p class="text-sm text-gray-600">
+                        This proposal is valid for 30 days from the date of issue. Acceptance requires signed agreement and down payment.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-10 text-center">
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl p-8 shadow-xl">
+                    <h3 class="text-2xl font-bold mb-3">Ready to Transform Your Business?</h3>
+                    <p class="text-white/90 mb-6">Contact us to discuss your requirements and get started</p>
+                    <div class="flex justify-center gap-6 text-sm">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="mail" class="w-5 h-5"></i>
+                            info@hishamtraders.com
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="phone" class="w-5 h-5"></i>
+                            +92-XXX-XXXXXXX
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
