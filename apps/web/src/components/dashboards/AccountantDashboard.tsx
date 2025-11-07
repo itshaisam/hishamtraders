@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { DollarSign, TrendingDown, TrendingUp, CreditCard, PieChart, BarChart3 } from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
+import { Card, Spinner } from '../ui';
 
 export default function AccountantDashboard() {
   const { data: stats, isLoading } = useQuery({
@@ -12,11 +13,7 @@ export default function AccountantDashboard() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    );
+    return <Spinner size={48} className="h-64" />;
   }
 
   return (
@@ -74,7 +71,7 @@ export default function AccountantDashboard() {
 
       {/* Financial Summary & Charts */}
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <Card className="rounded-xl">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <PieChart className="w-5 h-5 text-blue-600" />
             Revenue vs Expenses
@@ -102,9 +99,9 @@ export default function AccountantDashboard() {
               <div className="text-green-600 font-semibold">0% margin</div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <Card className="rounded-xl">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-purple-600" />
             Receivables Aging
@@ -159,12 +156,12 @@ export default function AccountantDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Receivables & Payables Summary */}
       <div className="grid lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <Card className="rounded-xl">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Receivables</h3>
           <div className="text-center py-8">
             <div className="text-4xl font-bold text-green-600">
@@ -172,9 +169,9 @@ export default function AccountantDashboard() {
             </div>
             <div className="text-sm text-gray-500 mt-2">Total outstanding from clients</div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <Card className="rounded-xl">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Payables</h3>
           <div className="text-center py-8">
             <div className="text-4xl font-bold text-red-600">
@@ -182,7 +179,7 @@ export default function AccountantDashboard() {
             </div>
             <div className="text-sm text-gray-500 mt-2">Total outstanding to suppliers</div>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

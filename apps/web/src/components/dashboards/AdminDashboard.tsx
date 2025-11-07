@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Users, Database, Activity, Shield, TrendingUp, Package } from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
+import { Card, Spinner } from '../ui';
 import WarehouseDashboard from './WarehouseDashboard';
 import SalesDashboard from './SalesDashboard';
 import AccountantDashboard from './AccountantDashboard';
@@ -20,11 +21,7 @@ export default function AdminDashboard() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    );
+    return <Spinner size={48} className="h-64" />;
   }
 
   return (
@@ -155,7 +152,7 @@ export default function AdminDashboard() {
 
           {/* Activity & System Health */}
           <div className="grid lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <Card className="rounded-xl">
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-blue-600" />
                 Recent Activity Log
@@ -183,9 +180,9 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-            </div>
+            </Card>
 
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <Card className="rounded-xl">
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Shield className="w-5 h-5 text-indigo-600" />
                 System Health & Performance
@@ -223,7 +220,7 @@ export default function AdminDashboard() {
                   <div className="text-xs text-gray-500 mt-1">Total registered users</div>
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
         </div>
       )}

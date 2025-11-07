@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, Users, DollarSign, Calendar, TrendingUp, Phone } from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
+import { Card, Spinner } from '../ui';
 
 export default function RecoveryDashboard() {
   const { data: stats, isLoading } = useQuery({
@@ -12,11 +13,7 @@ export default function RecoveryDashboard() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    );
+    return <Spinner size={48} className="h-64" />;
   }
 
   return (
@@ -72,7 +69,7 @@ export default function RecoveryDashboard() {
 
       {/* Quick Actions & Weekly Target */}
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <Card className="rounded-xl">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-blue-600" />
             Quick Actions
@@ -99,9 +96,9 @@ export default function RecoveryDashboard() {
               <div className="text-xs text-gray-600">Reminders</div>
             </button>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <Card className="rounded-xl">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Weekly Target</h3>
           <div className="space-y-4">
             <div>
@@ -133,12 +130,12 @@ export default function RecoveryDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Overdue Clients List */}
       {stats?.overdueClientsList && stats.overdueClientsList.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm">
+        <Card className="rounded-xl" padding="none">
           <div className="p-6 border-b">
             <h3 className="text-lg font-bold text-gray-900">Overdue Clients</h3>
           </div>
@@ -176,7 +173,7 @@ export default function RecoveryDashboard() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

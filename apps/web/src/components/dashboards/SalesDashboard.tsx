@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, Users, FileText, Plus, Target, DollarSign } from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
+import { Card, Spinner } from '../ui';
 
 export default function SalesDashboard() {
   const { data: stats, isLoading } = useQuery({
@@ -12,11 +13,7 @@ export default function SalesDashboard() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    );
+    return <Spinner size={48} className="h-64" />;
   }
 
   return (
@@ -92,7 +89,7 @@ export default function SalesDashboard() {
 
       {/* Quick Actions & Recent Invoices */}
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <Card className="rounded-xl">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Plus className="w-5 h-5 text-blue-600" />
             Quick Actions
@@ -119,9 +116,9 @@ export default function SalesDashboard() {
               <div className="text-xs text-gray-600">Download data</div>
             </button>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <Card className="rounded-xl">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-green-600" />
             Sales Performance
@@ -148,12 +145,12 @@ export default function SalesDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Recent Invoices */}
       {stats?.recentInvoices && stats.recentInvoices.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm">
+        <Card className="rounded-xl" padding="none">
           <div className="p-6 border-b">
             <h3 className="text-lg font-bold text-gray-900">Recent Invoices</h3>
           </div>
@@ -191,7 +188,7 @@ export default function SalesDashboard() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

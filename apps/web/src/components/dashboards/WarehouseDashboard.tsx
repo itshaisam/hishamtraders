@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Package, AlertTriangle, XCircle, Plus, Warehouse, TrendingUp } from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
+import { Card, Spinner } from '../ui';
 
 export default function WarehouseDashboard() {
   const { data: stats, isLoading } = useQuery({
@@ -12,11 +13,7 @@ export default function WarehouseDashboard() {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    );
+    return <Spinner size={48} className="h-64" />;
   }
 
   return (
@@ -68,7 +65,7 @@ export default function WarehouseDashboard() {
 
       {/* Quick Actions & Stock Status */}
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <Card className="rounded-xl">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-blue-600" />
             Quick Actions
@@ -95,9 +92,9 @@ export default function WarehouseDashboard() {
               <div className="text-xs text-gray-600">Stock warnings</div>
             </button>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <Card className="rounded-xl">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Warehouse className="w-5 h-5 text-purple-600" />
             Stock Status by Warehouse
@@ -124,12 +121,12 @@ export default function WarehouseDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Low Stock Products Table */}
       {stats?.lowStockProducts && stats.lowStockProducts.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm">
+        <Card className="rounded-xl" padding="none">
           <div className="p-6 border-b">
             <h3 className="text-lg font-bold text-gray-900">Low Stock Products</h3>
           </div>
@@ -163,7 +160,7 @@ export default function WarehouseDashboard() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );
