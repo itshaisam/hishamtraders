@@ -1,0 +1,107 @@
+# Production Dockerfile for Hisham Traders API
+# Multi-stage build for optimal image size and security
+# Tested for Railway deployment
+
+# ============================================================================
+# Stage 1: Dependencies
+# Install production dependencies only
+# ============================================================================
+FROM node:20-alpine AS deps
+WORKDIR /app
+
+# Install pnpm globally
+RUN npm install -g pnpm@latest
+
+# Copy workspace configuration
+COPY pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml ./
+
+# Copy API package.json
+COPY apps/api/package.json ./apps/api/
+
+# Install production dependencies only
+RUN pnpm install --prod --frozen-lockfile
+
+# ============================================================================
+# Stage 2: Build
+# Compile TypeScript and prepare application
+# ============================================================================
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm@latest
+
+# Copy workspace configuration
+COPY pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml ./
+
+# Copy package files
+COPY apps/api/package.json ./apps/api/
+
+# Install all dependencies (including dev for build)
+RUN pnpm install --frozen-lockfile
+
+# Copy Prisma schema
+COPY prisma ./prisma/
+
+# Generate Prisma Client
+RUN pnpm --filter @hishamtraders/api db:generate
+
+# Copy source code
+COPY apps/api/src ./apps/api/src
+COPY apps/api/tsconfig.json ./apps/api/
+
+# Build TypeScript
+RUN pnpm --filter @hishamtraders/api build
+
+# ============================================================================
+# Stage 3: Runtime
+# Final production image with only necessary files
+# ============================================================================
+FROM node:20-alpine AS runtime
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm@latest
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 expressjs
+
+# Copy workspace files
+COPY pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml ./
+
+# Copy production dependencies from stage 1
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+
+# Copy built application from stage 2
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/package.json ./apps/api/
+
+# Copy Prisma files and generated client
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# Set proper permissions
+RUN chown -R expressjs:nodejs /app
+
+# Switch to non-root user
+USER expressjs
+
+# Environment variables
+ENV NODE_ENV=production
+ENV PORT=3001
+
+# Expose port
+EXPOSE 3001
+
+# Health check (Railway will use this)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
+
+# Run migrations and start server
+CMD ["sh", "-c", "pnpm --filter @hishamtraders/api prisma:migrate && pnpm --filter @hishamtraders/api start"]

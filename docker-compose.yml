@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # MySQL Database Service
+  mysql:
+    image: mysql:8.0
+    container_name: hisham_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-hisham_erp}
+      MYSQL_USER: ${MYSQL_USER:-hisham_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-hisham_password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql-init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hisham-network
+
+  # Node.js API Service
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: hisham_api
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: mysql://hisham_user:hisham_password@mysql:3306/hisham_erp
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      JWT_EXPIRES_IN: 24h
+      LOG_LEVEL: debug
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./apps/api/src:/app/apps/api/src
+      - ./prisma:/app/prisma
+    command: sh -c "pnpm run prisma:migrate && pnpm -F @hishamtraders/api dev"
+    networks:
+      - hisham-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # React Frontend Service
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: hisham_web
+    ports:
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3001/api/v1
+    depends_on:
+      - api
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/public:/app/apps/web/public
+    networks:
+      - hisham-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5173/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  hisham-network:
+    driver: bridge

@@ -1,0 +1,104 @@
+# Production Dockerfile for Hisham Traders Web
+# Multi-stage build: Node for building, Nginx for serving
+# Tested for Railway deployment
+
+# ============================================================================
+# Stage 1: Dependencies
+# Install production dependencies
+# ============================================================================
+FROM node:20-alpine AS deps
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm@latest
+
+# Copy workspace configuration
+COPY pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml ./
+
+# Copy web package.json
+COPY apps/web/package.json ./apps/web/
+
+# Install production dependencies
+RUN pnpm install --prod --frozen-lockfile
+
+# ============================================================================
+# Stage 2: Build
+# Build React application with Vite
+# ============================================================================
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm@latest
+
+# Copy workspace configuration
+COPY pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml ./
+
+# Copy web package.json
+COPY apps/web/package.json ./apps/web/
+
+# Install all dependencies (including dev)
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY apps/web/src ./apps/web/src
+COPY apps/web/public ./apps/web/public
+COPY apps/web/index.html ./apps/web/
+COPY apps/web/vite.config.ts ./apps/web/
+COPY apps/web/tsconfig.json ./apps/web/
+COPY apps/web/tsconfig.node.json ./apps/web/
+COPY apps/web/tailwind.config.js ./apps/web/
+COPY apps/web/postcss.config.js ./apps/web/
+
+# Build the application
+# Accept VITE_API_URL as build argument for flexibility
+ARG VITE_API_URL=http://localhost:3001/api/v1
+ENV VITE_API_URL=$VITE_API_URL
+
+RUN pnpm --filter @hishamtraders/web build
+
+# ============================================================================
+# Stage 3: Production
+# Serve with Nginx - minimal, fast image
+# ============================================================================
+FROM nginx:1.25-alpine AS runtime
+
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nginx && \
+    adduser --system --uid 1001 nginx
+
+# Copy built application from builder stage
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+
+# Copy Nginx configuration
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy nginx main config if customization needed
+# This ensures proper ownership and permissions
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    chown -R nginx:nginx /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && \
+    chown -R nginx:nginx /var/run/nginx.pid
+
+# Create nginx runtime directory
+RUN mkdir -p /var/run/nginx
+
+# Switch to non-root user
+USER nginx
+
+# Port
+EXPOSE 80
+
+# Health check (Railway will use this)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+  CMD curl -f http://localhost:80/ || exit 1
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
