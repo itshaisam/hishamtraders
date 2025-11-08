@@ -5,6 +5,9 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAuthStore } from './stores/auth.store';
+import { SuppliersPage } from './features/suppliers/pages/SuppliersPage';
+import { ProductsPage } from './features/products/pages/ProductsPage';
+import { PurchaseOrdersPage } from './features/purchase-orders/pages/PurchaseOrdersPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -42,6 +45,36 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Suppliers route */}
+          <Route
+            path="/suppliers"
+            element={
+              <ProtectedRoute>
+                <SuppliersPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Products route */}
+          <Route
+            path="/products"
+            element={
+              <ProtectedRoute>
+                <ProductsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Purchase Orders route */}
+          <Route
+            path="/purchase-orders"
+            element={
+              <ProtectedRoute>
+                <PurchaseOrdersPage />
               </ProtectedRoute>
             }
           />
