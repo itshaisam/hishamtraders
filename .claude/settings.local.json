@@ -11,7 +11,8 @@
       "Bash(python generate_proposal.py:*)",
       "Bash(pnpm run lint)",
       "Bash(pnpm run build:*)",
-      "Bash(pnpm -F @hishamtraders/web build:*)"
+      "Bash(pnpm -F @hishamtraders/web build:*)",
+      "Bash(pnpm -F @hishamtraders/api build:*)"
     ],
     "deny": [],
     "ask": []
