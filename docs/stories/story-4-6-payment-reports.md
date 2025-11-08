@@ -36,8 +36,33 @@
    - [ ] Payment list and receivables summary
    - [ ] Export to Excel
 
-4. **Authorization:**
-   - [ ] Accountant, Recovery Agent, Admin
+4. **Authorization & Role-Based Access:**
+   - [ ] Accountant: Full payment data access
+   - [ ] Recovery Agent: Own assigned clients' payments only
+   - [ ] Admin: Full access
+   - [ ] Sales Officer, Other roles: 403 Forbidden
+
+5. **Performance & Caching:**
+   - [ ] Page size default: 50 items
+   - [ ] Max items returned: 5,000 per report
+   - [ ] Cache TTL: 5 minutes (payment data changes frequently)
+   - [ ] API timeout: 15 seconds maximum
+   - [ ] Pagination validation: max pageSize = 100
+
+6. **Real-Time Data Updates:**
+   - [ ] Cache TTL: 5 minutes
+   - [ ] Manual refresh button available
+   - [ ] Show "Report generated at" timestamp on page
+   - [ ] Cache invalidation: On payment recording, invoice status change
+   - [ ] Network error: Show cached data with warning
+
+7. **Error Handling:**
+   - [ ] Validate date range (from <= to, max 1 year)
+   - [ ] Handle missing allocation data gracefully (show 'Unallocated')
+   - [ ] Return HTTP 400 with error details if filters invalid
+   - [ ] Max 20,000 rows for Excel export
+   - [ ] Display partial data with error toast if calculation fails
+   - [ ] Catch and log overpayment calculation errors (negative balance scenarios)
 
 ---
 

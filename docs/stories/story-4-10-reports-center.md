@@ -34,8 +34,28 @@
    - [ ] Responsive (mobile, tablet, desktop)
    - [ ] Dashboard includes "View All Reports" link
 
-3. **Navigation:**
+3. **Navigation & Authorization:**
    - [ ] Clicking report card navigates to specific report page with filters
+   - [ ] Reports filtered by user role: only show accessible reports (no 403 errors on center page)
+   - [ ] Navigation validated: prevent direct access to unauthorized report pages (403 Forbidden)
+
+4. **Performance & Caching:**
+   - [ ] No database queries (static report definitions)
+   - [ ] Page load time: <500ms
+   - [ ] Report metadata cached client-side indefinitely
+   - [ ] No API calls required for reports center itself
+
+5. **Frontend Design:**
+   - [ ] Category sections organized logically
+   - [ ] Each report card shows: icon, name, description
+   - [ ] Hover effects and visual feedback on card selection
+   - [ ] Responsive grid layout: 1 column (mobile), 2 columns (tablet), 3 columns (desktop)
+   - [ ] "View All Reports" link on related dashboards
+
+6. **Error Handling:**
+   - [ ] Gracefully handle missing navigation targets
+   - [ ] Log unauthorized navigation attempts
+   - [ ] Display user-friendly message if navigating to inaccessible report
 
 ---
 

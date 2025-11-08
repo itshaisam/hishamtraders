@@ -36,8 +36,32 @@
    - [ ] Pending receipts widget
    - [ ] Quick actions: Record Receipt, Adjust Stock
 
-3. **Authorization:**
-   - [ ] Warehouse Manager, Admin can access
+3. **Authorization & Role-Based Access:**
+   - [ ] Warehouse Manager: Own warehouse only
+   - [ ] Accountant: All warehouses (read-only)
+   - [ ] Admin: Full access
+   - [ ] Other roles: 403 Forbidden
+
+4. **Performance & Caching:**
+   - [ ] Recent movements: Return 10 items only (paginate if needed)
+   - [ ] Low stock alerts: No pagination (assume <500 products)
+   - [ ] Cache TTL: 2 minutes (warehouse changes frequently)
+   - [ ] API timeout: 8 seconds maximum
+   - [ ] Max records returned: 100 total per dashboard call
+
+5. **Real-Time Data Updates:**
+   - [ ] Auto-refresh every 10 seconds
+   - [ ] Push notifications for critical alerts (low stock, arrivals)
+   - [ ] WebSocket connection for live stock movements
+   - [ ] Fallback to polling (5-second intervals) if WebSocket unavailable
+   - [ ] Show "Last updated at" timestamp
+
+6. **Error Handling:**
+   - [ ] Handle missing warehouse associations (default 'Unknown')
+   - [ ] Log PO status mismatches
+   - [ ] Return 206 Partial Content if some data missing
+   - [ ] Display warning badges for problematic records
+   - [ ] Catch calculation errors: Show affected metric as 'N/A'
 
 ---
 

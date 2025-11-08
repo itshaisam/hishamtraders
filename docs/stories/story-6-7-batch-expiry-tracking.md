@@ -89,10 +89,17 @@ async function deductStockFIFO(
         { expiryDate: { gt: new Date() } }
       ]
     },
-    // Order by expiry date first (FEFO - First Expiry First Out), then by batch (FIFO)
+    // Order by expiry date (FEFO - First Expiry First Out)
+    // NULLs go LAST (non-expiring products picked last)
+    // Then by creation date (FIFO within same expiry)
     orderBy: [
-      { expiryDate: 'asc' },
-      { batchNo: 'asc' }
+      {
+        expiryDate: {
+          sort: 'asc',
+          nulls: 'last' // Non-expiring products picked LAST
+        }
+      },
+      { createdAt: 'asc' } // Within same expiry, FIFO
     ]
   });
 

@@ -29,7 +29,21 @@
 4. Retained Earnings = Previous Retained Earnings + Net Profit
 5. Net Profit = Revenue - Expenses
 6. Report exportable to Excel
-7. Only Admin and Accountant can access
+7. **Authorization & Role-Based Access:**
+   - [ ] Admin and Accountant can access
+   - [ ] Other roles: 403 Forbidden
+
+8. **Performance & Caching:**
+   - [ ] Cache balance sheet: 10 minutes per date
+   - [ ] Cache invalidation: On journal entry posting
+   - [ ] API timeout: 20 seconds maximum
+   - [ ] Pre-calculate retained earnings to avoid complex queries
+
+9. **Error Handling:**
+    - [ ] Handle missing revenue/expense accounts gracefully (zero balance)
+    - [ ] Balance equation validation: Alert if Assets ≠ Liabilities + Equity
+    - [ ] Calculation errors: Display with specific error details
+    - [ ] Return partial data with error flag if calculation fails
 
 ---
 

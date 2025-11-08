@@ -28,6 +28,22 @@
 7. Frontend allows clicking entry # to view full journal entry
 8. Frontend allows clicking reference # to view source transaction
 
+9. **Authorization & Role-Based Access:**
+   - [ ] Accountant and Admin can access
+   - [ ] Other roles: 403 Forbidden
+
+10. **Performance & Caching:**
+    - [ ] Cache GL report: 5 minutes per account/date range
+    - [ ] Cache invalidation: On journal entry posting
+    - [ ] API timeout: 15 seconds maximum
+    - [ ] Paginate results if > 1000 items (cursor-based)
+
+11. **Error Handling:**
+    - [ ] Handle missing journal entries gracefully
+    - [ ] Running balance calculation errors: Log and display alert
+    - [ ] Missing reference transactions: Show as 'N/A'
+    - [ ] Return partial GL with error flag if calculation fails
+
 ---
 
 ## Dev Notes

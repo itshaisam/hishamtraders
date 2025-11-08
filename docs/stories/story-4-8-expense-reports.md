@@ -39,8 +39,34 @@
    - [ ] Optional monthly trend chart
    - [ ] Export to Excel
 
-5. **Authorization:**
-   - [ ] Accountant, Admin
+5. **Authorization & Role-Based Access:**
+   - [ ] Accountant: Full expense data access
+   - [ ] Admin: Full access
+   - [ ] Sales Officer, Warehouse Manager, Recovery Agent: 403 Forbidden
+
+6. **Performance & Caching:**
+   - [ ] Page size default: 50 items
+   - [ ] Max items returned: 5,000 per report
+   - [ ] Cache TTL: 10 minutes (expense data changes regularly)
+   - [ ] API timeout: 15 seconds maximum
+   - [ ] Pre-calculate category aggregations for performance
+   - [ ] Pagination validation: max pageSize = 100
+
+7. **Real-Time Data Updates:**
+   - [ ] Cache TTL: 10 minutes
+   - [ ] Manual refresh button available
+   - [ ] Show "Report generated at" timestamp on page
+   - [ ] Cache invalidation: On expense creation, modification, or deletion
+   - [ ] Network error: Show cached data with warning
+
+8. **Error Handling:**
+   - [ ] Validate date range (from <= to, max 1 year)
+   - [ ] Handle missing category/user data (show as 'Unknown')
+   - [ ] Return HTTP 400 with error details if filters invalid
+   - [ ] Max 10,000 rows for Excel export
+   - [ ] Display partial data with error toast if calculation fails
+   - [ ] Catch and log percentage calculation errors (division by zero)
+   - [ ] Handle missing expense records gracefully
 
 ---
 

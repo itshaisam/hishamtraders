@@ -51,6 +51,24 @@
    - [ ] Auto-created entries have status = POSTED (immutable)
    - [ ] Configuration mapping: expense categories → account codes
 
+8. **Authorization & Role-Based Access:**
+   - [ ] System-generated (automatic, no user authorization required)
+   - [ ] Posted entries are immutable and locked
+   - [ ] Audit trail: Records system as creator
+
+9. **Performance & Caching:**
+   - [ ] Account code lookups cached (account codes rarely change)
+   - [ ] Transaction to journal entry mapping: < 500ms per transaction
+   - [ ] Bulk operations (batch receipts): Process in transaction
+   - [ ] API timeout: 15 seconds maximum
+
+10. **Error Handling:**
+    - [ ] If account mapping missing: Log error, create entry with fallback account
+    - [ ] If account doesn't exist: Raise error and fail transaction creation
+    - [ ] Balance calculation errors: Catch and log with transaction details
+    - [ ] Retry logic for failed auto-entries (3 attempts with exponential backoff)
+    - [ ] Notify admin if auto-entry creation fails for critical transaction
+
 ---
 
 ## Dev Notes

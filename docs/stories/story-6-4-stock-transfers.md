@@ -26,9 +26,11 @@
 
 2. **Status Workflow:**
    - [ ] PENDING → APPROVED → IN_TRANSIT → RECEIVED
-   - [ ] When APPROVED: Gate pass auto-created for source warehouse
-   - [ ] When IN_TRANSIT: Inventory decremented from source
-   - [ ] When RECEIVED: Inventory incremented at destination
+   - [ ] When APPROVED: Gate pass auto-created for source warehouse (status depends on warehouse gate pass mode)
+     - If AUTO mode: Gate pass APPROVED, inventory deducted immediately
+     - If MANUAL mode: Gate pass PENDING, awaits warehouse manager approval
+   - [ ] When IN_TRANSIT: Inventory decremented from source (if not already deducted in AUTO mode)
+   - [ ] When RECEIVED: Inventory incremented at destination with SAME unit cost as source
 
 3. **Backend API:**
    - [ ] POST /api/stock-transfers - creates transfer
@@ -37,7 +39,9 @@
    - [ ] GET /api/stock-transfers - list with filters
 
 4. **Batch Tracking:**
-   - [ ] Batch/lot numbers maintained across transfer
+   - [ ] Each StockTransferItem = ONE batch from ONE bin location (not multiple batches per line)
+   - [ ] Batch/lot numbers and bin locations maintained across transfer
+   - [ ] If warehouse has same product in multiple bins, create separate line items per bin
 
 5. **Frontend:**
    - [ ] Stock Transfer page
@@ -199,6 +203,15 @@ async function receiveStockTransfer(
           data: { quantity: { increment: item.quantity } }
         });
       } else {
+        // Get source inventory to copy unit cost
+        const sourceInventory = await tx.inventory.findFirst({
+          where: {
+            productId: item.productId,
+            warehouseId: transfer.fromWarehouseId,
+            ...(item.batchNo && { batchNo: item.batchNo })
+          }
+        });
+
         await tx.inventory.create({
           data: {
             productId: item.productId,
@@ -206,7 +219,7 @@ async function receiveStockTransfer(
             quantity: item.quantity,
             batchNo: item.batchNo,
             binLocation: item.toBinLocation,
-            unitCost: 0 // Copy from source inventory
+            unitCost: sourceInventory?.unitCost || 0 // Copy from source inventory
           }
         });
       }

@@ -24,10 +24,10 @@
    - [ ] Cannot skip statuses
 
 2. **Status Transitions:**
-   - [ ] PUT /api/gate-passes/:id/approve (PENDING → APPROVED)
-   - [ ] PUT /api/gate-passes/:id/dispatch (APPROVED → IN_TRANSIT, inventory deducted)
+   - [ ] PUT /api/gate-passes/:id/approve (PENDING → APPROVED, no inventory change)
+   - [ ] PUT /api/gate-passes/:id/dispatch (APPROVED → IN_TRANSIT, **inventory deducted only in MANUAL mode**)
    - [ ] PUT /api/gate-passes/:id/complete (IN_TRANSIT → COMPLETED)
-   - [ ] PUT /api/gate-passes/:id/cancel (cancels if PENDING/APPROVED, restores inventory)
+   - [ ] PUT /api/gate-passes/:id/cancel (cancels if PENDING/APPROVED/IN_TRANSIT, restores inventory if deducted)
 
 3. **Inventory Deduction:**
    - [ ] Deducted when status → IN_TRANSIT (if not already deducted)
@@ -167,12 +167,25 @@ async function cancelGatePass(
     include: { items: true, warehouse: true }
   });
 
-  if (!['PENDING', 'APPROVED'].includes(gatePass!.status)) {
-    throw new BadRequestError('Cannot cancel gate pass in current status');
+  // Can cancel PENDING, APPROVED, or IN_TRANSIT statuses
+  const cancellableStatuses = ['PENDING', 'APPROVED', 'IN_TRANSIT'];
+  if (!cancellableStatuses.includes(gatePass!.status)) {
+    throw new BadRequestError(
+      `Cannot cancel gate pass in ${gatePass!.status} status. ` +
+      'Only PENDING, APPROVED, or IN_TRANSIT can be cancelled.'
+    );
   }
 
-  // Restore inventory if it was already deducted (AUTO mode, APPROVED status)
-  if (gatePass!.warehouse.gatePassMode === 'AUTO' && gatePass!.status === 'APPROVED') {
+  // Restore inventory if it was already deducted
+  if (gatePass!.status === 'PENDING') {
+    // No inventory deducted yet (MANUAL mode), nothing to restore
+  } else if (gatePass!.status === 'APPROVED') {
+    // AUTO mode: inventory was deducted when APPROVED, restore it
+    if (gatePass!.warehouse.gatePassMode === 'AUTO') {
+      await restoreInventoryForGatePass(gatePassId);
+    }
+  } else if (gatePass!.status === 'IN_TRANSIT') {
+    // Goods in transit, must restore inventory regardless of mode
     await restoreInventoryForGatePass(gatePassId);
   }
 
@@ -180,7 +193,7 @@ async function cancelGatePass(
     where: { id: gatePassId },
     data: {
       status: 'CANCELLED',
-      notes: `${gatePass!.notes || ''}\nCancelled: ${reason}`
+      notes: `${gatePass!.notes || ''}\n[CANCELLED] ${reason}`
     }
   });
 
@@ -189,7 +202,10 @@ async function cancelGatePass(
     userId,
     resource: 'GatePass',
     resourceId: gatePassId,
-    details: { reason }
+    details: {
+      previousStatus: gatePass!.status,
+      reason
+    }
   });
 
   return updated;

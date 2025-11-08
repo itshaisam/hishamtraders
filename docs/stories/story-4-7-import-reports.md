@@ -34,8 +34,33 @@
    - [ ] PO list with cost breakdown
    - [ ] Export to Excel
 
-4. **Authorization:**
-   - [ ] Accountant, Admin
+4. **Authorization & Role-Based Access:**
+   - [ ] Accountant: Full import cost data access
+   - [ ] Admin: Full access
+   - [ ] Warehouse Manager, Sales Officer, Recovery Agent: 403 Forbidden
+
+5. **Performance & Caching:**
+   - [ ] Page size default: 50 items
+   - [ ] Max items returned: 5,000 per report
+   - [ ] Cache TTL: 20 minutes (import data changes infrequently)
+   - [ ] API timeout: 20 seconds maximum
+   - [ ] Cache landed cost calculations to prevent recalculation
+   - [ ] Pagination validation: max pageSize = 100
+
+6. **Real-Time Data Updates:**
+   - [ ] Cache TTL: 20 minutes
+   - [ ] Manual refresh button available
+   - [ ] Show "Report generated at" timestamp on page
+   - [ ] Cache invalidation: On PO status change, cost addition, goods receipt
+   - [ ] Network error: Show cached data with warning
+
+7. **Error Handling:**
+   - [ ] Validate date range (from <= to, max 1 year)
+   - [ ] Handle missing supplier/cost data (show as 'N/A')
+   - [ ] Return HTTP 400 with error details if filters invalid
+   - [ ] Max 10,000 rows for Excel export
+   - [ ] Display partial data with error toast if cost calculation fails
+   - [ ] Catch and log landed cost calculation errors (division by zero, missing costs)
 
 ---
 

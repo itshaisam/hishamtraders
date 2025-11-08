@@ -21,9 +21,11 @@
 
 1. **Collection Efficiency Metrics:**
    - [ ] Collection Rate = (Collections / Receivables) × 100
-   - [ ] Days Sales Outstanding (DSO) = (Average Receivables / Revenue per Day)
+   - [ ] Days Sales Outstanding (DSO) = (Average A/R / Daily Revenue) × Days in Period
+     - **Uses 30-day rolling window** (most recent 30 days by default)
+     - Daily Revenue = Total invoiced amount / days in period
    - [ ] Collection Effectiveness Index (CEI) = (Beginning Receivables + Revenue - Ending Receivables) / (Beginning Receivables + Revenue - Ending Current Receivables) × 100
-   - [ ] Average Collection Period
+   - [ ] Average Collection Period = Avg days from invoice date to payment date
    - [ ] Overdue Percentage = (Overdue / Total Receivables) × 100
 
 2. **Backend API:**
@@ -165,8 +167,10 @@ async function getCollectionEfficiencyMetrics(
     : 0;
 
   // Calculate DSO (Days Sales Outstanding)
-  // DSO = (Average Receivables / Revenue per Day)
-  const daysInPeriod = differenceInDays(dateTo, dateFrom);
+  // DSO = (Average Receivables / Revenue per Day) × Days in Period
+  // Default: Use 30-day rolling window (most recent 30 days)
+  // daysInPeriod determines the denominator and multiplier
+  const daysInPeriod = Math.max(differenceInDays(dateTo, dateFrom), 1); // Avoid division by zero
 
   // Get beginning receivables
   const beginningClients = await prisma.client.findMany({

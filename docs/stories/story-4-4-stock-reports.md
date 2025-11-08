@@ -36,8 +36,35 @@
    - [ ] Export to Excel button
    - [ ] Performance: <5 seconds for 1000 products
 
-4. **Authorization:**
-   - [ ] All roles can access (read-only)
+4. **Authorization & Role-Based Access:**
+   - [ ] All roles: Read access to stock reports
+   - [ ] Accountant/Admin: Can export to Excel
+   - [ ] Warehouse Manager: Can access own warehouse only (filter enforced server-side)
+   - [ ] Recovery Agent: 403 Forbidden (no access)
+
+5. **Performance & Caching:**
+   - [ ] Page size default: 50 items
+   - [ ] Max items returned: 5,000 per report (enforce client-side limit)
+   - [ ] Implement cursor-based pagination for large datasets
+   - [ ] Cache TTL: 10 minutes for generated reports
+   - [ ] API timeout: 15 seconds maximum for large datasets
+   - [ ] Pagination validation: max pageSize = 100
+
+6. **Real-Time Data Updates:**
+   - [ ] Cache TTL: 10 minutes
+   - [ ] Cache invalidation: On any inventory transaction (receipt, sale, adjustment)
+   - [ ] Show "Report generated at" timestamp on page
+   - [ ] Refresh button to regenerate on-demand
+   - [ ] Show loading spinner during refresh (>2 seconds)
+
+7. **Excel Export Error Handling:**
+   - [ ] Validation: Max 10,000 rows per export
+   - [ ] Timeout: 30 seconds maximum per export
+   - [ ] Memory limit: 500MB max file size
+   - [ ] Retry mechanism: 3 automatic attempts with exponential backoff (1s, 2s, 4s)
+   - [ ] Error logging: Log all export failures with filters used
+   - [ ] User feedback: Display error toast with specific reason (timeout, size, validation)
+   - [ ] Partial export: If timeout after 1000 rows, allow user to export what's available
 
 ---
 

@@ -42,11 +42,33 @@
    - [ ] Recent activity widget (audit log summary)
    - [ ] Quick action buttons (New PO, New Invoice, New Product)
 
-3. **Authorization & Performance:**
-   - [ ] Only Admin role can access full admin dashboard
-   - [ ] Dashboard data refreshes on page load via TanStack Query
+3. **Authorization & Role-Based Access:**
+   - [ ] Only Admin role can access full admin dashboard (return 403 for others)
+   - [ ] Accountant role: View-only access (no refresh actions)
+   - [ ] Other roles: 403 Forbidden with clear error message
    - [ ] Dashboard is responsive (mobile, tablet, desktop)
-   - [ ] Metric cards show trend indicators (optional)
+
+4. **Performance & Caching:**
+   - [ ] Dashboard data refreshes on page load via TanStack Query
+   - [ ] Cache TTL: 5 minutes for all metrics
+   - [ ] Cache invalidation triggers: new invoice, new PO, stock change
+   - [ ] API timeout: 10 seconds maximum
+   - [ ] Max records returned: 100 for activity/audit list
+   - [ ] Pagination for "Recent activity": 10 items default, load more available
+
+5. **Real-Time Data Updates:**
+   - [ ] Dashboard auto-refreshes every 30 seconds
+   - [ ] Manual refresh button available for immediate updates
+   - [ ] Show "Last updated at" timestamp on dashboard
+   - [ ] Network error handling: Show last cached data with warning badge
+   - [ ] WebSocket support for live metric updates (optional for MVP)
+
+6. **Error Handling:**
+   - [ ] If any metric calculation fails, return partial data with error flags
+   - [ ] Display affected metric with "N/A" + error toast
+   - [ ] Log all calculation failures for audit trail
+   - [ ] Return 202 Accepted with warning if partial data
+   - [ ] Show "Last successful update" timestamp for failed metrics
 
 ---
 

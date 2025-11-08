@@ -29,6 +29,23 @@
 8. Frontend allows adding new bank account
 9. Frontend payment form includes bank account dropdown
 
+10. **Authorization & Role-Based Access:**
+    - [ ] Accountant and Admin can manage bank accounts
+    - [ ] All roles can view bank account balances
+    - [ ] Bank account creation/updates logged in audit trail
+
+11. **Performance & Caching:**
+    - [ ] Cache bank accounts list: Indefinitely (static reference data)
+    - [ ] Cache invalidation: Only on account creation/modification
+    - [ ] Balance lookups cached: 5 minutes
+    - [ ] API timeout: 5 seconds maximum
+
+12. **Error Handling:**
+    - [ ] Validate code range (11XX for bank accounts)
+    - [ ] Prevent duplicate account codes
+    - [ ] Handle missing parent account (1100) gracefully
+    - [ ] Display validation errors with specific reason
+
 ---
 
 ## Dev Notes

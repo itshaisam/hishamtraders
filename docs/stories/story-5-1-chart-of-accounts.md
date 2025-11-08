@@ -41,9 +41,23 @@
    - [ ] Add/edit accounts with type validation
    - [ ] Display account balances (current, opening, difference)
 
-5. **Authorization:**
+5. **Authorization & Role-Based Access:**
    - [ ] Only Admin and Accountant can manage Chart of Accounts
    - [ ] Account creation/updates logged in audit trail
+   - [ ] Other roles: 403 Forbidden
+
+6. **Performance & Caching:**
+   - [ ] Cache hierarchy indefinitely (static reference data)
+   - [ ] Cache invalidation: Only on account creation/modification
+   - [ ] API timeout: 5 seconds maximum
+   - [ ] Hierarchy query optimized with indexes on code, type
+
+7. **Error Handling:**
+   - [ ] Validate code uniqueness (return 400 if duplicate)
+   - [ ] Validate code range matches account type
+   - [ ] Prevent deletion if account has transactions
+   - [ ] Prevent deletion if account has child accounts
+   - [ ] Display validation errors with specific reason
 
 ---
 

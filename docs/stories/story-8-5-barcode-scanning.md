@@ -25,7 +25,10 @@
 2. **Backend API:**
    - [ ] PUT /api/products/:id/barcode - updates product barcode
    - [ ] GET /api/products/by-barcode/:barcode - searches product by barcode
-   - [ ] Barcode formats supported: EAN-13, UPC-A, Code 128, QR Code
+   - [ ] Barcode formats supported: EAN-13 (13 digits), UPC-A (12 digits), Code 128 (6+ printable ASCII), QR Code (any string)
+   - [ ] Default format: Code 128
+   - [ ] Validates barcode format before update (must match selected format spec)
+   - [ ] Prevents duplicate barcode assignment across products
 
 3. **Workflows with Barcode Scanning:**
    - [ ] **Stock receiving:** Scan → auto-populate product → enter quantity → repeat → submit
@@ -57,14 +60,24 @@
 ```prisma
 model Product {
   // ... existing fields
-  barcode  String?  @unique
-  qrCode   String?
+  barcode       String?  @unique
+  barcodeFormat String?  @default('CODE128')
+  qrCode        String?
 
   // ... relations
 }
 ```
 
+### Barcode Format Support
+
 ```typescript
+enum BarcodeFormat {
+  EAN13 = 'EAN13',
+  UPC_A = 'UPC_A',
+  CODE128 = 'CODE128',
+  QR_CODE = 'QR_CODE'
+}
+
 async function getProductByBarcode(barcode: string): Promise<Product | null> {
   return await prisma.product.findUnique({
     where: { barcode },
@@ -77,32 +90,85 @@ async function getProductByBarcode(barcode: string): Promise<Product | null> {
 
 async function updateProductBarcode(
   productId: string,
-  barcode: string
+  barcode: string,
+  format: BarcodeFormat = BarcodeFormat.CODE128,
+  userId: string
 ): Promise<Product> {
-  // Validate barcode format
-  if (!isValidBarcode(barcode)) {
-    throw new BadRequestError('Invalid barcode format');
+  // Validate format
+  if (!Object.values(BarcodeFormat).includes(format)) {
+    throw new BadRequestError('Unsupported barcode format');
   }
 
-  return await prisma.product.update({
-    where: { id: productId },
-    data: { barcode }
+  // Validate barcode format-specific rules
+  const validationRules: Record<BarcodeFormat, RegExp> = {
+    [BarcodeFormat.EAN13]: /^\d{13}$/, // 13 digits
+    [BarcodeFormat.UPC_A]: /^\d{12}$/, // 12 digits
+    [BarcodeFormat.CODE128]: /^[!-~]{6,}$/, // 6+ printable ASCII
+    [BarcodeFormat.QR_CODE]: /^.+$/ // Any non-empty string
+  };
+
+  if (!validationRules[format].test(barcode)) {
+    throw new BadRequestError(
+      `Invalid barcode format for ${format}. Expected: ${getFormatSpec(format)}`
+    );
+  }
+
+  // Check uniqueness (prevent duplicate barcode assignment)
+  const existing = await prisma.product.findFirst({
+    where: {
+      barcode,
+      id: { not: productId }
+    }
   });
+
+  if (existing) {
+    throw new BadRequestError(
+      `Barcode already assigned to product: ${existing.name}`
+    );
+  }
+
+  // Update barcode
+  const updated = await prisma.product.update({
+    where: { id: productId },
+    data: {
+      barcode,
+      barcodeFormat: format
+    }
+  });
+
+  // Log barcode change in audit trail
+  await auditLogger.log({
+    action: 'UPDATE_BARCODE',
+    userId,
+    resource: 'Product',
+    resourceId: productId,
+    details: { barcode, format }
+  });
+
+  return updated;
 }
 
-function isValidBarcode(barcode: string): boolean {
-  // EAN-13: 13 digits
-  // UPC-A: 12 digits
-  // Code 128: alphanumeric
-  const ean13Regex = /^\d{13}$/;
-  const upcaRegex = /^\d{12}$/;
-  const code128Regex = /^[\x20-\x7E]+$/;
+function getFormatSpec(format: BarcodeFormat): string {
+  const specs: Record<BarcodeFormat, string> = {
+    [BarcodeFormat.EAN13]: '13 digits (e.g., 5901234123457)',
+    [BarcodeFormat.UPC_A]: '12 digits (e.g., 036000291452)',
+    [BarcodeFormat.CODE128]: '6+ printable ASCII characters (e.g., ABC123DEF456)',
+    [BarcodeFormat.QR_CODE]: 'Any string, typically used for links or complex data'
+  };
+  return specs[format];
+}
 
-  return (
-    ean13Regex.test(barcode) ||
-    upcaRegex.test(barcode) ||
-    code128Regex.test(barcode)
-  );
+function isValidBarcode(barcode: string, format?: BarcodeFormat): boolean {
+  if (!format) format = BarcodeFormat.CODE128; // Default
+
+  const validationRules: Record<BarcodeFormat, RegExp> = {
+    [BarcodeFormat.EAN13]: /^\d{13}$/,
+    [BarcodeFormat.UPC_A]: /^\d{12}$/,
+    [BarcodeFormat.CODE128]: /^[!-~]{6,}$/,
+    [BarcodeFormat.QR_CODE]: /^.+$/
+  };
+
+  return validationRules[format].test(barcode);
 }
 ```
 

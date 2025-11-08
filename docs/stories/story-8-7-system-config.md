@@ -32,10 +32,13 @@
 
 3. **Backend API:**
    - [ ] POST /api/system-config - creates configuration entry
-   - [ ] PUT /api/system-config/:key - updates configuration value
+   - [ ] PUT /api/system-config/:key - updates configuration value with validation
    - [ ] GET /api/system-config - returns all configurations grouped by category
    - [ ] GET /api/system-config/:key - returns specific configuration
-   - [ ] Configuration validation: type checking (number, boolean, string, etc.)
+   - [ ] Configuration validation: type checking (STRING, NUMBER, BOOLEAN, DECIMAL, JSON)
+   - [ ] Range validation: min/max for numeric values
+   - [ ] Pattern validation: regex for string values
+   - [ ] Enum validation: allowedValues for restricted choices
 
 4. **Frontend - System Settings Page:**
    - [ ] Category tabs (General, Tax, Inventory, Recovery, Security, Notifications)
@@ -60,7 +63,8 @@
 model SystemConfig {
   id          String   @id @default(cuid())
   key         String   @unique
-  value       Json
+  value       String   @db.Text // Stored as JSON string
+  valueType   String   // ConfigValueType enum: STRING, NUMBER, BOOLEAN, DECIMAL, JSON
   category    String
   description String?  @db.Text
   updatedBy   String
@@ -72,25 +76,138 @@ model SystemConfig {
 }
 ```
 
+### Configuration Value Types
+
 ```typescript
+enum ConfigValueType {
+  STRING = 'STRING',
+  NUMBER = 'NUMBER',
+  BOOLEAN = 'BOOLEAN',
+  DECIMAL = 'DECIMAL',
+  JSON = 'JSON'
+}
+
+interface ConfigSchema {
+  valueType: ConfigValueType;
+  min?: number;
+  max?: number;
+  pattern?: RegExp;
+  allowedValues?: string[];
+  default?: any;
+}
+
+// Configuration schema definition
+const CONFIG_SCHEMA: Record<string, ConfigSchema> = {
+  // General settings
+  COMPANY_NAME: {
+    valueType: ConfigValueType.STRING,
+    pattern: /^.{1,255}$/,
+    default: 'Hisham Traders'
+  },
+  COMPANY_LOGO_URL: {
+    valueType: ConfigValueType.STRING,
+    pattern: /^(https?:\/\/).+/,
+    default: ''
+  },
+  TIMEZONE: {
+    valueType: ConfigValueType.STRING,
+    allowedValues: ['UTC', 'Asia/Karachi', 'Asia/Dubai'],
+    default: 'Asia/Karachi'
+  },
+  DATE_FORMAT: {
+    valueType: ConfigValueType.STRING,
+    allowedValues: ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'],
+    default: 'DD/MM/YYYY'
+  },
+
+  // Tax settings
+  DEFAULT_SALES_TAX_RATE: {
+    valueType: ConfigValueType.DECIMAL,
+    min: 0,
+    max: 100,
+    default: 17
+  },
+  WITHHOLDING_TAX_RATE: {
+    valueType: ConfigValueType.DECIMAL,
+    min: 0,
+    max: 100,
+    default: 0.5
+  },
+
+  // Inventory settings
+  LOW_STOCK_THRESHOLD_MULTIPLIER: {
+    valueType: ConfigValueType.DECIMAL,
+    min: 0.1,
+    max: 10,
+    default: 1.5
+  },
+  ADJUSTMENT_APPROVAL_THRESHOLD: {
+    valueType: ConfigValueType.DECIMAL,
+    min: 0,
+    max: 1000000,
+    default: 5000
+  },
+
+  // Recovery settings
+  DSO_TARGET_DAYS: {
+    valueType: ConfigValueType.NUMBER,
+    min: 1,
+    max: 365,
+    default: 32
+  },
+  COLLECTION_EFFECTIVENESS_TARGET: {
+    valueType: ConfigValueType.DECIMAL,
+    min: 0,
+    max: 100,
+    default: 90
+  },
+
+  // Security settings
+  SESSION_TIMEOUT_MINUTES: {
+    valueType: ConfigValueType.NUMBER,
+    min: 5,
+    max: 1440,
+    default: 30
+  },
+  LOGIN_ATTEMPT_LIMIT: {
+    valueType: ConfigValueType.NUMBER,
+    min: 1,
+    max: 10,
+    default: 5
+  },
+  ENABLE_TWO_FACTOR_AUTH: {
+    valueType: ConfigValueType.BOOLEAN,
+    default: true
+  }
+};
+
 async function updateSystemConfig(
   key: string,
   value: any,
   userId: string
 ): Promise<SystemConfig> {
-  // Validate value based on key
-  validateConfigValue(key, value);
+  const schema = CONFIG_SCHEMA[key];
+  if (!schema) {
+    throw new BadRequestError(`Unknown configuration key: ${key}`);
+  }
+
+  // Validate value
+  validateConfigValue(key, value, schema);
+
+  // Convert value to appropriate type
+  const convertedValue = convertToType(value, schema.valueType);
 
   const config = await prisma.systemConfig.upsert({
     where: { key },
     update: {
-      value,
+      value: JSON.stringify(convertedValue),
       updatedBy: userId,
       updatedAt: new Date()
     },
     create: {
       key,
-      value,
+      value: JSON.stringify(convertedValue),
+      valueType: schema.valueType,
       category: getCategoryForKey(key),
       description: getDescriptionForKey(key),
       updatedBy: userId
@@ -102,34 +219,100 @@ async function updateSystemConfig(
     userId,
     resource: 'SystemConfig',
     resourceId: config.id,
-    details: { key, value }
+    details: { key, value: convertedValue, valueType: schema.valueType }
   });
 
   return config;
 }
 
-function validateConfigValue(key: string, value: any): void {
-  switch (key) {
-    case 'DEFAULT_SALES_TAX_RATE':
-      if (typeof value !== 'number' || value < 0 || value > 100) {
-        throw new BadRequestError('Tax rate must be between 0 and 100');
-      }
-      break;
-    case 'SESSION_TIMEOUT':
-      if (typeof value !== 'number' || value <= 0) {
-        throw new BadRequestError('Session timeout must be positive');
-      }
-      break;
-    // ... other validations
+function validateConfigValue(key: string, value: any, schema: ConfigSchema): void {
+  // Type validation
+  const actualType = typeof value;
+  const expectedTypes: Record<ConfigValueType, string[]> = {
+    [ConfigValueType.STRING]: ['string'],
+    [ConfigValueType.NUMBER]: ['number'],
+    [ConfigValueType.BOOLEAN]: ['boolean'],
+    [ConfigValueType.DECIMAL]: ['number'],
+    [ConfigValueType.JSON]: ['object']
+  };
+
+  const validTypes = expectedTypes[schema.valueType];
+  if (!validTypes.includes(actualType)) {
+    throw new BadRequestError(
+      `Invalid type for ${key}. Expected ${schema.valueType}, got ${actualType}`
+    );
+  }
+
+  // Range validation (for numeric types)
+  if ((schema.valueType === ConfigValueType.NUMBER || schema.valueType === ConfigValueType.DECIMAL) && typeof value === 'number') {
+    if (schema.min !== undefined && value < schema.min) {
+      throw new BadRequestError(`${key} must be >= ${schema.min}`);
+    }
+    if (schema.max !== undefined && value > schema.max) {
+      throw new BadRequestError(`${key} must be <= ${schema.max}`);
+    }
+  }
+
+  // Pattern validation (for strings)
+  if (schema.valueType === ConfigValueType.STRING && schema.pattern && !schema.pattern.test(value)) {
+    throw new BadRequestError(`${key} format is invalid`);
+  }
+
+  // Enum validation
+  if (schema.allowedValues && !schema.allowedValues.includes(value)) {
+    throw new BadRequestError(
+      `${key} must be one of: ${schema.allowedValues.join(', ')}`
+    );
+  }
+}
+
+function convertToType(value: any, type: ConfigValueType): any {
+  switch (type) {
+    case ConfigValueType.STRING:
+      return String(value);
+    case ConfigValueType.NUMBER:
+      return parseInt(String(value), 10);
+    case ConfigValueType.DECIMAL:
+      return parseFloat(String(value));
+    case ConfigValueType.BOOLEAN:
+      return value === true || value === 'true' || value === '1';
+    case ConfigValueType.JSON:
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    default:
+      return value;
   }
 }
 
 async function getSystemConfig(key: string): Promise<any> {
+  const schema = CONFIG_SCHEMA[key];
+  if (!schema) {
+    throw new BadRequestError(`Unknown configuration key: ${key}`);
+  }
+
   const config = await prisma.systemConfig.findUnique({
     where: { key }
   });
 
-  return config?.value || getDefaultValue(key);
+  const value = config ? JSON.parse(config.value) : schema.default;
+  return convertToType(value, schema.valueType);
+}
+
+async function getAllSystemConfigs(): Promise<Record<string, any>> {
+  const configs = await prisma.systemConfig.findMany();
+  const result: Record<string, any> = {};
+
+  for (const config of configs) {
+    result[config.key] = JSON.parse(config.value);
+  }
+
+  // Fill in defaults for missing keys
+  for (const [key, schema] of Object.entries(CONFIG_SCHEMA)) {
+    if (!(key in result) && schema.default !== undefined) {
+      result[key] = schema.default;
+    }
+  }
+
+  return result;
 }
 ```
 

@@ -37,8 +37,31 @@
    - [ ] Credit limit alerts widget
    - [ ] Quick actions: Create Invoice, Record Payment
 
-3. **Authorization:**
-   - [ ] Sales Officer, Accountant, Admin can access
+3. **Authorization & Role-Based Access:**
+   - [ ] Sales Officer: Own sales data only (filtered by assigned territory/region)
+   - [ ] Accountant: View all sales data
+   - [ ] Admin: Full access
+   - [ ] Other roles: 403 Forbidden
+
+4. **Performance & Caching:**
+   - [ ] Max 50 records for top clients/overdue lists
+   - [ ] Weekly trend: return all 7 days (no pagination needed)
+   - [ ] Cache TTL: 3 minutes (more frequent updates than admin dashboard)
+   - [ ] API timeout: 8 seconds maximum
+   - [ ] Pagination: 10 items default for lists
+
+5. **Real-Time Data Updates:**
+   - [ ] Auto-refresh every 15 seconds during business hours
+   - [ ] Manual refresh button available
+   - [ ] Show "Last updated at" timestamp
+   - [ ] Pause auto-updates after hours (optional)
+   - [ ] Network error: Show cached data with warning
+
+6. **Error Handling:**
+   - [ ] Catch and log failures in trend calculation
+   - [ ] Return HTTP 400 with error details if filters invalid
+   - [ ] Validate date range (from <= to, max 1 year)
+   - [ ] Display partial data with error toast if calculation fails
 
 ---
 

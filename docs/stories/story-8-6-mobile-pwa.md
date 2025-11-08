@@ -27,8 +27,11 @@
 2. **Offline Functionality:**
    - [ ] Cache critical pages (dashboard, inventory list, client list)
    - [ ] Allow viewing cached data when offline
-   - [ ] Queue actions (payments, adjustments) for sync when online
+   - [ ] Queue actions (payments, adjustments, stock adjustments, recovery visits) for sync when online
+   - [ ] Queue stored in IndexedDB with max 5 retries per action
+   - [ ] Exponential backoff retry strategy (1s, 2s, 4s, 8s)
    - [ ] Display "Offline Mode" banner when disconnected
+   - [ ] Display sync status indicator (pending, syncing, synced, error)
 
 3. **Mobile-Optimized Workflows:**
    - [ ] Payment recording (simplified form with large buttons)
@@ -132,27 +135,185 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Background sync for queued actions
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-actions') {
-    event.waitUntil(syncQueuedActions());
-  }
-});
-
+// Offline Queue Management with IndexedDB
 async function syncQueuedActions() {
   const db = await openDB('erp-queue');
   const actions = await db.getAll('actions');
 
   for (const action of actions) {
     try {
-      await fetch(action.url, {
-        method: action.method,
-        body: JSON.stringify(action.data)
-      });
+      await executeQueuedAction(action, db);
       await db.delete('actions', action.id);
     } catch (error) {
-      console.error('Sync failed:', error);
+      console.error('Sync failed for action:', action.id, error);
+      await updateActionRetry(action, db);
     }
+  }
+}
+
+async function executeQueuedAction(action, db) {
+  const response = await fetch(action.url, {
+    method: action.method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(action.payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+async function updateActionRetry(action, db) {
+  const maxRetries = 5;
+  const retryDelays = [1000, 2000, 4000, 8000, 16000]; // Exponential backoff
+
+  if (!action.retryCount) {
+    action.retryCount = 0;
+  }
+
+  if (action.retryCount >= maxRetries) {
+    // Mark action as permanently failed
+    action.status = 'FAILED';
+    action.lastError = 'Max retries exceeded';
+    await db.put('actions', action);
+  } else {
+    // Schedule next retry
+    const nextRetryDelay = retryDelays[action.retryCount];
+    action.retryCount += 1;
+    action.nextRetryAt = Date.now() + nextRetryDelay;
+    action.status = 'PENDING';
+    await db.put('actions', action);
+  }
+}
+
+// Background sync triggered when connection restored
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-actions') {
+    event.waitUntil(syncQueuedActions());
+  }
+});
+```
+
+**Offline Queue Structure (IndexedDB):**
+```typescript
+// Queue item interface
+interface OfflineQueueItem {
+  id: string; // UUID
+  action: QueueableAction; // Action type
+  timestamp: Date; // When queued
+  payload: Record<string, any>; // API request body
+  url: string; // API endpoint
+  method: 'POST' | 'PUT' | 'PATCH'; // HTTP method
+  retryCount: number; // Number of retries attempted
+  maxRetries: number; // Default: 5
+  nextRetryAt?: number; // Timestamp for next retry
+  status: 'PENDING' | 'SYNCING' | 'FAILED'; // Queue item status
+  lastError?: string; // Error message if failed
+  createdAt: Date; // Created timestamp
+  updatedAt: Date; // Last update timestamp
+}
+
+// Queueable actions
+enum QueueableAction {
+  CREATE_PAYMENT = 'CREATE_PAYMENT',
+  CREATE_INVOICE = 'CREATE_INVOICE',
+  UPDATE_STOCK_ADJUSTMENT = 'UPDATE_STOCK_ADJUSTMENT',
+  LOG_RECOVERY_VISIT = 'LOG_RECOVERY_VISIT'
+}
+
+// IndexedDB Schema
+interface QueueDB {
+  actions: OfflineQueueItem[];
+}
+
+// Storage implementation
+class OfflineQueueManager {
+  private db: IDBDatabase;
+  private storeName = 'offline-actions';
+
+  async init(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('erp-offline-queue', 1);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve();
+      };
+
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
+        store.createIndex('status', 'status', { unique: false });
+        store.createIndex('action', 'action', { unique: false });
+        store.createIndex('nextRetryAt', 'nextRetryAt', { unique: false });
+      };
+    });
+  }
+
+  async enqueue(item: Omit<OfflineQueueItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<OfflineQueueItem> {
+    const queueItem: OfflineQueueItem = {
+      ...item,
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      retryCount: 0,
+      maxRetries: 5,
+      status: 'PENDING'
+    };
+
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction([this.storeName], 'readwrite');
+      const store = tx.objectStore(this.storeName);
+      const request = store.add(queueItem);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(queueItem);
+    });
+  }
+
+  async getPendingActions(): Promise<OfflineQueueItem[]> {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction([this.storeName], 'readonly');
+      const store = tx.objectStore(this.storeName);
+      const index = store.index('status');
+      const request = index.getAll('PENDING');
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+  }
+
+  async updateStatus(id: string, status: 'PENDING' | 'SYNCING' | 'FAILED', error?: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction([this.storeName], 'readwrite');
+      const store = tx.objectStore(this.storeName);
+      const getRequest = store.get(id);
+
+      getRequest.onsuccess = () => {
+        const item = getRequest.result;
+        item.status = status;
+        item.updatedAt = new Date();
+        if (error) item.lastError = error;
+
+        const updateRequest = store.put(item);
+        updateRequest.onerror = () => reject(updateRequest.error);
+        updateRequest.onsuccess = () => resolve();
+      };
+    });
+  }
+
+  async remove(id: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction([this.storeName], 'readwrite');
+      const store = tx.objectStore(this.storeName);
+      const request = store.delete(id);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
   }
 }
 ```

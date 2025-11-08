@@ -31,8 +31,10 @@
 
 3. **Count Completion:**
    - [ ] When COMPLETED:
-   - [ ] For each variance, create StockAdjustment (type=PHYSICAL_COUNT)
-   - [ ] Update inventory quantities
+   - [ ] For each variance, create StockAdjustment (type=PHYSICAL_COUNT or CORRECTION)
+   - [ ] **Calculate adjustment value:** |variance| × product cost price
+   - [ ] Adjustment goes through approval workflow (may be auto-approved if below threshold)
+   - [ ] Update inventory quantities when adjustment is approved
    - [ ] Generate variance report
 
 4. **Backend API:**
@@ -184,52 +186,76 @@ async function completeStockCount(
     // Process each item with variance
     for (const item of stockCount!.items) {
       if (item.variance !== 0) {
-        // Create stock adjustment
+        // Get product cost to calculate adjustment value
+        const product = await tx.product.findUnique({
+          where: { id: item.productId }
+        });
+
+        // Calculate adjustment value: |variance| × cost
+        const adjustmentValue = Math.abs(item.variance) *
+          parseFloat(product!.costPrice.toString());
+
+        // Determine adjustment type
         const adjustmentType = item.variance > 0 ? 'CORRECTION' : 'WASTAGE';
 
-        await tx.stockAdjustment.create({
+        // Get approval threshold from configuration
+        const config = await tx.configuration.findUnique({
+          where: { key: 'ADJUSTMENT_APPROVAL_THRESHOLD' }
+        });
+        const threshold = config ? parseFloat(config.value) : 1000;
+
+        // Determine if approval needed based on value
+        const requiresApproval = adjustmentValue >= threshold;
+        const status = requiresApproval ? 'PENDING' : 'APPROVED';
+
+        // Create stock adjustment through normal workflow
+        const adjustment = await tx.stockAdjustment.create({
           data: {
             productId: item.productId,
             warehouseId: stockCount!.warehouseId,
             type: adjustmentType,
             quantity: Math.abs(item.variance),
             reason: `Physical count variance: ${item.notes || 'No notes'}`,
-            value: 0, // Calculate based on cost
-            status: 'APPROVED',
+            value: adjustmentValue, // Calculate actual value
+            status,
             requestedBy: userId,
-            approvedBy: userId,
-            approvedAt: new Date()
+            ...(status === 'APPROVED' && {
+              approvedBy: userId,
+              approvedAt: new Date()
+            })
           }
         });
 
-        // Update inventory
-        const inventory = await tx.inventory.findFirst({
-          where: {
-            productId: item.productId,
-            warehouseId: stockCount!.warehouseId,
-            ...(item.batchNo && { batchNo: item.batchNo })
-          }
-        });
+        // Update inventory only if adjustment approved
+        if (status === 'APPROVED') {
+          const inventory = await tx.inventory.findFirst({
+            where: {
+              productId: item.productId,
+              warehouseId: stockCount!.warehouseId,
+              ...(item.batchNo && { batchNo: item.batchNo })
+            }
+          });
 
-        await tx.inventory.update({
-          where: { id: inventory!.id },
-          data: { quantity: item.countedQty } // Set to actual counted qty
-        });
+          await tx.inventory.update({
+            where: { id: inventory!.id },
+            data: { quantity: item.countedQty } // Set to actual counted qty
+          });
 
-        // Create stock movement
-        await tx.stockMovement.create({
-          data: {
-            productId: item.productId,
-            warehouseId: stockCount!.warehouseId,
-            movementType: 'PHYSICAL_COUNT',
-            quantity: item.variance,
-            referenceType: 'STOCK_COUNT',
-            referenceId: stockCountId,
-            movementDate: new Date(),
-            userId,
-            notes: `Physical count adjustment: ${item.variance > 0 ? '+' : ''}${item.variance}`
-          }
-        });
+          // Create stock movement
+          await tx.stockMovement.create({
+            data: {
+              productId: item.productId,
+              warehouseId: stockCount!.warehouseId,
+              movementType: 'PHYSICAL_COUNT',
+              quantity: item.variance,
+              referenceType: 'STOCK_COUNT',
+              referenceId: stockCountId,
+              movementDate: new Date(),
+              userId,
+              notes: `Physical count adjustment: ${item.variance > 0 ? '+' : ''}${item.variance}`
+            }
+          });
+        }
       }
     }
 

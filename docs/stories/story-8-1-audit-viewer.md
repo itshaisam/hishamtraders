@@ -35,6 +35,7 @@
 3. **Search Capability:**
    - [ ] Search by: entity ID, user email/name, reference number (invoice #, PO #)
    - [ ] Case-insensitive partial match
+   - [ ] Performance optimized with database indexes on frequently searched fields
 
 4. **Response Data:**
    - [ ] timestamp, userId, userName, userEmail, action, entityType, entityId, ipAddress
@@ -65,6 +66,49 @@
 ---
 
 ## Dev Notes
+
+### Database Schema with Performance Indexes
+
+```prisma
+model AuditLog {
+  id              String   @id @default(cuid())
+  timestamp       DateTime @default(now())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action          String   // CREATE, UPDATE, DELETE, VIEW
+  entityType      String   // Product, Invoice, Payment, etc.
+  entityId        String   // Reference to entity ID
+  ipAddress       String?
+  changedFields   Json?    // Full change details
+  metadata        Json?    // Additional metadata (e.g., referenceNumber)
+
+  // Performance indexes
+  @@index([userId, timestamp])     // Filter by user and date
+  @@index([entityType, entityId])  // Filter by entity type and ID
+  @@index([action])                // Filter by action type
+  @@index([timestamp])             // Sort by timestamp
+  @@index([entityId])              // Search by entity ID
+  @@fulltext([entityId])           // Full-text search support (MySQL)
+
+  @@map("audit_logs")
+}
+```
+
+### Search Optimization Notes
+
+The following indexes are crucial for query performance:
+
+1. **[userId, timestamp]** - Most common filter combination (user actions on a date)
+2. **[entityType, entityId]** - Find all changes to a specific entity
+3. **[action]** - Filter critical operations (DELETE)
+4. **[timestamp]** - Default sorting (newest first) and date range queries
+5. **[entityId]** - Individual entity lookup and search
+6. **fulltext([entityId])** - MySQL full-text search for partial matches
+
+For PostgreSQL, add GIN index for better full-text search:
+```prisma
+@@index([entityId(ops: "gin_trgm_ops")]) // PostgreSQL trigram index for LIKE
+```
 
 ```typescript
 interface AuditLogFilters {

@@ -43,9 +43,24 @@
    - [ ] Display running debit/credit totals and difference (must be 0)
    - [ ] "Post to GL" button (requires confirmation)
 
-5. **Authorization:**
+5. **Authorization & Role-Based Access:**
    - [ ] Only Accountant and Admin can create journal entries
+   - [ ] Only Accountant/Admin can post entries to GL
    - [ ] Journal entries logged in audit trail
+   - [ ] Other roles: 403 Forbidden
+
+6. **Performance & Caching:**
+   - [ ] Cache journal entry list: 5 minutes (entries rarely change)
+   - [ ] No caching for draft entries (always fresh)
+   - [ ] API timeout: 10 seconds maximum
+   - [ ] Pagination: max 100 entries per request
+
+7. **Error Handling:**
+   - [ ] Validate double-entry rule (debits = credits)
+   - [ ] Validate each line has debit XOR credit (not both, not neither)
+   - [ ] Cannot update/delete posted entries
+   - [ ] Return 400 with specific validation errors
+   - [ ] Catch and log balance calculation errors
 
 ---
 

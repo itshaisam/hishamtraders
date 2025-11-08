@@ -57,7 +57,7 @@ async function createBinTransfer(
   data: BinTransferDto,
   userId: string
 ): Promise<void> {
-  // Validate bins exist
+  // Validate bins exist and are ACTIVE
   const [fromBin, toBin] = await Promise.all([
     prisma.binLocation.findUnique({
       where: { warehouseId_code: { warehouseId: data.warehouseId, code: data.fromBinLocation } }
@@ -67,8 +67,13 @@ async function createBinTransfer(
     })
   ]);
 
-  if (!fromBin || !toBin) {
-    throw new NotFoundError('Bin location not found');
+  // Both bins must exist, be ACTIVE, and not deleted
+  if (!fromBin || fromBin.status !== 'ACTIVE' || fromBin.isDeleted) {
+    throw new BadRequestError('Source bin not found, inactive, or deleted');
+  }
+
+  if (!toBin || toBin.status !== 'ACTIVE' || toBin.isDeleted) {
+    throw new BadRequestError('Destination bin not found, inactive, or deleted');
   }
 
   // Find inventory in source bin

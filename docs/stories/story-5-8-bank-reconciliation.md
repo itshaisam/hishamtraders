@@ -29,6 +29,24 @@
 8. Frontend displays system transactions for period
 9. Frontend allows matching statement to system entries
 
+10. **Authorization & Role-Based Access:**
+    - [ ] Accountant and Admin can perform reconciliation
+    - [ ] Other roles: 403 Forbidden
+    - [ ] Reconciliation process logged in audit trail
+
+11. **Performance & Caching:**
+    - [ ] No caching for reconciliation data (real-time accuracy required)
+    - [ ] API timeout: 20 seconds maximum (matching logic can be complex)
+    - [ ] Pagination: max 500 unmatched transactions per request
+
+12. **Error Handling:**
+    - [ ] Validate statement date is valid
+    - [ ] Handle CSV/Excel parsing errors gracefully
+    - [ ] Prevent duplicate reconciliations for same statement
+    - [ ] If statement balance ≠ system balance: Display difference clearly
+    - [ ] Handle missing/invalid transaction data (skip with warning)
+    - [ ] Catch matching logic errors and display to user
+
 ---
 
 ## Dev Notes

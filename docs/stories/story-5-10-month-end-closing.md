@@ -32,7 +32,26 @@
 5. Admin can reopen period (requires confirmation + reason)
 6. GET /api/period-close returns list of closed periods
 7. Frontend Month-End Closing page displays trial balance status, P&L summary
-8. Only Admin can perform month-end closing
+8. **Authorization & Role-Based Access:**
+   - [ ] Only Admin can perform month-end closing
+   - [ ] Only Admin can reopen closed periods (requires confirmation + reason)
+   - [ ] Accountant can view closed periods (read-only)
+   - [ ] Other roles: 403 Forbidden
+   - [ ] Month-end closing logged in audit trail with details
+
+9. **Performance & Caching:**
+   - [ ] Pre-validate trial balance before closing (< 5 seconds)
+   - [ ] Lock period atomically (transaction ensures all-or-nothing)
+   - [ ] API timeout: 30 seconds maximum (closing involves multiple calculations)
+   - [ ] Cache invalidation: Invalidate all GL/TB/BS reports for closed period
+
+10. **Error Handling:**
+    - [ ] Validate trial balance is balanced before closing
+    - [ ] If not balanced: Display difference and prevent closing
+    - [ ] Handle already-closed period: Return 400 error
+    - [ ] Validate period date is valid (last day of month)
+    - [ ] Catch journal entry locking errors and display to user
+    - [ ] Log month-end closing process with detailed error messages
 
 ---
 

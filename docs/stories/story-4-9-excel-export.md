@@ -32,12 +32,42 @@
    - [ ] Content-Disposition: attachment with filename
    - [ ] Filename format: `{report-type}-{date}.xlsx`
 
-3. **Performance:**
+3. **Performance & Timeout Handling:**
    - [ ] Export all data (not paginated, up to 10,000 rows)
-   - [ ] Performance: <5 seconds for 1000 rows
+   - [ ] Performance: <5 seconds for 1000 rows, <30 seconds max
+   - [ ] Default timeout: 30 seconds per export
+   - [ ] Retry mechanism: Automatic 3 retries with exponential backoff (1s, 2s, 4s)
+   - [ ] Show progress indicator for exports >5 seconds
+   - [ ] Queue large exports (>5000 rows) for background processing
+   - [ ] Notify user via toast + optional email when large export ready
 
-4. **Frontend:**
+4. **Error Handling & Validation:**
+   - [ ] Network timeout: Show retry button + offline notification
+   - [ ] File generation error: Log stack trace + return user-friendly message
+   - [ ] Invalid filters: Return 400 with validation errors
+   - [ ] Permission denied: Return 403 with reason
+   - [ ] Server error: 500 with ticket number for support
+   - [ ] Max rows per export: 10,000 (enforce server-side)
+   - [ ] Max file size: 500MB (enforce server-side)
+   - [ ] Max concurrent exports: 5 per user (queue additional requests)
+   - [ ] Rate limit: 1 export per 5 seconds per user
+
+5. **Export Authorization & Limits:**
+   - [ ] Admin/Accountant: Can export all reports
+   - [ ] Sales Officer: Can export own sales only
+   - [ ] Warehouse Manager: Can export warehouse reports only
+   - [ ] Recovery Agent: Can export payment/receivables only
+   - [ ] Other roles: 403 Forbidden for export functionality
+   - [ ] Enforce filters validation: Date ranges, field presence
+
+6. **Frontend:**
    - [ ] "Export to Excel" button on all report pages
+   - [ ] Show loading spinner + cancel button during export
+   - [ ] Progress bar for exports >5 seconds
+   - [ ] Success notification with download link
+   - [ ] Error toast with specific reason + retry button
+   - [ ] Disable export button during active export
+   - [ ] Show export history (last 5 exports)
 
 ---
 

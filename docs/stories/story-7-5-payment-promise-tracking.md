@@ -37,9 +37,11 @@
    - [ ] GET /api/recovery/promises?clientId=xxx - client's promise history
 
 4. **Auto-Update Logic:**
-   - [ ] When payment recorded, check for pending promises
-   - [ ] If payment date ≤ promise date and amount ≥ promise amount: FULFILLED
-   - [ ] If payment date ≤ promise date and amount < promise amount: PARTIAL
+   - [ ] When payment recorded, check for pending promises (earliest first - FIFO)
+   - [ ] Match payment against promises in order of promise date
+   - [ ] If payment >= promiseAmount: Mark promise FULFILLED, apply remaining to next promise
+   - [ ] If payment < promiseAmount: Mark promise PARTIAL, remaining amount to next promise
+   - [ ] **Promise matching is FIFO by promise date** (earliest promise gets first matching payment)
    - [ ] Daily job: Mark promises as BROKEN if promise date passed and status = PENDING
 
 5. **Frontend:**
@@ -200,6 +202,72 @@ async function fulfillPaymentPromise(
   });
 
   return updated;
+}
+
+// Match payment to promises (FIFO by promise date)
+async function matchPaymentToPromises(
+  clientId: string,
+  paymentAmount: number,
+  paymentDate: Date
+): Promise<void> {
+  let remainingAmount = paymentAmount;
+
+  // Get all PENDING promises for client, sorted by promise date (FIFO)
+  const promises = await prisma.paymentPromise.findMany({
+    where: {
+      clientId,
+      status: 'PENDING'
+    },
+    orderBy: { promiseDate: 'asc' } // Earliest promises first
+  });
+
+  for (const promise of promises) {
+    if (remainingAmount <= 0) break;
+
+    const promiseAmount = parseFloat(promise.promiseAmount.toString());
+
+    if (remainingAmount >= promiseAmount) {
+      // Full payment for this promise
+      await prisma.paymentPromise.update({
+        where: { id: promise.id },
+        data: {
+          status: 'FULFILLED',
+          actualPaymentDate: paymentDate,
+          actualAmount: promiseAmount
+        }
+      });
+
+      await auditLogger.log({
+        action: 'PAYMENT_PROMISE_FULFILLED',
+        userId: 'SYSTEM',
+        resource: 'PaymentPromise',
+        resourceId: promise.id,
+        details: { matchedToPayment: true, amount: promiseAmount }
+      });
+
+      remainingAmount -= promiseAmount;
+    } else if (remainingAmount > 0) {
+      // Partial payment toward this promise
+      await prisma.paymentPromise.update({
+        where: { id: promise.id },
+        data: {
+          status: 'PARTIAL',
+          actualPaymentDate: paymentDate,
+          actualAmount: remainingAmount
+        }
+      });
+
+      await auditLogger.log({
+        action: 'PAYMENT_PROMISE_PARTIAL',
+        userId: 'SYSTEM',
+        resource: 'PaymentPromise',
+        resourceId: promise.id,
+        details: { matchedToPayment: true, amount: remainingAmount }
+      });
+
+      remainingAmount = 0;
+    }
+  }
 }
 
 async function checkBrokenPromises(): Promise<void> {

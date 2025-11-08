@@ -26,7 +26,21 @@
 5. If not balanced, display error: "Books not balanced! Difference: X"
 6. Report exportable to Excel
 7. Frontend displays two-column table (Debits | Credits)
-8. Only Accountant and Admin can access
+8. **Authorization & Role-Based Access:**
+   - [ ] Accountant and Admin can access
+   - [ ] Other roles: 403 Forbidden
+
+9. **Performance & Caching:**
+   - [ ] Cache trial balance: 10 minutes per date (balances rarely change during day)
+   - [ ] Cache invalidation: On journal entry posting
+   - [ ] API timeout: 20 seconds maximum
+   - [ ] Optimize account balance queries with indexes
+
+10. **Error Handling:**
+    - [ ] Handle missing accounts gracefully
+    - [ ] Balance calculation errors: Display with specific error message
+    - [ ] If not balanced: Log discrepancy for investigation
+    - [ ] Return partial data with error flag if calculation fails
 
 ---
 

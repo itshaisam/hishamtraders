@@ -29,7 +29,22 @@
 4. POST /api/petty-cash/settlement - settles petty cash (records expenses, replenishes)
 5. GET /api/account-heads/1102/balance - returns petty cash balance
 6. Frontend Petty Cash page shows balance, advance, expense, settle
-7. Only Accountant can manage petty cash
+7. **Authorization & Role-Based Access:**
+   - [ ] Only Accountant and Admin can manage petty cash
+   - [ ] Other roles: 403 Forbidden
+   - [ ] Petty cash operations logged in audit trail
+
+8. **Performance & Caching:**
+   - [ ] Cache petty cash balance: 5 minutes
+   - [ ] Cache invalidation: On advance/expense/settlement
+   - [ ] API timeout: 10 seconds maximum
+
+9. **Error Handling:**
+   - [ ] Validate advance amount > 0
+   - [ ] Prevent advance if bank balance insufficient
+   - [ ] Validate expense amount matches receipts total
+   - [ ] Handle missing expense category gracefully
+   - [ ] Display validation errors with specific reason
 
 ---
 

@@ -26,8 +26,8 @@
    - [ ] Gate pass number format: GP-{WarehouseCode}-YYYYMMDD-XXX
 
 2. **Gate Pass Modes:**
-   - [ ] AUTO: Gate pass created automatically, status = APPROVED, inventory deducted immediately
-   - [ ] MANUAL: Gate pass created with status = PENDING, requires approval, inventory deducted on IN_TRANSIT
+   - [ ] AUTO: Gate pass created automatically, status = APPROVED, **inventory deducted when APPROVED**
+   - [ ] MANUAL: Gate pass created with status = PENDING, requires approval, **inventory deducted when IN_TRANSIT** (dispatched)
 
 3. **Backend API:**
    - [ ] PUT /api/warehouses/:id/gate-pass-config updates gatePassMode

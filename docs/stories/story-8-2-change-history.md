@@ -25,7 +25,9 @@
 
 2. **Change Tracking:**
    - [ ] Base service layer hooks capture current state before update
-   - [ ] Store snapshot in ChangeHistory table
+   - [ ] Store snapshot in ChangeHistory table (only whitelisted fields)
+   - [ ] Limit snapshot to relevant fields only (exclude large objects, sensitive data)
+   - [ ] Validate snapshot size (max 5MB per entry)
    - [ ] Auto-delete versions older than 2
 
 3. **Critical Entities Tracked:**
@@ -77,7 +79,20 @@ model ChangeHistory {
 }
 ```
 
+### Snapshot Field Whitelisting
+
+Define which fields should be stored for each entity type:
+
 ```typescript
+const ENTITY_SNAPSHOT_WHITELIST: Record<string, string[]> = {
+  PRODUCT: ['id', 'name', 'sku', 'category', 'costPrice', 'salePrice', 'description', 'barcode', 'status'],
+  CLIENT: ['id', 'name', 'contactPerson', 'email', 'phone', 'address', 'city', 'area', 'taxId', 'creditLimit', 'status'],
+  INVOICE: ['id', 'invoiceNumber', 'clientId', 'issueDate', 'dueDate', 'subtotal', 'taxAmount', 'total', 'status', 'notes'],
+  PAYMENT: ['id', 'invoiceId', 'amount', 'paymentDate', 'paymentMethod', 'reference', 'status'],
+  SUPPLIER: ['id', 'name', 'contactPerson', 'email', 'phone', 'address', 'taxId', 'paymentTerms', 'status'],
+  PURCHASE_ORDER: ['id', 'poNumber', 'supplierId', 'orderDate', 'expectedDelivery', 'subtotal', 'taxAmount', 'total', 'status']
+};
+
 async function captureChangeHistory(
   entityType: string,
   entityId: string,
@@ -85,6 +100,30 @@ async function captureChangeHistory(
   changedBy: string,
   changeReason?: string
 ): Promise<void> {
+  // Filter snapshot to whitelisted fields only
+  const whitelistedFields = ENTITY_SNAPSHOT_WHITELIST[entityType];
+  if (!whitelistedFields) {
+    throw new BadRequestError(`Change history not supported for ${entityType}`);
+  }
+
+  const filteredSnapshot = Object.keys(currentSnapshot)
+    .filter(key => whitelistedFields.includes(key))
+    .reduce((obj, key) => {
+      obj[key] = currentSnapshot[key];
+      return obj;
+    }, {} as Record<string, any>);
+
+  // Validate snapshot size (max 5MB)
+  const snapshotSize = JSON.stringify(filteredSnapshot).length;
+  const maxSnapshotSize = 5 * 1024 * 1024; // 5MB
+
+  if (snapshotSize > maxSnapshotSize) {
+    throw new BadRequestError(
+      `Change history snapshot too large (${(snapshotSize / 1024).toFixed(2)}KB). ` +
+      `Maximum allowed: ${(maxSnapshotSize / 1024 / 1024).toFixed(2)}MB`
+    );
+  }
+
   // Get current version count
   const existingVersions = await prisma.changeHistory.findMany({
     where: { entityType, entityId },
@@ -93,14 +132,14 @@ async function captureChangeHistory(
 
   const newVersion = existingVersions.length + 1;
 
-  // Create new version
+  // Create new version with filtered snapshot
   await prisma.changeHistory.create({
     data: {
       entityType,
       entityId,
       version: newVersion,
       changedBy,
-      snapshot: currentSnapshot,
+      snapshot: filteredSnapshot,
       changeReason
     }
   });
@@ -114,6 +153,20 @@ async function captureChangeHistory(
       }
     });
   }
+
+  // Log to audit trail
+  await auditLogger.log({
+    action: 'SNAPSHOT_CREATED',
+    userId: changedBy,
+    resource: entityType,
+    resourceId: entityId,
+    details: {
+      version: newVersion,
+      snapshotSize,
+      fieldCount: Object.keys(filteredSnapshot).length,
+      changeReason
+    }
+  });
 }
 
 async function getChangeHistory(

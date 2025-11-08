@@ -41,8 +41,34 @@
    - [ ] Results table with summary
    - [ ] Export to Excel button
 
-5. **Authorization:**
-   - [ ] All roles except Recovery Agent
+5. **Authorization & Role-Based Access:**
+   - [ ] Sales Officer: Own sales data only (filtered by assigned territory/region)
+   - [ ] Accountant: View all sales data
+   - [ ] Admin: Full access
+   - [ ] Recovery Agent, Other roles: 403 Forbidden
+
+6. **Performance & Caching:**
+   - [ ] Page size default: 100 items
+   - [ ] Max items returned: 10,000 per report
+   - [ ] Cache TTL: 15 minutes (less frequent updates than dashboard)
+   - [ ] API timeout: 20 seconds maximum
+   - [ ] Pagination validation: max pageSize = 100
+   - [ ] Implement cursor-based pagination for datasets > 1000 items
+
+7. **Real-Time Data Updates:**
+   - [ ] Cache TTL: 15 minutes (manual refresh recommended)
+   - [ ] Manual refresh button available
+   - [ ] Show "Report generated at" timestamp on page
+   - [ ] Network error: Show cached data with warning banner
+   - [ ] Cache invalidation: On invoice creation, voiding, payment
+
+8. **Error Handling:**
+   - [ ] Validate date range (from <= to, max 1 year)
+   - [ ] Handle missing client/product data (show as 'Unknown')
+   - [ ] Return HTTP 400 with error details if filters invalid
+   - [ ] Max 50,000 rows for Excel export (validate before download)
+   - [ ] Display partial data with error toast if calculation fails
+   - [ ] Catch and log trend calculation failures
 
 ---
 
