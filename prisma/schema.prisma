@@ -52,6 +52,35 @@ model Supplier {
   @@map("suppliers")
 }
 
+// ============================================================================
+// PRODUCT MANAGEMENT (Epic 2.4)
+// ============================================================================
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Product {
+  id            String         @id @default(cuid())
+  sku           String         @unique
+  name          String
+  brand         String?
+  category      String?
+  costPrice     Decimal        @db.Decimal(10, 2)
+  sellingPrice  Decimal        @db.Decimal(10, 2)
+  reorderLevel  Int            @default(10)
+  binLocation   String?
+  status        ProductStatus  @default(ACTIVE)
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([status])
+  @@index([sku])
+  @@map("products")
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
