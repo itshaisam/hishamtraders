@@ -29,24 +29,33 @@
 3. **Due Date Calculation:**
    - [ ] Due date calculated: invoiceDate + client.paymentTermsDays
 
-4. **Stock Validation:**
+4. **Stock Validation & Warehouse Selection:**
    - [ ] Line items validated: product exists, quantity > 0, **quantity <= available stock**
    - [ ] **Stock availability check before saving invoice** (prevent overselling)
    - [ ] **If multiple batches exist, deduct from oldest batch first (FIFO)**
+   - [ ] **User must explicitly select warehouse when creating invoice** (no pre-selection for MVP)
+   - [ ] Display available quantity per warehouse per product before selection
+   - [ ] Prevent concurrent invoice creation race conditions with database locks on batch records
 
 5. **Credit Limit Check:**
    - [ ] For credit sales, check: client.balance + invoice.total <= client.creditLimit
-   - [ ] Warning if 80-100% of credit limit
-   - [ ] Error if exceeding credit limit (Admin can override)
+   - [ ] Warning if 80-100% of credit limit (80% configurable by Admin)
+   - [ ] Error if exceeding credit limit
+   - [ ] Override logged with reason/notes, but no approval workflow required for MVP
 
 6. **Tax & Total Calculation:**
-   - [ ] Tax calculated per line item if applicable
+   - [ ] Tax calculated and applied at invoice level (NOT deferred to separate story)
+   - [ ] Tax rate retrieved from system configuration (not per-invoice override for MVP)
    - [ ] Subtotal and total calculated automatically
+   - [ ] Tax rounding: Round to nearest cent (standard banker's rounding)
 
 7. **Inventory Deduction:**
    - [ ] **When invoice saved, inventory decremented** (quantity reduced)
    - [ ] Client balance increased by total (if paymentType = CREDIT)
+   - [ ] For CASH invoices: paidAmount = total, status = PAID (no balance update)
+   - [ ] For CREDIT invoices: paidAmount = 0, status = PENDING (balance updated)
    - [ ] StockMovement record created (type=SALE, referenceType=INVOICE)
+   - [ ] Cannot cancel same-day unpaid invoices (voiding must be done via Story 3.4)
 
 8. **Backend API Endpoints:**
    - [ ] POST /api/invoices - Creates invoice with line items

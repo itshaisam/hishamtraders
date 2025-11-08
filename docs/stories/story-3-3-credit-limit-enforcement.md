@@ -23,14 +23,19 @@
    - [ ] When creating credit invoice, system calculates: client.balance + new invoice total
    - [ ] If result > 80% of creditLimit, display warning: "Client approaching credit limit (X% utilized)"
    - [ ] If result > 100% of creditLimit, display error: "Credit limit exceeded. Current balance: X, Limit: Y"
+   - [ ] **80% threshold is Admin-configurable** (default 80%, can be changed in System Settings)
+   - [ ] Credit limit check happens ONLY at invoice creation (not re-checked at payment)
 
 2. **Admin Override:**
-   - [ ] Admin can override credit limit (requires confirmation with reason)
-   - [ ] Non-admin users cannot override (invoice creation blocked)
+   - [ ] Admin can override credit limit and create invoice anyway (requires logged reason, no approval workflow)
+   - [ ] Non-admin users cannot override (invoice creation blocked with error)
+   - [ ] Override reason stored in Invoice audit log (free text field, 10-500 characters)
+   - [ ] Overrides are NOT reversible (created invoices stand)
 
 3. **Credit Limit Display:**
    - [ ] Credit limit utilization displayed on client detail page with progress bar
    - [ ] Dashboard shows list of clients > 80% credit limit utilization
+   - [ ] When client credit limit is changed by Admin: existing invoices remain unchanged, new limit applies to future invoices only
 
 4. **Frontend Warnings:**
    - [ ] Display credit limit warnings prominently during invoice creation

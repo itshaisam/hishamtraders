@@ -25,11 +25,12 @@
    - [ ] Payment type CLIENT differentiated from SUPPLIER
 
 2. **Payment Allocation Logic:**
-   - [ ] Payment can be allocated to one or multiple invoices
-   - [ ] FIFO invoice allocation: oldest unpaid invoice first (automatic mode)
-   - [ ] Manual allocation: user selects specific invoices
-   - [ ] Invoice status updated: UNPAID → PARTIAL → PAID based on allocation
-   - [ ] Overpayment handling: excess stored as client credit/advance
+   - [ ] Payment allocated to invoices AUTOMATICALLY using FIFO (oldest unpaid first)
+   - [ ] **No manual allocation in MVP** (always auto-allocate FIFO)
+   - [ ] Invoice status updated: PENDING → PARTIAL (if partiallyPaid) → PAID (if fully paid)
+   - [ ] **Overpayment handling: Store as NEGATIVE client balance** (e.g., balance = -$10 means $10 credit)
+   - [ ] **Overpayment credits must be used for future invoices** (cannot be refunded, only applied)
+   - [ ] **Allocation is ONE-WAY, not reversible** (allocated payments cannot be un-allocated)
 
 3. **Backend API Endpoints:**
    - [ ] POST /api/payments/client - Creates client payment with allocations
@@ -39,11 +40,19 @@
 
 4. **Payment Validation:**
    - [ ] Payment amount must be > 0
-   - [ ] If payment method is CHEQUE or BANK_TRANSFER, reference number required
-   - [ ] Allocated amounts cannot exceed payment amount
+   - [ ] If payment method is CHEQUE or BANK_TRANSFER, reference number required (format not validated for MVP)
+   - [ ] Payment date cannot be in future (max date = today)
+   - [ ] Payment date cannot be before earliest unpaid invoice date
    - [ ] Cannot allocate to VOIDED invoices
+   - [ ] Cannot allocate to PAID invoices (already fully allocated)
 
-5. **Frontend Pages:**
+5. **Client Balance Calculation:**
+   - [ ] **Balance = SUM(unpaid invoice totals) - SUM(payment allocations) - SUM(credit adjustments)**
+   - [ ] Negative balance means client has CREDIT (overpayment)
+   - [ ] Positive balance means client OWES
+   - [ ] Balance must be recalculated after each payment allocation (atomic transaction)
+
+6. **Frontend Pages:**
    - [ ] Record Client Payment page with client selection
    - [ ] Display client outstanding invoices when client selected
    - [ ] Allocation mode selector: Automatic (FIFO) or Manual

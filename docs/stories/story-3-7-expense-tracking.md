@@ -24,24 +24,31 @@
    - [ ] ExpenseCategory enum: RENT, UTILITIES, SALARIES, SUPPLIES, MAINTENANCE, MARKETING, TRANSPORT, MISC
 
 2. **Backend API Endpoints:**
-   - [ ] POST /api/expenses - Creates new expense
+   - [ ] POST /api/expenses - Creates new expense (Accountant & Admin only)
    - [ ] GET /api/expenses - Returns paginated expense list with filters (category, date range)
    - [ ] GET /api/expenses/:id - Returns expense details
-   - [ ] PUT /api/expenses/:id - Updates expense
-   - [ ] DELETE /api/expenses/:id - Soft-deletes expense
+   - [ ] PUT /api/expenses/:id - Updates expense (Accountant & Admin only)
+   - [ ] DELETE /api/expenses/:id - **Soft-deletes expense** (sets deleted_at timestamp)
 
-3. **Expense Validation:**
+3. **Expense Creation Workflow:**
+   - [ ] **No approval workflow for MVP** (Accountant creates expense directly, no approval needed)
+   - [ ] Expense is recorded immediately and counted in reporting
+
+4. **Expense Validation:**
    - [ ] Amount must be > 0
-   - [ ] Date cannot be in future
-   - [ ] Description required (min 3 characters)
-   - [ ] Category must be valid enum value
+   - [ ] Date cannot be in future (max date = today)
+   - [ ] Date cannot be older than 1 year (business rule: expenses older than 1 year require special approval)
+   - [ ] Description required (min 3 characters, max 500)
+   - [ ] Category must be valid enum value (8 fixed categories, not extensible for MVP)
 
-4. **Receipt Upload (Optional for MVP):**
+5. **Receipt Upload (Optional for MVP):**
    - [ ] receiptUrl field stores file path/URL
-   - [ ] File upload to local storage or cloud (S3, etc.)
+   - [ ] **Receipt truly optional** (user can record expense without receipt)
+   - [ ] File upload to local storage (cloud S3 deferred to Phase 2)
    - [ ] Supported formats: PDF, JPG, PNG
+   - [ ] File size limit: 5MB
 
-5. **Frontend Pages:**
+6. **Frontend Pages:**
    - [ ] Expense List page with add/edit modals
    - [ ] Filter by category, date range
    - [ ] Display total expenses for selected period

@@ -24,23 +24,25 @@
    - [ ] Filter by payment type (CLIENT, SUPPLIER, ALL)
    - [ ] Filter by date range
    - [ ] Filter by payment method (CASH, BANK_TRANSFER, CHEQUE)
-   - [ ] Search by client/supplier name
+   - [ ] **Search limited to name only** (not invoice/reference in MVP)
    - [ ] Pagination (20 records per page)
+   - [ ] Overpayment credits displayed as **negative payment rows** (for client payments only)
 
 2. **Payment Details Display:**
    - [ ] Date, Type (Client/Supplier), Party Name, Amount, Method, Reference, Recorded By
-   - [ ] For client payments: show allocated invoices
-   - [ ] For supplier payments: show linked purchase orders
-   - [ ] Click to view full payment details modal
+   - [ ] For client payments: show allocated invoices in collapsed table
+   - [ ] For supplier payments: show linked purchase orders (from Story 2.10 schema)
+   - [ ] Click to view full payment details modal with allocation breakdown
+   - [ ] **Schema compatibility note:** Confirm Story 2.10 Payment table structure aligns with Story 3.6
 
 3. **Cash Flow Report:**
    - [ ] GET /api/reports/cash-flow endpoint
    - [ ] Date range filter
-   - [ ] Calculate total cash IN (client payments)
+   - [ ] Calculate total cash IN (sum of client payments, excluding overpayment adjustments)
    - [ ] Calculate total cash OUT (supplier payments + expenses)
    - [ ] Net cash flow = IN - OUT
-   - [ ] Group by payment method
-   - [ ] Daily/weekly/monthly breakdown option
+   - [ ] **Daily/weekly/monthly breakdown OPTIONAL for MVP** (can be deferred if time-constrained)
+   - [ ] Group by payment method (supplementary info)
 
 4. **Payment Summary Cards:**
    - [ ] Total received from clients (period)

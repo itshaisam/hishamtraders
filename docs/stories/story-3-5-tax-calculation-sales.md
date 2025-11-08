@@ -21,31 +21,37 @@
 
 1. **System Configuration:**
    - [ ] Default sales tax rate stored in configuration (e.g., 17% for Pakistan GST)
-   - [ ] Tax rate configurable by Admin through settings page
+   - [ ] Tax rate configurable by Admin through settings page (only one global rate for MVP)
    - [ ] Tax rate validation: 0-100%
+   - [ ] Tax rate changes apply only to NEW invoices, not retroactively to old invoices
 
-2. **Client Tax Exemption:**
+2. **Integration with Story 3.2:**
+   - [ ] **Tax is calculated AND applied in Story 3.2 (Sales Invoice Creation), NOT here**
+   - [ ] This story (3.5) provides the configuration and reporting infrastructure
+   - [ ] Tax calculation responsibility: Story 3.2 uses config from 3.5
+   - [ ] No separate tax creation step required
+
+3. **Client Tax Exemption:**
    - [ ] Client model has `taxExempt` boolean field (default: false)
-   - [ ] Tax-exempt clients have 0% tax applied automatically
-   - [ ] Tax exemption reason optional field on client
+   - [ ] Tax-exempt clients have 0% tax applied automatically in Story 3.2
+   - [ ] Tax exemption reason optional field on client (free text)
 
-3. **Invoice Tax Calculation:**
+4. **Invoice Tax Calculation:**
    - [ ] Tax calculated on subtotal (sum of line items)
    - [ ] Formula: taxAmount = subtotal × (taxRate / 100)
    - [ ] Invoice total = subtotal + taxAmount
-   - [ ] Tax rate used displayed on invoice (snapshot at creation time)
+   - [ ] Tax rate SNAPSHOT at creation time (stored on invoice for historical accuracy)
+   - [ ] **Rounding: Round to nearest cent using standard banker's rounding**
 
-4. **Line Item Display:**
-   - [ ] Invoice displays: Subtotal, Tax (X%), Total
-   - [ ] Each line item shows unit price excluding tax
-   - [ ] Tax breakdown clearly visible
+5. **Tax Exemption Validation:**
+   - [ ] Tax exemption field is informational only for MVP (no certificate validation)
+   - [ ] Admin responsible for ensuring exemptions are valid
 
-5. **Tax Override:**
-   - [ ] Admin can manually override tax amount on invoice creation (optional)
-   - [ ] Override reason required if tax manually adjusted
-   - [ ] Original calculated tax and override reason stored
+6. **No Tax Override:**
+   - [ ] **For MVP: Tax override NOT allowed (removed from AC)**
+   - [ ] Tax amount calculated by Story 3.2 formula, not adjustable
 
-6. **Tax Reporting:**
+7. **Tax Reporting:**
    - [ ] GET /api/reports/tax-summary endpoint
    - [ ] Returns total tax collected for date range
    - [ ] Group by tax rate (supports historical rate changes)

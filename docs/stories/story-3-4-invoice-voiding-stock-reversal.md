@@ -20,17 +20,23 @@
 ## Acceptance Criteria
 
 1. **Void Validation:**
-   - [ ] Cannot void invoice if any payment has been recorded against it
+   - [ ] **Cannot void invoice if status = PARTIAL or PAID** (any payment recorded blocks voiding)
    - [ ] Cannot void invoice if status is already VOIDED
+   - [ ] **Can only void invoices with status = PENDING** (unpaid invoices only)
    - [ ] Only Admin and Accountant can void invoices
+   - [ ] Void reason required: free text, minimum 10 characters, maximum 500 characters
 
 2. **Stock Reversal Logic:**
-   - [ ] When invoice voided, all inventory deductions reversed (added back to original batches)
+   - [ ] When invoice voided, all inventory deductions reversed (added back)
+   - [ ] **If original batch still exists: add quantity back to original batch**
+   - [ ] **If original batch was consumed in other sales: create new batch dated today with "REVERSAL" prefix**
+   - [ ] **Batch format for reversals: REVERSAL-YYYYMMDD-XXX** (to distinguish from normal batches)
    - [ ] Stock movements created with type ADJUSTMENT and reference to voided invoice
-   - [ ] If original batch no longer exists, stock added to new batch with current date
+   - [ ] Running balance tracking must reflect void correctly (quantity returns to inventory)
 
 3. **Client Balance Update:**
-   - [ ] Client balance reduced by invoice total when voided
+   - [ ] **For CREDIT invoices: client balance reduced by invoice total** (they owe less)
+   - [ ] **For CASH invoices: no balance impact** (already marked PAID, no balance tracking)
    - [ ] Balance calculation: currentBalance - invoiceTotal
 
 4. **Invoice Status Update:**
