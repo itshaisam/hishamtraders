@@ -27,23 +27,41 @@
    - [ ] Movement records are immutable (insert only, no update/delete)
    - [ ] Each movement links to source document (PO, invoice, adjustment)
 
-3. **Backend API Endpoints:**
-   - [ ] GET /api/inventory/movements - Returns movement history with filters (productId, warehouseId, date range, movementType)
+3. **Stock Movement Workflow (Inter-Warehouse Transfer):**
+   - [ ] Two-step transfer process:
+     - Step 1: Create transfer (source warehouse, target warehouse, items, quantities)
+     - Step 2: Receive transfer in target warehouse (destination manager confirms receipt)
+   - [ ] Status flow: INITIATED → RECEIVED
+   - [ ] Database transaction: Both steps succeed or both fail (atomic)
+   - [ ] Validation: Can't transfer quantity > available in source warehouse
+   - [ ] Cancel transfer: Only allowed during INITIATED status
+   - [ ] If transfer fails: User notified, can retry step 2
+   - [ ] Reverse transfer: Create new opposite transfer if needed (return to source)
 
-4. **Running Balance:**
+4. **Backend API Endpoints:**
+   - [ ] GET /api/inventory/movements - Returns movement history with filters (productId, warehouseId, date range, movementType)
+   - [ ] POST /api/inventory/transfers - Create transfer (step 1)
+   - [ ] POST /api/inventory/transfers/:id/receive - Receive transfer (step 2)
+   - [ ] GET /api/inventory/transfers - List pending/completed transfers
+
+5. **Running Balance:**
    - [ ] Running balance calculated per movement (previous quantity + change = new quantity)
 
-5. **Frontend Pages:**
+6. **Frontend Pages:**
    - [ ] Inventory Movement Report displays: Date | Type | Reference | Quantity In | Quantity Out | Balance | User
    - [ ] Filter by product, warehouse, date range
    - [ ] Clicking reference number navigates to source document
    - [ ] Movement report exportable to Excel
+   - [ ] Transfer Status page shows pending/in-transit/received transfers
 
-6. **Authorization:**
+7. **Authorization:**
    - [ ] All roles can view movement history (read-only)
+   - [ ] Warehouse Manager can initiate transfers (step 1)
+   - [ ] Destination Warehouse Manager can receive transfers (step 2)
 
-7. **Audit Integrity:**
+8. **Audit Integrity:**
    - [ ] Stock movements automatically logged (separate from user audit trail)
+   - [ ] Transfer steps logged: who initiated, when received, by whom
 
 ---
 

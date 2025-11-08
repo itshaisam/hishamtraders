@@ -25,21 +25,31 @@
 
 2. **Adjustment Logic:**
    - [ ] Adjustment payload: productId, warehouseId, adjustmentType (WASTAGE/DAMAGE/THEFT/CORRECTION), quantity (+ or -), reason, notes
-   - [ ] Inventory quantity updated immediately
-   - [ ] StockMovement record created (type=ADJUSTMENT, quantity, reason)
    - [ ] Quantity can be positive (count increase) or negative (count decrease)
    - [ ] Stock never goes negative (validation: newQty >= 0)
    - [ ] Reason field required (free text explanation)
 
-3. **Frontend Pages:**
+3. **Adjustment Approval Workflow:**
+   - [ ] Warehouse Manager creates adjustment (qty, type, reason, notes)
+   - [ ] Adjustment status: PENDING (inventory NOT updated yet)
+   - [ ] Admin reviews in approval queue
+   - [ ] Admin can Approve or Reject
+   - [ ] If Approved: Inventory updated, StockMovement record created, status → APPROVED
+   - [ ] If Rejected: Adjustment cancelled, notification sent to manager with reason
+   - [ ] Audit log: Records who created, who approved/rejected, when, reason
+   - [ ] No reversal of approved adjustments (create new opposite adjustment if needed)
+
+4. **Frontend Pages:**
    - [ ] Stock Adjustment page with form: product, warehouse, type, quantity, reason
    - [ ] Display adjustment history with type-specific icons
 
-4. **Authorization:**
-   - [ ] Only Warehouse Manager and Admin can create adjustments
+5. **Authorization:**
+   - [ ] Warehouse Manager can create adjustments
+   - [ ] Admin can approve/reject adjustments
+   - [ ] Only these roles can access adjustment workflow
 
-5. **Audit Logging:**
-   - [ ] Stock adjustments logged in audit trail with reason
+6. **Audit Logging:**
+   - [ ] Stock adjustments logged in audit trail with reason, creator, approver, timestamp
 
 ---
 

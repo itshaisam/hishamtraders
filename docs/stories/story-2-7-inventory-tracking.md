@@ -28,19 +28,27 @@
    - [ ] Stock status calculated: in-stock (qty > reorderLevel), low-stock (qty <= reorderLevel but > 0), out-of-stock (qty = 0)
    - [ ] GET /api/inventory/low-stock - Returns products at or below reorder level
 
-3. **Auto-Update Logic:**
+3. **Inventory Allocation Algorithm:**
+   - [ ] For MVP: Manual warehouse selection by user
+   - [ ] When creating invoice, user selects source warehouse for each line item
+   - [ ] System prevents over-allocation (qty to allocate <= available in selected warehouse)
+   - [ ] Display available quantity per warehouse to user
+   - [ ] Batch/lot tracking deferred to Phase 2 (Epic 6)
+   - [ ] FIFO/LIFO algorithms deferred to Phase 2 (Epic 6)
+
+4. **Auto-Update Logic:**
    - [ ] Inventory quantities updated automatically by stock movements (receipts, sales, adjustments)
 
-4. **Frontend Pages:**
+5. **Frontend Pages:**
    - [ ] Inventory View displays filterable table: Product | SKU | Warehouse | Bin | Quantity | Status
    - [ ] Status displayed with color coding (green/yellow/red)
    - [ ] Search by SKU or product name
    - [ ] Display last updated timestamp
 
-5. **Authorization:**
+6. **Authorization:**
    - [ ] All roles can view inventory (read-only for Sales/Recovery, read-write for Warehouse/Admin)
 
-6. **Data Refresh:**
+7. **Data Refresh:**
    - [ ] Inventory view updates on data refetch (TanStack Query cache invalidation)
 
 ---

@@ -35,15 +35,22 @@
    - [ ] PO status updated to RECEIVED when goods received
    - [ ] StockMovement record created (type=RECEIPT, productId, quantity, referenceType=PO, referenceId=poId)
 
-4. **Frontend Pages:**
+4. **Receiving Mismatch Handling:**
+   - [ ] Accept received quantity as-is (may differ from PO quantity)
+   - [ ] Record variance note: over-delivery, under-delivery, or exact match
+   - [ ] Update inventory based on actual received quantity only
+   - [ ] Adjust landed cost calculation based on actual received quantity
+   - [ ] Variance report available for reconciliation with suppliers
+
+5. **Frontend Pages:**
    - [ ] PO detail page includes "Receive Goods" button (if status = IN_TRANSIT or PENDING)
    - [ ] Goods receipt form lists PO items with input for bin location per item
    - [ ] Receipt confirmation with updated inventory
 
-5. **Authorization:**
+6. **Authorization:**
    - [ ] Only Warehouse Manager and Admin can record goods receipts
 
-6. **Audit Logging:**
+7. **Audit Logging:**
    - [ ] Stock receipt logged in audit trail with before/after quantities
 
 ---
