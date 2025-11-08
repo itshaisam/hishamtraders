@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
+import suppliersRoutes from './modules/suppliers/suppliers.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
@@ -47,6 +48,7 @@ app.use('/api/v1', auditMiddleware);
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/suppliers', suppliersRoutes);
 app.use('/api/v1', dashboardRoutes);
 
 // 404 handler (must be after all routes)
