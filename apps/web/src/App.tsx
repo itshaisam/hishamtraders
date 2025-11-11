@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import Layout from './components/Layout';
 import { useAuthStore } from './stores/auth.store';
 import { SuppliersPage } from './features/suppliers/pages/SuppliersPage';
 import { ProductsPage } from './features/products/pages/ProductsPage';
@@ -54,7 +55,9 @@ function App() {
             path="/suppliers"
             element={
               <ProtectedRoute>
-                <SuppliersPage />
+                <Layout>
+                  <SuppliersPage />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -64,7 +67,9 @@ function App() {
             path="/products"
             element={
               <ProtectedRoute>
-                <ProductsPage />
+                <Layout>
+                  <ProductsPage />
+                </Layout>
               </ProtectedRoute>
             }
           />
@@ -74,7 +79,9 @@ function App() {
             path="/purchase-orders"
             element={
               <ProtectedRoute>
-                <PurchaseOrdersPage />
+                <Layout>
+                  <PurchaseOrdersPage />
+                </Layout>
               </ProtectedRoute>
             }
           />
