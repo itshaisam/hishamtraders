@@ -10,6 +10,11 @@ export { default as Alert } from './Alert';
 export { default as Spinner } from './Spinner';
 export { default as Combobox, type ComboboxOption } from './Combobox';
 export { default as FormField } from './FormField';
+export { default as Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs';
+export {
+  default as RadioBadgeGroup,
+  type RadioBadgeOption,
+} from './RadioBadgeGroup';
 export {
   default as Skeleton,
   SkeletonLine,

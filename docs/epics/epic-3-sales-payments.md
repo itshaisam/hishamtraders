@@ -154,7 +154,7 @@
 2. Payment payload: clientId, amount, method (CASH/BANK_TRANSFER/CHEQUE), referenceNumber, date, notes
 3. Payment reduces client.balance by payment amount
 4. Payment can be allocated to specific invoices or treated as account credit
-5. Invoice allocation: oldest unpaid invoices first (FIFO)
+5. Invoice allocation is handled automatically using a First-In-First-Out (FIFO) strategy (oldest unpaid invoices are paid first).
 6. Invoice status updated: PENDING → PARTIAL (if partly paid) → PAID (if fully paid)
 7. If payment > outstanding balance, warn but allow (overpayment creates credit balance)
 8. Payment method validation: if CHEQUE or BANK_TRANSFER, referenceNumber required
@@ -162,7 +162,7 @@
 10. GET /api/clients/:id/payments returns payment history for specific client
 11. Frontend Record Payment page with client selection, amount, method, reference
 12. Frontend displays client current balance before and after payment
-13. Frontend allows manual allocation to specific invoices
+13. For more complex scenarios, the frontend also allows accountants to manually allocate a payment to specific invoices.
 14. Frontend shows remaining client balance after payment
 15. Recovery Agent, Accountant, Admin can record payments
 16. **Client payments logged in audit trail**
@@ -217,6 +217,44 @@
 10. All roles can view payment history (read-only for Sales/Recovery)
 
 **Story File:** [docs/stories/story-3-8-payment-history.md](../stories/story-3-8-payment-history.md)
+
+---
+
+### Story 3.9: Sales Returns and Credit Notes
+
+**As an** accountant,
+**I want** to process sales returns for paid or partially paid invoices and issue a credit note,
+**So that** returned inventory is restocked and client accounts are accurately adjusted.
+
+**Acceptance Criteria:**
+1.  Can create a credit note from an existing, paid or partially paid invoice.
+2.  `CreditNote` and `CreditNoteItem` tables are created in the database.
+3.  When a credit note is created, returned items are added back to inventory.
+4.  A `StockMovement` record is created for the return.
+5.  The client's balance is adjusted by the credit note amount.
+6.  `POST /api/credit-notes` and `GET /api/credit-notes` endpoints are created.
+7.  Frontend UI exists for creating and viewing credit notes.
+8.  Only `Admin` and `Accountant` roles can create credit notes.
+9.  Credit note creation is logged in the audit trail.
+
+**Story File:** [docs/stories/story-3-9-sales-returns.md](../stories/story-3-9-sales-returns.md)
+
+---
+
+### Story 3.10: Tax Rate Configuration
+
+**As an** admin,
+**I want** a settings page to manage the system-wide default sales tax rate,
+**So that** I can easily update the tax percentage applied to all invoices.
+
+**Acceptance Criteria:**
+1.  A system-wide configuration for `DEFAULT_SALES_TAX_RATE` exists.
+2.  API endpoints `GET /api/config/tax-rate` and `PUT /api/config/tax-rate` are created.
+3.  The tax rate is validated to be between 0 and 100.
+4.  An admin-only "Tax Settings" page is created to manage the rate.
+5.  Changes to the tax rate are logged in the audit trail.
+
+**Story File:** [docs/stories/story-3-10-tax-configuration.md](../stories/story-3-10-tax-configuration.md)
 
 ---
 

@@ -323,6 +323,24 @@ export async function auditMiddleware(req, res, next) {
 
 ---
 
+### Story 1.11: JWT Refresh Token Mechanism
+
+**As a** user,
+**I want** the application to automatically refresh my session before it expires,
+**So that** I can stay logged in for an extended period without being abruptly logged out.
+
+**Acceptance Criteria:**
+1.  Upon login, the API returns a short-lived access token and a long-lived refresh token.
+2.  The refresh token is stored securely in an `httpOnly` cookie.
+3.  A `POST /api/v1/auth/refresh-token` endpoint is created to exchange a refresh token for a new access token.
+4.  The frontend automatically refreshes the access token when it expires.
+5.  The user is logged out if the refresh token is also invalid.
+6.  Token refresh attempts are logged in the audit trail.
+
+**Story File:** [docs/stories/story-1-11-jwt-refresh-token.md](../stories/story-1-11-jwt-refresh-token.md)
+
+---
+
 ## Epic 1 Dependencies
 
 - None (foundation epic)

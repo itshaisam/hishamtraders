@@ -42,6 +42,22 @@ The MVP provides **simplified accounting** (client/supplier balances, expense tr
 
 ## Stories
 
+### Story 5.0: MVP Data Migration to General Ledger
+
+**As a** developer,
+**I want** a one-time migration script that creates historical journal entries for all MVP transactions,
+**So that** the General Ledger is accurate from the moment Phase 2 is deployed.
+
+**Acceptance Criteria:**
+1.  [ ] A script is created to backfill journal entries for all Invoices, Payments, Expenses, and other transactions from the MVP.
+2.  [ ] The script is idempotent, meaning it can be run multiple times without creating duplicate entries.
+3.  [ ] After the script runs, a Trial Balance report confirms that total debits equal total credits.
+4.  [ ] The script is documented with clear instructions on how to run it.
+
+**Story File:** [docs/stories/story-5-0-mvp-data-migration.md](../stories/story-5-0-mvp-data-migration.md)
+
+---
+
 ### Story 5.1: Chart of Accounts Setup
 
 **As an** accountant,

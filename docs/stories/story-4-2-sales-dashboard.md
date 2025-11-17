@@ -36,6 +36,7 @@
    - [ ] Overdue clients list with color-coding
    - [ ] Credit limit alerts widget
    - [ ] Quick actions: Create Invoice, Record Payment
+   - [ ] The dashboard gracefully handles an "empty state" by displaying informative messages or placeholder content when there is no data to show.
 
 3. **Authorization & Role-Based Access:**
    - [ ] Sales Officer: Own sales data only (filtered by assigned territory/region)

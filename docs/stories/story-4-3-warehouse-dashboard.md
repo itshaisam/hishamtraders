@@ -35,6 +35,7 @@
    - [ ] Low stock alerts list
    - [ ] Pending receipts widget
    - [ ] Quick actions: Record Receipt, Adjust Stock
+   - [ ] The dashboard gracefully handles an "empty state" by displaying informative messages or placeholder content when there is no data to show.
 
 3. **Authorization & Role-Based Access:**
    - [ ] Warehouse Manager: Own warehouse only

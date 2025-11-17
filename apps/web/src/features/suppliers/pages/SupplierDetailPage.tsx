@@ -2,8 +2,9 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { SupplierForm } from '../components/SupplierForm';
+import { SupplierFormSkeleton } from '../components/SupplierFormSkeleton';
 import { useSupplier, useUpdateSupplier } from '../hooks/useSuppliers';
-import { Spinner, Button } from '../../../components/ui';
+import { Spinner, Button, Breadcrumbs } from '../../../components/ui';
 
 /**
  * SupplierDetailPage - Full page for editing an existing supplier
@@ -31,17 +32,13 @@ export const SupplierDetailPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
-        <Spinner />
-      </div>
-    );
+    return <SupplierFormSkeleton isEdit={true} />;
   }
 
   if (isError || !supplier) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-2xl mx-auto px-4">
+        <div className="max-w-5xl mx-auto px-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <h2 className="text-lg font-semibold text-red-900 mb-2">Supplier Not Found</h2>
             <p className="text-red-700 mb-4">The supplier you're looking for doesn't exist or has been deleted.</p>
@@ -56,24 +53,33 @@ export const SupplierDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4 space-y-8">
-        {/* Header with back button - Responsive */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:gap-4 gap-3">
+      <div className="max-w-5xl mx-auto px-4 space-y-4">
+        {/* Breadcrumbs - Responsive */}
+        <Breadcrumbs
+          items={[
+            { label: 'Suppliers', href: '/suppliers' },
+            { label: supplier.name },
+          ]}
+          className="text-xs sm:text-sm"
+        />
+
+        {/* Header with back button - Responsive Flex */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:gap-4 gap-2">
           <button
             onClick={() => navigate('/suppliers')}
             className="p-2 hover:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
-            aria-label="Go back"
+            aria-label="Go back to suppliers"
           >
             <ArrowLeft size={24} className="text-gray-700" />
           </button>
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit Supplier</h1>
-            <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">Update supplier information</p>
+            <p className="mt-1 text-sm sm:text-base text-gray-600">Update supplier information and details</p>
           </div>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-white rounded-lg shadow p-6 md:p-8">
+        {/* Form Card - Full width on mobile, wider on desktop */}
+        <div className="bg-white rounded-lg shadow p-6 md:p-8 mt-2">
           <SupplierForm supplier={supplier} onSubmit={handleSubmit} isLoading={isUpdating} />
         </div>
       </div>

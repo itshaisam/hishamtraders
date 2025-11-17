@@ -10,6 +10,8 @@ import { SuppliersPage } from './features/suppliers/pages/SuppliersPage';
 import { SupplierFormPage } from './features/suppliers/pages/SupplierFormPage';
 import { SupplierDetailPage } from './features/suppliers/pages/SupplierDetailPage';
 import { ProductsPage } from './features/products/pages/ProductsPage';
+import { ProductFormPage } from './features/products/pages/ProductFormPage';
+import { ProductDetailPage } from './features/products/pages/ProductDetailPage';
 import { PurchaseOrdersPage } from './features/purchase-orders/pages/PurchaseOrdersPage';
 import { POFormPage } from './features/purchase-orders/pages/POFormPage';
 import { PODetailPage } from './features/purchase-orders/pages/PODetailPage';
@@ -88,13 +90,35 @@ function App() {
             }
           />
 
-          {/* Products route */}
+          {/* Products routes */}
           <Route
             path="/products"
             element={
               <ProtectedRoute>
                 <Layout>
                   <ProductsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/products/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProductFormPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/products/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProductDetailPage />
                 </Layout>
               </ProtectedRoute>
             }

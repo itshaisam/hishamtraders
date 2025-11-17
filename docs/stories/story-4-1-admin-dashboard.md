@@ -41,6 +41,7 @@
    - [ ] Pending containers widget
    - [ ] Recent activity widget (audit log summary)
    - [ ] Quick action buttons (New PO, New Invoice, New Product)
+   - [ ] The dashboard gracefully handles an "empty state" by displaying informative messages or placeholder content when there is no data to show (e.g., for a new account).
 
 3. **Authorization & Role-Based Access:**
    - [ ] Only Admin role can access full admin dashboard (return 403 for others)

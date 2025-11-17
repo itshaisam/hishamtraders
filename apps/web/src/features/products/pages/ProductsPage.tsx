@@ -1,19 +1,19 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Plus, Search, Filter } from 'lucide-react';
-import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '../hooks/useProducts';
-import { ProductFormModal } from '../components/ProductFormModal';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Search } from 'lucide-react';
+import { useProducts, useDeleteProduct } from '../hooks/useProducts';
 import { ProductList } from '../components/ProductList';
-import { Product, CreateProductRequest, UpdateProductRequest } from '../types/product.types';
+import { Product } from '../types/product.types';
 import { useAuthStore } from '@/stores/auth.store';
+import { Button, Breadcrumbs, RadioBadgeGroup } from '@/components/ui';
 
 const PRODUCT_CATEGORIES = ['Sinks', 'Faucets', 'Toilets', 'Showers', 'Accessories'];
 
 export const ProductsPage: React.FC = () => {
+  const navigate = useNavigate();
   const user = useAuthStore((state: any) => state.user);
   const canEdit = user?.role?.name && ['ADMIN', 'WAREHOUSE_MANAGER'].includes(user.role.name);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [page, setPage] = useState(1);
@@ -26,19 +26,15 @@ export const ProductsPage: React.FC = () => {
     limit: 10,
   });
 
-  const createMutation = useCreateProduct();
-  const updateMutation = useUpdateProduct();
   const deleteMutation = useDeleteProduct();
 
   const handleCreate = useCallback(() => {
-    setEditingProduct(undefined);
-    setIsModalOpen(true);
-  }, []);
+    navigate('/products/new');
+  }, [navigate]);
 
   const handleEdit = useCallback((product: Product) => {
-    setEditingProduct(product);
-    setIsModalOpen(true);
-  }, []);
+    navigate(`/products/${product.id}`);
+  }, [navigate]);
 
   const handleDelete = useCallback((product: Product) => {
     if (window.confirm(`Are you sure you want to delete "${product.name}" (${product.sku})?`)) {
@@ -49,39 +45,35 @@ export const ProductsPage: React.FC = () => {
     }
   }, [deleteMutation]);
 
-  const handleSubmit = useCallback(
-    async (formData: CreateProductRequest | UpdateProductRequest) => {
-      if (editingProduct) {
-        await updateMutation.mutateAsync({
-          id: editingProduct.id,
-          data: formData as UpdateProductRequest,
-        });
-      } else {
-        await createMutation.mutateAsync(formData as CreateProductRequest);
-      }
-    },
-    [editingProduct, createMutation, updateMutation]
-  );
-
   const products = useMemo(() => data?.data || [], [data]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-            <p className="mt-1 text-gray-600">Manage product catalog and pricing</p>
+        {/* Breadcrumbs - Responsive */}
+        <div className="mb-6">
+          <Breadcrumbs
+            items={[{ label: 'Products' }]}
+            className="text-xs sm:text-sm"
+          />
+        </div>
+
+        {/* Header - Responsive Flex */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Products</h1>
+            <p className="mt-1 text-sm sm:text-base text-gray-600">Manage product catalog and pricing</p>
           </div>
           {canEdit && (
-            <button
+            <Button
               onClick={handleCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              variant="primary"
+              size="md"
+              icon={<Plus size={20} />}
+              className="w-full sm:w-auto"
             >
-              <Plus size={20} />
               New Product
-            </button>
+            </Button>
           )}
         </div>
 
@@ -113,24 +105,22 @@ export const ProductsPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Category
               </label>
-              <div className="flex items-center gap-2">
-                <Filter size={16} className="text-gray-400" />
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => {
-                    setSelectedCategory(e.target.value);
-                    setPage(1);
-                  }}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">All Categories</option>
-                  {PRODUCT_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <RadioBadgeGroup
+                name="category"
+                value={selectedCategory}
+                onChange={(value) => {
+                  setSelectedCategory(value);
+                  setPage(1);
+                }}
+                options={[
+                  { value: '', label: 'All Categories', color: 'gray' },
+                  ...PRODUCT_CATEGORIES.map((cat) => ({
+                    value: cat,
+                    label: cat,
+                    color: 'blue' as const,
+                  })),
+                ]}
+              />
             </div>
           </div>
         </div>
@@ -146,25 +136,25 @@ export const ProductsPage: React.FC = () => {
           />
         </div>
 
-        {/* Pagination */}
+        {/* Pagination - Responsive Stack/Flex */}
         {data && data.pagination.pages > 1 && (
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm text-gray-600">
+          <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <p className="text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
               Showing page {data.pagination.page} of {data.pagination.pages} (
               {data.pagination.total} total)
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 order-1 sm:order-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 sm:flex-initial px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 Previous
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(data.pagination.pages, p + 1))}
                 disabled={page === data.pagination.pages}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 sm:flex-initial px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 Next
               </button>
@@ -172,19 +162,6 @@ export const ProductsPage: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Form Modal */}
-      <ProductFormModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingProduct(undefined);
-        }}
-        onSubmit={handleSubmit}
-        product={editingProduct}
-        isLoading={createMutation.isPending || updateMutation.isPending}
-        isEditMode={!!editingProduct}
-      />
     </div>
   );
 };

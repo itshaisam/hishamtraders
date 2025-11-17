@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, AlertCircle, Trash2 } from 'lucide-react';
-import { Button, Combobox, ComboboxOption, FormField, Input } from '../../../components/ui';
+import { Button, Combobox, ComboboxOption, FormField, Input, RadioBadgeGroup } from '../../../components/ui';
 import { PurchaseOrder, CreatePurchaseOrderRequest, CreatePOItemRequest } from '../types/purchase-order.types';
 import { useSuppliers } from '@/features/suppliers/hooks/useSuppliers';
 import { useProducts } from '@/features/products/hooks/useProducts';
@@ -12,6 +12,7 @@ const poFormSchema = z.object({
   supplierId: z.string().min(1, 'Supplier is required'),
   orderDate: z.string().min(1, 'Order date is required'),
   expectedArrivalDate: z.string().optional(),
+  status: z.enum(['PENDING', 'IN_TRANSIT', 'RECEIVED', 'CANCELLED']).default('PENDING'),
   notes: z.string().optional(),
 });
 
@@ -38,6 +39,7 @@ export const POForm: React.FC<POFormProps> = ({
   const [quantity, setQuantity] = useState<number>(1);
   const [unitCost, setUnitCost] = useState<number>(0);
   const [itemError, setItemError] = useState<string>('');
+  const [status, setStatus] = useState(purchaseOrder?.status || 'PENDING');
 
   const { data: suppliersData, isLoading: suppliersLoading } = useSuppliers({ limit: 100 });
   const { data: productsData, isLoading: productsLoading } = useProducts({ limit: 100 });
@@ -62,6 +64,7 @@ export const POForm: React.FC<POFormProps> = ({
       expectedArrivalDate: purchaseOrder?.expectedArrivalDate
         ? new Date(purchaseOrder.expectedArrivalDate).toISOString().split('T')[0]
         : '',
+      status: purchaseOrder?.status || 'PENDING',
       notes: purchaseOrder?.notes || '',
     },
   });
@@ -146,61 +149,94 @@ export const POForm: React.FC<POFormProps> = ({
     items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0).toFixed(2);
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      {/* Basic Information */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="font-semibold text-lg text-gray-900 mb-4">Order Information</h3>
-        <div className="space-y-4">
-          {/* Supplier - Using Combobox for searchable dropdown */}
-          <FormField label="Supplier" error={errors.supplierId?.message} required>
-            <Combobox
-              options={supplierOptions}
-              value={supplierId}
-              onChange={(value) => setValue('supplierId', value || '')}
-              placeholder="Search and select supplier..."
-              isLoading={suppliersLoading}
-              disabled={isLoading || !!purchaseOrder}
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
+      {/* SECTION 1: Order Information */}
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-3">
+          Order Information
+        </h3>
+
+        {/* Supplier - Using Combobox for searchable dropdown */}
+        <FormField label="Supplier" error={errors.supplierId?.message} required>
+          <Combobox
+            options={supplierOptions}
+            value={supplierId}
+            onChange={(value) => setValue('supplierId', value || '')}
+            placeholder="Search and select supplier..."
+            isLoading={suppliersLoading}
+            disabled={isLoading || !!purchaseOrder}
+          />
+        </FormField>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Order Date */}
+          <FormField label="Order Date" error={errors.orderDate?.message} required>
+            <Input
+              {...register('orderDate')}
+              type="date"
+              disabled={isLoading}
+              className="py-2.5"
             />
           </FormField>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Order Date */}
-            <FormField label="Order Date" error={errors.orderDate?.message} required>
-              <Input
-                {...register('orderDate')}
-                type="date"
-                disabled={isLoading}
-              />
-            </FormField>
-
-            {/* Expected Arrival Date */}
-            <FormField label="Expected Arrival Date" error={errors.expectedArrivalDate?.message}>
-              <Input
-                {...register('expectedArrivalDate')}
-                type="date"
-                disabled={isLoading}
-              />
-            </FormField>
-          </div>
-
-          {/* Notes */}
-          <FormField label="Notes" error={errors.notes?.message}>
-            <textarea
-              {...register('notes')}
-              rows={3}
-              placeholder="Add any notes about this purchase order..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
-                focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-blue-600 focus:ring-blue-600
-                disabled:bg-gray-100 disabled:cursor-not-allowed"
+          {/* Expected Arrival Date */}
+          <FormField label="Expected Arrival Date" error={errors.expectedArrivalDate?.message}>
+            <Input
+              {...register('expectedArrivalDate')}
+              type="date"
               disabled={isLoading}
+              className="py-2.5"
             />
           </FormField>
         </div>
+
+        {/* Notes */}
+        <FormField label="Notes" error={errors.notes?.message}>
+          <textarea
+            {...register('notes')}
+            rows={3}
+            placeholder="Add any notes about this purchase order..."
+            className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg
+              focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500
+              disabled:bg-gray-100 disabled:cursor-not-allowed transition-all"
+            disabled={isLoading}
+          />
+        </FormField>
       </div>
 
-      {/* Line Items */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="font-semibold text-lg text-gray-900 mb-4">Order Items</h3>
+      {/* SECTION 2: Status */}
+      {purchaseOrder && (
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-3">
+            Order Status
+          </h3>
+
+          <FormField label="Status" error={errors.status?.message}>
+            <RadioBadgeGroup
+              name="status"
+              value={status}
+              onChange={(value) => {
+                setStatus(value as 'PENDING' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED');
+                register('status').onChange({ target: { value } } as any);
+              }}
+              options={[
+                { value: 'PENDING', label: 'Pending', color: 'blue' },
+                { value: 'IN_TRANSIT', label: 'In Transit', color: 'yellow' },
+                { value: 'RECEIVED', label: 'Received', color: 'green' },
+                { value: 'CANCELLED', label: 'Cancelled', color: 'red' },
+              ]}
+              disabled={isLoading}
+            />
+            <input type="hidden" {...register('status')} value={status} />
+          </FormField>
+        </div>
+      )}
+
+      {/* SECTION 3: Line Items */}
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-3">
+          Order Items
+        </h3>
 
         {/* Item Error Alert */}
         {itemError && (
@@ -211,8 +247,8 @@ export const POForm: React.FC<POFormProps> = ({
         )}
 
         {/* Add Item Form */}
-        <div className="space-y-4 mb-6 p-4 bg-white rounded-md border border-gray-300">
-          <h4 className="font-medium text-gray-900">Add New Item</h4>
+        <div className="space-y-6 mb-6 p-6 bg-gray-50 rounded-lg border-2 border-gray-200">
+          <h4 className="font-semibold text-gray-900 text-base">Add New Item</h4>
 
           <FormField label="Product">
             <Combobox
@@ -226,7 +262,7 @@ export const POForm: React.FC<POFormProps> = ({
           </FormField>
 
           {/* Responsive Grid: 1 col on mobile, 3 on sm+ */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <FormField label="Quantity">
               <Input
                 type="number"
@@ -234,6 +270,7 @@ export const POForm: React.FC<POFormProps> = ({
                 onChange={(e) => setQuantity(Math.max(0, Number(e.target.value)))}
                 min="1"
                 disabled={isLoading}
+                className="py-2.5"
               />
             </FormField>
 
@@ -245,6 +282,7 @@ export const POForm: React.FC<POFormProps> = ({
                 min="0"
                 step="0.01"
                 disabled={isLoading}
+                className="py-2.5"
               />
             </FormField>
 
@@ -253,7 +291,7 @@ export const POForm: React.FC<POFormProps> = ({
                 type="text"
                 value={calculateLineTotal(quantity, unitCost)}
                 disabled
-                className="bg-gray-100"
+                className="bg-gray-100 py-2.5"
               />
             </FormField>
           </div>
@@ -323,28 +361,20 @@ export const POForm: React.FC<POFormProps> = ({
         )}
       </div>
 
-      {/* Action Buttons - Responsive Stack/Flex */}
-      <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
-        <Button
-          type="button"
-          variant="secondary"
-          size="md"
-          onClick={() => window.history.back()}
-          disabled={isLoading}
-          className="sm:flex-1"
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          variant="primary"
-          size="md"
-          loading={isLoading}
-          disabled={isLoading}
-          className="sm:flex-1"
-        >
-          {purchaseOrder ? 'Update Order' : 'Create Order'}
-        </Button>
+      {/* Action Button - Sticky */}
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 -mx-6 -mb-8 px-6 py-4">
+        <div className="flex gap-3 max-w-md ml-auto">
+          <Button
+            type="submit"
+            variant="primary"
+            size="md"
+            loading={isLoading}
+            disabled={isLoading}
+            className="flex-1"
+          >
+            {purchaseOrder ? 'Update Order' : 'Create Order'}
+          </Button>
+        </div>
       </div>
     </form>
   );

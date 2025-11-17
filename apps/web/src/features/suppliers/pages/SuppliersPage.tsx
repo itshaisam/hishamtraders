@@ -6,7 +6,7 @@ import { SupplierList } from '../components/SupplierList';
 import { SupplierListSkeleton } from '../components/SupplierListSkeleton';
 import { Supplier } from '../types/supplier.types';
 import { useAuthStore } from '@/stores/auth.store';
-import { Button } from '@/components/ui';
+import { Button, Breadcrumbs } from '@/components/ui';
 
 export const SuppliersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -52,6 +52,12 @@ export const SuppliersPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 space-y-6">
+        {/* Breadcrumbs - Responsive */}
+        <Breadcrumbs
+          items={[{ label: 'Suppliers' }]}
+          className="text-xs sm:text-sm"
+        />
+
         {/* Header - Responsive Flex */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex-1">
