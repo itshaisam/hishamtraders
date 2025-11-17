@@ -10,13 +10,17 @@ export class ProductsRepository {
       data: {
         sku: data.sku.toUpperCase(),
         name: data.name,
-        brand: data.brand || null,
-        category: data.category || null,
+        brandId: data.brandId || null,
+        categoryId: data.categoryId || null,
         costPrice: data.costPrice,
         sellingPrice: data.sellingPrice,
         reorderLevel: data.reorderLevel || 10,
         binLocation: data.binLocation || null,
         status: (data.status as ProductStatus) || 'ACTIVE',
+      },
+      include: {
+        category: true,
+        brand: true,
       },
     });
   }
@@ -41,7 +45,7 @@ export class ProductsRepository {
     }
 
     if (category) {
-      where.category = { contains: category, mode: 'insensitive' };
+      where.category = { name: { contains: category, mode: 'insensitive' } };
     }
 
     if (status) {
@@ -54,6 +58,10 @@ export class ProductsRepository {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          category: true,
+          brand: true,
+        },
       }),
       prisma.product.count({ where }),
     ]);
@@ -64,12 +72,20 @@ export class ProductsRepository {
   async findById(id: string): Promise<Product | null> {
     return prisma.product.findUnique({
       where: { id },
+      include: {
+        category: true,
+        brand: true,
+      },
     });
   }
 
   async findBySku(sku: string): Promise<Product | null> {
     return prisma.product.findUnique({
       where: { sku: sku.toUpperCase() },
+      include: {
+        category: true,
+        brand: true,
+      },
     });
   }
 
@@ -77,13 +93,17 @@ export class ProductsRepository {
     return prisma.product.update({
       where: { id },
       data: {
-        ...(data.brand !== undefined && { brand: data.brand || null }),
-        ...(data.category !== undefined && { category: data.category || null }),
+        ...(data.brandId !== undefined && { brandId: data.brandId || null }),
+        ...(data.categoryId !== undefined && { categoryId: data.categoryId || null }),
         ...(data.costPrice !== undefined && { costPrice: data.costPrice }),
         ...(data.sellingPrice !== undefined && { sellingPrice: data.sellingPrice }),
         ...(data.reorderLevel !== undefined && { reorderLevel: data.reorderLevel }),
         ...(data.binLocation !== undefined && { binLocation: data.binLocation || null }),
         ...(data.status !== undefined && { status: data.status as ProductStatus }),
+      },
+      include: {
+        category: true,
+        brand: true,
       },
     });
   }

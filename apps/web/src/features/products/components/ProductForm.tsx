@@ -2,14 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Input, FormField, RadioBadgeGroup } from '../../../components/ui';
+import { Button, Input, FormField, RadioBadgeGroup, Combobox } from '../../../components/ui';
 import { Product, CreateProductRequest, UpdateProductRequest } from '../types/product.types';
+import { useBrandsForSelect } from '../../../hooks/useBrands';
+import { useCategoriesForSelect } from '../../../hooks/useCategories';
 
 export const productFormSchema = z.object({
   sku: z.string().min(1, 'SKU is required').toUpperCase(),
   name: z.string().min(1, 'Product name is required').min(2, 'Name must be at least 2 characters'),
-  brand: z.string().optional(),
-  category: z.string().optional(),
+  brandId: z.string().optional(),
+  categoryId: z.string().optional(),
   costPrice: z.string().or(z.number()).pipe(z.coerce.number().positive('Cost price must be positive')),
   sellingPrice: z.string().or(z.number()).pipe(z.coerce.number().positive('Selling price must be positive')),
   reorderLevel: z.string().or(z.number()).pipe(z.coerce.number().int().default(10)),
@@ -35,12 +37,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   isLoading = false,
 }) => {
   const [status, setStatus] = useState(product?.status || 'ACTIVE');
+  const { options: brandOptions, isLoading: isBrandsLoading } = useBrandsForSelect();
+  const { options: categoryOptions, isLoading: isCategoriesLoading } = useCategoriesForSelect();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
     defaultValues: product || {
@@ -48,6 +54,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       reorderLevel: 10,
     },
   });
+
+  const brandIdValue = watch('brandId');
+  const categoryIdValue = watch('categoryId');
 
   useEffect(() => {
     if (product) {
@@ -99,23 +108,25 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField label="Brand" error={errors.brand?.message}>
-            <Input
-              {...register('brand')}
-              type="text"
-              placeholder="Enter brand name"
-              disabled={isLoading}
-              className="py-2.5"
+          <FormField label="Brand" error={errors.brandId?.message}>
+            <Combobox
+              options={brandOptions}
+              value={brandIdValue || ''}
+              onChange={(value) => setValue('brandId', value || undefined)}
+              placeholder="Select a brand"
+              disabled={isLoading || isBrandsLoading}
+              searchable
             />
           </FormField>
 
-          <FormField label="Category" error={errors.category?.message}>
-            <Input
-              {...register('category')}
-              type="text"
-              placeholder="e.g., Sinks, Faucets"
-              disabled={isLoading}
-              className="py-2.5"
+          <FormField label="Category" error={errors.categoryId?.message}>
+            <Combobox
+              options={categoryOptions}
+              value={categoryIdValue || ''}
+              onChange={(value) => setValue('categoryId', value || undefined)}
+              placeholder="Select a category"
+              disabled={isLoading || isCategoriesLoading}
+              searchable
             />
           </FormField>
         </div>

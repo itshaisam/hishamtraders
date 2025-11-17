@@ -6,8 +6,7 @@ import { ProductList } from '../components/ProductList';
 import { Product } from '../types/product.types';
 import { useAuthStore } from '@/stores/auth.store';
 import { Button, Breadcrumbs, RadioBadgeGroup } from '@/components/ui';
-
-const PRODUCT_CATEGORIES = ['Sinks', 'Faucets', 'Toilets', 'Showers', 'Accessories'];
+import { useCategories } from '@/hooks/useCategories';
 
 export const ProductsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +18,7 @@ export const ProductsPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const { data: categoriesData, isLoading: isCategoriesLoading } = useCategories();
   const { data, isLoading } = useProducts({
     search: searchTerm,
     category: selectedCategory,
@@ -27,6 +27,19 @@ export const ProductsPage: React.FC = () => {
   });
 
   const deleteMutation = useDeleteProduct();
+
+  // Create category options from dynamic data
+  const categoryOptions = useMemo(
+    () => [
+      { value: '', label: 'All Categories', color: 'gray' as const },
+      ...(categoriesData?.map((cat) => ({
+        value: cat.name,
+        label: cat.name,
+        color: 'blue' as const,
+      })) || []),
+    ],
+    [categoriesData]
+  );
 
   const handleCreate = useCallback(() => {
     navigate('/products/new');
@@ -112,14 +125,8 @@ export const ProductsPage: React.FC = () => {
                   setSelectedCategory(value);
                   setPage(1);
                 }}
-                options={[
-                  { value: '', label: 'All Categories', color: 'gray' },
-                  ...PRODUCT_CATEGORIES.map((cat) => ({
-                    value: cat,
-                    label: cat,
-                    color: 'blue' as const,
-                  })),
-                ]}
+                options={categoryOptions}
+                disabled={isCategoriesLoading}
               />
             </div>
           </div>

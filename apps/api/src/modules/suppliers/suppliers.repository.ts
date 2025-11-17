@@ -9,13 +9,17 @@ export class SuppliersRepository {
     return prisma.supplier.create({
       data: {
         name: data.name,
-        country: data.country || null,
+        countryId: data.countryId || null,
         contactPerson: data.contactPerson || null,
         email: data.email || null,
         phone: data.phone || null,
         address: data.address || null,
-        paymentTerms: data.paymentTerms || null,
+        paymentTermId: data.paymentTermId || null,
         status: (data.status as SupplierStatus) || 'ACTIVE',
+      },
+      include: {
+        country: true,
+        paymentTerm: true,
       },
     });
   }
@@ -49,6 +53,10 @@ export class SuppliersRepository {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          country: true,
+          paymentTerm: true,
+        },
       }),
       prisma.supplier.count({ where }),
     ]);
@@ -59,12 +67,20 @@ export class SuppliersRepository {
   async findById(id: string): Promise<Supplier | null> {
     return prisma.supplier.findUnique({
       where: { id },
+      include: {
+        country: true,
+        paymentTerm: true,
+      },
     });
   }
 
   async findByName(name: string): Promise<Supplier | null> {
     return prisma.supplier.findUnique({
       where: { name },
+      include: {
+        country: true,
+        paymentTerm: true,
+      },
     });
   }
 
@@ -72,13 +88,17 @@ export class SuppliersRepository {
     return prisma.supplier.update({
       where: { id },
       data: {
-        ...(data.country !== undefined && { country: data.country || null }),
+        ...(data.countryId !== undefined && { countryId: data.countryId || null }),
         ...(data.contactPerson !== undefined && { contactPerson: data.contactPerson || null }),
         ...(data.email !== undefined && { email: data.email || null }),
         ...(data.phone !== undefined && { phone: data.phone || null }),
         ...(data.address !== undefined && { address: data.address || null }),
-        ...(data.paymentTerms !== undefined && { paymentTerms: data.paymentTerms || null }),
+        ...(data.paymentTermId !== undefined && { paymentTermId: data.paymentTermId || null }),
         ...(data.status !== undefined && { status: data.status as SupplierStatus }),
+      },
+      include: {
+        country: true,
+        paymentTerm: true,
       },
     });
   }

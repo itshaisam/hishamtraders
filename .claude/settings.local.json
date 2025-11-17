@@ -12,7 +12,8 @@
       "Bash(pnpm run lint)",
       "Bash(pnpm run build:*)",
       "Bash(pnpm -F @hishamtraders/web build:*)",
-      "Bash(pnpm -F @hishamtraders/api build:*)"
+      "Bash(pnpm -F @hishamtraders/api build:*)",
+      "Bash(npx prisma migrate:*)"
     ],
     "deny": [],
     "ask": []

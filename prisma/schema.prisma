@@ -26,6 +26,67 @@ model Role {
 }
 
 // ============================================================================
+// REFERENCE TABLES (Epic 2 - Lookup/Master Data)
+// ============================================================================
+
+model Country {
+  id        String    @id @default(cuid())
+  code      String    @unique  // "CN", "PK", "AE", "US", etc.
+  name      String    @unique  // "China", "Pakistan", "UAE", "United States"
+  active    Boolean   @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  suppliers Supplier[]
+
+  @@map("countries")
+}
+
+model PaymentTerm {
+  id          String    @id @default(cuid())
+  name        String    @unique  // "Net 30", "50% Advance + 50% on Delivery", etc.
+  description String?   @db.Text
+  days        Int?      // For calculating due dates (30, 60, etc.)
+  active      Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  suppliers   Supplier[]
+
+  @@map("payment_terms")
+}
+
+model ProductCategory {
+  id          String    @id @default(cuid())
+  name        String    @unique  // "Sinks", "Faucets", "Toilets", "Showers", "Accessories"
+  description String?   @db.Text
+  active      Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[]
+
+  @@map("product_categories")
+}
+
+model Brand {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  country   String?   // Brand origin country (optional)
+  active    Boolean   @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products  Product[]
+
+  @@map("brands")
+}
+
+// ============================================================================
 // SUPPLIER MANAGEMENT (Epic 2.1)
 // ============================================================================
 
@@ -37,20 +98,28 @@ enum SupplierStatus {
 model Supplier {
   id            String         @id @default(cuid())
   name          String         @unique
-  country       String?
+
+  // Foreign keys to reference tables
+  countryId     String?
+  paymentTermId String?
+
   contactPerson String?
-  email         String?
+  email         String?        @unique
   phone         String?
   address       String?        @db.Text
-  paymentTerms  String?        @db.Text
   status        SupplierStatus @default(ACTIVE)
 
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+  // Relations
+  country       Country?           @relation(fields: [countryId], references: [id])
+  paymentTerm   PaymentTerm?       @relation(fields: [paymentTermId], references: [id])
   purchaseOrders PurchaseOrder[]
 
   @@index([status])
+  @@index([countryId])
+  @@index([paymentTermId])
   @@map("suppliers")
 }
 
@@ -67,8 +136,11 @@ model Product {
   id            String         @id @default(cuid())
   sku           String         @unique
   name          String
-  brand         String?
-  category      String?
+
+  // Foreign keys to reference tables
+  categoryId    String?
+  brandId       String?
+
   costPrice     Decimal        @db.Decimal(10, 2)
   sellingPrice  Decimal        @db.Decimal(10, 2)
   reorderLevel  Int            @default(10)
@@ -78,10 +150,15 @@ model Product {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+  // Relations
+  category      ProductCategory? @relation(fields: [categoryId], references: [id])
+  brand         Brand?           @relation(fields: [brandId], references: [id])
   poItems       POItem[]
 
   @@index([status])
   @@index([sku])
+  @@index([categoryId])
+  @@index([brandId])
   @@map("products")
 }
 

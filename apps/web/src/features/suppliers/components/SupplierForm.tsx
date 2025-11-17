@@ -2,17 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Input, FormField, RadioBadgeGroup } from '../../../components/ui';
+import { Button, Input, FormField, RadioBadgeGroup, Combobox } from '../../../components/ui';
 import { Supplier, CreateSupplierRequest, UpdateSupplierRequest } from '../types/supplier.types';
+import { useCountriesForSelect } from '../../../hooks/useCountries';
+import { usePaymentTermsForSelect } from '../../../hooks/usePaymentTerms';
 
 export const supplierFormSchema = z.object({
   name: z.string().min(1, 'Supplier name is required').min(2, 'Name must be at least 2 characters'),
-  country: z.string().optional(),
+  countryId: z.string().optional(),
   contactPerson: z.string().optional(),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   phone: z.string().optional(),
   address: z.string().optional(),
-  paymentTerms: z.string().optional(),
+  paymentTermId: z.string().optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
 });
 
@@ -34,18 +36,25 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
   isLoading = false,
 }) => {
   const [status, setStatus] = useState(supplier?.status || 'ACTIVE');
+  const { options: countryOptions, isLoading: isCountriesLoading } = useCountriesForSelect();
+  const { options: paymentTermOptions, isLoading: isPaymentTermsLoading } = usePaymentTermsForSelect();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<SupplierFormData>({
     resolver: zodResolver(supplierFormSchema),
     defaultValues: supplier || {
       status: 'ACTIVE',
     },
   });
+
+  const countryIdValue = watch('countryId');
+  const paymentTermIdValue = watch('paymentTermId');
 
   useEffect(() => {
     if (supplier) {
@@ -84,13 +93,14 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
           />
         </FormField>
 
-        <FormField label="Country" error={errors.country?.message}>
-          <Input
-            {...register('country')}
-            type="text"
-            placeholder="Enter country"
-            disabled={isLoading}
-            className="py-2.5"
+        <FormField label="Country" error={errors.countryId?.message}>
+          <Combobox
+            options={countryOptions}
+            value={countryIdValue || ''}
+            onChange={(value) => setValue('countryId', value || undefined)}
+            placeholder="Select a country"
+            disabled={isLoading || isCountriesLoading}
+            searchable
           />
         </FormField>
       </div>
@@ -150,15 +160,14 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
           />
         </FormField>
 
-        <FormField label="Payment Terms" error={errors.paymentTerms?.message}>
-          <textarea
-            {...register('paymentTerms')}
-            rows={2}
-            placeholder="e.g., Net 30, 50% advance + 50% on delivery"
-            className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg
-              focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500
-              disabled:bg-gray-100 disabled:cursor-not-allowed transition-all"
-            disabled={isLoading}
+        <FormField label="Payment Terms" error={errors.paymentTermId?.message}>
+          <Combobox
+            options={paymentTermOptions}
+            value={paymentTermIdValue || ''}
+            onChange={(value) => setValue('paymentTermId', value || undefined)}
+            placeholder="Select payment terms"
+            disabled={isLoading || isPaymentTermsLoading}
+            searchable
           />
         </FormField>
       </div>
