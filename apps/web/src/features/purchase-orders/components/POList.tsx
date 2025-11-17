@@ -40,25 +40,25 @@ export const POList: React.FC<POListProps> = ({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-xs sm:text-sm">
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50">
-            <th className="px-6 py-3 text-left font-semibold text-gray-900">
+            <th className="px-3 sm:px-6 py-2 sm:py-3 text-left font-semibold text-gray-900">
               PO Number
             </th>
-            <th className="px-6 py-3 text-left font-semibold text-gray-900">
+            <th className="px-3 sm:px-6 py-2 sm:py-3 text-left font-semibold text-gray-900">
               Supplier
             </th>
-            <th className="px-6 py-3 text-left font-semibold text-gray-900">
+            <th className="hidden sm:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left font-semibold text-gray-900">
               Order Date
             </th>
-            <th className="px-6 py-3 text-right font-semibold text-gray-900">
-              Total Amount
+            <th className="px-3 sm:px-6 py-2 sm:py-3 text-right font-semibold text-gray-900">
+              Total
             </th>
-            <th className="px-6 py-3 text-center font-semibold text-gray-900">
+            <th className="hidden sm:table-cell px-3 sm:px-6 py-2 sm:py-3 text-center font-semibold text-gray-900">
               Status
             </th>
-            <th className="px-6 py-3 text-center font-semibold text-gray-900">
+            <th className="px-3 sm:px-6 py-2 sm:py-3 text-center font-semibold text-gray-900">
               Actions
             </th>
           </tr>
@@ -66,38 +66,38 @@ export const POList: React.FC<POListProps> = ({
         <tbody>
           {pos.map((po) => (
             <tr key={po.id} className="border-b border-gray-200 hover:bg-gray-50">
-              <td className="px-6 py-3">
-                <span className="font-mono font-semibold text-blue-600">
+              <td className="px-3 sm:px-6 py-2 sm:py-3">
+                <span className="font-mono font-semibold text-blue-600 text-xs sm:text-sm">
                   {po.poNumber}
                 </span>
               </td>
-              <td className="px-6 py-3">
+              <td className="px-3 sm:px-6 py-2 sm:py-3">
                 <div>
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-gray-900 text-xs sm:text-sm">
                     {po.supplier?.name || '-'}
                   </p>
                   {po.supplier?.contactPerson && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 hidden sm:block">
                       {po.supplier.contactPerson}
                     </p>
                   )}
                 </div>
               </td>
-              <td className="px-6 py-3">
-                <span className="text-gray-600">
+              <td className="hidden sm:table-cell px-3 sm:px-6 py-2 sm:py-3">
+                <span className="text-gray-600 text-xs sm:text-sm">
                   {new Date(po.orderDate).toLocaleDateString()}
                 </span>
               </td>
-              <td className="px-6 py-3 text-right">
-                <span className="font-medium text-gray-900">
+              <td className="px-3 sm:px-6 py-2 sm:py-3 text-right">
+                <span className="font-medium text-gray-900 text-xs sm:text-sm">
                   ${po.totalAmount.toFixed(2)}
                 </span>
               </td>
-              <td className="px-6 py-3 text-center">
+              <td className="hidden sm:table-cell px-3 sm:px-6 py-2 sm:py-3 text-center">
                 <POStatusBadge status={po.status} />
               </td>
-              <td className="px-6 py-3 text-center">
-                <div className="flex gap-2 justify-center">
+              <td className="px-3 sm:px-6 py-2 sm:py-3 text-center">
+                <div className="flex gap-1 sm:gap-2 justify-center">
                   <button
                     onClick={() => onView(po)}
                     className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition"

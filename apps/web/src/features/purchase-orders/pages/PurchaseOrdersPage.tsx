@@ -6,6 +6,7 @@ import {
   useDeletePurchaseOrder,
 } from '../hooks/usePurchaseOrders';
 import { POList } from '../components/POList';
+import { POListSkeleton } from '../components/POListSkeleton';
 import {
   PurchaseOrder,
   POStatus,
@@ -60,14 +61,19 @@ export const PurchaseOrdersPage: React.FC = () => {
 
   const pos = useMemo(() => data?.data || [], [data]);
 
+  // Show skeleton while loading initial data
+  if (isLoading && pos.length === 0) {
+    return <POListSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Purchase Orders</h1>
-            <p className="mt-1 text-gray-600">
+      <div className="max-w-7xl mx-auto px-4 space-y-6">
+        {/* Header - Responsive Flex */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Purchase Orders</h1>
+            <p className="mt-1 text-sm sm:text-base text-gray-600">
               Manage supplier purchase orders and tracking
             </p>
           </div>
@@ -77,6 +83,7 @@ export const PurchaseOrdersPage: React.FC = () => {
               variant="primary"
               size="md"
               icon={<Plus size={20} />}
+              className="w-full sm:w-auto"
             >
               New PO
             </Button>
@@ -84,11 +91,11 @@ export const PurchaseOrdersPage: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="bg-white rounded-lg shadow p-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Search by PO Number or Supplier
               </label>
               <div className="relative">
@@ -101,14 +108,14 @@ export const PurchaseOrdersPage: React.FC = () => {
                     setSearchTerm(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
             </div>
 
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Status
               </label>
               <div className="flex items-center gap-2">
@@ -119,7 +126,7 @@ export const PurchaseOrdersPage: React.FC = () => {
                     setSelectedStatus(e.target.value as POStatus | '');
                     setPage(1);
                   }}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 >
                   <option value="">All Statuses</option>
                   {PO_STATUSES.map((status) => (
@@ -131,9 +138,9 @@ export const PurchaseOrdersPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Info */}
-            <div className="flex items-end">
-              <div className="w-full px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+            {/* Info - Responsive */}
+            <div className="md:flex md:items-end">
+              <div className="w-full px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs sm:text-sm text-blue-700">
                 <Calendar size={16} className="inline mr-2" />
                 Showing {data?.pagination?.total || 0} purchase orders
               </div>
@@ -153,18 +160,18 @@ export const PurchaseOrdersPage: React.FC = () => {
           />
         </div>
 
-        {/* Pagination */}
+        {/* Pagination - Responsive Stack/Flex */}
         {data && data.pagination.pages > 1 && (
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm text-gray-600">
+          <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <p className="text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
               Showing page {data.pagination.page} of {data.pagination.pages} (
               {data.pagination.total} total)
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 order-1 sm:order-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 sm:flex-initial px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 Previous
               </button>
@@ -173,7 +180,7 @@ export const PurchaseOrdersPage: React.FC = () => {
                   setPage((p) => Math.min(data.pagination.pages, p + 1))
                 }
                 disabled={page === data.pagination.pages}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 sm:flex-initial px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 Next
               </button>

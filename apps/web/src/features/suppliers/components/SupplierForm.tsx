@@ -154,14 +154,15 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
         </select>
       </FormField>
 
-      {/* Action Buttons */}
-      <div className="flex gap-3 pt-6 border-t">
+      {/* Action Buttons - Responsive Stack/Flex */}
+      <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
         <Button
           type="button"
           variant="secondary"
           size="md"
           onClick={() => window.history.back()}
           disabled={isLoading}
+          className="sm:flex-1"
         >
           Cancel
         </Button>
@@ -171,6 +172,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
           size="md"
           loading={isLoading}
           disabled={isLoading}
+          className="sm:flex-1"
         >
           {supplier ? 'Update Supplier' : 'Create Supplier'}
         </Button>

@@ -56,19 +56,19 @@ export const SupplierDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        {/* Header with back button */}
-        <div className="mb-8 flex items-center gap-4">
+      <div className="max-w-2xl mx-auto px-4 space-y-8">
+        {/* Header with back button - Responsive */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:gap-4 gap-3">
           <button
             onClick={() => navigate('/suppliers')}
-            className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
             aria-label="Go back"
           >
             <ArrowLeft size={24} className="text-gray-700" />
           </button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Edit Supplier</h1>
-            <p className="mt-2 text-gray-600">Update supplier information</p>
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit Supplier</h1>
+            <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">Update supplier information</p>
           </div>
         </div>
 

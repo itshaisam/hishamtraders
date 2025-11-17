@@ -10,3 +10,13 @@ export { default as Alert } from './Alert';
 export { default as Spinner } from './Spinner';
 export { default as Combobox, type ComboboxOption } from './Combobox';
 export { default as FormField } from './FormField';
+export {
+  default as Skeleton,
+  SkeletonLine,
+  SkeletonText,
+  SkeletonButton,
+  SkeletonAvatar,
+  SkeletonCard,
+  SkeletonInput,
+  SkeletonTable,
+} from './Skeleton';

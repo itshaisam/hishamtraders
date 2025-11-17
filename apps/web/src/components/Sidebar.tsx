@@ -16,11 +16,17 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Warehouse,
   ClipboardList,
+  X,
 } from 'lucide-react';
 
-export default function Sidebar() {
+interface SidebarProps {
+  isMobile?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ isMobile = false, isOpen = false, onClose }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const location = useLocation();
@@ -43,25 +49,49 @@ export default function Sidebar() {
   const isActive = (path: string) => location.pathname === path;
   const isMenuExpanded = (menuName: string) => expandedMenus.includes(menuName);
 
-  return (
+  // Mobile backdrop
+  const MobileBackdrop = () => (
     <div
-      className={`bg-white h-screen fixed left-0 top-0 border-r border-gray-200 transition-all duration-300 ${
-        isCollapsed ? 'w-16' : 'w-60'
-      }`}
-    >
+      className="fixed inset-0 bg-black bg-opacity-50 z-30 sm:hidden"
+      onClick={onClose}
+    />
+  );
+
+  return (
+    <>
+      {/* Mobile backdrop - only show when mobile drawer is open */}
+      {isMobile && isOpen && <MobileBackdrop />}
+
+      {/* Sidebar - Fixed on desktop, drawer on mobile */}
+      <div
+        className={`bg-white h-screen fixed left-0 top-0 border-r border-gray-200 transition-all duration-300 ${
+          isMobile ? 'z-40 w-60' : 'z-40 hidden sm:block'
+        } ${isMobile && !isOpen ? '-translate-x-full' : ''} ${
+          isCollapsed && !isMobile ? 'w-16' : !isMobile ? 'w-60' : ''
+        }`}
+      >
       {/* Header */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        {!isCollapsed && (
+        {!isCollapsed && !isMobile && (
           <div>
             <h1 className="text-lg font-bold text-gray-900">Hisham Traders</h1>
             <p className="text-xs text-gray-500">ERP System</p>
           </div>
         )}
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => {
+            if (isMobile) {
+              onClose?.();
+            } else {
+              setIsCollapsed(!isCollapsed);
+            }
+          }}
           className="p-1 hover:bg-gray-100 rounded transition"
+          aria-label={isMobile ? 'Close menu' : 'Toggle sidebar'}
         >
-          {isCollapsed ? (
+          {isMobile ? (
+            <X size={20} className="text-gray-600" />
+          ) : isCollapsed ? (
             <ChevronRight size={20} className="text-gray-600" />
           ) : (
             <ChevronLeft size={20} className="text-gray-600" />
@@ -340,5 +370,6 @@ export default function Sidebar() {
         </button>
       </div>
     </div>
+    </>
   );
 }

@@ -225,7 +225,8 @@ export const POForm: React.FC<POFormProps> = ({
             />
           </FormField>
 
-          <div className="grid grid-cols-3 gap-4">
+          {/* Responsive Grid: 1 col on mobile, 3 on sm+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <FormField label="Quantity">
               <Input
                 type="number"
@@ -322,14 +323,15 @@ export const POForm: React.FC<POFormProps> = ({
         )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-3 pt-6 border-t">
+      {/* Action Buttons - Responsive Stack/Flex */}
+      <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
         <Button
           type="button"
           variant="secondary"
           size="md"
           onClick={() => window.history.back()}
           disabled={isLoading}
+          className="sm:flex-1"
         >
           Cancel
         </Button>
@@ -339,6 +341,7 @@ export const POForm: React.FC<POFormProps> = ({
           size="md"
           loading={isLoading}
           disabled={isLoading}
+          className="sm:flex-1"
         >
           {purchaseOrder ? 'Update Order' : 'Create Order'}
         </Button>
