@@ -1,18 +1,17 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
-import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from '../hooks/useSuppliers';
-import { SupplierFormModal } from '../components/SupplierFormModal';
+import { useSuppliers, useDeleteSupplier } from '../hooks/useSuppliers';
 import { SupplierList } from '../components/SupplierList';
-import { Supplier, CreateSupplierRequest, UpdateSupplierRequest } from '../types/supplier.types';
+import { Supplier } from '../types/supplier.types';
 import { useAuthStore } from '@/stores/auth.store';
-import { toast } from 'react-hot-toast';
+import { Button } from '@/components/ui';
 
 export const SuppliersPage: React.FC = () => {
+  const navigate = useNavigate();
   const user = useAuthStore((state: any) => state.user);
   const canEdit = user?.role?.name && ['ADMIN', 'ACCOUNTANT'].includes(user.role.name);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -23,19 +22,15 @@ export const SuppliersPage: React.FC = () => {
     limit: 10,
   });
 
-  const createMutation = useCreateSupplier();
-  const updateMutation = useUpdateSupplier();
   const deleteMutation = useDeleteSupplier();
 
   const handleCreate = useCallback(() => {
-    setEditingSupplier(undefined);
-    setIsModalOpen(true);
-  }, []);
+    navigate('/suppliers/new');
+  }, [navigate]);
 
   const handleEdit = useCallback((supplier: Supplier) => {
-    setEditingSupplier(supplier);
-    setIsModalOpen(true);
-  }, []);
+    navigate(`/suppliers/${supplier.id}`);
+  }, [navigate]);
 
   const handleDelete = useCallback((supplier: Supplier) => {
     if (window.confirm(`Are you sure you want to delete "${supplier.name}"?`)) {
@@ -45,20 +40,6 @@ export const SuppliersPage: React.FC = () => {
       });
     }
   }, [deleteMutation]);
-
-  const handleSubmit = useCallback(
-    async (formData: CreateSupplierRequest | UpdateSupplierRequest) => {
-      if (editingSupplier) {
-        await updateMutation.mutateAsync({
-          id: editingSupplier.id,
-          data: formData as UpdateSupplierRequest,
-        });
-      } else {
-        await createMutation.mutateAsync(formData as CreateSupplierRequest);
-      }
-    },
-    [editingSupplier, createMutation, updateMutation]
-  );
 
   const suppliers = useMemo(() => data?.data || [], [data]);
 
@@ -72,13 +53,14 @@ export const SuppliersPage: React.FC = () => {
             <p className="mt-1 text-gray-600">Manage supplier information and payment terms</p>
           </div>
           {canEdit && (
-            <button
+            <Button
               onClick={handleCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              variant="primary"
+              size="md"
+              icon={<Plus size={20} />}
             >
-              <Plus size={20} />
               New Supplier
-            </button>
+            </Button>
           )}
         </div>
 
@@ -137,17 +119,6 @@ export const SuppliersPage: React.FC = () => {
         )}
       </div>
 
-      {/* Form Modal */}
-      <SupplierFormModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingSupplier(undefined);
-        }}
-        onSubmit={handleSubmit}
-        supplier={editingSupplier}
-        isLoading={createMutation.isPending || updateMutation.isPending}
-      />
     </div>
   );
 };

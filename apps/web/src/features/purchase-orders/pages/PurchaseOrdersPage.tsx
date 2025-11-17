@@ -1,27 +1,25 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Calendar } from 'lucide-react';
 import {
   usePurchaseOrders,
-  useCreatePurchaseOrder,
   useDeletePurchaseOrder,
 } from '../hooks/usePurchaseOrders';
-import { POFormModal } from '../components/POFormModal';
 import { POList } from '../components/POList';
 import {
   PurchaseOrder,
-  CreatePurchaseOrderRequest,
   POStatus,
 } from '../types/purchase-order.types';
 import { useAuthStore } from '@/stores/auth.store';
+import { Button } from '@/components/ui';
 
 const PO_STATUSES: POStatus[] = ['PENDING', 'IN_TRANSIT', 'RECEIVED', 'CANCELLED'];
 
 export const PurchaseOrdersPage: React.FC = () => {
+  const navigate = useNavigate();
   const user = useAuthStore((state: any) => state.user);
   const canCreate = user?.role?.name && ['ADMIN', 'ACCOUNTANT'].includes(user.role.name);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [viewingPO, setViewingPO] = useState<PurchaseOrder | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<POStatus | ''>('');
   const [page, setPage] = useState(1);
@@ -34,18 +32,15 @@ export const PurchaseOrdersPage: React.FC = () => {
     limit: 10,
   });
 
-  const createMutation = useCreatePurchaseOrder();
   const deleteMutation = useDeletePurchaseOrder();
 
   const handleCreate = useCallback(() => {
-    setViewingPO(undefined);
-    setIsModalOpen(true);
-  }, []);
+    navigate('/purchase-orders/new');
+  }, [navigate]);
 
-  const handleView = useCallback((po: PurchaseOrder) => {
-    setViewingPO(po);
-    setIsModalOpen(true);
-  }, []);
+  const handleEdit = useCallback((po: PurchaseOrder) => {
+    navigate(`/purchase-orders/${po.id}`);
+  }, [navigate]);
 
   const handleDelete = useCallback(
     (po: PurchaseOrder) => {
@@ -63,13 +58,6 @@ export const PurchaseOrdersPage: React.FC = () => {
     [deleteMutation]
   );
 
-  const handleSubmit = useCallback(
-    async (formData: CreatePurchaseOrderRequest) => {
-      await createMutation.mutateAsync(formData);
-    },
-    [createMutation]
-  );
-
   const pos = useMemo(() => data?.data || [], [data]);
 
   return (
@@ -84,13 +72,14 @@ export const PurchaseOrdersPage: React.FC = () => {
             </p>
           </div>
           {canCreate && (
-            <button
+            <Button
               onClick={handleCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              variant="primary"
+              size="md"
+              icon={<Plus size={20} />}
             >
-              <Plus size={20} />
               New PO
-            </button>
+            </Button>
           )}
         </div>
 
@@ -157,8 +146,8 @@ export const PurchaseOrdersPage: React.FC = () => {
           <POList
             pos={pos}
             isLoading={isLoading || deletingId !== null}
-            onView={handleView}
-            onEdit={handleCreate}
+            onView={handleEdit}
+            onEdit={handleEdit}
             onDelete={handleDelete}
             canEdit={canCreate || false}
           />
@@ -193,17 +182,6 @@ export const PurchaseOrdersPage: React.FC = () => {
         )}
       </div>
 
-      {/* Form Modal */}
-      <POFormModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setViewingPO(undefined);
-        }}
-        onSubmit={handleSubmit}
-        purchaseOrder={viewingPO}
-        isLoading={createMutation.isPending}
-      />
     </div>
   );
 };

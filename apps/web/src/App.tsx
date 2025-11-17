@@ -7,8 +7,12 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import { useAuthStore } from './stores/auth.store';
 import { SuppliersPage } from './features/suppliers/pages/SuppliersPage';
+import { SupplierFormPage } from './features/suppliers/pages/SupplierFormPage';
+import { SupplierDetailPage } from './features/suppliers/pages/SupplierDetailPage';
 import { ProductsPage } from './features/products/pages/ProductsPage';
 import { PurchaseOrdersPage } from './features/purchase-orders/pages/PurchaseOrdersPage';
+import { POFormPage } from './features/purchase-orders/pages/POFormPage';
+import { PODetailPage } from './features/purchase-orders/pages/PODetailPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -50,13 +54,35 @@ function App() {
             }
           />
 
-          {/* Suppliers route */}
+          {/* Suppliers routes */}
           <Route
             path="/suppliers"
             element={
               <ProtectedRoute>
                 <Layout>
                   <SuppliersPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/suppliers/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <SupplierFormPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/suppliers/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <SupplierDetailPage />
                 </Layout>
               </ProtectedRoute>
             }
@@ -74,13 +100,35 @@ function App() {
             }
           />
 
-          {/* Purchase Orders route */}
+          {/* Purchase Orders routes */}
           <Route
             path="/purchase-orders"
             element={
               <ProtectedRoute>
                 <Layout>
                   <PurchaseOrdersPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/purchase-orders/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <POFormPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/purchase-orders/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PODetailPage />
                 </Layout>
               </ProtectedRoute>
             }
