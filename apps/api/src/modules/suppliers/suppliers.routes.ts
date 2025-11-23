@@ -1,32 +1,16 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.middleware';
+import { requireRole } from '../../middleware/role.middleware';
 import { suppliersController } from './suppliers.controller';
 import { auditSupplierAction } from './suppliers.middleware';
 
 const router = Router();
 
-// Helper middleware to check authorization
-const authorize = (allowedRoles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const user = (req as any).user;
-
-    if (!user) {
-      return res.status(401).json({ success: false, error: 'Unauthorized' });
-    }
-
-    if (allowedRoles.includes(user.role)) {
-      return next();
-    }
-
-    return res.status(403).json({ success: false, error: 'Forbidden' });
-  };
-};
-
 // POST /api/suppliers - Create supplier (Admin, Accountant)
 router.post(
   '/',
   authenticate,
-  authorize(['ADMIN', 'ACCOUNTANT']),
+  requireRole(['ADMIN', 'ACCOUNTANT']),
   auditSupplierAction('CREATE'),
   (req, res, next) => suppliersController.create(req, res, next)
 );
@@ -49,7 +33,7 @@ router.get(
 router.put(
   '/:id',
   authenticate,
-  authorize(['ADMIN', 'ACCOUNTANT']),
+  requireRole(['ADMIN', 'ACCOUNTANT']),
   auditSupplierAction('UPDATE'),
   (req, res, next) => suppliersController.update(req, res, next)
 );
@@ -58,7 +42,7 @@ router.put(
 router.delete(
   '/:id',
   authenticate,
-  authorize(['ADMIN', 'ACCOUNTANT']),
+  requireRole(['ADMIN', 'ACCOUNTANT']),
   auditSupplierAction('DELETE'),
   (req, res, next) => suppliersController.delete(req, res, next)
 );
