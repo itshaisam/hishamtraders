@@ -59,11 +59,11 @@ export const ProductList: React.FC<ProductListProps> = ({
               <td className="px-6 py-3">
                 <div>
                   <p className="font-medium text-gray-900">{product.name}</p>
-                  {product.brand && <p className="text-xs text-gray-500">{product.brand}</p>}
+                  {product.brand && <p className="text-xs text-gray-500">{product.brand.name}</p>}
                 </div>
               </td>
               <td className="px-6 py-3">
-                <span className="text-gray-600">{product.category || '-'}</span>
+                <span className="text-gray-600">{product.category?.name || '-'}</span>
               </td>
               <td className="px-6 py-3 text-right">
                 <div className="flex items-center justify-end gap-1">

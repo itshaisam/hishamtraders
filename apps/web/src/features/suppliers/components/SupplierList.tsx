@@ -78,7 +78,7 @@ export const SupplierList: React.FC<SupplierListProps> = ({
                 {supplier.country && (
                   <p className="flex items-center gap-1 truncate">
                     <MapPin size={14} className="flex-shrink-0" />
-                    <span className="truncate">{supplier.country}</span>
+                    <span className="truncate">{supplier.country.name}</span>
                   </p>
                 )}
               </div>
@@ -89,9 +89,9 @@ export const SupplierList: React.FC<SupplierListProps> = ({
                 </p>
               )}
 
-              {supplier.paymentTerms && (
+              {supplier.paymentTerm && (
                 <p className="mt-1 text-xs sm:text-sm text-gray-600 line-clamp-1">
-                  <span className="font-medium">Payment Terms:</span> {supplier.paymentTerms}
+                  <span className="font-medium">Payment Terms:</span> {supplier.paymentTerm.name}
                 </p>
               )}
             </div>

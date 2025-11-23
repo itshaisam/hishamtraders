@@ -3,12 +3,12 @@ export type SupplierStatus = 'ACTIVE' | 'INACTIVE';
 export interface Supplier {
   id: string;
   name: string;
-  country?: string;
+  country?: { id: string; code: string; name: string } | null;
   contactPerson?: string;
   email?: string;
   phone?: string;
   address?: string;
-  paymentTerms?: string;
+  paymentTerm?: { id: string; name: string } | null;
   status: SupplierStatus;
   createdAt: string;
   updatedAt: string;
@@ -16,22 +16,22 @@ export interface Supplier {
 
 export interface CreateSupplierRequest {
   name: string;
-  country?: string;
+  countryId?: string;
   contactPerson?: string;
   email?: string;
   phone?: string;
   address?: string;
-  paymentTerms?: string;
+  paymentTermId?: string;
   status?: SupplierStatus;
 }
 
 export interface UpdateSupplierRequest {
-  country?: string;
+  countryId?: string;
   contactPerson?: string;
   email?: string;
   phone?: string;
   address?: string;
-  paymentTerms?: string;
+  paymentTermId?: string;
   status?: SupplierStatus;
 }
 

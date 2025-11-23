@@ -4,12 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X } from 'lucide-react';
 import { Product, CreateProductRequest, UpdateProductRequest } from '../types/product.types';
+import { useBrandsForSelect } from '@/hooks/useBrands';
+import { useCategoriesForSelect } from '@/hooks/useCategories';
 
 const productFormSchema = z.object({
   sku: z.string().min(1, 'SKU is required').toUpperCase(),
   name: z.string().min(1, 'Product name is required').min(2, 'Name must be at least 2 characters'),
-  brand: z.string().optional(),
-  category: z.string().optional(),
+  brandId: z.string().optional(),
+  categoryId: z.string().optional(),
   costPrice: z.string().or(z.number()).pipe(z.coerce.number().positive('Cost price must be positive')),
   sellingPrice: z.string().or(z.number()).pipe(z.coerce.number().positive('Selling price must be positive')),
   reorderLevel: z.string().or(z.number()).pipe(z.coerce.number().int().default(10)),
@@ -36,6 +38,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   isLoading = false,
   isEditMode = false,
 }) => {
+  const { options: brandOptions } = useBrandsForSelect();
+  const { options: categoryOptions } = useCategoriesForSelect();
+
   const {
     register,
     handleSubmit,
@@ -51,7 +56,17 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   useEffect(() => {
     if (product) {
-      reset(product);
+      reset({
+        sku: product.sku,
+        name: product.name,
+        brandId: product.brand?.id,
+        categoryId: product.category?.id,
+        costPrice: product.costPrice,
+        sellingPrice: product.sellingPrice,
+        reorderLevel: product.reorderLevel,
+        binLocation: product.binLocation,
+        status: product.status,
+      });
     } else {
       reset({ status: 'ACTIVE', reorderLevel: 10 });
     }
@@ -122,24 +137,35 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             {/* Brand */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-              <input
-                {...register('brand')}
-                type="text"
+              <select
+                {...register('brandId')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
                 disabled={isLoading}
-              />
+              >
+                <option value="">Select a brand</option>
+                {brandOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Category */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <input
-                {...register('category')}
-                type="text"
+              <select
+                {...register('categoryId')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
                 disabled={isLoading}
-                placeholder="e.g., Sinks, Faucets"
-              />
+              >
+                <option value="">Select a category</option>
+                {categoryOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Cost Price */}

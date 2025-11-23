@@ -4,8 +4,8 @@ export interface Product {
   id: string;
   sku: string;
   name: string;
-  brand?: string;
-  category?: string;
+  brand?: { id: string; name: string } | null;
+  category?: { id: string; name: string } | null;
   costPrice: number;
   sellingPrice: number;
   reorderLevel: number;
@@ -18,8 +18,8 @@ export interface Product {
 export interface CreateProductRequest {
   sku: string;
   name: string;
-  brand?: string;
-  category?: string;
+  brandId?: string;
+  categoryId?: string;
   costPrice: number;
   sellingPrice: number;
   reorderLevel?: number;
@@ -28,8 +28,8 @@ export interface CreateProductRequest {
 }
 
 export interface UpdateProductRequest {
-  brand?: string;
-  category?: string;
+  brandId?: string;
+  categoryId?: string;
   costPrice?: number;
   sellingPrice?: number;
   reorderLevel?: number;

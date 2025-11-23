@@ -4,9 +4,18 @@ import { UpdateProductDto } from './dto/update-product.dto';
 
 const prisma = new PrismaClient();
 
+// Helper function to transform product for API response
+const transformProduct = (product: any) => ({
+  ...product,
+  costPrice: product.costPrice.toNumber(),
+  sellingPrice: product.sellingPrice.toNumber(),
+  category: product.category ? { id: product.category.id, name: product.category.name } : null,
+  brand: product.brand ? { id: product.brand.id, name: product.brand.name } : null,
+});
+
 export class ProductsRepository {
   async create(data: CreateProductDto): Promise<Product> {
-    return prisma.product.create({
+    const product = await prisma.product.create({
       data: {
         sku: data.sku.toUpperCase(),
         name: data.name,
@@ -23,6 +32,7 @@ export class ProductsRepository {
         brand: true,
       },
     });
+    return transformProduct(product);
   }
 
   async findAll(filters: {
@@ -66,31 +76,33 @@ export class ProductsRepository {
       prisma.product.count({ where }),
     ]);
 
-    return { data, total };
+    return { data: data.map(transformProduct), total };
   }
 
   async findById(id: string): Promise<Product | null> {
-    return prisma.product.findUnique({
+    const product = await prisma.product.findUnique({
       where: { id },
       include: {
         category: true,
         brand: true,
       },
     });
+    return product ? transformProduct(product) : null;
   }
 
   async findBySku(sku: string): Promise<Product | null> {
-    return prisma.product.findUnique({
+    const product = await prisma.product.findUnique({
       where: { sku: sku.toUpperCase() },
       include: {
         category: true,
         brand: true,
       },
     });
+    return product ? transformProduct(product) : null;
   }
 
   async update(id: string, data: UpdateProductDto): Promise<Product> {
-    return prisma.product.update({
+    const product = await prisma.product.update({
       where: { id },
       data: {
         ...(data.brandId !== undefined && { brandId: data.brandId || null }),
@@ -106,6 +118,7 @@ export class ProductsRepository {
         brand: true,
       },
     });
+    return transformProduct(product);
   }
 
   async softDelete(id: string): Promise<Product> {

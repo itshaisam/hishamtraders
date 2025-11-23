@@ -4,15 +4,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X } from 'lucide-react';
 import { Supplier, CreateSupplierRequest, UpdateSupplierRequest } from '../types/supplier.types';
+import { useCountriesForSelect } from '@/hooks/useCountries';
+import { usePaymentTermsForSelect } from '@/hooks/usePaymentTerms';
 
 const supplierFormSchema = z.object({
   name: z.string().min(1, 'Supplier name is required').min(2, 'Name must be at least 2 characters'),
-  country: z.string().optional(),
+  countryId: z.string().optional(),
   contactPerson: z.string().optional(),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   phone: z.string().optional(),
   address: z.string().optional(),
-  paymentTerms: z.string().optional(),
+  paymentTermId: z.string().optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
 });
 
@@ -33,6 +35,9 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
   supplier,
   isLoading = false,
 }) => {
+  const { options: countryOptions } = useCountriesForSelect();
+  const { options: paymentTermOptions } = usePaymentTermsForSelect();
+
   const {
     register,
     handleSubmit,
@@ -47,7 +52,16 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
 
   useEffect(() => {
     if (supplier) {
-      reset(supplier);
+      reset({
+        name: supplier.name,
+        countryId: supplier.country?.id,
+        contactPerson: supplier.contactPerson,
+        email: supplier.email,
+        phone: supplier.phone,
+        address: supplier.address,
+        paymentTermId: supplier.paymentTerm?.id,
+        status: supplier.status,
+      });
     } else {
       reset({ status: 'ACTIVE' });
     }
@@ -101,12 +115,18 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
           {/* Country */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-            <input
-              {...register('country')}
-              type="text"
+            <select
+              {...register('countryId')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
               disabled={isLoading}
-            />
+            >
+              <option value="">Select a country</option>
+              {countryOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Contact Person */}
@@ -161,13 +181,18 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Payment Terms
             </label>
-            <textarea
-              {...register('paymentTerms')}
-              rows={2}
-              placeholder="e.g., Net 30, 50% advance + 50% on delivery"
+            <select
+              {...register('paymentTermId')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
               disabled={isLoading}
-            />
+            >
+              <option value="">Select payment terms</option>
+              {paymentTermOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Status */}
