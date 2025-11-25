@@ -111,6 +111,8 @@ model Supplier {
 
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  createdBy     String?
+  updatedBy     String?
 
   // Relations
   country       Country?           @relation(fields: [countryId], references: [id])
@@ -141,6 +143,10 @@ model Product {
   categoryId    String?
   brandId       String?
 
+  // Variant support flag
+  hasVariants   Boolean        @default(false)
+
+  // Base pricing (used when hasVariants=false, or as fallback)
   costPrice     Decimal        @db.Decimal(10, 2)
   sellingPrice  Decimal        @db.Decimal(10, 2)
   reorderLevel  Int            @default(10)
@@ -149,16 +155,20 @@ model Product {
 
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  createdBy     String?
+  updatedBy     String?
 
   // Relations
   category      ProductCategory? @relation(fields: [categoryId], references: [id])
   brand         Brand?           @relation(fields: [brandId], references: [id])
+  variants      ProductVariant[]
   poItems       POItem[]
 
   @@index([status])
   @@index([sku])
   @@index([categoryId])
   @@index([brandId])
+  @@index([hasVariants])
   @@map("products")
 }
 
@@ -185,6 +195,8 @@ model PurchaseOrder {
 
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+  createdBy           String?
+  updatedBy           String?
 
   supplier            Supplier @relation(fields: [supplierId], references: [id])
   items               POItem[]
@@ -195,19 +207,68 @@ model PurchaseOrder {
   @@map("purchase_orders")
 }
 
-model POItem {
-  id          String   @id @default(cuid())
-  poId        String
-  productId   String
-  quantity    Int
-  unitCost    Decimal  @db.Decimal(10, 2)
-  totalCost   Decimal  @db.Decimal(12, 2)
+// ============================================================================
+// PRODUCT VARIANTS (Epic 2.4.1)
+// ============================================================================
 
-  purchaseOrder PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
-  product       Product       @relation(fields: [productId], references: [id])
+enum VariantStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model ProductVariant {
+  id            String         @id @default(cuid())
+  productId     String
+  sku           String         @unique // Variant-specific SKU (e.g., PROD-2025-001-RED-M)
+  variantName   String         // e.g., "Red / Medium", "250mm / Chrome"
+
+  // Variant attributes stored as JSON for flexibility
+  // Example: {"color": "Red", "size": "Medium"} or {"length": "250mm", "finish": "Chrome"}
+  attributes    Json
+
+  // Variant-specific pricing (overrides base product pricing)
+  costPrice     Decimal        @db.Decimal(10, 2)
+  sellingPrice  Decimal        @db.Decimal(10, 2)
+  reorderLevel  Int            @default(10)
+  binLocation   String?
+  status        VariantStatus  @default(ACTIVE)
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  createdBy     String?
+  updatedBy     String?
+
+  // Relations
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  poItems       POItem[]
+
+  @@index([productId])
+  @@index([sku])
+  @@index([status])
+  @@map("product_variants")
+}
+
+model POItem {
+  id              String          @id @default(cuid())
+  poId            String
+  productId       String
+  productVariantId String?       // Optional: references specific variant
+  quantity        Int
+  unitCost        Decimal         @db.Decimal(10, 2)
+  totalCost       Decimal         @db.Decimal(12, 2)
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  createdBy       String?
+  updatedBy       String?
+
+  purchaseOrder   PurchaseOrder   @relation(fields: [poId], references: [id], onDelete: Cascade)
+  product         Product         @relation(fields: [productId], references: [id])
+  productVariant  ProductVariant? @relation(fields: [productVariantId], references: [id])
 
   @@index([poId])
   @@index([productId])
+  @@index([productVariantId])
   @@map("po_items")
 }
 

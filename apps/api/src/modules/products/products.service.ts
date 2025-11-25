@@ -3,25 +3,42 @@ import { BadRequestError, ConflictError, NotFoundError } from '../../utils/error
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { productsRepository } from './products.repository';
+import { generateSKU, isSkuUnique } from './utils/generate-sku.js';
 import { Product, ProductStatus } from '@prisma/client';
 
 export class ProductsService {
   async createProduct(data: CreateProductDto): Promise<Product> {
-    // Check if product with this SKU already exists
-    const existingProduct = await productsRepository.findBySku(data.sku);
+    // Auto-generate SKU if not provided
+    let sku = data.sku;
+    if (!sku) {
+      sku = await generateSKU(data.categoryId);
+      logger.info('Auto-generated SKU for product', { sku });
+    } else {
+      // Validate SKU uniqueness if provided
+      const skuUnique = await isSkuUnique(sku);
+      if (!skuUnique) {
+        throw new ConflictError('Product with this SKU already exists');
+      }
+    }
+
+    // Check if product with this SKU already exists (double-check)
+    const existingProduct = await productsRepository.findBySku(sku);
     if (existingProduct) {
       throw new ConflictError('Product with this SKU already exists');
     }
 
+    // Merge the auto-generated or validated SKU with data
+    const productData = { ...data, sku };
+
     // Validate prices
-    if (data.costPrice <= 0) {
+    if (productData.costPrice <= 0) {
       throw new BadRequestError('Cost price must be greater than 0');
     }
-    if (data.sellingPrice <= 0) {
+    if (productData.sellingPrice <= 0) {
       throw new BadRequestError('Selling price must be greater than 0');
     }
 
-    const product = await productsRepository.create(data);
+    const product = await productsRepository.create(productData);
     logger.info('Product created', {
       productId: product.id,
       sku: product.sku,

@@ -134,10 +134,19 @@ export const POForm: React.FC<POFormProps> = ({
     }
 
     try {
-      const payload: CreatePurchaseOrderRequest = {
-        ...data,
+      const payload: any = {
+        supplierId: data.supplierId,
+        orderDate: new Date(data.orderDate),
+        expectedArrivalDate: data.expectedArrivalDate ? new Date(data.expectedArrivalDate) : undefined,
         items,
+        notes: data.notes,
       };
+
+      // Include status when editing existing PO
+      if (purchaseOrder) {
+        payload.status = status;
+      }
+
       await onSubmit(payload);
     } catch (error) {
       console.error('Form submission error:', error);

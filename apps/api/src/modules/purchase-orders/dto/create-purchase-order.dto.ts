@@ -2,12 +2,24 @@ import { z } from 'zod';
 
 export const createPurchaseOrderSchema = z.object({
   supplierId: z.string().min(1, 'Supplier is required'),
-  orderDate: z.string().datetime('Invalid date format').or(z.date()).pipe(
-    z.coerce.date()
-  ),
-  expectedArrivalDate: z.string().datetime('Invalid date format')
+  orderDate: z.string()
     .or(z.date())
-    .pipe(z.coerce.date())
+    .transform(val => {
+      if (typeof val === 'string') {
+        return new Date(val);
+      }
+      return val;
+    })
+    .pipe(z.date()),
+  expectedArrivalDate: z.string()
+    .or(z.date())
+    .transform(val => {
+      if (typeof val === 'string') {
+        return new Date(val);
+      }
+      return val;
+    })
+    .pipe(z.date())
     .optional(),
   items: z.array(z.object({
     productId: z.string().min(1, 'Product ID is required'),

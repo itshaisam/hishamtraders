@@ -7,6 +7,22 @@ export class PurchaseOrderRepository {
   constructor(private prisma: PrismaClient) {}
 
   /**
+   * Transform Prisma Decimal values to numbers for JSON serialization
+   * Prevents Decimal.toJSON() from converting to string
+   */
+  private transformDecimals(po: any) {
+    return {
+      ...po,
+      totalAmount: typeof po.totalAmount === 'number' ? po.totalAmount : Number(po.totalAmount),
+      items: po.items?.map((item: any) => ({
+        ...item,
+        unitCost: typeof item.unitCost === 'number' ? item.unitCost : Number(item.unitCost),
+        totalCost: typeof item.totalCost === 'number' ? item.totalCost : Number(item.totalCost),
+      })) || [],
+    };
+  }
+
+  /**
    * Generate next PO number in format PO-YYYY-NNN
    */
   private async generatePONumber(): Promise<string> {
@@ -143,7 +159,7 @@ export class PurchaseOrderRepository {
     ]);
 
     return {
-      data,
+      data: data.map(po => this.transformDecimals(po)),
       pagination: {
         page,
         limit,
@@ -157,7 +173,7 @@ export class PurchaseOrderRepository {
    * Find a purchase order by ID with items
    */
   async findById(id: string) {
-    return this.prisma.purchaseOrder.findUnique({
+    const po = await this.prisma.purchaseOrder.findUnique({
       where: { id },
       include: {
         supplier: true,
@@ -168,13 +184,14 @@ export class PurchaseOrderRepository {
         },
       },
     });
+    return po ? this.transformDecimals(po) : null;
   }
 
   /**
    * Find a purchase order by PO number
    */
   async findByPoNumber(poNumber: string) {
-    return this.prisma.purchaseOrder.findUnique({
+    const po = await this.prisma.purchaseOrder.findUnique({
       where: { poNumber },
       include: {
         supplier: true,
@@ -185,6 +202,7 @@ export class PurchaseOrderRepository {
         },
       },
     });
+    return po ? this.transformDecimals(po) : null;
   }
 
   /**
@@ -193,8 +211,8 @@ export class PurchaseOrderRepository {
   async update(
     id: string,
     data: UpdatePurchaseOrderRequest
-  ): Promise<PurchaseOrder> {
-    return this.prisma.purchaseOrder.update({
+  ) {
+    const po = await this.prisma.purchaseOrder.update({
       where: { id },
       data: {
         expectedArrivalDate: data.expectedArrivalDate ? new Date(data.expectedArrivalDate) : undefined,
@@ -210,13 +228,14 @@ export class PurchaseOrderRepository {
         },
       },
     });
+    return this.transformDecimals(po);
   }
 
   /**
    * Update only the status of a purchase order
    */
-  async updateStatus(id: string, status: POStatus): Promise<PurchaseOrder> {
-    return this.prisma.purchaseOrder.update({
+  async updateStatus(id: string, status: POStatus) {
+    const po = await this.prisma.purchaseOrder.update({
       where: { id },
       data: { status },
       include: {
@@ -228,6 +247,7 @@ export class PurchaseOrderRepository {
         },
       },
     });
+    return this.transformDecimals(po);
   }
 
   /**

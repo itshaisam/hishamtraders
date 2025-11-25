@@ -11,6 +11,7 @@
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
+| 2025-11-24 | 1.1 | Added ProductVariant model and variant support to Product model | Winston (Architect) |
 | 2025-01-15 | 1.0 | Initial database schema for MVP (Epics 1-4) + Phase 2 (Epics 5-8) | Winston (Architect) |
 
 ---
@@ -44,6 +45,40 @@ This document defines the complete database schema for the Hisham Traders ERP sy
 - **Soft Deletes:** status field or deletedAt timestamp
 - **Naming:** camelCase for fields, PascalCase for models
 - **Enums:** SCREAMING_SNAKE_CASE
+
+---
+
+## Architecture Decisions
+
+### Product Variant Architecture (Story 2.4.1)
+
+**Decision:** Implement product variants as a separate `ProductVariant` table with JSON-based attributes.
+
+**Rationale:**
+1. **Flexibility:** Different product types have different attributes (color/size for some products, length/finish for others)
+2. **Scalability:** Avoid creating multiple fixed columns for every possible attribute
+3. **Maintainability:** Easy to add new attribute types without schema changes
+4. **Performance:** JSON fields in MySQL 8+ support indexing and efficient queries
+
+**Implementation:**
+- `Product.hasVariants` flag indicates if a product has variants
+- When `hasVariants=true`, variants are stored in `ProductVariant` table
+- Each variant has its own SKU, pricing, and inventory tracking
+- Attributes stored as JSON: `{"color": "Red", "size": "Medium"}` or `{"length": "250mm", "finish": "Chrome"}`
+- POItem can reference either Product (for non-variant products) or ProductVariant (for specific variants)
+
+**Business Rules:**
+- If `hasVariants=false`, use base Product pricing and SKU
+- If `hasVariants=true`, must select a specific variant when creating PO/Invoice
+- Variants inherit category and brand from parent Product
+- Each variant has independent pricing, reorder levels, and bin locations
+- Variant SKU format: `{BASE_SKU}-{VARIANT_CODE}` (e.g., `PROD-2025-001-RED-M`)
+
+**Example Use Cases:**
+- Faucets: Same model with different finishes (Chrome, Brushed Nickel, Oil-Rubbed Bronze)
+- Sinks: Same design with different sizes (24", 30", 36")
+- Shower heads: Combinations of finish and spray pattern
+- Toilets: Elongated vs Round bowl, different colors
 
 ---
 
@@ -193,18 +228,21 @@ enum PurchaseOrderStatus {
 }
 
 model PurchaseOrderItem {
-  id              String   @id @default(cuid())
+  id              String          @id @default(cuid())
   poId            String
   productId       String
+  productVariantId String?
   quantity        Int
-  unitCost        Decimal  @db.Decimal(10, 2)
-  totalCost       Decimal  @db.Decimal(12, 2)
+  unitCost        Decimal         @db.Decimal(10, 2)
+  totalCost       Decimal         @db.Decimal(12, 2)
 
-  purchaseOrder   PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
-  product         Product       @relation(fields: [productId], references: [id])
+  purchaseOrder   PurchaseOrder   @relation(fields: [poId], references: [id], onDelete: Cascade)
+  product         Product         @relation(fields: [productId], references: [id])
+  productVariant  ProductVariant? @relation(fields: [productVariantId], references: [id])
 
   @@index([poId])
   @@index([productId])
+  @@index([productVariantId])
   @@map("purchase_order_items")
 }
 
@@ -228,6 +266,7 @@ model Product {
   name         String
   brand        String?
   category     String?
+  hasVariants  Boolean       @default(false)
   costPrice    Decimal?      @db.Decimal(10, 2)
   sellingPrice Decimal       @db.Decimal(10, 2)
   reorderLevel Int           @default(0)
@@ -237,6 +276,7 @@ model Product {
   updatedAt    DateTime      @updatedAt
   deletedAt    DateTime?
 
+  variants     ProductVariant[]
   poItems      PurchaseOrderItem[]
   invoiceItems InvoiceItem[]
   inventory    Inventory[]
@@ -246,10 +286,39 @@ model Product {
   @@index([status])
   @@index([category])
   @@index([name])
+  @@index([hasVariants])
   @@map("products")
 }
 
 enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model ProductVariant {
+  id            String         @id @default(cuid())
+  productId     String
+  sku           String         @unique
+  variantName   String
+  attributes    Json
+  costPrice     Decimal        @db.Decimal(10, 2)
+  sellingPrice  Decimal        @db.Decimal(10, 2)
+  reorderLevel  Int            @default(10)
+  binLocation   String?
+  status        VariantStatus  @default(ACTIVE)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  poItems       PurchaseOrderItem[]
+
+  @@index([productId])
+  @@index([sku])
+  @@index([status])
+  @@map("product_variants")
+}
+
+enum VariantStatus {
   ACTIVE
   INACTIVE
 }
@@ -811,6 +880,14 @@ erDiagram
 - Product master data
 - SKU, pricing, reorder levels
 - Soft delete via status field
+- Supports variants via hasVariants flag
+
+**ProductVariant**
+- Product variants with attribute-based variations (color, size, finish, length, etc.)
+- Each variant has unique SKU and independent pricing
+- Attributes stored as JSON for flexibility (e.g., {"color": "Red", "size": "Medium"})
+- Linked to parent Product via productId
+- Used in POItem when ordering specific variants
 
 **Warehouse**
 - Warehouse locations

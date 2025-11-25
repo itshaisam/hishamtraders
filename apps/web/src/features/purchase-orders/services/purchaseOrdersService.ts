@@ -10,7 +10,7 @@ import {
   PurchaseOrderStatistics,
 } from '../types/purchase-order.types';
 
-const BASE_URL = '/api/v1/purchase-orders';
+const BASE_URL = '/purchase-orders';
 
 export const purchaseOrdersService = {
   /**

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.middleware';
-import { requireRole } from '../../middleware/role.middleware';
+import { requirePermission } from '../../middleware/permission.middleware';
 import { brandsController } from './brands.controller';
 
 const router = Router();
@@ -9,7 +9,7 @@ const router = Router();
 router.post(
   '/',
   authenticate,
-  requireRole(['ADMIN']),
+  requirePermission('brands', 'create'),
   (req, res, next) => brandsController.create(req, res, next)
 );
 
@@ -31,7 +31,7 @@ router.get(
 router.put(
   '/:id',
   authenticate,
-  requireRole(['ADMIN']),
+  requirePermission('brands', 'update'),
   (req, res, next) => brandsController.update(req, res, next)
 );
 
@@ -39,7 +39,7 @@ router.put(
 router.delete(
   '/:id',
   authenticate,
-  requireRole(['ADMIN']),
+  requirePermission('brands', 'delete'),
   (req, res, next) => brandsController.delete(req, res, next)
 );
 

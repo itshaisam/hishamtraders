@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { requireRole } from '../../middleware/role.middleware.js';
+import { requirePermission } from '../../middleware/permission.middleware.js';
 import { PurchaseOrderController } from './purchase-orders.controller.js';
 import { PurchaseOrderService } from './purchase-orders.service.js';
 import { PurchaseOrderRepository } from './purchase-orders.repository.js';
 import { auditPurchaseOrderAction } from './purchase-orders.middleware.js';
+import { requireRole } from '../../middleware/role.middleware';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -37,11 +38,11 @@ router.get(
 /**
  * POST /api/v1/purchase-orders
  * Create a new purchase order
- * Accessible to: ADMIN, ACCOUNTANT
+ * Accessible to: ADMIN, ACCOUNTANT, WAREHOUSE_MANAGER
  */
 router.post(
   '/',
-  requireRole(['ADMIN', 'ACCOUNTANT']),
+  requirePermission('purchaseOrders', 'create'),
   auditPurchaseOrderAction('CREATE'),
   (req, res) => controller.create(req, res)
 );
@@ -63,7 +64,7 @@ router.get(
  */
 router.patch(
   '/:id',
-  requireRole(['ADMIN', 'ACCOUNTANT']),
+  requirePermission('purchaseOrders', 'update'),
   auditPurchaseOrderAction('UPDATE'),
   (req, res) => controller.update(req, res)
 );
@@ -75,7 +76,7 @@ router.patch(
  */
 router.patch(
   '/:id/status',
-  requireRole(['ADMIN', 'WAREHOUSE_MANAGER']),
+  requirePermission('purchaseOrders', 'update'),
   auditPurchaseOrderAction('UPDATE'),
   (req, res) => controller.updateStatus(req, res)
 );

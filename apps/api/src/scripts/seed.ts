@@ -286,6 +286,123 @@ async function main() {
   }
   console.log('  ✓ Sample products created (6 total)');
 
+  // Sample Purchase Orders
+  console.log('  Creating sample purchase orders...');
+  const beijingSupplier = await prisma.supplier.findUnique({ where: { name: 'Beijing Ceramics Co.' } });
+  const karachiSupplier = await prisma.supplier.findUnique({ where: { name: 'Karachi Fixtures Ltd.' } });
+  const shanghaiSupplier = await prisma.supplier.findUnique({ where: { name: 'Shanghai Bathroom Supplies' } });
+
+  const sinkProduct1 = await prisma.product.findUnique({ where: { sku: 'SINK-001' } });
+  const sinkProduct2 = await prisma.product.findUnique({ where: { sku: 'SINK-002' } });
+  const faucetProduct1 = await prisma.product.findUnique({ where: { sku: 'FAUCET-001' } });
+  const faucetProduct2 = await prisma.product.findUnique({ where: { sku: 'FAUCET-002' } });
+  const toiletProduct1 = await prisma.product.findUnique({ where: { sku: 'TOILET-001' } });
+  const toiletProduct2 = await prisma.product.findUnique({ where: { sku: 'TOILET-002' } });
+
+  const purchaseOrders = [
+    {
+      poNumber: 'PO-2025-001',
+      supplierId: beijingSupplier?.id || '',
+      orderDate: new Date('2025-01-10'),
+      expectedArrivalDate: new Date('2025-02-10'),
+      status: 'PENDING' as const,
+      totalAmount: new Decimal('2700.00'),
+      notes: 'Initial order for sink inventory from Beijing',
+      items: [
+        {
+          productId: sinkProduct1?.id || '',
+          quantity: 10,
+          unitCost: new Decimal('150.00'),
+          totalCost: new Decimal('1500.00'),
+        },
+        {
+          productId: sinkProduct2?.id || '',
+          quantity: 8,
+          unitCost: new Decimal('200.00'),
+          totalCost: new Decimal('1600.00'),
+        },
+      ],
+    },
+    {
+      poNumber: 'PO-2025-002',
+      supplierId: karachiSupplier?.id || '',
+      orderDate: new Date('2025-01-15'),
+      expectedArrivalDate: new Date('2025-01-30'),
+      status: 'IN_TRANSIT' as const,
+      totalAmount: new Decimal('3200.00'),
+      notes: 'Faucet fixtures from Karachi - rush delivery',
+      items: [
+        {
+          productId: faucetProduct1?.id || '',
+          quantity: 20,
+          unitCost: new Decimal('75.00'),
+          totalCost: new Decimal('1500.00'),
+        },
+        {
+          productId: faucetProduct2?.id || '',
+          quantity: 25,
+          unitCost: new Decimal('45.00'),
+          totalCost: new Decimal('1125.00'),
+        },
+      ],
+    },
+    {
+      poNumber: 'PO-2025-003',
+      supplierId: shanghaiSupplier?.id || '',
+      orderDate: new Date('2025-01-05'),
+      expectedArrivalDate: new Date('2025-02-05'),
+      status: 'RECEIVED' as const,
+      totalAmount: new Decimal('3200.00'),
+      notes: 'Toilet units received and inspected',
+      items: [
+        {
+          productId: toiletProduct1?.id || '',
+          quantity: 10,
+          unitCost: new Decimal('120.00'),
+          totalCost: new Decimal('1200.00'),
+        },
+        {
+          productId: toiletProduct2?.id || '',
+          quantity: 8,
+          unitCost: new Decimal('180.00'),
+          totalCost: new Decimal('1440.00'),
+        },
+      ],
+    },
+    {
+      poNumber: 'PO-2025-004',
+      supplierId: beijingSupplier?.id || '',
+      orderDate: new Date('2025-01-20'),
+      expectedArrivalDate: null,
+      status: 'CANCELLED' as const,
+      totalAmount: new Decimal('0.00'),
+      notes: 'Cancelled due to supplier stock unavailability',
+      items: [
+        {
+          productId: faucetProduct1?.id || '',
+          quantity: 5,
+          unitCost: new Decimal('75.00'),
+          totalCost: new Decimal('375.00'),
+        },
+      ],
+    },
+  ];
+
+  for (const po of purchaseOrders) {
+    const { items, ...poData } = po;
+    const createdPO = await prisma.purchaseOrder.upsert({
+      where: { poNumber: poData.poNumber },
+      update: {},
+      create: {
+        ...poData,
+        items: {
+          create: items,
+        },
+      },
+    });
+  }
+  console.log('  ✓ Sample purchase orders created (4 total)');
+
   console.log('\n✓ Reference data seeded successfully');
   console.log('🌱 Seed completed successfully!');
 }

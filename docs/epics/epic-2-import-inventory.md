@@ -122,6 +122,35 @@
 
 ---
 
+### Story 2.4.1: Product Variant Management
+
+**As a** warehouse manager,
+**I want** to create and manage product variants with different attributes (color, size, finish, length, etc.),
+**So that** I can track different versions of the same base product with variant-specific pricing and inventory.
+
+**Acceptance Criteria:**
+1. ProductVariant table created: id, productId, sku (unique), variantName, attributes (JSON), costPrice, sellingPrice, reorderLevel, binLocation, status, createdAt, updatedAt
+2. Product model updated with hasVariants flag and variants relationship
+3. POItem model updated with optional productVariantId foreign key
+4. POST /api/products/:productId/variants creates new variant with auto-generated SKU
+5. GET /api/products/:productId/variants lists all variants with stock levels
+6. GET /api/variants/:id returns variant details with parent product info
+7. PUT /api/variants/:id updates variant (pricing, attributes, status)
+8. DELETE /api/variants/:id soft-deletes variant (status=INACTIVE)
+9. Variant SKU must be unique across all products and variants
+10. Variant attributes stored as JSON for flexibility (color, size, finish, length, etc.)
+11. Each variant has independent pricing, reorder levels, and bin locations
+12. Frontend Product Detail page includes Variants section with table
+13. Frontend Add/Edit Variant modal with attribute builder component
+14. Frontend Product Form enhanced with "Has Variants" checkbox and variant creation
+15. Frontend PO Form updated to show variant dropdown when product has variants
+16. Only Admin and Warehouse Manager can create/edit/delete variants
+17. **Variant CRUD operations logged in audit trail**
+
+**Story File:** [docs/stories/story-2-4-1-product-variants.md](../stories/story-2-4-1-product-variants.md)
+
+---
+
 ### Story 2.5: Warehouse Management
 
 **As a** warehouse manager,
@@ -278,9 +307,10 @@
 ✅ Import cost tracking (shipping, customs, taxes)
 ✅ Landed cost calculation per product
 ✅ Product master data with SKU, pricing, categories
+✅ Product variant management with flexible attributes
 ✅ Warehouse management
 ✅ Stock receiving from POs into inventory
-✅ Real-time inventory tracking
+✅ Real-time inventory tracking (per product and per variant)
 ✅ Stock adjustments for wastage/corrections
 ✅ Stock movement audit trail
 ✅ Supplier payment recording
@@ -297,6 +327,12 @@
 
 ## Links
 
-- **Stories:** [docs/stories/](../stories/) (story-2-1 through story-2-10)
+- **Stories:** [docs/stories/](../stories/) (story-2-1 through story-2-10, story-2-4-1)
 - **Architecture:** [docs/architecture/database-schema.md](../architecture/database-schema.md)
 - **MVP Roadmap:** [docs/planning/mvp-roadmap.md](../planning/mvp-roadmap.md)
+
+---
+
+## Notes
+
+**Story 2.4.1 (Product Variants)** was added on 2025-11-24 to address the architectural gap in variant management. This story is essential for properly handling products with multiple variations (e.g., faucets with different finishes, sinks with different sizes) which are common in the sanitary ware business.

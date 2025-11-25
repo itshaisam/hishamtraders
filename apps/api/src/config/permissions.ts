@@ -26,9 +26,30 @@ export const PERMISSIONS = {
   },
 
   suppliers: {
-    create: ['ADMIN', 'WAREHOUSE_MANAGER'],
-    read: ['ADMIN', 'WAREHOUSE_MANAGER'],
-    update: ['ADMIN', 'WAREHOUSE_MANAGER'],
+    create: ['ADMIN', 'ACCOUNTANT'],
+    read: ['ADMIN', 'ACCOUNTANT'],
+    update: ['ADMIN', 'ACCOUNTANT'],
+    delete: ['ADMIN'],
+  },
+
+  purchaseOrders: {
+    create: ['ADMIN', 'ACCOUNTANT', 'WAREHOUSE_MANAGER'],
+    read: ['ADMIN', 'ACCOUNTANT', 'WAREHOUSE_MANAGER'],
+    update: ['ADMIN', 'ACCOUNTANT'],
+    delete: ['ADMIN'],
+  },
+
+  categories: {
+    create: ['ADMIN'],
+    read: ['ADMIN', 'WAREHOUSE_MANAGER', 'SALES_OFFICER'],
+    update: ['ADMIN'],
+    delete: ['ADMIN'],
+  },
+
+  brands: {
+    create: ['ADMIN'],
+    read: ['ADMIN', 'WAREHOUSE_MANAGER', 'SALES_OFFICER'],
+    update: ['ADMIN'],
     delete: ['ADMIN'],
   },
 

@@ -180,6 +180,50 @@ enum ProductStatus {
 
 ---
 
+## Implementation Notes (Authorization & SKU Auto-Generation Remediation - Nov 2025)
+
+### Phase 1: Authorization System Fix
+
+**Problem Found:** The inline `authorize()` middleware in products.routes.ts was checking `user.role` which doesn't exist in JWT payload, causing all users to get "Access denied" errors.
+
+**Fix Applied:**
+- Replaced inline `authorize()` with `requireRole()` middleware (Phase 1)
+- Refactored to use centralized `requirePermission()` middleware (Phase 2)
+- Updated permission matrix: `products: { create: ['ADMIN', 'WAREHOUSE_MANAGER'], delete: ['ADMIN'], ... }`
+
+**Files Modified:**
+- `apps/api/src/modules/products/products.routes.ts` - Now uses `requirePermission('products', action)`
+- `apps/api/src/config/permissions.ts` - Added products resource with correct role permissions
+- `apps/api/src/middleware/permission.middleware.ts` - Centralized authorization middleware
+
+### Phase 2: SKU Auto-Generation Feature
+
+**New Capability:** Products can now be created without providing a SKU. The system will auto-generate SKU in format `PROD-YYYY-XXX`.
+
+**Implementation:**
+- Created `apps/api/src/modules/products/utils/generate-sku.ts` with `generateSKU()` and `isSkuUnique()` functions
+- Updated products DTO to make `sku` field optional
+- Updated products service to auto-generate SKU if not provided
+- Updated frontend ProductFormModal to show "Auto-generated if empty" hint
+- Backend automatically generates: `PROD-2025-001`, `PROD-2025-002`, etc.
+
+**Backward Compatibility:**
+- Users can still provide custom SKU if desired (e.g., vendor-specific codes)
+- Manual SKU input is optional; auto-generation is the default
+
+**Files Modified/Created:**
+- `apps/api/src/modules/products/utils/generate-sku.ts` - New utility for SKU generation
+- `apps/api/src/modules/products/dto/create-product.dto.ts` - Made SKU optional
+- `apps/api/src/modules/products/products.service.ts` - Added auto-generation logic
+- `apps/web/src/features/products/components/ProductFormModal.tsx` - Updated UI to show optional SKU
+
+**Testing:** Products can now be created with:
+1. No SKU provided → Auto-generates `PROD-2025-XXX`
+2. Custom SKU provided → Uses provided SKU (if unique)
+3. Edit mode → SKU remains immutable (read-only, disabled in UI)
+
+---
+
 ## QA Results
 
 *To be populated by QA agent after testing*

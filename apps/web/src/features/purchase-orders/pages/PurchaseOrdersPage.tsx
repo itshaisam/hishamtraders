@@ -39,6 +39,10 @@ export const PurchaseOrdersPage: React.FC = () => {
     navigate('/purchase-orders/new');
   }, [navigate]);
 
+  const handleView = useCallback((po: PurchaseOrder) => {
+    navigate(`/purchase-orders/${po.id}/view`);
+  }, [navigate]);
+
   const handleEdit = useCallback((po: PurchaseOrder) => {
     navigate(`/purchase-orders/${po.id}`);
   }, [navigate]);
@@ -156,7 +160,7 @@ export const PurchaseOrdersPage: React.FC = () => {
           <POList
             pos={pos}
             isLoading={isLoading || deletingId !== null}
-            onView={handleEdit}
+            onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
             canEdit={canCreate || false}

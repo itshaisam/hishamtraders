@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.middleware';
-import { requireRole } from '../../middleware/role.middleware';
+import { requirePermission } from '../../middleware/permission.middleware';
 import { suppliersController } from './suppliers.controller';
 import { auditSupplierAction } from './suppliers.middleware';
 
@@ -10,7 +10,7 @@ const router = Router();
 router.post(
   '/',
   authenticate,
-  requireRole(['ADMIN', 'ACCOUNTANT']),
+  requirePermission('suppliers', 'create'),
   auditSupplierAction('CREATE'),
   (req, res, next) => suppliersController.create(req, res, next)
 );
@@ -33,16 +33,16 @@ router.get(
 router.put(
   '/:id',
   authenticate,
-  requireRole(['ADMIN', 'ACCOUNTANT']),
+  requirePermission('suppliers', 'update'),
   auditSupplierAction('UPDATE'),
   (req, res, next) => suppliersController.update(req, res, next)
 );
 
-// DELETE /api/suppliers/:id - Delete supplier (Admin, Accountant)
+// DELETE /api/suppliers/:id - Delete supplier (Admin)
 router.delete(
   '/:id',
   authenticate,
-  requireRole(['ADMIN', 'ACCOUNTANT']),
+  requirePermission('suppliers', 'delete'),
   auditSupplierAction('DELETE'),
   (req, res, next) => suppliersController.delete(req, res, next)
 );

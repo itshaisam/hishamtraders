@@ -7,6 +7,10 @@ export interface POItem {
   quantity: number;
   unitCost: number;
   totalCost: number;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  createdBy?: string;
+  updatedBy?: string;
   product?: {
     id: string;
     sku: string;
@@ -27,6 +31,8 @@ export interface PurchaseOrder {
   notes?: string;
   createdAt: string | Date;
   updatedAt: string | Date;
+  createdBy?: string;
+  updatedBy?: string;
   supplier?: {
     id: string;
     name: string;

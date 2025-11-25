@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.middleware';
-import { requireRole } from '../../middleware/role.middleware';
+import { requirePermission } from '../../middleware/permission.middleware';
 import { productsController } from './products.controller';
 import { auditProductAction } from './products.middleware';
 
@@ -10,7 +10,7 @@ const router = Router();
 router.post(
   '/',
   authenticate,
-  requireRole(['ADMIN', 'WAREHOUSE_MANAGER']),
+  requirePermission('products', 'create'),
   auditProductAction('CREATE'),
   (req, res, next) => productsController.create(req, res, next)
 );
@@ -33,16 +33,16 @@ router.get(
 router.put(
   '/:id',
   authenticate,
-  requireRole(['ADMIN', 'WAREHOUSE_MANAGER']),
+  requirePermission('products', 'update'),
   auditProductAction('UPDATE'),
   (req, res, next) => productsController.update(req, res, next)
 );
 
-// DELETE /api/products/:id - Delete product (Admin, Warehouse Manager)
+// DELETE /api/products/:id - Delete product (Admin)
 router.delete(
   '/:id',
   authenticate,
-  requireRole(['ADMIN', 'WAREHOUSE_MANAGER']),
+  requirePermission('products', 'delete'),
   auditProductAction('DELETE'),
   (req, res, next) => productsController.delete(req, res, next)
 );

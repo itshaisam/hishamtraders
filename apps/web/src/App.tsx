@@ -15,6 +15,7 @@ import { ProductDetailPage } from './features/products/pages/ProductDetailPage';
 import { PurchaseOrdersPage } from './features/purchase-orders/pages/PurchaseOrdersPage';
 import { POFormPage } from './features/purchase-orders/pages/POFormPage';
 import { PODetailPage } from './features/purchase-orders/pages/PODetailPage';
+import { POViewPage } from './features/purchase-orders/pages/POViewPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -142,6 +143,17 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <POFormPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/purchase-orders/:id/view"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <POViewPage />
                 </Layout>
               </ProtectedRoute>
             }

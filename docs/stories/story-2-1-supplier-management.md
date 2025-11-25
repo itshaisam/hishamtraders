@@ -45,6 +45,8 @@
 5. **Authorization:**
    - [x] Only Admin and Accountant roles can create/edit/delete suppliers
    - [x] Other roles can view suppliers (read-only)
+   - [x] Uses centralized permission matrix from `config/permissions.ts`
+   - [x] Authorization checks via `requirePermission('suppliers', action)` middleware
 
 6. **Audit Logging:**
    - [x] All supplier CRUD operations logged in audit trail
@@ -485,6 +487,26 @@ Claude Haiku 4.5
 
 **Database**:
 1. Migration: `20251108151319_add_supplier_model` - Creates suppliers table
+
+---
+
+## Implementation Notes (Authorization Remediation - Nov 2025)
+
+### Authorization System Update
+
+**Problem Found:** The inline `authorize()` middleware in suppliers.routes.ts was checking `user.role` which doesn't exist in JWT payload, causing "Access denied" errors for all users including ADMIN.
+
+**Fix Applied:**
+- Replaced inline `authorize()` with `requireRole()` middleware from `role.middleware.ts` (Phase 1 fix)
+- Refactored to use centralized `requirePermission()` middleware (Phase 2 enhancement)
+- Updated permission matrix in `config/permissions.ts` to match Story 2.1 specification: `suppliers: { create: ['ADMIN', 'ACCOUNTANT'], ... }`
+
+**Files Modified:**
+- `apps/api/src/modules/suppliers/suppliers.routes.ts` - Now uses `requirePermission('suppliers', action)`
+- `apps/api/src/config/permissions.ts` - Added suppliers resource with correct ADMIN + ACCOUNTANT permissions
+- `apps/api/src/middleware/permission.middleware.ts` - New middleware using centralized permission matrix
+
+**Testing:** All POST/PUT/DELETE operations on suppliers now correctly verify user role from database and check against permission matrix.
 
 ---
 

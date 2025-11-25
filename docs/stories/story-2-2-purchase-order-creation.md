@@ -42,8 +42,10 @@
    - [ ] Purchase Orders List page with filters
 
 5. **Authorization:**
-   - [ ] Only Warehouse Manager, Accountant, Admin can create POs
-   - [ ] Sales/Recovery roles can view POs (read-only)
+   - [x] Warehouse Manager, Accountant, Admin can create POs (fixed in remediation)
+   - [x] Sales/Recovery roles can view POs (read-only)
+   - [x] Uses centralized permission matrix: `purchaseOrders: { create: ['ADMIN', 'ACCOUNTANT', 'WAREHOUSE_MANAGER'], ... }`
+   - [x] Authorization checks via `requirePermission('purchaseOrders', action)` middleware
 
 6. **Audit Logging:**
    - [ ] PO creation and updates logged in audit trail
@@ -479,6 +481,26 @@ const createPOSchema = z.object({
 ### File List
 
 *To be filled by dev agent*
+
+---
+
+## Implementation Notes (Authorization Remediation - Nov 2025)
+
+### Authorization System Fix
+
+**Problem Found:** Purchase Order creation was missing WAREHOUSE_MANAGER from allowed roles. The specification (AC #45) required "Warehouse Manager, Accountant, Admin" but implementation only allowed ADMIN and ACCOUNTANT.
+
+**Fix Applied:**
+- Updated permission matrix in `config/permissions.ts`: `purchaseOrders: { create: ['ADMIN', 'ACCOUNTANT', 'WAREHOUSE_MANAGER'], ... }`
+- Updated purchase-orders.routes.ts to use `requirePermission('purchaseOrders', 'create')` middleware
+- This ensures WAREHOUSE_MANAGER role can now create purchase orders as specified
+
+**Files Modified:**
+- `apps/api/src/modules/purchase-orders/purchase-orders.routes.ts` - Uses `requirePermission('purchaseOrders', action)`
+- `apps/api/src/config/permissions.ts` - Added purchaseOrders resource with WAREHOUSE_MANAGER in create permissions
+- `apps/api/src/middleware/permission.middleware.ts` - Centralized authorization middleware
+
+**Testing:** All POST operations on purchase orders now allow WAREHOUSE_MANAGER role as specified in AC #45.
 
 ---
 
