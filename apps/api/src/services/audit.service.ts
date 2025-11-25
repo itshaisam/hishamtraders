@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 
 export interface AuditLogData {
   userId: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' | 'LOGIN' | 'LOGOUT';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' | 'LOGIN' | 'LOGOUT' | 'PERMISSION_CHECK';
   entityType: string;
   entityId?: string;
   ipAddress?: string;

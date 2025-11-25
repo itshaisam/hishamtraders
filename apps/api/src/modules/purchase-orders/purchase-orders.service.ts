@@ -5,6 +5,7 @@ import { CreatePurchaseOrderRequest } from './dto/create-purchase-order.dto.js';
 import { UpdatePurchaseOrderRequest } from './dto/update-purchase-order.dto.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import { POStatus } from '@prisma/client';
+import { variantsRepository } from '../variants/variants.repository.js';
 
 export class PurchaseOrderService {
   constructor(private repository: PurchaseOrderRepository) {}
@@ -29,6 +30,21 @@ export class PurchaseOrderService {
         }
         if (item.unitCost <= 0) {
           throw new BadRequestError('Unit cost must be greater than 0');
+        }
+
+        // Validate product variant if provided
+        if (item.productVariantId) {
+          const variant = await variantsRepository.findById(item.productVariantId);
+          if (!variant) {
+            throw new BadRequestError(`Product variant ${item.productVariantId} not found`);
+          }
+          if (variant.status !== 'ACTIVE') {
+            throw new BadRequestError(`Product variant ${item.productVariantId} is inactive`);
+          }
+          // Ensure variant belongs to the specified product
+          if (variant.productId !== item.productId) {
+            throw new BadRequestError(`Variant ${item.productVariantId} does not belong to product ${item.productId}`);
+          }
         }
       }
 

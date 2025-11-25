@@ -85,6 +85,7 @@ export class PurchaseOrderRepository {
         data: data.items.map((item) => ({
           poId: createdPO.id,
           productId: item.productId,
+          productVariantId: item.productVariantId || null, // Support product variants
           quantity: item.quantity,
           unitCost: item.unitCost,
           totalCost: item.quantity * item.unitCost,

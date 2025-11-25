@@ -11,10 +11,15 @@ const transformProduct = (product: any) => ({
   sellingPrice: product.sellingPrice.toNumber(),
   category: product.category ? { id: product.category.id, name: product.category.name } : null,
   brand: product.brand ? { id: product.brand.id, name: product.brand.name } : null,
+  variants: product.variants ? product.variants.map((v: any) => ({
+    ...v,
+    costPrice: v.costPrice.toNumber(),
+    sellingPrice: v.sellingPrice.toNumber(),
+  })) : undefined,
 });
 
 export class ProductsRepository {
-  async create(data: CreateProductDto): Promise<Product> {
+  async create(data: CreateProductDto & { sku: string }): Promise<Product> {
     const product = await prisma.product.create({
       data: {
         sku: data.sku.toUpperCase(),
@@ -85,6 +90,10 @@ export class ProductsRepository {
       include: {
         category: true,
         brand: true,
+        variants: {
+          where: { status: 'ACTIVE' },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
     return product ? transformProduct(product) : null;

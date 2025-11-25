@@ -11,6 +11,7 @@ import categoriesRoutes from './modules/categories/categories.routes.js';
 import brandsRoutes from './modules/brands/brands.routes.js';
 import suppliersRoutes from './modules/suppliers/suppliers.routes.js';
 import productsRoutes from './modules/products/products.routes.js';
+import variantsRoutes from './modules/variants/variants.routes.js';
 import purchaseOrdersRoutes from './modules/purchase-orders/purchase-orders.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
@@ -60,6 +61,7 @@ app.use('/api/v1/categories', categoriesRoutes);
 app.use('/api/v1/brands', brandsRoutes);
 app.use('/api/v1/suppliers', suppliersRoutes);
 app.use('/api/v1/products', productsRoutes);
+app.use('/api/v1/variants', variantsRoutes);
 app.use('/api/v1/purchase-orders', purchaseOrdersRoutes);
 app.use('/api/v1', dashboardRoutes);
 

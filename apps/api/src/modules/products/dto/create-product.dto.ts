@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const createProductSchema = z.object({
+  sku: z.string().optional(), // Optional: auto-generated if not provided
   name: z.string().min(1, 'Product name is required').min(2, 'Name must be at least 2 characters'),
   brandId: z.string().optional(),
   categoryId: z.string().optional(),

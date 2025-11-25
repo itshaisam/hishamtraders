@@ -23,6 +23,7 @@ export const createPurchaseOrderSchema = z.object({
     .optional(),
   items: z.array(z.object({
     productId: z.string().min(1, 'Product ID is required'),
+    productVariantId: z.string().optional(), // Optional: for products with variants
     quantity: z.number().int('Quantity must be a whole number').positive('Quantity must be positive'),
     unitCost: z.number().positive('Unit cost must be positive'),
   })).min(1, 'At least one item is required'),
@@ -33,6 +34,7 @@ export type CreatePurchaseOrderRequest = z.infer<typeof createPurchaseOrderSchem
 
 export interface POItemInput {
   productId: string;
+  productVariantId?: string; // Optional: for products with variants
   quantity: number;
   unitCost: number;
 }
