@@ -4,6 +4,7 @@ export interface POItem {
   id: string;
   poId: string;
   productId: string;
+  productVariantId?: string | null;
   quantity: number;
   unitCost: number;
   totalCost: number;
@@ -45,6 +46,7 @@ export interface PurchaseOrder {
 
 export interface CreatePOItemRequest {
   productId: string;
+  productVariantId?: string;
   quantity: number;
   unitCost: number;
 }

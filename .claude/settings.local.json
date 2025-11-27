@@ -13,7 +13,11 @@
       "Bash(pnpm run build:*)",
       "Bash(pnpm -F @hishamtraders/web build:*)",
       "Bash(pnpm -F @hishamtraders/api build:*)",
-      "Bash(npx prisma migrate:*)"
+      "Bash(npx prisma migrate:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run db:seed:*)"
     ],
     "deny": [],
     "ask": []

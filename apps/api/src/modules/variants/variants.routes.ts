@@ -22,18 +22,18 @@ router.get(
   (req, res, next) => variantsController.getAll(req, res, next)
 );
 
+// GET /api/variants/product/:productId - Get all variants for a product (All authenticated users)
+router.get(
+  '/product/:productId',
+  authenticate,
+  (req, res, next) => variantsController.getByProductId(req, res, next)
+);
+
 // GET /api/variants/:id - Get variant details (All authenticated users)
 router.get(
   '/:id',
   authenticate,
   (req, res, next) => variantsController.getById(req, res, next)
-);
-
-// GET /api/products/:productId/variants - Get all variants for a product (All authenticated users)
-router.get(
-  '/products/:productId/variants',
-  authenticate,
-  (req, res, next) => variantsController.getByProductId(req, res, next)
 );
 
 // PUT /api/variants/:id - Update variant (Admin, Warehouse Manager)

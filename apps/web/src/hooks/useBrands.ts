@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
 import { apiClient } from '@/lib/api-client';
 
 export interface Brand {
@@ -8,6 +9,11 @@ export interface Brand {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CreateBrandRequest {
+  name: string;
+  country?: string;
 }
 
 export const useBrands = () => {
@@ -33,4 +39,22 @@ export const useBrandsForSelect = () => {
     isLoading,
     error,
   };
+};
+
+export const useCreateBrand = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateBrandRequest) => {
+      const response = await apiClient.post('/brands', data);
+      return response.data.data as Brand;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['brands'] });
+      toast.success('Brand created successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to create brand');
+    },
+  });
 };

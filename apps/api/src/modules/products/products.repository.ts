@@ -11,6 +11,11 @@ const transformProduct = (product: any) => ({
   sellingPrice: product.sellingPrice.toNumber(),
   category: product.category ? { id: product.category.id, name: product.category.name } : null,
   brand: product.brand ? { id: product.brand.id, name: product.brand.name } : null,
+  uom: product.uom ? {
+    id: product.uom.id,
+    name: product.uom.name,
+    abbreviation: product.uom.abbreviation
+  } : null,
   variants: product.variants ? product.variants.map((v: any) => ({
     ...v,
     costPrice: v.costPrice.toNumber(),
@@ -76,6 +81,7 @@ export class ProductsRepository {
         include: {
           category: true,
           brand: true,
+          uom: true,
         },
       }),
       prisma.product.count({ where }),
@@ -90,6 +96,7 @@ export class ProductsRepository {
       include: {
         category: true,
         brand: true,
+        uom: true,
         variants: {
           where: { status: 'ACTIVE' },
           orderBy: { createdAt: 'asc' },
@@ -116,6 +123,7 @@ export class ProductsRepository {
       data: {
         ...(data.brandId !== undefined && { brandId: data.brandId || null }),
         ...(data.categoryId !== undefined && { categoryId: data.categoryId || null }),
+        ...(data.uomId !== undefined && { uomId: data.uomId || null }),
         ...(data.costPrice !== undefined && { costPrice: data.costPrice }),
         ...(data.sellingPrice !== undefined && { sellingPrice: data.sellingPrice }),
         ...(data.reorderLevel !== undefined && { reorderLevel: data.reorderLevel }),
@@ -125,6 +133,7 @@ export class ProductsRepository {
       include: {
         category: true,
         brand: true,
+        uom: true,
       },
     });
     return transformProduct(product);

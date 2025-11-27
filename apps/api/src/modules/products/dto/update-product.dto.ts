@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const updateProductSchema = z.object({
   brandId: z.string().optional(), // Changed from 'brand: string'
   categoryId: z.string().optional(), // Changed from 'category: string'
+  uomId: z.string().optional(),
   costPrice: z.string().or(z.number()).pipe(z.coerce.number().positive('Cost price must be positive')).optional(),
   sellingPrice: z.string().or(z.number()).pipe(z.coerce.number().positive('Selling price must be positive')).optional(),
   reorderLevel: z.string().or(z.number()).pipe(z.coerce.number().int()).optional(),

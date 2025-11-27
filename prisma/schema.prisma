@@ -86,6 +86,21 @@ model Brand {
   @@map("brands")
 }
 
+model UnitOfMeasure {
+  id           String    @id @default(cuid())
+  name         String    @unique  // "Piece", "Box", "Case", etc.
+  abbreviation String    @unique  // "pc", "box", "cs", etc.
+  description  String?   @db.Text
+  active       Boolean   @default(true)
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  products     Product[]
+
+  @@map("units_of_measure")
+}
+
 // ============================================================================
 // SUPPLIER MANAGEMENT (Epic 2.1)
 // ============================================================================
@@ -142,6 +157,7 @@ model Product {
   // Foreign keys to reference tables
   categoryId    String?
   brandId       String?
+  uomId         String?
 
   // Variant support flag
   hasVariants   Boolean        @default(false)
@@ -161,6 +177,7 @@ model Product {
   // Relations
   category      ProductCategory? @relation(fields: [categoryId], references: [id])
   brand         Brand?           @relation(fields: [brandId], references: [id])
+  uom           UnitOfMeasure?   @relation(fields: [uomId], references: [id])
   variants      ProductVariant[]
   poItems       POItem[]
 
@@ -168,6 +185,7 @@ model Product {
   @@index([sku])
   @@index([categoryId])
   @@index([brandId])
+  @@index([uomId])
   @@index([hasVariants])
   @@map("products")
 }

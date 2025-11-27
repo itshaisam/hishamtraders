@@ -7,6 +7,7 @@ import { Button, Combobox, ComboboxOption, FormField, Input, RadioBadgeGroup } f
 import { PurchaseOrder, CreatePurchaseOrderRequest, CreatePOItemRequest } from '../types/purchase-order.types';
 import { useSuppliers } from '@/features/suppliers/hooks/useSuppliers';
 import { useProducts } from '@/features/products/hooks/useProducts';
+import { useVariantsByProduct } from '@/features/products/hooks/useVariants';
 
 const poFormSchema = z.object({
   supplierId: z.string().min(1, 'Supplier is required'),
@@ -36,6 +37,7 @@ export const POForm: React.FC<POFormProps> = ({
 }) => {
   const [items, setItems] = useState<CreatePOItemRequest[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
+  const [selectedVariant, setSelectedVariant] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
   const [unitCost, setUnitCost] = useState<number>(0);
   const [itemError, setItemError] = useState<string>('');
@@ -43,9 +45,17 @@ export const POForm: React.FC<POFormProps> = ({
 
   const { data: suppliersData, isLoading: suppliersLoading } = useSuppliers({ limit: 100 });
   const { data: productsData, isLoading: productsLoading } = useProducts({ limit: 100 });
+  const { data: variantsData, isLoading: variantsLoading } = useVariantsByProduct(
+    selectedProduct,
+    'ACTIVE'
+  );
 
   const suppliers = suppliersData?.data || [];
   const products = productsData?.data || [];
+  const variants = variantsData?.data || [];
+
+  const selectedProductData = products.find((p) => p.id === selectedProduct);
+  const productHasVariants = selectedProductData?.hasVariants || false;
 
   const {
     register,
@@ -93,11 +103,21 @@ export const POForm: React.FC<POFormProps> = ({
     label: `${p.sku} - ${p.name}`,
   }));
 
+  const variantOptions: ComboboxOption[] = variants.map((v) => ({
+    value: v.id,
+    label: `${v.sku} - ${v.variantName}`,
+  }));
+
   const handleAddItem = () => {
     setItemError('');
 
     if (!selectedProduct) {
       setItemError('Please select a product');
+      return;
+    }
+
+    if (productHasVariants && !selectedVariant) {
+      setItemError('Please select a product variant');
       return;
     }
 
@@ -113,12 +133,14 @@ export const POForm: React.FC<POFormProps> = ({
 
     const newItem: CreatePOItemRequest = {
       productId: selectedProduct,
+      productVariantId: selectedVariant || undefined,
       quantity,
       unitCost,
     };
 
     setItems([...items, newItem]);
     setSelectedProduct('');
+    setSelectedVariant('');
     setQuantity(1);
     setUnitCost(0);
   };
@@ -263,12 +285,31 @@ export const POForm: React.FC<POFormProps> = ({
             <Combobox
               options={productOptions}
               value={selectedProduct}
-              onChange={(value) => setSelectedProduct(value || '')}
+              onChange={(value) => {
+                setSelectedProduct(value || '');
+                setSelectedVariant('');
+              }}
               placeholder="Search products..."
               disabled={!supplierId || productsLoading || isLoading}
               isLoading={productsLoading}
             />
           </FormField>
+
+          {productHasVariants && (
+            <FormField label="Product Variant" required>
+              <Combobox
+                options={variantOptions}
+                value={selectedVariant}
+                onChange={(value) => setSelectedVariant(value || '')}
+                placeholder={variantsLoading ? 'Loading variants...' : 'Select a variant...'}
+                disabled={!selectedProduct || variantsLoading || isLoading}
+                isLoading={variantsLoading}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                This product has variants. Please select one to continue.
+              </p>
+            </FormField>
+          )}
 
           {/* Responsive Grid: 1 col on mobile, 3 on sm+ */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -332,11 +373,21 @@ export const POForm: React.FC<POFormProps> = ({
               <tbody>
                 {items.map((item, index) => {
                   const product = products.find((p) => p.id === item.productId);
+                  const variant = item.productVariantId
+                    ? variants.find((v) => v.id === item.productVariantId)
+                    : null;
+
+                  let displayName = 'Unknown';
+                  if (product) {
+                    displayName = `${product.sku} - ${product.name}`;
+                    if (variant) {
+                      displayName = `${variant.sku} - ${product.name} (${variant.variantName})`;
+                    }
+                  }
+
                   return (
                     <tr key={index} className="border-b border-gray-200 hover:bg-gray-100">
-                      <td className="px-4 py-2 text-gray-900">
-                        {product ? `${product.sku} - ${product.name}` : 'Unknown'}
-                      </td>
+                      <td className="px-4 py-2 text-gray-900">{displayName}</td>
                       <td className="px-4 py-2 text-right text-gray-900">{item.quantity}</td>
                       <td className="px-4 py-2 text-right text-gray-900">
                         ${item.unitCost.toFixed(2)}

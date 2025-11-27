@@ -6,11 +6,13 @@ export interface Product {
   name: string;
   brand?: { id: string; name: string } | null;
   category?: { id: string; name: string } | null;
+  uom?: { id: string; name: string; abbreviation: string } | null;
   costPrice: number;
   sellingPrice: number;
   reorderLevel: number;
   binLocation?: string;
   status: ProductStatus;
+  hasVariants?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,6 +22,7 @@ export interface CreateProductRequest {
   name: string;
   brandId?: string;
   categoryId?: string;
+  uomId?: string;
   costPrice: number;
   sellingPrice: number;
   reorderLevel?: number;
@@ -30,6 +33,7 @@ export interface CreateProductRequest {
 export interface UpdateProductRequest {
   brandId?: string;
   categoryId?: string;
+  uomId?: string;
   costPrice?: number;
   sellingPrice?: number;
   reorderLevel?: number;

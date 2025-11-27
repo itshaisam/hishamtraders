@@ -165,6 +165,34 @@ async function main() {
   }
   console.log('  ✓ Brands created');
 
+  // Units of Measure
+  console.log('  Creating units of measure...');
+  const uoms = [
+    { name: 'Piece', abbreviation: 'pc', description: 'Individual item or unit' },
+    { name: 'Box', abbreviation: 'box', description: 'Standard box packaging' },
+    { name: 'Case', abbreviation: 'cs', description: 'Case containing multiple units' },
+    { name: 'Dozen', abbreviation: 'dz', description: '12 units' },
+    { name: 'Pair', abbreviation: 'pr', description: 'Set of 2 items' },
+    { name: 'Set', abbreviation: 'set', description: 'Complete set or kit' },
+    { name: 'Pack', abbreviation: 'pk', description: 'Package or bundle' },
+    { name: 'Meter', abbreviation: 'm', description: 'Metric unit of length' },
+    { name: 'Kilogram', abbreviation: 'kg', description: 'Metric unit of weight' },
+    { name: 'Liter', abbreviation: 'L', description: 'Metric unit of volume' },
+    { name: 'Square Meter', abbreviation: 'sqm', description: 'Metric unit of area' },
+    { name: 'Carton', abbreviation: 'ctn', description: 'Carton packaging' },
+    { name: 'Bundle', abbreviation: 'bdl', description: 'Bundle of items' },
+    { name: 'Roll', abbreviation: 'roll', description: 'Rolled material' },
+  ];
+
+  for (const uom of uoms) {
+    await prisma.unitOfMeasure.upsert({
+      where: { name: uom.name },
+      update: {},
+      create: uom,
+    });
+  }
+  console.log('  ✓ Units of measure created');
+
   // Get reference data for relationships
   const chinaCountry = await prisma.country.findUnique({ where: { code: 'CN' } });
   const pakistanCountry = await prisma.country.findUnique({ where: { code: 'PK' } });
@@ -176,6 +204,8 @@ async function main() {
   const superSinkBrand = await prisma.brand.findUnique({ where: { name: 'SuperSink' } });
   const eliteFaucetBrand = await prisma.brand.findUnique({ where: { name: 'EliteFaucet' } });
   const classicToiletBrand = await prisma.brand.findUnique({ where: { name: 'ClassicToilet' } });
+  const pieceUom = await prisma.unitOfMeasure.findUnique({ where: { name: 'Piece' } });
+  const setUom = await prisma.unitOfMeasure.findUnique({ where: { name: 'Set' } });
 
   // Sample Suppliers
   console.log('  Creating sample suppliers...');
@@ -226,6 +256,7 @@ async function main() {
       name: 'Stainless Steel Kitchen Sink 33x22',
       categoryId: sinksCategory?.id,
       brandId: superSinkBrand?.id,
+      uomId: pieceUom?.id,
       costPrice: new Decimal('150.00'),
       sellingPrice: new Decimal('250.00'),
       reorderLevel: 10,
@@ -235,6 +266,7 @@ async function main() {
       name: 'Double Bowl Undermount Sink',
       categoryId: sinksCategory?.id,
       brandId: superSinkBrand?.id,
+      uomId: pieceUom?.id,
       costPrice: new Decimal('200.00'),
       sellingPrice: new Decimal('350.00'),
       reorderLevel: 8,
@@ -244,6 +276,7 @@ async function main() {
       name: 'Chrome Kitchen Faucet with Sprayer',
       categoryId: faucetsCategory?.id,
       brandId: eliteFaucetBrand?.id,
+      uomId: setUom?.id,
       costPrice: new Decimal('75.00'),
       sellingPrice: new Decimal('125.00'),
       reorderLevel: 20,
@@ -253,6 +286,7 @@ async function main() {
       name: 'Brass Basin Faucet Hot/Cold',
       categoryId: faucetsCategory?.id,
       brandId: eliteFaucetBrand?.id,
+      uomId: pieceUom?.id,
       costPrice: new Decimal('45.00'),
       sellingPrice: new Decimal('85.00'),
       reorderLevel: 25,
@@ -262,6 +296,7 @@ async function main() {
       name: 'Ceramic Western Toilet Seat',
       categoryId: toiletsCategory?.id,
       brandId: classicToiletBrand?.id,
+      uomId: setUom?.id,
       costPrice: new Decimal('120.00'),
       sellingPrice: new Decimal('200.00'),
       reorderLevel: 10,
@@ -271,6 +306,7 @@ async function main() {
       name: 'Dual Flush Toilet with Soft Close',
       categoryId: toiletsCategory?.id,
       brandId: classicToiletBrand?.id,
+      uomId: setUom?.id,
       costPrice: new Decimal('180.00'),
       sellingPrice: new Decimal('320.00'),
       reorderLevel: 8,
