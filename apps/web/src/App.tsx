@@ -20,6 +20,7 @@ import { WarehousesPage } from './features/warehouses/pages/WarehousesPage';
 import { WarehouseFormPage } from './features/warehouses/pages/WarehouseFormPage';
 import { WarehouseDetailPage } from './features/warehouses/pages/WarehouseDetailPage';
 import { ReceiveGoodsPage } from './features/purchase-orders/pages/ReceiveGoodsPage';
+import { InventoryPage } from './features/inventory/pages/InventoryPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -214,6 +215,18 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <WarehouseDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Inventory route */}
+          <Route
+            path="/stock-levels"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <InventoryPage />
                 </Layout>
               </ProtectedRoute>
             }

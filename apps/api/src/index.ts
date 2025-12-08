@@ -15,6 +15,7 @@ import productsRoutes from './modules/products/products.routes.js';
 import variantsRoutes from './modules/variants/variants.routes.js';
 import purchaseOrdersRoutes from './modules/purchase-orders/purchase-orders.routes.js';
 import warehousesRoutes from './modules/warehouses/warehouses.routes.js';
+import inventoryRoutes from './modules/inventory/inventory.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
@@ -67,6 +68,7 @@ app.use('/api/v1/products', productsRoutes);
 app.use('/api/v1/variants', variantsRoutes);
 app.use('/api/v1/purchase-orders', purchaseOrdersRoutes);
 app.use('/api/v1/warehouses', warehousesRoutes);
+app.use('/api/v1/inventory', inventoryRoutes);
 app.use('/api/v1', dashboardRoutes);
 
 // 404 handler (must be after all routes)
