@@ -5,6 +5,9 @@ import { POFormSkeleton } from '../components/POFormSkeleton';
 import { usePurchaseOrder } from '../hooks/usePurchaseOrders';
 import { POStatusBadge } from '../components/POStatusBadge';
 import { Button, Breadcrumbs } from '../../../components/ui';
+import { ImportDocumentationSection } from '../components/ImportDocumentationSection';
+import { POAdditionalCostsTable } from '../components/POAdditionalCostsTable';
+import { LandedCostBreakdown } from '../components/LandedCostBreakdown';
 
 /**
  * POViewPage - Read-only display of a purchase order
@@ -273,7 +276,19 @@ export const POViewPage: React.FC = () => {
               </div>
             </>
           )}
+        </div>
 
+        {/* Story 2.3: Import Documentation, Costs, and Landed Cost (Only show for IN_TRANSIT or RECEIVED) */}
+        {(purchaseOrder.status === 'IN_TRANSIT' || purchaseOrder.status === 'RECEIVED') && (
+          <>
+            <ImportDocumentationSection po={purchaseOrder} />
+            <POAdditionalCostsTable po={purchaseOrder} />
+            <LandedCostBreakdown poId={purchaseOrder.id} />
+          </>
+        )}
+
+        {/* Audit Fields Card */}
+        <div className="bg-white rounded-lg shadow p-6">
           {/* Audit Fields */}
           <hr className="border-gray-200" />
           <div className="bg-gray-50 rounded-lg p-4">

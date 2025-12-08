@@ -14,6 +14,11 @@ import {
   PurchaseOrderFilters,
   purchaseOrderFilterSchema,
 } from './dto/purchase-order-filter.dto.js';
+import { AddPOCostRequest, addPOCostSchema } from './dto/add-po-cost.dto.js';
+import {
+  UpdateImportDetailsRequest,
+  updateImportDetailsSchema,
+} from './dto/update-import-details.dto.js';
 
 export class PurchaseOrderController {
   constructor(private service: PurchaseOrderService) {}
@@ -282,6 +287,141 @@ export class PurchaseOrderController {
       res.status(500).json({
         success: false,
         message: 'Failed to fetch statistics',
+      });
+    }
+  }
+
+  /**
+   * Add a cost to a purchase order
+   * POST /api/v1/purchase-orders/:id/costs
+   */
+  async addCost(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const validatedData: AddPOCostRequest = addPOCostSchema.parse(req.body);
+
+      const cost = await this.service.addCost(
+        id,
+        validatedData,
+        req.user?.userId || ''
+      );
+
+      logger.info('Cost added to purchase order via API', {
+        userId: req.user?.userId,
+        poId: id,
+        costId: cost.id,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: cost,
+        message: 'Cost added successfully',
+      });
+    } catch (error: any) {
+      logger.error('Error adding cost to purchase order', { error });
+
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          success: false,
+          errors: error.errors,
+          message: 'Validation failed',
+        });
+      }
+
+      if (error.message === 'Purchase order not found') {
+        return res.status(404).json({
+          success: false,
+          message: 'Purchase order not found',
+        });
+      }
+
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Failed to add cost',
+      });
+    }
+  }
+
+  /**
+   * Get landed cost calculation for a purchase order
+   * GET /api/v1/purchase-orders/:id/landed-cost
+   */
+  async getLandedCost(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const landedCost = await this.service.getLandedCost(id);
+
+      res.status(200).json({
+        success: true,
+        data: landedCost,
+      });
+    } catch (error: any) {
+      logger.error('Error calculating landed cost', { error });
+
+      if (error.message === 'Purchase order not found') {
+        return res.status(404).json({
+          success: false,
+          message: 'Purchase order not found',
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        message: 'Failed to calculate landed cost',
+      });
+    }
+  }
+
+  /**
+   * Update import details for a purchase order
+   * PATCH /api/v1/purchase-orders/:id/import-details
+   */
+  async updateImportDetails(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const validatedData: UpdateImportDetailsRequest =
+        updateImportDetailsSchema.parse(req.body);
+
+      const updated = await this.service.updateImportDetails(
+        id,
+        validatedData,
+        req.user?.userId || ''
+      );
+
+      logger.info('Import details updated via API', {
+        userId: req.user?.userId,
+        poId: id,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: updated,
+        message: 'Import details updated successfully',
+      });
+    } catch (error: any) {
+      logger.error('Error updating import details', { error });
+
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          success: false,
+          errors: error.errors,
+          message: 'Validation failed',
+        });
+      }
+
+      if (error.message === 'Purchase order not found') {
+        return res.status(404).json({
+          success: false,
+          message: 'Purchase order not found',
+        });
+      }
+
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Failed to update import details',
       });
     }
   }

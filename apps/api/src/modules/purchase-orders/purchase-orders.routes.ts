@@ -4,6 +4,7 @@ import { requirePermission } from '../../middleware/permission.middleware.js';
 import { PurchaseOrderController } from './purchase-orders.controller.js';
 import { PurchaseOrderService } from './purchase-orders.service.js';
 import { PurchaseOrderRepository } from './purchase-orders.repository.js';
+import { LandedCostService } from './landed-cost.service.js';
 import { auditPurchaseOrderAction } from './purchase-orders.middleware.js';
 import { requireRole } from '../../middleware/role.middleware';
 
@@ -12,7 +13,8 @@ const router = Router();
 
 // Initialize repository, service, and controller
 const repository = new PurchaseOrderRepository(prisma);
-const service = new PurchaseOrderService(repository);
+const landedCostService = new LandedCostService(prisma);
+const service = new PurchaseOrderService(repository, landedCostService);
 const controller = new PurchaseOrderController(service);
 
 /**
@@ -91,6 +93,40 @@ router.delete(
   requireRole(['ADMIN', 'ACCOUNTANT']),
   auditPurchaseOrderAction('DELETE'),
   (req, res) => controller.delete(req, res)
+);
+
+/**
+ * POST /api/v1/purchase-orders/:id/costs
+ * Add a cost to a purchase order
+ * Accessible to: ADMIN, ACCOUNTANT
+ */
+router.post(
+  '/:id/costs',
+  requireRole(['ADMIN', 'ACCOUNTANT']),
+  auditPurchaseOrderAction('ADD_COST'),
+  (req, res) => controller.addCost(req, res)
+);
+
+/**
+ * GET /api/v1/purchase-orders/:id/landed-cost
+ * Get landed cost calculation for a purchase order
+ * Accessible to: All authenticated users
+ */
+router.get(
+  '/:id/landed-cost',
+  (req, res) => controller.getLandedCost(req, res)
+);
+
+/**
+ * PATCH /api/v1/purchase-orders/:id/import-details
+ * Update import details for a purchase order
+ * Accessible to: ADMIN, ACCOUNTANT
+ */
+router.patch(
+  '/:id/import-details',
+  requireRole(['ADMIN', 'ACCOUNTANT']),
+  auditPurchaseOrderAction('UPDATE_IMPORT_DETAILS'),
+  (req, res) => controller.updateImportDetails(req, res)
 );
 
 export default router;

@@ -211,6 +211,11 @@ model PurchaseOrder {
   totalAmount         Decimal  @db.Decimal(12, 2)
   notes               String?  @db.Text
 
+  // Import documentation fields (Story 2.3)
+  containerNo         String?
+  shipDate            DateTime?
+  arrivalDate         DateTime?
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   createdBy           String?
@@ -218,11 +223,39 @@ model PurchaseOrder {
 
   supplier            Supplier @relation(fields: [supplierId], references: [id])
   items               POItem[]
+  costs               POCost[] // Story 2.3: Additional costs
 
   @@index([status])
   @@index([supplierId])
   @@index([orderDate])
   @@map("purchase_orders")
+}
+
+// ============================================================================
+// PO ADDITIONAL COSTS (Story 2.3)
+// ============================================================================
+
+enum POCostType {
+  SHIPPING
+  CUSTOMS
+  TAX
+  OTHER
+}
+
+model POCost {
+  id            String      @id @default(cuid())
+  poId          String
+  type          POCostType
+  amount        Decimal     @db.Decimal(10, 2)
+  description   String?     @db.Text
+
+  createdAt     DateTime    @default(now())
+  createdBy     String?
+
+  purchaseOrder PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+
+  @@index([poId])
+  @@map("po_costs")
 }
 
 // ============================================================================

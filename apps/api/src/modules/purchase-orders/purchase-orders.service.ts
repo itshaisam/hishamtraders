@@ -3,12 +3,18 @@ import { PurchaseOrderRepository } from './purchase-orders.repository.js';
 import { PurchaseOrderFilters } from './dto/purchase-order-filter.dto.js';
 import { CreatePurchaseOrderRequest } from './dto/create-purchase-order.dto.js';
 import { UpdatePurchaseOrderRequest } from './dto/update-purchase-order.dto.js';
+import { AddPOCostRequest } from './dto/add-po-cost.dto.js';
+import { UpdateImportDetailsRequest } from './dto/update-import-details.dto.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import { POStatus } from '@prisma/client';
 import { variantsRepository } from '../variants/variants.repository.js';
+import { LandedCostService } from './landed-cost.service.js';
 
 export class PurchaseOrderService {
-  constructor(private repository: PurchaseOrderRepository) {}
+  constructor(
+    private repository: PurchaseOrderRepository,
+    private landedCostService: LandedCostService
+  ) {}
 
   /**
    * Create a new purchase order
@@ -234,6 +240,137 @@ export class PurchaseOrderService {
     } catch (error) {
       logger.error('Error fetching purchase order statistics', { error });
       throw new BadRequestError('Failed to fetch statistics');
+    }
+  }
+
+  /**
+   * Add a cost to a purchase order
+   * Only allowed when PO status is IN_TRANSIT or RECEIVED
+   */
+  async addCost(poId: string, costData: AddPOCostRequest, userId: string) {
+    try {
+      // Validate PO exists
+      const po = await this.repository.findById(poId);
+      if (!po) {
+        throw new NotFoundError('Purchase order not found');
+      }
+
+      // Validate PO status - costs can only be added when PO is IN_TRANSIT or RECEIVED
+      if (po.status !== 'IN_TRANSIT' && po.status !== 'RECEIVED') {
+        throw new BadRequestError(
+          `Cannot add costs to ${po.status} purchase order. Costs can only be added when status is IN_TRANSIT or RECEIVED.`
+        );
+      }
+
+      // Validate amount
+      if (costData.amount <= 0) {
+        throw new BadRequestError('Cost amount must be greater than 0');
+      }
+
+      logger.info(`Adding ${costData.type} cost to PO: ${po.poNumber}`, {
+        userId,
+        amount: costData.amount,
+      });
+
+      const cost = await this.repository.addCost(poId, costData, userId);
+
+      logger.info(`Cost added successfully to PO: ${po.poNumber}`, {
+        userId,
+        costId: cost.id,
+      });
+
+      return cost;
+    } catch (error) {
+      if (error instanceof NotFoundError || error instanceof BadRequestError) {
+        throw error;
+      }
+      logger.error('Error adding cost to purchase order', { error, poId, userId });
+      throw new BadRequestError('Failed to add cost to purchase order');
+    }
+  }
+
+  /**
+   * Get all costs for a purchase order
+   */
+  async getCosts(poId: string) {
+    try {
+      // Validate PO exists
+      const po = await this.repository.findById(poId);
+      if (!po) {
+        throw new NotFoundError('Purchase order not found');
+      }
+
+      return await this.repository.getCosts(poId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      logger.error('Error fetching costs for purchase order', { error, poId });
+      throw new BadRequestError('Failed to fetch costs');
+    }
+  }
+
+  /**
+   * Update import details for a purchase order
+   * Only allowed when PO status is IN_TRANSIT or RECEIVED
+   */
+  async updateImportDetails(
+    poId: string,
+    details: UpdateImportDetailsRequest,
+    userId: string
+  ) {
+    try {
+      // Validate PO exists
+      const po = await this.repository.findById(poId);
+      if (!po) {
+        throw new NotFoundError('Purchase order not found');
+      }
+
+      // Validate PO status
+      if (po.status !== 'IN_TRANSIT' && po.status !== 'RECEIVED') {
+        throw new BadRequestError(
+          `Cannot update import details for ${po.status} purchase order. Import details can only be updated when status is IN_TRANSIT or RECEIVED.`
+        );
+      }
+
+      logger.info(`Updating import details for PO: ${po.poNumber}`, {
+        userId,
+      });
+
+      const updated = await this.repository.updateImportDetails(poId, details, userId);
+
+      logger.info(`Import details updated for PO: ${po.poNumber}`, {
+        userId,
+      });
+
+      return updated;
+    } catch (error) {
+      if (error instanceof NotFoundError || error instanceof BadRequestError) {
+        throw error;
+      }
+      logger.error('Error updating import details', { error, poId, userId });
+      throw new BadRequestError('Failed to update import details');
+    }
+  }
+
+  /**
+   * Get landed cost calculation for a purchase order
+   */
+  async getLandedCost(poId: string) {
+    try {
+      // Validate PO exists
+      const po = await this.repository.findById(poId);
+      if (!po) {
+        throw new NotFoundError('Purchase order not found');
+      }
+
+      return await this.landedCostService.calculateLandedCost(poId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      logger.error('Error calculating landed cost', { error, poId });
+      throw new BadRequestError('Failed to calculate landed cost');
     }
   }
 }

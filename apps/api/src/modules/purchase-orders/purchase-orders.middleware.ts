@@ -11,17 +11,27 @@ export const auditPurchaseOrderAction = (action: string) => {
     const originalSend = res.send;
 
     res.send = function (data: any) {
-      if (res.statusCode < 400 && ['CREATE', 'UPDATE', 'DELETE'].includes(action)) {
+      const auditableActions = ['CREATE', 'UPDATE', 'DELETE', 'ADD_COST', 'UPDATE_IMPORT_DETAILS'];
+
+      if (res.statusCode < 400 && auditableActions.includes(action)) {
         const userId = req.user?.userId;
 
         if (userId) {
           const entityId = req.params.id || (data?.data?.id || '');
           const poNumber = data?.data?.poNumber;
 
-          // Capture changed fields for updates
+          // Capture changed fields for updates and cost additions
           let changedFieldsJson: any = null;
-          if (action === 'UPDATE' && req.body) {
+          if (['UPDATE', 'ADD_COST', 'UPDATE_IMPORT_DETAILS'].includes(action) && req.body) {
             changedFieldsJson = req.body;
+          }
+
+          // Create notes based on action type
+          let notes = `PO Number: ${poNumber}`;
+          if (action === 'ADD_COST') {
+            notes += ` | Cost Type: ${req.body?.type} | Amount: ${req.body?.amount}`;
+          } else if (action === 'UPDATE_IMPORT_DETAILS') {
+            notes += ` | Import Details Updated`;
           }
 
           // Log audit record asynchronously
@@ -32,7 +42,7 @@ export const auditPurchaseOrderAction = (action: string) => {
               entityType: 'PurchaseOrder',
               entityId,
               changedFields: changedFieldsJson,
-              notes: `PO Number: ${poNumber}`,
+              notes,
               ipAddress: req.ip,
               userAgent: req.get('user-agent'),
             },

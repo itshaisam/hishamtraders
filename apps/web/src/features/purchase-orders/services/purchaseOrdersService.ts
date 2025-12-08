@@ -8,6 +8,10 @@ import {
   PurchaseOrderListResponse,
   PurchaseOrderResponse,
   PurchaseOrderStatistics,
+  AddPOCostRequest,
+  POCost,
+  LandedCostResult,
+  UpdateImportDetailsRequest,
 } from '../types/purchase-order.types';
 
 const BASE_URL = '/purchase-orders';
@@ -98,6 +102,51 @@ export const purchaseOrdersService = {
       success: boolean;
       data: PurchaseOrderStatistics;
     }>(`${BASE_URL}/statistics`);
+    return response.data;
+  },
+
+  /**
+   * Add a cost to a purchase order
+   * Story 2.3
+   */
+  async addCost(
+    poId: string,
+    data: AddPOCostRequest
+  ): Promise<{ success: boolean; data: POCost; message: string }> {
+    const response = await apiClient.post<{
+      success: boolean;
+      data: POCost;
+      message: string;
+    }>(`${BASE_URL}/${poId}/costs`, data);
+    return response.data;
+  },
+
+  /**
+   * Get landed cost calculation for a purchase order
+   * Story 2.3
+   */
+  async getLandedCost(
+    poId: string
+  ): Promise<{ success: boolean; data: LandedCostResult }> {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: LandedCostResult;
+    }>(`${BASE_URL}/${poId}/landed-cost`);
+    return response.data;
+  },
+
+  /**
+   * Update import details for a purchase order
+   * Story 2.3
+   */
+  async updateImportDetails(
+    poId: string,
+    data: UpdateImportDetailsRequest
+  ): Promise<PurchaseOrderResponse> {
+    const response = await apiClient.patch<PurchaseOrderResponse>(
+      `${BASE_URL}/${poId}/import-details`,
+      data
+    );
     return response.data;
   },
 };

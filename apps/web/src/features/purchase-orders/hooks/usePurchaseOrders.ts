@@ -8,6 +8,8 @@ import {
   UpdatePOStatusRequest,
   PurchaseOrderFilters,
   POStatus,
+  AddPOCostRequest,
+  UpdateImportDetailsRequest,
 } from '../types/purchase-order.types';
 
 export const usePurchaseOrders = (filters?: PurchaseOrderFilters) => {
@@ -115,5 +117,58 @@ export const usePurchaseOrderStatistics = () => {
     queryKey: ['purchaseOrderStatistics'],
     queryFn: () => purchaseOrdersService.getStatistics(),
     staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+/**
+ * Story 2.3: Add a cost to a purchase order
+ */
+export const useAddPOCost = (poId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: AddPOCostRequest) =>
+      purchaseOrdersService.addCost(poId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchaseOrder', poId] });
+      queryClient.invalidateQueries({ queryKey: ['landedCost', poId] });
+      toast.success('Cost added successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to add cost');
+    },
+  });
+};
+
+/**
+ * Story 2.3: Get landed cost calculation
+ */
+export const useLandedCost = (poId: string) => {
+  return useQuery({
+    queryKey: ['landedCost', poId],
+    queryFn: () => purchaseOrdersService.getLandedCost(poId),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!poId,
+  });
+};
+
+/**
+ * Story 2.3: Update import details
+ */
+export const useUpdateImportDetails = (poId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateImportDetailsRequest) =>
+      purchaseOrdersService.updateImportDetails(poId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchaseOrder', poId] });
+      toast.success('Import details updated successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(
+        error.response?.data?.message || 'Failed to update import details'
+      );
+    },
   });
 };

@@ -1,7 +1,9 @@
-import { PrismaClient, PurchaseOrder, POItem, POStatus } from '@prisma/client';
+import { PrismaClient, PurchaseOrder, POItem, POStatus, POCost } from '@prisma/client';
 import { PurchaseOrderFilters } from './dto/purchase-order-filter.dto';
 import { CreatePurchaseOrderRequest, POItemInput } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderRequest } from './dto/update-purchase-order.dto';
+import { AddPOCostRequest } from './dto/add-po-cost.dto';
+import { UpdateImportDetailsRequest } from './dto/update-import-details.dto';
 
 export class PurchaseOrderRepository {
   constructor(private prisma: PrismaClient) {}
@@ -181,8 +183,10 @@ export class PurchaseOrderRepository {
         items: {
           include: {
             product: true,
+            productVariant: true,
           },
         },
+        costs: true,
       },
     });
     return po ? this.transformDecimals(po) : null;
@@ -279,5 +283,64 @@ export class PurchaseOrderRepository {
       pendingPOs,
       totalValue: totalValue._sum.totalAmount || 0,
     };
+  }
+
+  /**
+   * Add a cost to a purchase order
+   */
+  async addCost(poId: string, costData: AddPOCostRequest, userId: string): Promise<POCost> {
+    const cost = await this.prisma.pOCost.create({
+      data: {
+        poId,
+        type: costData.type,
+        amount: costData.amount,
+        description: costData.description,
+        createdBy: userId,
+      },
+    });
+
+    return cost;
+  }
+
+  /**
+   * Get all costs for a purchase order
+   */
+  async getCosts(poId: string): Promise<POCost[]> {
+    const costs = await this.prisma.pOCost.findMany({
+      where: { poId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return costs;
+  }
+
+  /**
+   * Update import details (container number, ship/arrival dates)
+   */
+  async updateImportDetails(
+    poId: string,
+    details: UpdateImportDetailsRequest,
+    userId: string
+  ): Promise<PurchaseOrder> {
+    const po = await this.prisma.purchaseOrder.update({
+      where: { id: poId },
+      data: {
+        containerNo: details.containerNo,
+        shipDate: details.shipDate,
+        arrivalDate: details.arrivalDate,
+        updatedBy: userId,
+      },
+      include: {
+        supplier: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
+        costs: true,
+      },
+    });
+
+    return this.transformDecimals(po);
   }
 }

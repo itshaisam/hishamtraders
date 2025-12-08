@@ -8,6 +8,7 @@ import { PurchaseOrder, CreatePurchaseOrderRequest, CreatePOItemRequest } from '
 import { useSuppliers } from '@/features/suppliers/hooks/useSuppliers';
 import { useProducts } from '@/features/products/hooks/useProducts';
 import { useVariantsByProduct } from '@/features/products/hooks/useVariants';
+import { useUomsForSelect } from '@/hooks/useUoms';
 
 const poFormSchema = z.object({
   supplierId: z.string().min(1, 'Supplier is required'),
@@ -43,12 +44,19 @@ export const POForm: React.FC<POFormProps> = ({
   const [itemError, setItemError] = useState<string>('');
   const [status, setStatus] = useState(purchaseOrder?.status || 'PENDING');
 
+  // UOM Conversion state
+  const [useConversion, setUseConversion] = useState<boolean>(false);
+  const [orderUomId, setOrderUomId] = useState<string>('');
+  const [orderQuantity, setOrderQuantity] = useState<number>(0);
+  const [conversionFactor, setConversionFactor] = useState<number>(0);
+
   const { data: suppliersData, isLoading: suppliersLoading } = useSuppliers({ limit: 100 });
   const { data: productsData, isLoading: productsLoading } = useProducts({ limit: 100 });
   const { data: variantsData, isLoading: variantsLoading } = useVariantsByProduct(
     selectedProduct,
     'ACTIVE'
   );
+  const { options: uomOptions, isLoading: uomsLoading } = useUomsForSelect();
 
   const suppliers = suppliersData?.data || [];
   const products = productsData?.data || [];
@@ -126,8 +134,8 @@ export const POForm: React.FC<POFormProps> = ({
       return;
     }
 
-    if (unitCost < 0) {
-      setItemError('Unit cost must be greater than or equal to 0');
+    if (unitCost <= 0) {
+      setItemError('Unit cost must be greater than 0');
       return;
     }
 
@@ -143,10 +151,42 @@ export const POForm: React.FC<POFormProps> = ({
     setSelectedVariant('');
     setQuantity(1);
     setUnitCost(0);
+
+    // Reset conversion fields
+    setUseConversion(false);
+    setOrderUomId('');
+    setOrderQuantity(0);
+    setConversionFactor(0);
   };
 
   const handleRemoveItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
+  };
+
+  // UOM Conversion handlers
+  const handleToggleConversion = (enabled: boolean) => {
+    setUseConversion(enabled);
+    if (!enabled) {
+      // Reset conversion fields when disabled
+      setOrderUomId('');
+      setOrderQuantity(0);
+      setConversionFactor(0);
+      setQuantity(1);
+    }
+  };
+
+  const handleOrderQuantityChange = (value: number) => {
+    setOrderQuantity(value);
+    // Calculate base quantity
+    const factor = conversionFactor || 1;
+    setQuantity(value * factor);
+  };
+
+  const handleConversionFactorChange = (value: number) => {
+    setConversionFactor(value);
+    // Recalculate base quantity
+    const orderQty = orderQuantity || 0;
+    setQuantity(orderQty * value);
   };
 
   const handleFormSubmit = async (data: POFormData) => {
@@ -311,9 +351,95 @@ export const POForm: React.FC<POFormProps> = ({
             </FormField>
           )}
 
-          {/* Responsive Grid: 1 col on mobile, 3 on sm+ */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <FormField label="Quantity">
+          {/* Product Base UOM Display */}
+          {selectedProductData && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-gray-700">
+                <span className="font-semibold">Base UOM:</span>{' '}
+                {selectedProductData.uom?.name || 'Not Set'}{' '}
+                {selectedProductData.uom?.abbreviation && (
+                  <span className="text-gray-500">({selectedProductData.uom.abbreviation})</span>
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* UOM Conversion Toggle */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="useConversion"
+              checked={useConversion}
+              onChange={(e) => handleToggleConversion(e.target.checked)}
+              disabled={isLoading || !selectedProduct}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label htmlFor="useConversion" className="text-sm font-medium text-gray-700">
+              Order in different UOM (with conversion)
+            </label>
+          </div>
+
+          {/* Conversion Fields */}
+          {useConversion ? (
+            <div className="space-y-4 p-4 bg-gray-100 border-2 border-gray-300 rounded-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Order UOM Selector */}
+                <FormField label="Order UOM" required>
+                  <Combobox
+                    options={uomOptions}
+                    value={orderUomId}
+                    onChange={(value) => setOrderUomId(value || '')}
+                    placeholder="Select UOM..."
+                    disabled={isLoading || uomsLoading}
+                    isLoading={uomsLoading}
+                  />
+                </FormField>
+
+                {/* Order Quantity */}
+                <FormField label="Quantity" required>
+                  <Input
+                    type="number"
+                    value={orderQuantity || ''}
+                    onChange={(e) => handleOrderQuantityChange(Math.max(0, Number(e.target.value)))}
+                    min="0"
+                    step="0.01"
+                    disabled={isLoading}
+                    className="py-2.5"
+                    placeholder="e.g., 5"
+                  />
+                </FormField>
+
+                {/* Conversion Factor */}
+                <FormField
+                  label={`Each contains (${selectedProductData?.uom?.abbreviation || 'base units'})`}
+                  required
+                >
+                  <Input
+                    type="number"
+                    value={conversionFactor || ''}
+                    onChange={(e) => handleConversionFactorChange(Math.max(0, Number(e.target.value)))}
+                    min="0"
+                    step="0.01"
+                    disabled={isLoading}
+                    className="py-2.5"
+                    placeholder="e.g., 24"
+                  />
+                </FormField>
+              </div>
+
+              {/* Calculated Base Quantity Display */}
+              <div className="p-3 bg-blue-50 border-2 border-blue-300 rounded-md">
+                <p className="text-sm font-semibold text-blue-900">
+                  = {quantity} {selectedProductData?.uom?.name || 'units'} total
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  ({orderQuantity} × {conversionFactor} = {quantity})
+                </p>
+              </div>
+            </div>
+          ) : (
+            /* Direct Entry in Base UOM */
+            <FormField label={`Quantity (${selectedProductData?.uom?.name || 'units'})`} required>
               <Input
                 type="number"
                 value={quantity}
@@ -323,8 +449,17 @@ export const POForm: React.FC<POFormProps> = ({
                 className="py-2.5"
               />
             </FormField>
+          )}
 
-            <FormField label="Unit Cost">
+          {/* Unit Cost and Line Total */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <FormField
+              label={useConversion && orderUomId
+                ? `Unit Cost (per ${uomOptions.find(u => u.value === orderUomId)?.label || 'unit'})`
+                : `Unit Cost (per ${selectedProductData?.uom?.name || 'unit'})`
+              }
+              required
+            >
               <Input
                 type="number"
                 value={unitCost}
@@ -339,9 +474,12 @@ export const POForm: React.FC<POFormProps> = ({
             <FormField label="Line Total">
               <Input
                 type="text"
-                value={calculateLineTotal(quantity, unitCost)}
+                value={useConversion
+                  ? calculateLineTotal(orderQuantity, unitCost)
+                  : calculateLineTotal(quantity, unitCost)
+                }
                 disabled
-                className="bg-gray-100 py-2.5"
+                className="bg-gray-100 py-2.5 font-semibold"
               />
             </FormField>
           </div>

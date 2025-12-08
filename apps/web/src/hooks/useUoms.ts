@@ -3,6 +3,9 @@ import { toast } from 'react-hot-toast';
 import { apiClient } from '@/lib/api-client';
 import { UnitOfMeasure, CreateUomRequest, UpdateUomRequest } from '@/types/uom.types';
 
+// Re-export types for convenience
+export type { CreateUomRequest, UpdateUomRequest };
+
 export const useUoms = () => {
   return useQuery({
     queryKey: ['uoms'],
