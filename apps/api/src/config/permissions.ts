@@ -60,6 +60,13 @@ export const PERMISSIONS = {
     delete: ['ADMIN'],
   },
 
+  warehouses: {
+    create: ['ADMIN'],
+    read: ['ADMIN', 'WAREHOUSE_MANAGER', 'SALES_OFFICER'],
+    update: ['ADMIN'],
+    delete: ['ADMIN'],
+  },
+
   // Sales & Invoicing
   invoices: {
     create: ['ADMIN', 'SALES_OFFICER'],

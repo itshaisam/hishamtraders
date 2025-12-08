@@ -141,6 +141,31 @@ model Supplier {
 }
 
 // ============================================================================
+// WAREHOUSE MANAGEMENT (Epic 2.5)
+// ============================================================================
+
+enum WarehouseStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Warehouse {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  location  String?         @db.Text  // Full address
+  city      String?
+  status    WarehouseStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+
+  @@index([status])
+  @@map("warehouses")
+}
+
+// ============================================================================
 // PRODUCT MANAGEMENT (Epic 2.4)
 // ============================================================================
 

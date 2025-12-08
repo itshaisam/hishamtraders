@@ -16,6 +16,9 @@ import { PurchaseOrdersPage } from './features/purchase-orders/pages/PurchaseOrd
 import { POFormPage } from './features/purchase-orders/pages/POFormPage';
 import { PODetailPage } from './features/purchase-orders/pages/PODetailPage';
 import { POViewPage } from './features/purchase-orders/pages/POViewPage';
+import { WarehousesPage } from './features/warehouses/pages/WarehousesPage';
+import { WarehouseFormPage } from './features/warehouses/pages/WarehouseFormPage';
+import { WarehouseDetailPage } from './features/warehouses/pages/WarehouseDetailPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -165,6 +168,40 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <PODetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Warehouses routes */}
+          <Route
+            path="/warehouses"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <WarehousesPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/warehouses/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <WarehouseFormPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/warehouses/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <WarehouseDetailPage />
                 </Layout>
               </ProtectedRoute>
             }
