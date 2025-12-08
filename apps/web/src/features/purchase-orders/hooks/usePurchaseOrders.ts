@@ -10,6 +10,7 @@ import {
   POStatus,
   AddPOCostRequest,
   UpdateImportDetailsRequest,
+  ReceiveGoodsRequest,
 } from '../types/purchase-order.types';
 
 export const usePurchaseOrders = (filters?: PurchaseOrderFilters) => {
@@ -169,6 +170,39 @@ export const useUpdateImportDetails = (poId: string) => {
       toast.error(
         error.response?.data?.message || 'Failed to update import details'
       );
+    },
+  });
+};
+
+/**
+ * Story 2.6: Check if PO can be received
+ */
+export const useCanReceivePO = (poId: string) => {
+  return useQuery({
+    queryKey: ['canReceivePO', poId],
+    queryFn: () => purchaseOrdersService.canReceive(poId),
+    enabled: !!poId,
+    staleTime: 0, // Always refetch to get latest status
+  });
+};
+
+/**
+ * Story 2.6: Receive goods from PO
+ */
+export const useReceiveGoods = (poId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: ReceiveGoodsRequest) =>
+      purchaseOrdersService.receiveGoods(poId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['purchaseOrder', poId] });
+      queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['canReceivePO', poId] });
+      toast.success('Goods received successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to receive goods');
     },
   });
 };

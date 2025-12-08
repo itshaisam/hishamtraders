@@ -12,6 +12,8 @@ import {
   POCost,
   LandedCostResult,
   UpdateImportDetailsRequest,
+  ReceiveGoodsRequest,
+  CanReceiveResponse,
 } from '../types/purchase-order.types';
 
 const BASE_URL = '/purchase-orders';
@@ -147,6 +149,35 @@ export const purchaseOrdersService = {
       `${BASE_URL}/${poId}/import-details`,
       data
     );
+    return response.data;
+  },
+
+  /**
+   * Check if purchase order can be received
+   * Story 2.6
+   */
+  async canReceive(
+    poId: string
+  ): Promise<{ success: boolean; data: CanReceiveResponse }> {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: CanReceiveResponse;
+    }>(`${BASE_URL}/${poId}/can-receive`);
+    return response.data;
+  },
+
+  /**
+   * Receive goods from purchase order
+   * Story 2.6
+   */
+  async receiveGoods(
+    poId: string,
+    data: ReceiveGoodsRequest
+  ): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.post<{
+      success: boolean;
+      message: string;
+    }>(`${BASE_URL}/${poId}/receive`, data);
     return response.data;
   },
 };

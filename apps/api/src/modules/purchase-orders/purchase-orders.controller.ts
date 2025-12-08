@@ -19,9 +19,15 @@ import {
   UpdateImportDetailsRequest,
   updateImportDetailsSchema,
 } from './dto/update-import-details.dto.js';
+import { ReceiveGoodsDto, receiveGoodsSchema } from './dto/receive-goods.dto.js';
+import { StockReceiptService } from '../inventory/stock-receipt.service.js';
 
 export class PurchaseOrderController {
-  constructor(private service: PurchaseOrderService) {}
+  private stockReceiptService: StockReceiptService;
+
+  constructor(private service: PurchaseOrderService) {
+    this.stockReceiptService = new StockReceiptService();
+  }
 
   /**
    * Create a new purchase order
@@ -422,6 +428,80 @@ export class PurchaseOrderController {
       res.status(400).json({
         success: false,
         message: error.message || 'Failed to update import details',
+      });
+    }
+  }
+
+  /**
+   * Check if PO can be received
+   * GET /api/v1/purchase-orders/:id/can-receive
+   */
+  async canReceive(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const result = await this.stockReceiptService.canReceivePO(id);
+
+      res.status(200).json({
+        success: true,
+        data: result,
+      });
+    } catch (error: any) {
+      logger.error('Error checking if PO can be received', { error });
+
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Failed to check receive status',
+      });
+    }
+  }
+
+  /**
+   * Receive goods from purchase order
+   * POST /api/v1/purchase-orders/:id/receive
+   */
+  async receiveGoods(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const validatedData: ReceiveGoodsDto = receiveGoodsSchema.parse(req.body);
+
+      await this.stockReceiptService.receiveGoods(
+        id,
+        validatedData,
+        req.user?.userId || ''
+      );
+
+      logger.info('Goods received via API', {
+        userId: req.user?.userId,
+        poId: id,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Goods received successfully',
+      });
+    } catch (error: any) {
+      logger.error('Error receiving goods', { error });
+
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          success: false,
+          errors: error.errors,
+          message: 'Validation failed',
+        });
+      }
+
+      if (error.message === 'Purchase order not found') {
+        return res.status(404).json({
+          success: false,
+          message: 'Purchase order not found',
+        });
+      }
+
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Failed to receive goods',
       });
     }
   }

@@ -179,3 +179,23 @@ export interface UpdateImportDetailsRequest {
   shipDate?: string | Date;
   arrivalDate?: string | Date;
 }
+
+// Story 2.6: Stock Receiving
+export interface ReceiveGoodsItem {
+  productId: string;
+  productVariantId?: string | null;
+  quantity: number;
+  binLocation?: string | null;
+  batchNo?: string | null;
+}
+
+export interface ReceiveGoodsRequest {
+  warehouseId: string;
+  receivedDate?: string | Date;
+  items: ReceiveGoodsItem[];
+}
+
+export interface CanReceiveResponse {
+  canReceive: boolean;
+  reason?: string;
+}

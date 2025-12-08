@@ -129,4 +129,27 @@ router.patch(
   (req, res) => controller.updateImportDetails(req, res)
 );
 
+/**
+ * GET /api/v1/purchase-orders/:id/can-receive
+ * Check if purchase order can be received
+ * Accessible to: ADMIN, WAREHOUSE_MANAGER
+ */
+router.get(
+  '/:id/can-receive',
+  requireRole(['ADMIN', 'WAREHOUSE_MANAGER']),
+  (req, res) => controller.canReceive(req, res)
+);
+
+/**
+ * POST /api/v1/purchase-orders/:id/receive
+ * Receive goods from purchase order
+ * Accessible to: ADMIN, WAREHOUSE_MANAGER
+ */
+router.post(
+  '/:id/receive',
+  requireRole(['ADMIN', 'WAREHOUSE_MANAGER']),
+  auditPurchaseOrderAction('RECEIVE_GOODS'),
+  (req, res) => controller.receiveGoods(req, res)
+);
+
 export default router;

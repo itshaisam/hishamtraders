@@ -11,7 +11,7 @@ export const auditPurchaseOrderAction = (action: string) => {
     const originalSend = res.send;
 
     res.send = function (data: any) {
-      const auditableActions = ['CREATE', 'UPDATE', 'DELETE', 'ADD_COST', 'UPDATE_IMPORT_DETAILS'];
+      const auditableActions = ['CREATE', 'UPDATE', 'DELETE', 'ADD_COST', 'UPDATE_IMPORT_DETAILS', 'RECEIVE_GOODS'];
 
       if (res.statusCode < 400 && auditableActions.includes(action)) {
         const userId = req.user?.userId;
@@ -22,7 +22,7 @@ export const auditPurchaseOrderAction = (action: string) => {
 
           // Capture changed fields for updates and cost additions
           let changedFieldsJson: any = null;
-          if (['UPDATE', 'ADD_COST', 'UPDATE_IMPORT_DETAILS'].includes(action) && req.body) {
+          if (['UPDATE', 'ADD_COST', 'UPDATE_IMPORT_DETAILS', 'RECEIVE_GOODS'].includes(action) && req.body) {
             changedFieldsJson = req.body;
           }
 
@@ -32,6 +32,8 @@ export const auditPurchaseOrderAction = (action: string) => {
             notes += ` | Cost Type: ${req.body?.type} | Amount: ${req.body?.amount}`;
           } else if (action === 'UPDATE_IMPORT_DETAILS') {
             notes += ` | Import Details Updated`;
+          } else if (action === 'RECEIVE_GOODS') {
+            notes += ` | Goods Received | Warehouse: ${req.body?.warehouseId} | Items: ${req.body?.items?.length || 0}`;
           }
 
           // Log audit record asynchronously

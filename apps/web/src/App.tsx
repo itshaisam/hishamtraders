@@ -19,6 +19,7 @@ import { POViewPage } from './features/purchase-orders/pages/POViewPage';
 import { WarehousesPage } from './features/warehouses/pages/WarehousesPage';
 import { WarehouseFormPage } from './features/warehouses/pages/WarehouseFormPage';
 import { WarehouseDetailPage } from './features/warehouses/pages/WarehouseDetailPage';
+import { ReceiveGoodsPage } from './features/purchase-orders/pages/ReceiveGoodsPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -157,6 +158,17 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <POViewPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/purchase-orders/:id/receive"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ReceiveGoodsPage />
                 </Layout>
               </ProtectedRoute>
             }

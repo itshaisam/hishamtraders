@@ -1,13 +1,14 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft, Printer, PackageCheck } from 'lucide-react';
 import { POFormSkeleton } from '../components/POFormSkeleton';
-import { usePurchaseOrder } from '../hooks/usePurchaseOrders';
+import { usePurchaseOrder, useCanReceivePO } from '../hooks/usePurchaseOrders';
 import { POStatusBadge } from '../components/POStatusBadge';
 import { Button, Breadcrumbs } from '../../../components/ui';
 import { ImportDocumentationSection } from '../components/ImportDocumentationSection';
 import { POAdditionalCostsTable } from '../components/POAdditionalCostsTable';
 import { LandedCostBreakdown } from '../components/LandedCostBreakdown';
+import { useAuthStore } from '@/stores/auth.store';
 
 /**
  * POViewPage - Read-only display of a purchase order
@@ -17,10 +18,16 @@ import { LandedCostBreakdown } from '../components/LandedCostBreakdown';
 export const POViewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const user = useAuthStore((state: any) => state.user);
   const { data: response, isLoading, isError } = usePurchaseOrder(id || '');
+  const { data: canReceiveResponse } = useCanReceivePO(id || '');
 
   // Extract PO data from API response
   const purchaseOrder = response?.data;
+  const canReceive = canReceiveResponse?.data?.canReceive || false;
+
+  // Check if user can receive goods (ADMIN or WAREHOUSE_MANAGER)
+  const canUserReceive = user?.role?.name === 'ADMIN' || user?.role?.name === 'WAREHOUSE_MANAGER';
 
   const handlePrint = () => {
     window.print();
@@ -73,14 +80,26 @@ export const POViewPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">View Purchase Order</h1>
             <p className="mt-1 text-sm sm:text-base text-gray-600">Read-only details</p>
           </div>
-          <button
-            onClick={handlePrint}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 text-sm"
-            title="Print purchase order"
-          >
-            <Printer size={16} />
-            Print
-          </button>
+          <div className="flex gap-2">
+            {canUserReceive && canReceive && (purchaseOrder.status === 'PENDING' || purchaseOrder.status === 'IN_TRANSIT') && (
+              <button
+                onClick={() => navigate(`/purchase-orders/${id}/receive`)}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm font-medium"
+                title="Receive goods from this purchase order"
+              >
+                <PackageCheck size={16} />
+                Receive Goods
+              </button>
+            )}
+            <button
+              onClick={handlePrint}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 text-sm"
+              title="Print purchase order"
+            >
+              <Printer size={16} />
+              Print
+            </button>
+          </div>
         </div>
 
         {/* Main Content Card */}

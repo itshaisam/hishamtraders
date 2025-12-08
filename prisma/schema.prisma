@@ -161,8 +161,80 @@ model Warehouse {
   createdBy String?
   updatedBy String?
 
+  inventory      Inventory[]
+  stockMovements StockMovement[]
+
   @@index([status])
   @@map("warehouses")
+}
+
+// ============================================================================
+// INVENTORY & STOCK MOVEMENTS (Story 2.6)
+// ============================================================================
+
+model Inventory {
+  id          String   @id @default(cuid())
+  productId   String
+  productVariantId String?
+  warehouseId String
+  quantity    Int      @default(0)
+  batchNo     String?
+  binLocation String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product        Product         @relation(fields: [productId], references: [id])
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id])
+  warehouse      Warehouse       @relation(fields: [warehouseId], references: [id])
+
+  @@unique([productId, productVariantId, warehouseId, batchNo])
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([productVariantId])
+  @@map("inventory")
+}
+
+enum MovementType {
+  RECEIPT
+  SALE
+  ADJUSTMENT
+  TRANSFER
+}
+
+enum ReferenceType {
+  PO
+  INVOICE
+  ADJUSTMENT
+  TRANSFER
+}
+
+model StockMovement {
+  id            String         @id @default(cuid())
+  productId     String
+  productVariantId String?
+  warehouseId   String
+  movementType  MovementType
+  quantity      Int
+  referenceType ReferenceType?
+  referenceId   String?
+  movementDate  DateTime       @default(now())
+  userId        String
+  notes         String?        @db.Text
+
+  createdAt     DateTime       @default(now())
+
+  product        Product         @relation(fields: [productId], references: [id])
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id])
+  warehouse      Warehouse       @relation(fields: [warehouseId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])
+
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([movementDate])
+  @@index([referenceType, referenceId])
+  @@index([productVariantId])
+  @@map("stock_movements")
 }
 
 // ============================================================================
@@ -205,6 +277,8 @@ model Product {
   uom           UnitOfMeasure?   @relation(fields: [uomId], references: [id])
   variants      ProductVariant[]
   poItems       POItem[]
+  inventory     Inventory[]
+  stockMovements StockMovement[]
 
   @@index([status])
   @@index([sku])
@@ -317,6 +391,8 @@ model ProductVariant {
   // Relations
   product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
   poItems       POItem[]
+  inventory     Inventory[]
+  stockMovements StockMovement[]
 
   @@index([productId])
   @@index([sku])
@@ -360,8 +436,9 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  role      Role        @relation(fields: [roleId], references: [id])
-  auditLogs AuditLog[]
+  role           Role            @relation(fields: [roleId], references: [id])
+  auditLogs      AuditLog[]
+  stockMovements StockMovement[]
 
   @@index([email])
   @@index([roleId])
