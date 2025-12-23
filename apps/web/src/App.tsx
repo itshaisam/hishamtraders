@@ -21,6 +21,9 @@ import { WarehouseFormPage } from './features/warehouses/pages/WarehouseFormPage
 import { WarehouseDetailPage } from './features/warehouses/pages/WarehouseDetailPage';
 import { ReceiveGoodsPage } from './features/purchase-orders/pages/ReceiveGoodsPage';
 import { InventoryPage } from './features/inventory/pages/InventoryPage';
+import { StockAdjustmentPage } from './features/inventory/pages/StockAdjustmentPage';
+import { AdjustmentHistoryPage } from './features/inventory/pages/AdjustmentHistoryPage';
+import { AdjustmentApprovalPage } from './features/inventory/pages/AdjustmentApprovalPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -227,6 +230,40 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <InventoryPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Stock Adjustments routes */}
+          <Route
+            path="/inventory/adjustments/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <StockAdjustmentPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/inventory/adjustments/history"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AdjustmentHistoryPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/inventory/adjustments/approvals"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AdjustmentApprovalPage />
                 </Layout>
               </ProtectedRoute>
             }

@@ -18,6 +18,16 @@ router.get(
 );
 
 /**
+ * GET /api/inventory/grouped
+ * Get inventory grouped by product and warehouse with expandable batch details
+ * Query params: productId, warehouseId, status, search, page, limit
+ */
+router.get(
+  '/grouped',
+  inventoryController.getAllGrouped.bind(inventoryController)
+);
+
+/**
  * GET /api/inventory/low-stock
  * Get all low stock items
  */

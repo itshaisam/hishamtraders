@@ -322,6 +322,120 @@ async function main() {
   }
   console.log('  ✓ Sample products created');
 
+  // Step 9: Sample Warehouses
+  console.log('9. Creating sample warehouses...');
+  const warehouses = [
+    {
+      name: 'Main Warehouse - Karachi',
+      location: 'Industrial Area, SITE, Karachi',
+      city: 'karachi',
+      status: 'ACTIVE' as const,
+      createdBy: adminUser.id,
+    },
+    {
+      name: 'Islamabad Branch Warehouse',
+      location: 'I-9 Industrial Area, Islamabad',
+      city: 'islamabad',
+      status: 'ACTIVE' as const,
+      createdBy: adminUser.id,
+    },
+  ];
+
+  for (const warehouse of warehouses) {
+    await prisma.warehouse.upsert({
+      where: { name: warehouse.name },
+      update: {},
+      create: warehouse,
+    });
+  }
+  console.log('  ✓ Sample warehouses created');
+
+  // Step 10: Sample Inventory Records
+  console.log('10. Creating sample inventory records...');
+  const mainWarehouse = await prisma.warehouse.findFirst({
+    where: { name: 'Main Warehouse - Karachi' }
+  });
+  const sinkProduct = await prisma.product.findUnique({
+    where: { sku: 'SINK-001' }
+  });
+  const faucetProduct = await prisma.product.findUnique({
+    where: { sku: 'FAUCET-001' }
+  });
+
+  if (mainWarehouse && sinkProduct) {
+    // Create inventory record
+    await prisma.inventory.upsert({
+      where: {
+        productId_productVariantId_warehouseId_batchNo: {
+          productId: sinkProduct.id,
+          productVariantId: null,
+          warehouseId: mainWarehouse.id,
+          batchNo: 'SEED-BATCH-001',
+        },
+      },
+      update: {},
+      create: {
+        productId: sinkProduct.id,
+        warehouseId: mainWarehouse.id,
+        quantity: 50,
+        batchNo: 'SEED-BATCH-001',
+        binLocation: 'A-01-001',
+      },
+    });
+
+    // Create stock movement record to show origin
+    await prisma.stockMovement.create({
+      data: {
+        productId: sinkProduct.id,
+        warehouseId: mainWarehouse.id,
+        movementType: 'RECEIPT',
+        quantity: 50,
+        referenceType: 'ADJUSTMENT',
+        referenceId: 'SEED-INIT',
+        userId: adminUser.id,
+        notes: 'Initial seed inventory for demo purposes',
+      },
+    });
+  }
+
+  if (mainWarehouse && faucetProduct) {
+    // Create inventory record (low stock example)
+    await prisma.inventory.upsert({
+      where: {
+        productId_productVariantId_warehouseId_batchNo: {
+          productId: faucetProduct.id,
+          productVariantId: null,
+          warehouseId: mainWarehouse.id,
+          batchNo: 'SEED-BATCH-002',
+        },
+      },
+      update: {},
+      create: {
+        productId: faucetProduct.id,
+        warehouseId: mainWarehouse.id,
+        quantity: 8, // Low stock to demonstrate alert
+        batchNo: 'SEED-BATCH-002',
+        binLocation: 'A-01-002',
+      },
+    });
+
+    // Create stock movement record
+    await prisma.stockMovement.create({
+      data: {
+        productId: faucetProduct.id,
+        warehouseId: mainWarehouse.id,
+        movementType: 'RECEIPT',
+        quantity: 8,
+        referenceType: 'ADJUSTMENT',
+        referenceId: 'SEED-INIT',
+        userId: adminUser.id,
+        notes: 'Initial seed inventory - low stock example for demo',
+      },
+    });
+  }
+
+  console.log('  ✓ Sample inventory created with stock movement history');
+
   console.log('✓ Reference data seeded successfully');
   console.log('🌱 Seed completed successfully!');
 }

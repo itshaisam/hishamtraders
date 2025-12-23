@@ -44,10 +44,11 @@ export class SuppliersRepository {
     const where: any = {};
 
     if (search) {
+      const searchLower = search.toLowerCase();
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { contactPerson: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
+        { name: { contains: searchLower } },
+        { contactPerson: { contains: searchLower } },
+        { email: { contains: searchLower } },
       ];
     }
 

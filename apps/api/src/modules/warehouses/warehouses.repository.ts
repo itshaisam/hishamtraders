@@ -30,10 +30,11 @@ export class WarehousesRepository {
     const where: any = {};
 
     if (search) {
+      const searchLower = search.toLowerCase();
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { city: { contains: search, mode: 'insensitive' } },
-        { location: { contains: search, mode: 'insensitive' } },
+        { name: { contains: searchLower } },
+        { city: { contains: searchLower } },
+        { location: { contains: searchLower } },
       ];
     }
 

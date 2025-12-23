@@ -14,6 +14,45 @@ export interface InventoryFilters {
   limit?: number;
 }
 
+export interface BatchDetail {
+  batchNo: string;
+  quantity: number;
+  binLocation: string | null;
+  createdAt: Date;
+}
+
+export interface GroupedInventoryItem {
+  id: string;
+  product: {
+    id: string;
+    sku: string;
+    name: string;
+    reorderLevel: number;
+  };
+  productVariant: {
+    id: string;
+    sku: string;
+    variantName: string;
+  } | null;
+  warehouse: {
+    id: string;
+    name: string;
+    city: string | null;
+  };
+  totalQuantity: number;
+  status: StockStatus;
+  batches: BatchDetail[];
+  lastUpdated: Date;
+}
+
+export interface GroupedInventoryResponse {
+  data: GroupedInventoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface InventoryItemWithStatus {
   id: string;
   productId: string;
@@ -78,11 +117,12 @@ export class InventoryService {
     }
 
     if (search) {
+      const searchLower = search.toLowerCase();
       where.OR = [
-        { product: { sku: { contains: search, mode: 'insensitive' } } },
-        { product: { name: { contains: search, mode: 'insensitive' } } },
-        { productVariant: { sku: { contains: search, mode: 'insensitive' } } },
-        { productVariant: { variantName: { contains: search, mode: 'insensitive' } } },
+        { product: { sku: { contains: searchLower } } },
+        { product: { name: { contains: searchLower } } },
+        { productVariant: { sku: { contains: searchLower } } },
+        { productVariant: { variantName: { contains: searchLower } } },
       ];
     }
 
@@ -308,5 +348,124 @@ export class InventoryService {
     });
 
     return result._sum.quantity || 0;
+  }
+
+  /**
+   * Get inventory grouped by product and warehouse with expandable batch details
+   */
+  async getAllGrouped(filters: InventoryFilters = {}): Promise<GroupedInventoryResponse> {
+    const { productId, warehouseId, status, search, page = 1, limit = 50 } = filters;
+
+    // Build where clause
+    const where: any = {};
+
+    if (productId) {
+      where.productId = productId;
+    }
+
+    if (warehouseId) {
+      where.warehouseId = warehouseId;
+    }
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      where.OR = [
+        { product: { sku: { contains: searchLower } } },
+        { product: { name: { contains: searchLower } } },
+        { productVariant: { sku: { contains: searchLower } } },
+        { productVariant: { variantName: { contains: searchLower } } },
+      ];
+    }
+
+    // Get all inventory items matching filters
+    const allItems = await prisma.inventory.findMany({
+      where,
+      include: {
+        product: {
+          select: {
+            id: true,
+            sku: true,
+            name: true,
+            reorderLevel: true,
+          },
+        },
+        productVariant: {
+          select: {
+            id: true,
+            sku: true,
+            variantName: true,
+          },
+        },
+        warehouse: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+          },
+        },
+      },
+      orderBy: [{ warehouse: { name: 'asc' } }, { product: { name: 'asc' } }],
+    });
+
+    // Group by productId + productVariantId + warehouseId
+    const groupedMap = new Map<string, GroupedInventoryItem>();
+
+    for (const item of allItems) {
+      const groupKey = `${item.productId}-${item.productVariantId || 'null'}-${item.warehouseId}`;
+
+      if (!groupedMap.has(groupKey)) {
+        groupedMap.set(groupKey, {
+          id: groupKey,
+          product: item.product,
+          productVariant: item.productVariant,
+          warehouse: item.warehouse,
+          totalQuantity: 0,
+          status: 'IN_STOCK' as StockStatus,
+          batches: [],
+          lastUpdated: item.updatedAt,
+        });
+      }
+
+      const group = groupedMap.get(groupKey)!;
+      group.totalQuantity += item.quantity;
+      group.batches.push({
+        batchNo: item.batchNo || 'N/A',
+        quantity: item.quantity,
+        binLocation: item.binLocation,
+        createdAt: item.createdAt,
+      });
+
+      // Update last updated if this item is newer
+      if (item.updatedAt > group.lastUpdated) {
+        group.lastUpdated = item.updatedAt;
+      }
+    }
+
+    // Convert map to array
+    let groupedItems = Array.from(groupedMap.values());
+
+    // Calculate stock status for each group based on total quantity
+    groupedItems = groupedItems.map((item) => ({
+      ...item,
+      status: this.calculateStockStatus(item.totalQuantity, item.product.reorderLevel),
+    }));
+
+    // Filter by status if requested
+    if (status) {
+      groupedItems = groupedItems.filter((item) => item.status === status);
+    }
+
+    // Pagination
+    const total = groupedItems.length;
+    const skip = (page - 1) * limit;
+    const paginatedItems = groupedItems.slice(skip, skip + limit);
+
+    return {
+      data: paginatedItems,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 }

@@ -20,7 +20,11 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] Payment table created: id, paymentType (SUPPLIER/CLIENT), referenceType (PO/INVOICE/GENERAL), referenceId, amount, method (CASH/BANK_TRANSFER/CHEQUE), date, notes, recordedBy, createdAt
+   - [ ] Payment table created: id, supplierId, paymentType (SUPPLIER/CLIENT), paymentReferenceType (PO/INVOICE/GENERAL), referenceId, amount, method (CASH/BANK_TRANSFER/CHEQUE), date, notes, recordedBy, createdAt
+   - [ ] Enum PaymentType: SUPPLIER, CLIENT
+   - [ ] Enum PaymentReferenceType: PO, INVOICE, GENERAL
+   - [ ] Enum PaymentMethod: CASH, BANK_TRANSFER, CHEQUE
+   - [ ] Relations to Supplier, User (recordedBy)
 
 2. **Backend API Endpoints:**
    - [ ] POST /api/payments/supplier - Creates supplier payment
@@ -51,11 +55,12 @@
 ### Backend Tasks
 
 - [ ] **Task 1: Database Schema & Migration (AC: 1)**
-  - [ ] Create Payment model: id, paymentType, referenceType, referenceId, amount, method, date, notes, recordedBy, createdAt
+  - [ ] Create Payment model: id, supplierId, paymentType, paymentReferenceType, referenceId, amount, method, date, notes, recordedBy, createdAt
   - [ ] Add PaymentType enum (SUPPLIER, CLIENT)
-  - [ ] Add ReferenceType enum (PO, INVOICE, GENERAL)
+  - [ ] Add PaymentReferenceType enum (PO, INVOICE, GENERAL) - NOTE: Different from StockMovement's ReferenceType
   - [ ] Add PaymentMethod enum (CASH, BANK_TRANSFER, CHEQUE)
-  - [ ] Run migration
+  - [ ] Add relations to Supplier and User models
+  - [ ] Run migration: `npx prisma migrate dev --name add_supplier_payments`
 
 - [ ] **Task 2: Payment Repository**
   - [ ] Create `payments.repository.ts`
@@ -117,21 +122,25 @@
 
 ```prisma
 model Payment {
-  id            String         @id @default(cuid())
-  paymentType   PaymentType
-  referenceType ReferenceType?
-  referenceId   String?
-  amount        Decimal        @db.Decimal(12, 2)
-  method        PaymentMethod
-  date          DateTime
-  notes         String?        @db.Text
-  recordedBy    String
+  id                   String                @id @default(cuid())
+  supplierId           String?               // Direct link to supplier
+  paymentType          PaymentType
+  paymentReferenceType PaymentReferenceType? // Renamed to avoid conflict with StockMovement's ReferenceType
+  referenceId          String?
+  amount               Decimal               @db.Decimal(12, 2)
+  method               PaymentMethod
+  date                 DateTime
+  notes                String?               @db.Text
+  recordedBy           String
 
-  createdAt     DateTime       @default(now())
+  createdAt            DateTime              @default(now())
 
-  user          User           @relation(fields: [recordedBy], references: [id])
+  supplier             Supplier?             @relation(fields: [supplierId], references: [id])
+  user                 User                  @relation(fields: [recordedBy], references: [id])
 
-  @@index([paymentType, referenceType, referenceId])
+  @@index([paymentType, paymentReferenceType, referenceId])
+  @@index([supplierId])
+  @@index([date])
   @@map("payments")
 }
 
@@ -140,7 +149,7 @@ enum PaymentType {
   CLIENT
 }
 
-enum ReferenceType {
+enum PaymentReferenceType {
   PO
   INVOICE
   GENERAL
@@ -166,7 +175,7 @@ async getPOBalance(poId: string): Promise<{ total: number; paid: number; outstan
   const payments = await prisma.payment.findMany({
     where: {
       paymentType: 'SUPPLIER',
-      referenceType: 'PO',
+      paymentReferenceType: 'PO',
       referenceId: poId
     }
   });
@@ -190,9 +199,9 @@ async getPOBalance(poId: string): Promise<{ total: number; paid: number; outstan
 
 ```typescript
 const createSupplierPaymentSchema = z.object({
-  supplierId: z.string().optional(), // Optional if linked to PO
-  referenceType: z.enum(['PO', 'GENERAL']),
-  referenceId: z.string().optional(), // PO ID if referenceType = PO
+  supplierId: z.string().cuid(), // Required - direct link to supplier
+  paymentReferenceType: z.enum(['PO', 'GENERAL']),
+  referenceId: z.string().cuid().optional(), // PO ID if paymentReferenceType = PO
   amount: z.number().positive('Amount must be greater than 0'),
   method: z.enum(['CASH', 'BANK_TRANSFER', 'CHEQUE']),
   date: z.date(),

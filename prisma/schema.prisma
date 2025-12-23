@@ -161,8 +161,9 @@ model Warehouse {
   createdBy String?
   updatedBy String?
 
-  inventory      Inventory[]
-  stockMovements StockMovement[]
+  inventory        Inventory[]
+  stockMovements   StockMovement[]
+  stockAdjustments StockAdjustment[]
 
   @@index([status])
   @@map("warehouses")
@@ -224,10 +225,11 @@ model StockMovement {
 
   createdAt     DateTime       @default(now())
 
-  product        Product         @relation(fields: [productId], references: [id])
-  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id])
-  warehouse      Warehouse       @relation(fields: [warehouseId], references: [id])
-  user           User            @relation(fields: [userId], references: [id])
+  product         Product          @relation(fields: [productId], references: [id])
+  productVariant  ProductVariant?  @relation(fields: [productVariantId], references: [id])
+  warehouse       Warehouse        @relation(fields: [warehouseId], references: [id])
+  user            User             @relation(fields: [userId], references: [id])
+  stockAdjustment StockAdjustment?
 
   @@index([productId])
   @@index([warehouseId])
@@ -235,6 +237,61 @@ model StockMovement {
   @@index([referenceType, referenceId])
   @@index([productVariantId])
   @@map("stock_movements")
+}
+
+// ============================================================================
+// STOCK ADJUSTMENTS (Story 2.8)
+// ============================================================================
+
+enum AdjustmentType {
+  WASTAGE
+  DAMAGE
+  THEFT
+  CORRECTION
+}
+
+enum AdjustmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model StockAdjustment {
+  id               String           @id @default(cuid())
+  productId        String
+  productVariantId String?
+  warehouseId      String
+  adjustmentType   AdjustmentType
+  quantity         Int              // Can be positive or negative
+  reason           String           @db.Text
+  notes            String?          @db.Text
+  status           AdjustmentStatus @default(PENDING)
+
+  // Workflow tracking
+  createdBy        String
+  createdAt        DateTime         @default(now())
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  rejectionReason  String?          @db.Text
+
+  // Link to stock movement (created on approval)
+  stockMovementId  String?          @unique
+
+  // Relations
+  product          Product          @relation(fields: [productId], references: [id])
+  productVariant   ProductVariant?  @relation(fields: [productVariantId], references: [id])
+  warehouse        Warehouse        @relation(fields: [warehouseId], references: [id])
+  creator          User             @relation("AdjustmentCreator", fields: [createdBy], references: [id])
+  reviewer         User?            @relation("AdjustmentReviewer", fields: [reviewedBy], references: [id])
+  stockMovement    StockMovement?   @relation(fields: [stockMovementId], references: [id])
+
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([status])
+  @@index([createdBy])
+  @@index([createdAt])
+  @@index([productVariantId])
+  @@map("stock_adjustments")
 }
 
 // ============================================================================
@@ -275,10 +332,11 @@ model Product {
   category      ProductCategory? @relation(fields: [categoryId], references: [id])
   brand         Brand?           @relation(fields: [brandId], references: [id])
   uom           UnitOfMeasure?   @relation(fields: [uomId], references: [id])
-  variants      ProductVariant[]
-  poItems       POItem[]
-  inventory     Inventory[]
-  stockMovements StockMovement[]
+  variants         ProductVariant[]
+  poItems          POItem[]
+  inventory        Inventory[]
+  stockMovements   StockMovement[]
+  stockAdjustments StockAdjustment[]
 
   @@index([status])
   @@index([sku])
@@ -389,10 +447,11 @@ model ProductVariant {
   updatedBy     String?
 
   // Relations
-  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
-  poItems       POItem[]
-  inventory     Inventory[]
-  stockMovements StockMovement[]
+  product          Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  poItems          POItem[]
+  inventory        Inventory[]
+  stockMovements   StockMovement[]
+  stockAdjustments StockAdjustment[]
 
   @@index([productId])
   @@index([sku])
@@ -436,9 +495,11 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  role           Role            @relation(fields: [roleId], references: [id])
-  auditLogs      AuditLog[]
-  stockMovements StockMovement[]
+  role                Role              @relation(fields: [roleId], references: [id])
+  auditLogs           AuditLog[]
+  stockMovements      StockMovement[]
+  createdAdjustments  StockAdjustment[] @relation("AdjustmentCreator")
+  reviewedAdjustments StockAdjustment[] @relation("AdjustmentReviewer")
 
   @@index([email])
   @@index([roleId])

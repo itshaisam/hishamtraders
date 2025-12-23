@@ -175,4 +175,35 @@ export class InventoryController {
       });
     }
   }
+
+  /**
+   * GET /api/inventory/grouped
+   * Get inventory grouped by product and warehouse with batch details
+   */
+  async getAllGrouped(req: Request, res: Response) {
+    try {
+      const filters: InventoryFilters = {
+        productId: req.query.productId as string,
+        warehouseId: req.query.warehouseId as string,
+        status: req.query.status as any,
+        search: req.query.search as string,
+        page: req.query.page ? parseInt(req.query.page as string) : 1,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
+      };
+
+      const result = await this.inventoryService.getAllGrouped(filters);
+
+      res.status(200).json({
+        success: true,
+        ...result,
+      });
+    } catch (error: any) {
+      console.error('Error fetching grouped inventory:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch grouped inventory',
+        error: error.message,
+      });
+    }
+  }
 }

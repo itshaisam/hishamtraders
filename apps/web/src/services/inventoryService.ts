@@ -5,6 +5,7 @@ import {
   InventoryItem,
   LowStockResponse,
   AvailableQuantityResponse,
+  GroupedInventoryResponse,
 } from '../types/inventory.types';
 
 export const inventoryService = {
@@ -70,6 +71,23 @@ export const inventoryService = {
     const response = await apiClient.get<AvailableQuantityResponse>(
       `/inventory/available/${productId}?${params.toString()}`
     );
+    return response.data;
+  },
+
+  /**
+   * Get inventory grouped by product and warehouse with batch details
+   */
+  async getAllGrouped(filters?: InventoryFilters): Promise<GroupedInventoryResponse> {
+    const params = new URLSearchParams();
+
+    if (filters?.productId) params.append('productId', filters.productId);
+    if (filters?.warehouseId) params.append('warehouseId', filters.warehouseId);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+
+    const response = await apiClient.get<GroupedInventoryResponse>(`/inventory/grouped?${params.toString()}`);
     return response.data;
   },
 };

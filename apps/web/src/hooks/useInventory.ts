@@ -67,3 +67,16 @@ export const useAvailableQuantity = (
     staleTime: 30 * 1000,
   });
 };
+
+/**
+ * Hook to fetch grouped inventory with expandable batch details
+ * Auto-refetches every 60 seconds for real-time inventory tracking
+ */
+export const useGroupedInventory = (filters?: InventoryFilters) => {
+  return useQuery({
+    queryKey: ['inventory', 'grouped', filters],
+    queryFn: () => inventoryService.getAllGrouped(filters),
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 60 * 1000, // Auto-refetch every 1 minute
+  });
+};

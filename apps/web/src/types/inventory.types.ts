@@ -64,3 +64,43 @@ export interface AvailableQuantityResponse {
     quantity: number;
   };
 }
+
+export interface BatchDetail {
+  batchNo: string;
+  quantity: number;
+  binLocation: string | null;
+  createdAt: string;
+}
+
+export interface GroupedInventoryItem {
+  id: string;
+  product: {
+    id: string;
+    sku: string;
+    name: string;
+    reorderLevel: number;
+  };
+  productVariant: {
+    id: string;
+    sku: string;
+    variantName: string;
+  } | null;
+  warehouse: {
+    id: string;
+    name: string;
+    city: string | null;
+  };
+  totalQuantity: number;
+  status: StockStatus;
+  batches: BatchDetail[];
+  lastUpdated: string;
+}
+
+export interface GroupedInventoryResponse {
+  success: boolean;
+  data: GroupedInventoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}

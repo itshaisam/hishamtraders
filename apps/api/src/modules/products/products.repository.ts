@@ -58,14 +58,15 @@ export class ProductsRepository {
     const where: any = {};
 
     if (search) {
+      const searchLower = search.toLowerCase();
       where.OR = [
-        { sku: { contains: search, mode: 'insensitive' } },
-        { name: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: searchLower } },
+        { name: { contains: searchLower } },
       ];
     }
 
     if (category) {
-      where.category = { name: { contains: category, mode: 'insensitive' } };
+      where.category = { name: { contains: category.toLowerCase() } };
     }
 
     if (status) {
