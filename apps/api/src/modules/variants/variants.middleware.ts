@@ -1,47 +1,42 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../../types/auth.types';
-import logger from '../../lib/logger.js';
-
-interface AuditDetails {
-  sku?: string;
-  variantName?: string;
-  productId?: string;
-  variantId?: string;
-  changedFields?: string[];
-}
+import { AuditService } from '../../services/audit.service.js';
 
 // Audit logging middleware for product variants
 export const auditVariantAction = (action: 'CREATE' | 'UPDATE' | 'DELETE') => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     const user = req.user;
 
-    res.on('finish', () => {
+    res.on('finish', async () => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        let details: AuditDetails = {};
+        const variantId = req.params.id || (res.locals.createdEntity?.id);
+        let changedFields: Record<string, unknown> = {};
+        let notes = '';
 
         if (action === 'CREATE') {
-          details = {
-            sku: req.body.sku as string | undefined,
-            variantName: req.body.variantName as string | undefined,
-            productId: req.body.productId as string | undefined,
+          changedFields = {
+            sku: req.body.sku,
+            variantName: req.body.variantName,
+            productId: req.body.productId,
+            attributes: req.body.attributes,
           };
+          notes = `Created variant: ${req.body.variantName} (SKU: ${req.body.sku})`;
         } else if (action === 'UPDATE') {
-          details = {
-            variantId: req.params.id,
-            changedFields: Object.keys(req.body),
-          };
+          changedFields = req.body;
+          notes = `Updated variant ID: ${variantId}`;
         } else if (action === 'DELETE') {
-          details = {
-            variantId: req.params.id,
-          };
+          notes = `Deleted variant ID: ${variantId}`;
         }
 
-        logger.info(`VARIANT_${action}`, {
-          userId: user?.userId,
-          action: `VARIANT_${action}`,
-          variantId: req.params.id || (req.body.id as string | undefined),
-          details,
+        await AuditService.log({
+          userId: user?.userId || '',
+          action,
+          entityType: 'ProductVariant',
+          entityId: variantId,
           ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+          changedFields: Object.keys(changedFields).length > 0 ? changedFields as any : undefined,
+          notes,
         });
       }
     });

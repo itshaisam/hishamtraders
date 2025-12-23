@@ -1,6 +1,7 @@
 import { PrismaClient, AdjustmentType, AdjustmentStatus } from '@prisma/client';
 import { StockAdjustmentRepository } from './stock-adjustment.repository';
 import { InventoryRepository } from './inventory.repository';
+import { AuditService } from '../../services/audit.service';
 
 const prisma = new PrismaClient();
 
@@ -239,6 +240,22 @@ export class StockAdjustmentService {
       };
     });
 
+    // Audit log for approval
+    await AuditService.log({
+      userId: adminId,
+      action: 'UPDATE',
+      entityType: 'StockAdjustment',
+      entityId: id,
+      changedFields: {
+        status: { old: 'PENDING', new: 'APPROVED' },
+        inventory: {
+          old: currentQuantity,
+          new: newQuantity
+        },
+      },
+      notes: `Approved ${adjustment.adjustmentType} adjustment of ${adjustment.quantity} units for ${result.adjustment.product.name}. Reason: ${adjustment.reason}`,
+    });
+
     return result.adjustment;
   }
 
@@ -268,6 +285,18 @@ export class StockAdjustmentService {
       adminId,
       rejectionReason.trim()
     );
+
+    // Audit log for rejection
+    await AuditService.log({
+      userId: adminId,
+      action: 'UPDATE',
+      entityType: 'StockAdjustment',
+      entityId: id,
+      changedFields: {
+        status: { old: 'PENDING', new: 'REJECTED' },
+      },
+      notes: `Rejected stock adjustment. Rejection reason: ${rejectionReason}`,
+    });
 
     return rejectedAdjustment;
   }

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import logger from '../../lib/logger.js';
+import { AuditService } from '../../services/audit.service.js';
 
 // Audit logging middleware for suppliers
 export const auditSupplierAction = (action: 'CREATE' | 'UPDATE' | 'DELETE') => {
@@ -7,33 +7,37 @@ export const auditSupplierAction = (action: 'CREATE' | 'UPDATE' | 'DELETE') => {
     // Store action and data for later logging in the response
     const user = (req as any).user;
 
-    res.on('finish', () => {
+    res.on('finish', async () => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        let details = {};
+        const supplierId = req.params.id || (res.locals.createdEntity?.id);
+        let changedFields: Record<string, unknown> = {};
+        let notes = '';
 
         if (action === 'CREATE') {
-          details = {
-            supplierName: req.body.name,
+          changedFields = {
+            name: req.body.name,
             email: req.body.email,
-            country: req.body.country,
+            countryId: req.body.countryId,
+            paymentTermId: req.body.paymentTermId,
+            status: req.body.status || 'ACTIVE',
           };
+          notes = `Created supplier: ${req.body.name}`;
         } else if (action === 'UPDATE') {
-          details = {
-            supplierId: req.params.id,
-            changedFields: Object.keys(req.body),
-          };
+          changedFields = req.body;
+          notes = `Updated supplier ID: ${supplierId}`;
         } else if (action === 'DELETE') {
-          details = {
-            supplierId: req.params.id,
-          };
+          notes = `Deleted supplier ID: ${supplierId}`;
         }
 
-        logger.info(`SUPPLIER_${action}`, {
+        await AuditService.log({
           userId: user?.userId,
-          action: `SUPPLIER_${action}`,
-          supplierId: req.params.id || req.body.id,
-          details,
+          action,
+          entityType: 'Supplier',
+          entityId: supplierId,
           ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+          changedFields: Object.keys(changedFields).length > 0 ? changedFields as any : undefined,
+          notes,
         });
       }
     });

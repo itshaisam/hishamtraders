@@ -24,6 +24,7 @@ import { InventoryPage } from './features/inventory/pages/InventoryPage';
 import { StockAdjustmentPage } from './features/inventory/pages/StockAdjustmentPage';
 import { AdjustmentHistoryPage } from './features/inventory/pages/AdjustmentHistoryPage';
 import { AdjustmentApprovalPage } from './features/inventory/pages/AdjustmentApprovalPage';
+import StockMovementsPage from './features/inventory/pages/StockMovementsPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -264,6 +265,18 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <AdjustmentApprovalPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Stock Movements route */}
+          <Route
+            path="/inventory/movements"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <StockMovementsPage />
                 </Layout>
               </ProtectedRoute>
             }
