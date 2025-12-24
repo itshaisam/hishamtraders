@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { ClientForm } from '../components/ClientForm';
+import { CreditUtilizationDisplay } from '../components/CreditUtilizationDisplay';
 import { useClient, useUpdateClient } from '../../../hooks/useClients';
 import { Button, Breadcrumbs } from '../../../components/ui';
 
@@ -85,9 +86,17 @@ export const ClientDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Form Card - Full width on mobile, wider on desktop */}
-        <div className="bg-white rounded-lg shadow p-6 md:p-8 mt-2">
-          <ClientForm client={client} onSubmit={handleSubmit} isLoading={isUpdating} />
+        {/* Credit Utilization & Form - Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Credit Utilization - Sidebar */}
+          <div className="lg:col-span-1">
+            <CreditUtilizationDisplay client={client} />
+          </div>
+
+          {/* Form Card - Main Content */}
+          <div className="lg:col-span-2 bg-white rounded-lg shadow p-6 md:p-8">
+            <ClientForm client={client} onSubmit={handleSubmit} isLoading={isUpdating} />
+          </div>
         </div>
       </div>
     </div>

@@ -19,7 +19,10 @@
       "Bash(npm run build:*)",
       "Bash(npm run db:seed:*)",
       "Bash(find:*)",
-      "Bash(pnpm build:*)"
+      "Bash(pnpm build:*)",
+      "Bash(npx prisma db seed:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npm run lint)"
     ],
     "deny": [],
     "ask": []

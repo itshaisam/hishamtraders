@@ -21,6 +21,7 @@ export interface LoginResponse {
 }
 
 export interface JWTPayload {
+  id?: string; // Alias for userId (used in some controllers)
   userId: string;
   email: string;
   roleId: string;

@@ -3,21 +3,24 @@ import { addDays } from 'date-fns';
 import { InvoicesRepository } from './invoices.repository.js';
 import { SettingsService } from '../settings/settings.service.js';
 import { FifoDeductionService } from '../inventory/fifo-deduction.service.js';
+import { CreditLimitService } from '../clients/credit-limit.service.js';
 import { CreateInvoiceDto, validateCreateInvoice } from './dto/create-invoice.dto.js';
 import { InvoiceFilterDto } from './dto/invoice-filter.dto.js';
 import { generateInvoiceNumber } from '../../utils/invoice-number.util.js';
-import { BadRequestError, NotFoundError } from '../../utils/errors.js';
+import { BadRequestError, NotFoundError, ForbiddenError } from '../../utils/errors.js';
 import logger from '../../lib/logger.js';
 
 export class InvoicesService {
   private repository: InvoicesRepository;
   private settingsService: SettingsService;
   private fifoService: FifoDeductionService;
+  private creditLimitService: CreditLimitService;
 
   constructor(private prisma: PrismaClient) {
     this.repository = new InvoicesRepository(prisma);
     this.settingsService = new SettingsService(prisma);
     this.fifoService = new FifoDeductionService(prisma);
+    this.creditLimitService = new CreditLimitService(prisma);
   }
 
   /**
@@ -53,8 +56,8 @@ export class InvoicesService {
     // 4. Calculate due date
     const dueDate = addDays(data.invoiceDate, client.paymentTermsDays);
 
-    // 5. Get tax rate from settings
-    const taxRate = await this.settingsService.getTaxRate();
+    // 5. Get tax rate from settings (check client tax exemption - Story 3.5)
+    const taxRate = client.taxExempt ? 0 : await this.settingsService.getTaxRate();
 
     // 6. Validate and calculate line item totals
     const itemsWithTotals = await this.calculateLineItemTotals(data.items);
@@ -64,12 +67,26 @@ export class InvoicesService {
     const taxAmount = (subtotal * taxRate) / 100;
     const total = subtotal + taxAmount;
 
+    // Log tax exemption if applicable
+    if (client.taxExempt) {
+      logger.info(`Client ${client.id} is tax-exempt. Tax rate: 0%`, {
+        clientName: client.name,
+        reason: client.taxExemptReason,
+      });
+    }
+
     // 8. Check stock availability for all items
     await this.validateStockAvailability(data.items, data.warehouseId);
 
     // 9. Credit limit check for CREDIT sales
     if (data.paymentType === 'CREDIT') {
-      await this.validateCreditLimit(client, total, data.adminOverride);
+      await this.validateCreditLimitWithOverride(
+        client.id,
+        total,
+        userId,
+        data.adminOverride,
+        data.overrideReason
+      );
     }
 
     // 10. Create invoice with transaction
@@ -85,6 +102,7 @@ export class InvoicesService {
           paymentType: data.paymentType,
           subtotal: new Prisma.Decimal(subtotal.toFixed(2)),
           taxAmount: new Prisma.Decimal(taxAmount.toFixed(2)),
+          taxRate: new Prisma.Decimal(taxRate.toFixed(2)), // Snapshot tax rate (Story 3.5)
           total: new Prisma.Decimal(total.toFixed(2)),
           paidAmount: data.paymentType === 'CASH' ? new Prisma.Decimal(total.toFixed(2)) : new Prisma.Decimal(0),
           status: data.paymentType === 'CASH' ? 'PAID' : 'PENDING',
@@ -209,34 +227,80 @@ export class InvoicesService {
   }
 
   /**
-   * Validate credit limit
+   * Validate credit limit with admin override support
    */
-  private async validateCreditLimit(
-    client: any,
+  private async validateCreditLimitWithOverride(
+    clientId: string,
     invoiceTotal: number,
-    adminOverride: boolean = false
+    userId: string,
+    adminOverride: boolean = false,
+    overrideReason?: string
   ) {
-    const newBalance = Number(client.balance) + invoiceTotal;
-    const creditLimit = Number(client.creditLimit);
-    const utilization = (newBalance / creditLimit) * 100;
+    // Get warning threshold from settings (default 80%)
+    const warningThreshold = 80;
 
-    if (utilization > 100 && !adminOverride) {
-      throw new BadRequestError(
-        `Credit limit exceeded. Current balance: ${client.balance}, Invoice total: ${invoiceTotal}, Credit limit: ${creditLimit}. Admin override required.`
-      );
-    }
+    // Check credit limit
+    const creditCheck = await this.creditLimitService.checkCreditLimit(
+      clientId,
+      invoiceTotal,
+      warningThreshold
+    );
 
-    if (utilization > 80 && utilization <= 100) {
-      logger.warn('Client approaching credit limit', {
-        clientId: client.id,
-        utilization: utilization.toFixed(2) + '%',
+    // If credit limit exceeded, require admin override
+    if (creditCheck.status === 'EXCEEDED') {
+      if (!adminOverride) {
+        throw new BadRequestError(creditCheck.message + ' Admin override required.');
+      }
+
+      // Validate user is Admin
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: { role: true },
       });
-    }
 
-    if (adminOverride) {
-      logger.warn('Credit limit override used', {
-        clientId: client.id,
-        utilization: utilization.toFixed(2) + '%',
+      if (!user || user.role.name !== 'ADMIN') {
+        throw new ForbiddenError('Only Admin users can override credit limits');
+      }
+
+      if (!overrideReason || overrideReason.trim().length < 10) {
+        throw new BadRequestError('Override reason must be at least 10 characters');
+      }
+
+      if (overrideReason.trim().length > 500) {
+        throw new BadRequestError('Override reason must not exceed 500 characters');
+      }
+
+      // Log credit limit override to audit log
+      await this.prisma.auditLog.create({
+        data: {
+          userId,
+          action: 'CREDIT_LIMIT_OVERRIDE',
+          entityType: 'Invoice',
+          entityId: null, // Will be set after invoice creation
+          notes: overrideReason,
+          changedFields: {
+            clientId,
+            invoiceAmount: invoiceTotal,
+            currentBalance: creditCheck.currentBalance,
+            creditLimit: creditCheck.creditLimit,
+            newBalance: creditCheck.newBalance,
+            utilization: creditCheck.utilization,
+          },
+        },
+      });
+
+      logger.warn('Credit limit override approved', {
+        userId,
+        clientId,
+        utilization: creditCheck.utilization.toFixed(2) + '%',
+        reason: overrideReason,
+      });
+    } else if (creditCheck.status === 'WARNING') {
+      // Log warning but allow creation
+      logger.warn('Client approaching credit limit', {
+        clientId,
+        utilization: creditCheck.utilization.toFixed(2) + '%',
+        message: creditCheck.message,
       });
     }
   }

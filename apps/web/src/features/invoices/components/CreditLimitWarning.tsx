@@ -21,6 +21,12 @@ export function CreditLimitWarning({
   const newBalance = currentBalance + invoiceTotal;
   const utilization = (newBalance / creditLimit) * 100;
   const isOverLimit = utilization > 100;
+  const isWarning = utilization >= 80 && utilization <= 100;
+
+  // Don't show warning if under 80%
+  if (utilization < 80) {
+    return null;
+  }
 
   return (
     <div className={`bg-yellow-50 border-l-4 ${isOverLimit ? 'border-red-500' : 'border-yellow-500'} p-4 rounded-lg shadow`}>
