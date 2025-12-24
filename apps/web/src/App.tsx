@@ -28,6 +28,8 @@ import StockMovementsPage from './features/inventory/pages/StockMovementsPage';
 import RecordSupplierPaymentPage from './features/payments/pages/RecordSupplierPaymentPage';
 import SupplierPaymentsPage from './features/payments/pages/SupplierPaymentsPage';
 import { ClientsPage } from './features/clients/pages/ClientsPage';
+import { ClientFormPage } from './features/clients/pages/ClientFormPage';
+import { ClientDetailPage } from './features/clients/pages/ClientDetailPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -315,6 +317,28 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <ClientsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/clients/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ClientFormPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/clients/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ClientDetailPage />
                 </Layout>
               </ProtectedRoute>
             }
