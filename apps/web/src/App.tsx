@@ -27,6 +27,7 @@ import { AdjustmentApprovalPage } from './features/inventory/pages/AdjustmentApp
 import StockMovementsPage from './features/inventory/pages/StockMovementsPage';
 import RecordSupplierPaymentPage from './features/payments/pages/RecordSupplierPaymentPage';
 import SupplierPaymentsPage from './features/payments/pages/SupplierPaymentsPage';
+import { ClientsPage } from './features/clients/pages/ClientsPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -302,6 +303,18 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <SupplierPaymentsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Clients routes */}
+          <Route
+            path="/clients"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ClientsPage />
                 </Layout>
               </ProtectedRoute>
             }
