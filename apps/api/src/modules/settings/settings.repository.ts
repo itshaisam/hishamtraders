@@ -1,0 +1,45 @@
+import { PrismaClient, SystemSetting } from '@prisma/client';
+
+export class SettingsRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  /**
+   * Get a system setting by key
+   */
+  async findByKey(key: string): Promise<SystemSetting | null> {
+    return this.prisma.systemSetting.findUnique({
+      where: { key },
+    });
+  }
+
+  /**
+   * Get all settings (optionally filtered by category)
+   */
+  async findAll(category?: string): Promise<SystemSetting[]> {
+    return this.prisma.systemSetting.findMany({
+      where: category ? { category } : undefined,
+      orderBy: [{ category: 'asc' }, { key: 'asc' }],
+    });
+  }
+
+  /**
+   * Create or update a system setting
+   */
+  async upsert(key: string, value: string, label: string, dataType: string, category?: string): Promise<SystemSetting> {
+    return this.prisma.systemSetting.upsert({
+      where: { key },
+      update: { value, label, dataType, category },
+      create: { key, value, label, dataType, category },
+    });
+  }
+
+  /**
+   * Update a setting value
+   */
+  async updateValue(key: string, value: string): Promise<SystemSetting> {
+    return this.prisma.systemSetting.update({
+      where: { key },
+      data: { value },
+    });
+  }
+}

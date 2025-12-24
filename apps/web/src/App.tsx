@@ -30,6 +30,9 @@ import SupplierPaymentsPage from './features/payments/pages/SupplierPaymentsPage
 import { ClientsPage } from './features/clients/pages/ClientsPage';
 import { ClientFormPage } from './features/clients/pages/ClientFormPage';
 import { ClientDetailPage } from './features/clients/pages/ClientDetailPage';
+import { InvoicesPage } from './features/invoices/pages/InvoicesPage';
+import { CreateInvoicePage } from './features/invoices/pages/CreateInvoicePage';
+import { InvoiceDetailPage } from './features/invoices/pages/InvoiceDetailPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -339,6 +342,40 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <ClientDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Invoices routes */}
+          <Route
+            path="/invoices"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <InvoicesPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/invoices/create"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateInvoicePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/invoices/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <InvoiceDetailPage />
                 </Layout>
               </ProtectedRoute>
             }

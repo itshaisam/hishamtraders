@@ -5,7 +5,7 @@
 **Priority:** Critical
 **Estimated Effort:** 12-15 hours
 **Dependencies:** Story 2.4 (Products), Story 2.7 (Inventory), Story 3.1 (Clients)
-**Status:** Draft
+**Status:** ✅ Complete
 
 ---
 
@@ -20,59 +20,59 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] Invoice table: id, invoiceNumber (unique), clientId, invoiceDate, dueDate, paymentType (CASH/CREDIT), subtotal, taxAmount, total, paidAmount, status (PENDING/PARTIAL/PAID/OVERDUE), notes, createdAt
-   - [ ] InvoiceItem table: id, invoiceId, productId, batchNo, quantity, unitPrice, discount, total
+   - [x] Invoice table: id, invoiceNumber (unique), clientId, invoiceDate, dueDate, paymentType (CASH/CREDIT), subtotal, taxAmount, total, paidAmount, status (PENDING/PARTIAL/PAID/OVERDUE), notes, createdAt
+   - [x] InvoiceItem table: id, invoiceId, productId, batchNo, quantity, unitPrice, discount, total
 
 2. **Invoice Number Generation:**
-   - [ ] Invoice number auto-generated: INV-YYYYMMDD-XXX (e.g., INV-20250115-001)
+   - [x] Invoice number auto-generated: INV-YYYYMMDD-XXX (e.g., INV-20250115-001)
 
 3. **Due Date Calculation:**
-   - [ ] Due date calculated: invoiceDate + client.paymentTermsDays
+   - [x] Due date calculated: invoiceDate + client.paymentTermsDays
 
 4. **Stock Validation & Warehouse Selection:**
-   - [ ] Line items validated: product exists, quantity > 0, **quantity <= available stock**
-   - [ ] **Stock availability check before saving invoice** (prevent overselling)
-   - [ ] **If multiple batches exist, deduct from oldest batch first (FIFO)**
-   - [ ] **User must explicitly select warehouse when creating invoice** (no pre-selection for MVP)
-   - [ ] Display available quantity per warehouse per product before selection
-   - [ ] Prevent concurrent invoice creation race conditions with database locks on batch records
+   - [x] Line items validated: product exists, quantity > 0, **quantity <= available stock**
+   - [x] **Stock availability check before saving invoice** (prevent overselling)
+   - [x] **If multiple batches exist, deduct from oldest batch first (FIFO)**
+   - [x] **User must explicitly select warehouse when creating invoice** (no pre-selection for MVP)
+   - [x] Display available quantity per warehouse per product before selection
+   - [x] Prevent concurrent invoice creation race conditions with database locks on batch records
 
 5. **Credit Limit Check:**
-   - [ ] For credit sales, check: client.balance + invoice.total <= client.creditLimit
-   - [ ] Warning if 80-100% of credit limit (80% configurable by Admin)
-   - [ ] Error if exceeding credit limit
-   - [ ] Override logged with reason/notes, but no approval workflow required for MVP
+   - [x] For credit sales, check: client.balance + invoice.total <= client.creditLimit
+   - [x] Warning if 80-100% of credit limit (80% configurable by Admin)
+   - [x] Error if exceeding credit limit
+   - [x] Override logged with reason/notes, but no approval workflow required for MVP
 
 6. **Tax & Total Calculation:**
-   - [ ] Tax calculated and applied at invoice level (NOT deferred to separate story)
-   - [ ] Tax rate retrieved from system configuration (not per-invoice override for MVP)
-   - [ ] Subtotal and total calculated automatically
-   - [ ] Tax rounding: Round to nearest cent (standard banker's rounding)
+   - [x] Tax calculated and applied at invoice level (NOT deferred to separate story)
+   - [x] Tax rate retrieved from system configuration (not per-invoice override for MVP)
+   - [x] Subtotal and total calculated automatically
+   - [x] Tax rounding: Round to nearest cent (standard banker's rounding)
 
 7. **Inventory Deduction:**
-   - [ ] **When invoice saved, inventory decremented** (quantity reduced)
-   - [ ] Client balance increased by total (if paymentType = CREDIT)
-   - [ ] For CASH invoices: paidAmount = total, status = PAID (no balance update)
-   - [ ] For CREDIT invoices: paidAmount = 0, status = PENDING (balance updated)
-   - [ ] StockMovement record created (type=SALE, referenceType=INVOICE)
-   - [ ] Cannot cancel same-day unpaid invoices (voiding must be done via Story 3.4)
+   - [x] **When invoice saved, inventory decremented** (quantity reduced)
+   - [x] Client balance increased by total (if paymentType = CREDIT)
+   - [x] For CASH invoices: paidAmount = total, status = PAID (no balance update)
+   - [x] For CREDIT invoices: paidAmount = 0, status = PENDING (balance updated)
+   - [x] StockMovement record created (type=SALE, referenceType=INVOICE)
+   - [x] Cannot cancel same-day unpaid invoices (voiding must be done via Story 3.4)
 
 8. **Backend API Endpoints:**
-   - [ ] POST /api/invoices - Creates invoice with line items
-   - [ ] GET /api/invoices - Returns invoice list with filters (date range, clientId, status)
-   - [ ] GET /api/invoices/:id - Returns invoice details with items and client info
+   - [x] POST /api/invoices - Creates invoice with line items
+   - [x] GET /api/invoices - Returns invoice list with filters (date range, clientId, status)
+   - [x] GET /api/invoices/:id - Returns invoice details with items and client info
 
 9. **Frontend Pages:**
-   - [ ] Create Invoice page with client selection, line item rows, automatic calculations
-   - [ ] Warn if client approaching/exceeding credit limit
-   - [ ] Display available stock when adding product
-   - [ ] Display error if insufficient stock
+   - [x] Create Invoice page with client selection, line item rows, automatic calculations
+   - [x] Warn if client approaching/exceeding credit limit
+   - [x] Display available stock when adding product
+   - [x] Display error if insufficient stock
 
 10. **Authorization:**
-    - [ ] Sales Officer, Accountant, Admin can create invoices
+    - [x] Sales Officer, Accountant, Admin can create invoices
 
 11. **Audit Logging:**
-    - [ ] Invoice creation logged with line items
+    - [x] Invoice creation logged with line items
 
 ---
 

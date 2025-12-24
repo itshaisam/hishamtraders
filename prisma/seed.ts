@@ -363,25 +363,28 @@ async function main() {
   });
 
   if (mainWarehouse && sinkProduct) {
-    // Create inventory record
-    await prisma.inventory.upsert({
+    // Create inventory record if doesn't exist
+    const existing = await prisma.inventory.findFirst({
       where: {
-        productId_productVariantId_warehouseId_batchNo: {
+        productId: sinkProduct.id,
+        productVariantId: null,
+        warehouseId: mainWarehouse.id,
+        batchNo: 'SEED-BATCH-001',
+      },
+    });
+
+    if (!existing) {
+      await prisma.inventory.create({
+        data: {
           productId: sinkProduct.id,
           productVariantId: null,
           warehouseId: mainWarehouse.id,
+          quantity: 50,
           batchNo: 'SEED-BATCH-001',
+          binLocation: 'A-01-001',
         },
-      },
-      update: {},
-      create: {
-        productId: sinkProduct.id,
-        warehouseId: mainWarehouse.id,
-        quantity: 50,
-        batchNo: 'SEED-BATCH-001',
-        binLocation: 'A-01-001',
-      },
-    });
+      });
+    }
 
     // Create stock movement record to show origin
     await prisma.stockMovement.create({
@@ -399,25 +402,28 @@ async function main() {
   }
 
   if (mainWarehouse && faucetProduct) {
-    // Create inventory record (low stock example)
-    await prisma.inventory.upsert({
+    // Create inventory record (low stock example) if doesn't exist
+    const existing = await prisma.inventory.findFirst({
       where: {
-        productId_productVariantId_warehouseId_batchNo: {
+        productId: faucetProduct.id,
+        productVariantId: null,
+        warehouseId: mainWarehouse.id,
+        batchNo: 'SEED-BATCH-002',
+      },
+    });
+
+    if (!existing) {
+      await prisma.inventory.create({
+        data: {
           productId: faucetProduct.id,
           productVariantId: null,
           warehouseId: mainWarehouse.id,
+          quantity: 8, // Low stock to demonstrate alert
           batchNo: 'SEED-BATCH-002',
+          binLocation: 'A-01-002',
         },
-      },
-      update: {},
-      create: {
-        productId: faucetProduct.id,
-        warehouseId: mainWarehouse.id,
-        quantity: 8, // Low stock to demonstrate alert
-        batchNo: 'SEED-BATCH-002',
-        binLocation: 'A-01-002',
-      },
-    });
+      });
+    }
 
     // Create stock movement record
     await prisma.stockMovement.create({
@@ -435,6 +441,123 @@ async function main() {
   }
 
   console.log('  ✓ Sample inventory created with stock movement history');
+
+  // Step 11: Sample Clients
+  console.log('11. Creating sample clients...');
+  const clients = [
+    {
+      name: 'ABC Construction Ltd.',
+      contactPerson: 'Ali Ahmed',
+      email: 'ali@abcconstruction.pk',
+      phone: '+92-300-1234567',
+      city: 'Lahore',
+      area: 'Gulberg',
+      creditLimit: new Decimal('500000.00'),
+      balance: new Decimal('120000.00'),
+      paymentTermsDays: 30,
+      status: 'ACTIVE' as const,
+    },
+    {
+      name: 'Paradise Builders',
+      contactPerson: 'Hassan Malik',
+      email: 'hassan@paradisebuilders.pk',
+      phone: '+92-321-9876543',
+      city: 'Karachi',
+      area: 'DHA',
+      creditLimit: new Decimal('1000000.00'),
+      balance: new Decimal('250000.00'),
+      paymentTermsDays: 45,
+      status: 'ACTIVE' as const,
+    },
+    {
+      name: 'Metro Plumbing Services',
+      contactPerson: 'Tariq Khan',
+      email: 'tariq@metroplumbing.pk',
+      phone: '+92-333-4567890',
+      city: 'Islamabad',
+      area: 'F-7 Markaz',
+      creditLimit: new Decimal('300000.00'),
+      balance: new Decimal('50000.00'),
+      paymentTermsDays: 15,
+      status: 'ACTIVE' as const,
+    },
+    {
+      name: 'Royal Interiors',
+      contactPerson: 'Sana Iqbal',
+      email: 'sana@royalinteriors.pk',
+      phone: '+92-345-7890123',
+      city: 'Lahore',
+      area: 'MM Alam Road',
+      creditLimit: new Decimal('750000.00'),
+      balance: new Decimal('680000.00'), // Close to limit (90% utilization)
+      paymentTermsDays: 30,
+      status: 'ACTIVE' as const,
+    },
+    {
+      name: 'Green Valley Homes',
+      contactPerson: 'Kamran Shah',
+      email: 'kamran@greenvalley.pk',
+      phone: '+92-300-2345678',
+      city: 'Islamabad',
+      area: 'Blue Area',
+      creditLimit: new Decimal('200000.00'),
+      balance: new Decimal('220000.00'), // Over limit - good for testing override
+      paymentTermsDays: 20,
+      status: 'ACTIVE' as const,
+    },
+    {
+      name: 'City Mart Retail',
+      contactPerson: 'Zainab Hussain',
+      email: 'zainab@citymart.pk',
+      phone: '+92-321-3456789',
+      city: 'Karachi',
+      area: 'Zamzama Boulevard',
+      creditLimit: new Decimal('150000.00'),
+      balance: new Decimal('0.00'), // Zero balance - clean account
+      paymentTermsDays: 7,
+      status: 'ACTIVE' as const,
+    },
+    {
+      name: 'Skyline Developers (Inactive)',
+      contactPerson: 'Umer Farooq',
+      email: 'umer@skylinedev.pk',
+      phone: '+92-333-5678901',
+      city: 'Faisalabad',
+      area: 'Civic Center',
+      creditLimit: new Decimal('100000.00'),
+      balance: new Decimal('15000.00'),
+      paymentTermsDays: 30,
+      status: 'INACTIVE' as const, // Inactive client for testing
+    },
+  ];
+
+  for (const client of clients) {
+    const existing = await prisma.client.findFirst({
+      where: { name: client.name },
+    });
+
+    if (!existing) {
+      await prisma.client.create({
+        data: client,
+      });
+    }
+  }
+  console.log('  ✓ Sample clients created (7 clients with various scenarios)');
+
+  // Step 12: System Settings
+  console.log('12. Creating system settings...');
+  await prisma.systemSetting.upsert({
+    where: { key: 'TAX_RATE' },
+    update: {},
+    create: {
+      key: 'TAX_RATE',
+      value: '18',
+      dataType: 'number',
+      label: 'Sales Tax Rate (%)',
+      category: 'tax',
+    },
+  });
+  console.log('  ✓ System settings created (TAX_RATE=18%)');
 
   console.log('✓ Reference data seeded successfully');
   console.log('🌱 Seed completed successfully!');
