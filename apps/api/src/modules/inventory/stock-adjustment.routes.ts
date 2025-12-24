@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import { StockAdjustmentController } from './stock-adjustment.controller';
-import { requireRole } from '../../middleware/authorization.middleware.js';
+import { authenticate } from '../../middleware/auth.middleware.js';
+import { requireRole } from '../../middleware/role.middleware.js';
 
 const router = Router();
 const adjustmentController = new StockAdjustmentController();
+
+// All routes require authentication
+router.use(authenticate);
 
 /**
  * POST /api/inventory/adjustments
@@ -18,14 +22,15 @@ router.post(
 
 /**
  * GET /api/inventory/adjustments
- * Get all stock adjustments with filters
- * WAREHOUSE_MANAGER: Can only view their own adjustments
+ * Get all stock adjustments with filters (read-only access for history viewing)
+ * SALES_OFFICER: Can view all adjustments (read-only)
+ * WAREHOUSE_MANAGER: Can view their own adjustments
  * ADMIN: Can view all adjustments
  * Query params: productId, warehouseId, status, createdBy, startDate, endDate, page, limit
  */
 router.get(
   '/',
-  requireRole(['WAREHOUSE_MANAGER', 'ADMIN']),
+  requireRole(['WAREHOUSE_MANAGER', 'ADMIN', 'SALES_OFFICER']),
   adjustmentController.getAllAdjustments
 );
 
@@ -42,13 +47,14 @@ router.get(
 
 /**
  * GET /api/inventory/adjustments/:id
- * Get single adjustment by ID
- * WAREHOUSE_MANAGER: Can only view their own
+ * Get single adjustment by ID (read-only access)
+ * SALES_OFFICER: Can view all adjustments (read-only)
+ * WAREHOUSE_MANAGER: Can view their own
  * ADMIN: Can view all
  */
 router.get(
   '/:id',
-  requireRole(['WAREHOUSE_MANAGER', 'ADMIN']),
+  requireRole(['WAREHOUSE_MANAGER', 'ADMIN', 'SALES_OFFICER']),
   adjustmentController.getAdjustmentById
 );
 

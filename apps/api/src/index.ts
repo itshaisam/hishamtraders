@@ -18,6 +18,7 @@ import warehousesRoutes from './modules/warehouses/warehouses.routes.js';
 import inventoryRoutes from './modules/inventory/inventory.routes.js';
 import stockAdjustmentRoutes from './modules/inventory/stock-adjustment.routes.js';
 import { stockMovementRoutes } from './modules/inventory/stock-movement.routes.js';
+import { paymentsRoutes } from './modules/payments/payments.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
@@ -73,6 +74,7 @@ app.use('/api/v1/warehouses', warehousesRoutes);
 app.use('/api/v1/inventory', inventoryRoutes);
 app.use('/api/v1/inventory/adjustments', stockAdjustmentRoutes);
 app.use('/api/v1/inventory/movements', stockMovementRoutes);
+app.use('/api/v1/payments', paymentsRoutes);
 app.use('/api/v1', dashboardRoutes);
 
 // 404 handler (must be after all routes)

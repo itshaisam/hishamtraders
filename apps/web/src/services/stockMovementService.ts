@@ -1,27 +1,9 @@
-import axios from 'axios';
+import { apiClient } from '@/lib/api-client';
 import {
   StockMovementFilters,
   PaginatedMovementsResponse,
   MovementsResponse,
 } from '../types/stock-movement.types';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 export const stockMovementService = {
   /**
@@ -62,7 +44,7 @@ export const stockMovementService = {
       params.pageSize = filters.pageSize;
     }
 
-    const response = await api.get('/inventory/movements', { params });
+    const response = await apiClient.get('/inventory/movements', { params });
     return response.data;
   },
 
@@ -78,7 +60,7 @@ export const stockMovementService = {
       params.productVariantId = productVariantId;
     }
 
-    const response = await api.get(`/inventory/movements/product/${productId}`, { params });
+    const response = await apiClient.get(`/inventory/movements/product/${productId}`, { params });
     return response.data;
   },
 
@@ -86,7 +68,7 @@ export const stockMovementService = {
    * Get movements for a specific warehouse
    */
   getByWarehouse: async (warehouseId: string): Promise<MovementsResponse> => {
-    const response = await api.get(`/inventory/movements/warehouse/${warehouseId}`);
+    const response = await apiClient.get(`/inventory/movements/warehouse/${warehouseId}`);
     return response.data;
   },
 
@@ -103,7 +85,7 @@ export const stockMovementService = {
       params.productVariantId = productVariantId;
     }
 
-    const response = await api.get(
+    const response = await apiClient.get(
       `/inventory/movements/product/${productId}/warehouse/${warehouseId}`,
       { params }
     );

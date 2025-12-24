@@ -169,6 +169,30 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                 >
                   Warehouses & Bins
                 </Link>
+                <Link
+                  to="/inventory/adjustments/new"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  New Stock Adjustment
+                </Link>
+                <Link
+                  to="/inventory/adjustments/approval"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Adjustment Approvals
+                </Link>
+                <Link
+                  to="/inventory/adjustments/history"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Adjustment History
+                </Link>
+                <Link
+                  to="/inventory/movements"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Stock Movements Report
+                </Link>
               </div>
             )}
           </div>
@@ -295,10 +319,16 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                 {hasRole(['ADMIN', 'ACCOUNTANT']) && (
                   <>
                     <Link
-                      to="/supplier-payments"
+                      to="/payments/supplier/record"
                       className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                     >
-                      Supplier Payments
+                      Record Supplier Payment
+                    </Link>
+                    <Link
+                      to="/payments/supplier/history"
+                      className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                    >
+                      Supplier Payment History
                     </Link>
                     <Link
                       to="/expenses"

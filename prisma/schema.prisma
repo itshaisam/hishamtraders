@@ -133,6 +133,7 @@ model Supplier {
   country       Country?           @relation(fields: [countryId], references: [id])
   paymentTerm   PaymentTerm?       @relation(fields: [paymentTermId], references: [id])
   purchaseOrders PurchaseOrder[]
+  payments      Payment[]
 
   @@index([status])
   @@index([countryId])
@@ -500,6 +501,7 @@ model User {
   stockMovements      StockMovement[]
   createdAdjustments  StockAdjustment[] @relation("AdjustmentCreator")
   reviewedAdjustments StockAdjustment[] @relation("AdjustmentReviewer")
+  payments            Payment[]         @relation("PaymentRecorder")
 
   @@index([email])
   @@index([roleId])
@@ -527,4 +529,48 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([action])
   @@map("audit_logs")
+}
+
+// ============================================================================
+// PAYMENT TRACKING (Epic 2.10)
+// ============================================================================
+
+enum PaymentType {
+  SUPPLIER
+  CLIENT
+}
+
+enum PaymentReferenceType {
+  PO
+  INVOICE
+  GENERAL
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CHEQUE
+}
+
+model Payment {
+  id                   String                 @id @default(cuid())
+  supplierId           String?
+  paymentType          PaymentType
+  paymentReferenceType PaymentReferenceType?
+  referenceId          String?                // PO ID or Invoice ID
+  amount               Decimal                @db.Decimal(12, 2)
+  method               PaymentMethod
+  date                 DateTime
+  notes                String?                @db.Text
+  recordedBy           String
+
+  createdAt            DateTime               @default(now())
+
+  supplier             Supplier?              @relation(fields: [supplierId], references: [id])
+  user                 User                   @relation("PaymentRecorder", fields: [recordedBy], references: [id])
+
+  @@index([paymentType, paymentReferenceType, referenceId])
+  @@index([supplierId])
+  @@index([date])
+  @@map("payments")
 }

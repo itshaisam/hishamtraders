@@ -1,5 +1,8 @@
 import { Response, NextFunction } from 'express';
+import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../types/auth.types.js';
+
+const prisma = new PrismaClient();
 
 /**
  * Authorization middleware to check if user has required role(s)
@@ -16,15 +19,33 @@ export const requireRole = (allowedRoles: string[]) => {
         });
       }
 
-      // Get user role name from request
-      const userRole = req.user.roleName;
+      // Get user role name from roleId
+      const roleId = req.user.roleId;
 
-      if (!userRole) {
+      if (!roleId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: User role ID not found',
+        });
+      }
+
+      // Fetch role name from database
+      const role = await prisma.role.findUnique({
+        where: { id: roleId },
+        select: { name: true },
+      });
+
+      if (!role) {
         return res.status(403).json({
           success: false,
           message: 'Forbidden: User role not found',
         });
       }
+
+      const userRole = role.name;
+
+      // Attach role name to request for future use
+      req.user.roleName = userRole;
 
       // Check if user's role is in the allowed roles
       if (!allowedRoles.includes(userRole)) {
