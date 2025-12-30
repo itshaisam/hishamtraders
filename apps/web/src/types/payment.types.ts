@@ -48,6 +48,15 @@ export interface CreateSupplierPaymentDto {
   notes?: string;
 }
 
+export interface CreateClientPaymentDto {
+  clientId: string;
+  amount: number;
+  method: PaymentMethod;
+  referenceNumber?: string;
+  date: string;
+  notes?: string;
+}
+
 export interface PaymentFilters {
   supplierId?: string;
   method?: PaymentMethod;

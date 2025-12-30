@@ -1,5 +1,7 @@
-import { PaymentType, PaymentMethod, PaymentReferenceType } from '@prisma/client';
+import { PaymentType, PaymentMethod, PaymentReferenceType, PrismaClient, Prisma } from '@prisma/client';
 import { PaymentsRepository, PaymentFilters } from './payments.repository.js';
+import { PaymentAllocationService, AllocationResult } from './payment-allocation.service.js';
+import logger from '../../lib/logger.js';
 
 export interface CreateSupplierPaymentDto {
   supplierId: string;
@@ -12,11 +14,25 @@ export interface CreateSupplierPaymentDto {
   recordedBy: string;
 }
 
+export interface CreateClientPaymentDto {
+  clientId: string;
+  amount: number;
+  method: PaymentMethod;
+  referenceNumber?: string; // For cheque/bank transfer
+  date: Date;
+  notes?: string;
+  recordedBy: string;
+}
+
 export class PaymentsService {
   private repository: PaymentsRepository;
+  private prisma: PrismaClient;
+  private allocationService: PaymentAllocationService;
 
   constructor() {
     this.repository = new PaymentsRepository();
+    this.prisma = new PrismaClient();
+    this.allocationService = new PaymentAllocationService(this.prisma);
   }
 
   /**
@@ -96,5 +112,159 @@ export class PaymentsService {
       throw new Error('Payment not found');
     }
     return payment;
+  }
+
+  /**
+   * Create a client payment with FIFO allocation (Story 3.6)
+   */
+  async createClientPayment(dto: CreateClientPaymentDto): Promise<{ payment: any; allocation: AllocationResult }> {
+    // Validation: Amount must be greater than 0
+    if (dto.amount <= 0) {
+      throw new Error('Payment amount must be greater than 0');
+    }
+
+    // Validation: If method is CHEQUE or BANK_TRANSFER, reference number is required
+    if (
+      (dto.method === PaymentMethod.CHEQUE || dto.method === PaymentMethod.BANK_TRANSFER) &&
+      (!dto.referenceNumber || dto.referenceNumber.trim().length === 0)
+    ) {
+      throw new Error('Reference number required for cheque or bank transfer');
+    }
+
+    // Verify client exists
+    const client = await this.prisma.client.findUnique({
+      where: { id: dto.clientId },
+    });
+
+    if (!client) {
+      throw new Error('Client not found');
+    }
+
+    // Create payment record
+    const payment = await this.prisma.payment.create({
+      data: {
+        clientId: dto.clientId,
+        paymentType: PaymentType.CLIENT,
+        amount: new Prisma.Decimal(dto.amount.toFixed(2)),
+        method: dto.method,
+        referenceNumber: dto.referenceNumber || null,
+        date: dto.date,
+        notes: dto.notes || null,
+        recordedBy: dto.recordedBy,
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+            balance: true,
+          },
+        },
+      },
+    });
+
+    logger.info('Client payment created', {
+      paymentId: payment.id,
+      clientId: dto.clientId,
+      clientName: client.name,
+      amount: dto.amount,
+      method: dto.method,
+      recordedBy: dto.recordedBy,
+    });
+
+    // Allocate payment to invoices using FIFO
+    const allocation = await this.allocationService.allocatePaymentToInvoices(
+      payment.id,
+      dto.clientId,
+      dto.amount
+    );
+
+    // Update client balance
+    await this.allocationService.updateClientBalance(dto.clientId, allocation.totalAllocated);
+
+    logger.info('Client payment allocated', {
+      paymentId: payment.id,
+      totalAllocated: allocation.totalAllocated,
+      overpayment: allocation.overpayment,
+      invoicesAllocated: allocation.allocations.length,
+    });
+
+    return { payment, allocation };
+  }
+
+  /**
+   * Get client payment history
+   */
+  async getClientPaymentHistory(clientId: string) {
+    return this.prisma.payment.findMany({
+      where: {
+        clientId,
+        paymentType: PaymentType.CLIENT,
+      },
+      include: {
+        allocations: {
+          include: {
+            invoice: {
+              select: {
+                invoiceNumber: true,
+                total: true,
+                paidAmount: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        date: 'desc',
+      },
+    });
+  }
+
+  /**
+   * Get outstanding invoices for a client
+   */
+  async getClientOutstandingInvoices(clientId: string) {
+    return this.allocationService.getOutstandingInvoices(clientId);
+  }
+
+  /**
+   * Get all client payments with optional client filter (Story 3.6)
+   */
+  async getAllClientPayments(clientId?: string) {
+    return this.prisma.payment.findMany({
+      where: {
+        paymentType: PaymentType.CLIENT,
+        ...(clientId && { clientId }),
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        allocations: {
+          include: {
+            invoice: {
+              select: {
+                invoiceNumber: true,
+                total: true,
+                paidAmount: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        date: 'desc',
+      },
+    });
   }
 }

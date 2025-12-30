@@ -137,4 +137,115 @@ export class PaymentsController {
       });
     }
   };
+
+  /**
+   * POST /api/payments/client
+   * Create a client payment (Story 3.6)
+   */
+  createClientPayment = async (req: AuthRequest, res: Response) => {
+    try {
+      const { clientId, amount, method, referenceNumber, date, notes } = req.body;
+
+      const result = await this.service.createClientPayment({
+        clientId,
+        amount: parseFloat(amount),
+        method: method as PaymentMethod,
+        referenceNumber,
+        date: new Date(date),
+        notes,
+        recordedBy: req.user!.userId,
+      });
+
+      // Audit log
+      await AuditService.log({
+        userId: req.user!.userId,
+        action: 'CREATE',
+        entityType: 'Payment',
+        entityId: result.payment.id,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        notes: `Client payment of ${amount} recorded for client ${clientId}. Allocated to ${result.allocation.allocations.length} invoice(s). Overpayment: ${result.allocation.overpayment}`,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: {
+          payment: result.payment,
+          allocation: result.allocation,
+        },
+        message: 'Client payment recorded and allocated successfully',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Failed to record client payment',
+      });
+    }
+  };
+
+  /**
+   * GET /api/payments/client/:clientId/history
+   * Get payment history for a specific client (Story 3.6)
+   */
+  getClientPaymentHistory = async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+
+      const payments = await this.service.getClientPaymentHistory(clientId);
+
+      res.status(200).json({
+        success: true,
+        data: payments,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to fetch client payment history',
+      });
+    }
+  };
+
+  /**
+   * GET /api/payments/client/:clientId/outstanding-invoices
+   * Get outstanding invoices for a client (Story 3.6)
+   */
+  getClientOutstandingInvoices = async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.params;
+
+      const invoices = await this.service.getClientOutstandingInvoices(clientId);
+
+      res.status(200).json({
+        success: true,
+        data: invoices,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to fetch outstanding invoices',
+      });
+    }
+  };
+
+  /**
+   * GET /api/payments/client
+   * Get all client payments with optional client filter (Story 3.6)
+   */
+  getAllClientPayments = async (req: Request, res: Response) => {
+    try {
+      const { clientId } = req.query;
+
+      const payments = await this.service.getAllClientPayments(clientId as string | undefined);
+
+      res.status(200).json({
+        success: true,
+        data: payments,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to fetch client payments',
+      });
+    }
+  };
 }

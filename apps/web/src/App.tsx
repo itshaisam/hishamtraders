@@ -26,7 +26,9 @@ import { AdjustmentHistoryPage } from './features/inventory/pages/AdjustmentHist
 import { AdjustmentApprovalPage } from './features/inventory/pages/AdjustmentApprovalPage';
 import StockMovementsPage from './features/inventory/pages/StockMovementsPage';
 import RecordSupplierPaymentPage from './features/payments/pages/RecordSupplierPaymentPage';
+import RecordClientPaymentPage from './features/payments/pages/RecordClientPaymentPage';
 import SupplierPaymentsPage from './features/payments/pages/SupplierPaymentsPage';
+import ClientPaymentsPage from './features/payments/pages/ClientPaymentsPage';
 import { ClientsPage } from './features/clients/pages/ClientsPage';
 import { ClientFormPage } from './features/clients/pages/ClientFormPage';
 import { ClientDetailPage } from './features/clients/pages/ClientDetailPage';
@@ -308,6 +310,40 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <SupplierPaymentsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Client Payments routes (Story 3.6) */}
+          <Route
+            path="/payments/client/record"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RecordClientPaymentPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/payments/client/record/:clientId"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RecordClientPaymentPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/payments/client/history"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ClientPaymentsPage />
                 </Layout>
               </ProtectedRoute>
             }

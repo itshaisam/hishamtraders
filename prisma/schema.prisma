@@ -558,11 +558,13 @@ enum PaymentMethod {
 model Payment {
   id                   String                 @id @default(cuid())
   supplierId           String?
+  clientId             String?                // Story 3.6: Client payment support
   paymentType          PaymentType
   paymentReferenceType PaymentReferenceType?
-  referenceId          String?                // PO ID or Invoice ID
+  referenceId          String?                // PO ID or Invoice ID (deprecated for client payments, use allocations)
   amount               Decimal                @db.Decimal(12, 2)
   method               PaymentMethod
+  referenceNumber      String?                // Story 3.6: Cheque/Bank transfer reference
   date                 DateTime
   notes                String?                @db.Text
   recordedBy           String
@@ -570,12 +572,31 @@ model Payment {
   createdAt            DateTime               @default(now())
 
   supplier             Supplier?              @relation(fields: [supplierId], references: [id])
+  client               Client?                @relation(fields: [clientId], references: [id])
   user                 User                   @relation("PaymentRecorder", fields: [recordedBy], references: [id])
+  allocations          PaymentAllocation[]    // Story 3.6: Payment allocation to invoices
 
   @@index([paymentType, paymentReferenceType, referenceId])
   @@index([supplierId])
+  @@index([clientId])
   @@index([date])
   @@map("payments")
+}
+
+// Story 3.6: Payment Allocation for Invoice Payments
+model PaymentAllocation {
+  id        String   @id @default(cuid())
+  paymentId String
+  invoiceId String
+  amount    Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now())
+
+  payment   Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+
+  @@index([paymentId])
+  @@index([invoiceId])
+  @@map("payment_allocations")
 }
 
 // ============================================================================
@@ -604,10 +625,11 @@ model Client {
   taxExempt       Boolean      @default(false)
   taxExemptReason String?      @db.Text
 
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
   invoices        Invoice[]
+  payments        Payment[]            // Story 3.6: Client payments
 
   @@map("clients")
 }
@@ -669,6 +691,7 @@ model Invoice {
   client        Client               @relation(fields: [clientId], references: [id])
   warehouse     Warehouse            @relation(fields: [warehouseId], references: [id])
   items         InvoiceItem[]
+  allocations   PaymentAllocation[]  // Story 3.6: Payment allocations
 
   @@index([clientId])
   @@index([warehouseId])

@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/api-client';
 import {
   CreateSupplierPaymentDto,
+  CreateClientPaymentDto,
   PaymentFilters,
   PaginatedPaymentsResponse,
   PaymentsResponse,
@@ -67,6 +68,40 @@ export const paymentsService = {
    */
   getPOBalance: async (poId: string): Promise<POBalanceResponse> => {
     const response = await apiClient.get(`/payments/po/${poId}/balance`);
+    return response.data;
+  },
+
+  /**
+   * Create a client payment (Story 3.6)
+   */
+  createClientPayment: async (data: CreateClientPaymentDto) => {
+    const response = await apiClient.post('/payments/client', data);
+    return response.data;
+  },
+
+  /**
+   * Get payment history for a specific client (Story 3.6)
+   */
+  getClientPaymentHistory: async (clientId: string): Promise<PaymentsResponse> => {
+    const response = await apiClient.get(`/payments/client/${clientId}/history`);
+    return response.data;
+  },
+
+  /**
+   * Get outstanding invoices for a client (Story 3.6)
+   */
+  getClientOutstandingInvoices: async (clientId: string) => {
+    const response = await apiClient.get(`/payments/client/${clientId}/outstanding-invoices`);
+    return response.data;
+  },
+
+  /**
+   * Get all client payments with optional client filter (Story 3.6)
+   */
+  getAllClientPayments: async (clientId?: string) => {
+    const response = await apiClient.get('/payments/client', {
+      params: clientId ? { clientId } : {},
+    });
     return response.data;
   },
 };

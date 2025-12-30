@@ -41,4 +41,36 @@ router.get('/supplier/:supplierId/history', controller.getSupplierPaymentHistory
  */
 router.get('/po/:poId/balance', controller.getPOBalance);
 
+/**
+ * GET /api/payments/client
+ * Get all client payments with optional client filter (Story 3.6)
+ * Access: All authenticated users
+ */
+router.get('/client', controller.getAllClientPayments);
+
+/**
+ * POST /api/payments/client
+ * Create a client payment (Story 3.6)
+ * Access: ACCOUNTANT, ADMIN
+ */
+router.post(
+  '/client',
+  requireRole(['ACCOUNTANT', 'ADMIN']),
+  controller.createClientPayment
+);
+
+/**
+ * GET /api/payments/client/:clientId/history
+ * Get payment history for a specific client (Story 3.6)
+ * Access: All authenticated users
+ */
+router.get('/client/:clientId/history', controller.getClientPaymentHistory);
+
+/**
+ * GET /api/payments/client/:clientId/outstanding-invoices
+ * Get outstanding invoices for a client (Story 3.6)
+ * Access: All authenticated users
+ */
+router.get('/client/:clientId/outstanding-invoices', controller.getClientOutstandingInvoices);
+
 export { router as paymentsRoutes };

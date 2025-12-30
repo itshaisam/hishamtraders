@@ -310,14 +310,20 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
             </button>
             {isMenuExpanded('payments') && !isCollapsed && (
               <div className="ml-6 mt-1 space-y-1">
-                <Link
-                  to="/client-payments"
-                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
-                >
-                  Client Payments
-                </Link>
                 {hasRole(['ADMIN', 'ACCOUNTANT']) && (
                   <>
+                    <Link
+                      to="/payments/client/record"
+                      className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                    >
+                      Record Client Payment
+                    </Link>
+                    <Link
+                      to="/payments/client/history"
+                      className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                    >
+                      Client Payment History
+                    </Link>
                     <Link
                       to="/payments/supplier/record"
                       className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"

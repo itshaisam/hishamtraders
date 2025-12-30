@@ -1,8 +1,9 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { ClientForm } from '../components/ClientForm';
 import { CreditUtilizationDisplay } from '../components/CreditUtilizationDisplay';
+import { ClientPaymentHistory } from '../components/ClientPaymentHistory';
 import { useClient, useUpdateClient } from '../../../hooks/useClients';
 import { Button, Breadcrumbs } from '../../../components/ui';
 
@@ -97,6 +98,23 @@ export const ClientDetailPage: React.FC = () => {
           <div className="lg:col-span-2 bg-white rounded-lg shadow p-6 md:p-8">
             <ClientForm client={client} onSubmit={handleSubmit} isLoading={isUpdating} />
           </div>
+        </div>
+
+        {/* Payment History Section - Story 3.6 Task 12 */}
+        <hr className="my-6 border-gray-200" />
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Recent Payments</h2>
+            <Link
+              to={`/payments/client/record/${id}`}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Record Payment
+            </Link>
+          </div>
+          <ClientPaymentHistory clientId={id!} />
         </div>
       </div>
     </div>
