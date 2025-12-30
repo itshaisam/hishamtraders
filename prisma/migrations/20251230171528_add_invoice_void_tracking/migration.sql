@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE `invoices` ADD COLUMN `voidReason` TEXT NULL,
+    ADD COLUMN `voidedAt` DATETIME(3) NULL,
+    ADD COLUMN `voidedBy` VARCHAR(191) NULL,
+    MODIFY `status` ENUM('PENDING', 'PARTIAL', 'PAID', 'OVERDUE', 'CANCELLED', 'VOIDED') NOT NULL DEFAULT 'PENDING';
+
+-- AddForeignKey
+ALTER TABLE `invoices` ADD CONSTRAINT `invoices_voidedBy_fkey` FOREIGN KEY (`voidedBy`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

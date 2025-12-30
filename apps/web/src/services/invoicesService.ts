@@ -45,4 +45,15 @@ export const invoicesService = {
     const response = await apiClient.post<{ data: Invoice }>(BASE_URL, data);
     return response.data.data;
   },
+
+  /**
+   * Void an invoice (Story 3.4)
+   */
+  voidInvoice: async (invoiceId: string, reason: string): Promise<Invoice> => {
+    const response = await apiClient.patch<{ data: Invoice }>(
+      `${BASE_URL}/${invoiceId}/void`,
+      { reason }
+    );
+    return response.data.data;
+  },
 };

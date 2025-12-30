@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import { InvoicesService } from './invoices.service.js';
 import { createInvoiceSchema } from './dto/create-invoice.dto.js';
 import { invoiceFilterSchema } from './dto/invoice-filter.dto.js';
+import { voidInvoiceSchema } from './dto/void-invoice.dto.js';
+import { UnauthorizedError } from '../../utils/errors.js';
 import logger from '../../lib/logger.js';
 
 const prisma = new PrismaClient();
@@ -99,6 +101,41 @@ export class InvoicesController {
       res.json({
         status: 'success',
         data: invoice,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * Void an invoice
+   * PATCH /api/v1/invoices/:id/void
+   * Story 3.4: Invoice Voiding and Stock Reversal
+   */
+  voidInvoice = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const userId = (req as any).user?.userId;
+
+      if (!userId) {
+        throw new UnauthorizedError('User not authenticated');
+      }
+
+      // Validate DTO
+      const dto = voidInvoiceSchema.parse(req.body);
+
+      const voidedInvoice = await this.service.voidInvoice(id, userId, dto);
+
+      logger.info('Invoice voided via API', {
+        invoiceId: id,
+        userId,
+        reason: dto.reason,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: voidedInvoice,
+        message: 'Invoice voided successfully',
       });
     } catch (error) {
       next(error);

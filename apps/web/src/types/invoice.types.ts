@@ -4,6 +4,7 @@ export enum InvoiceStatus {
   PAID = 'PAID',
   OVERDUE = 'OVERDUE',
   CANCELLED = 'CANCELLED',
+  VOIDED = 'VOIDED', // Story 3.4: Invoice voiding
 }
 
 export enum InvoicePaymentType {
@@ -47,6 +48,10 @@ export interface Invoice {
   paidAmount: number;
   status: InvoiceStatus;
   notes?: string | null;
+  // Story 3.4: Void tracking
+  voidedAt?: string | null;
+  voidedBy?: string | null;
+  voidReason?: string | null;
   createdAt: string;
   updatedAt: string;
   client: {
@@ -59,6 +64,11 @@ export interface Invoice {
     name: string;
   };
   items: InvoiceItem[];
+  voider?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
 }
 
 export interface CreateInvoiceItemDto {

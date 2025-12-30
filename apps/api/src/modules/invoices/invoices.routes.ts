@@ -22,6 +22,16 @@ router.get('/', controller.getInvoices);
 router.get('/:id', controller.getInvoiceById);
 
 /**
+ * Void an invoice (Story 3.4)
+ * Accessible by: ADMIN, ACCOUNTANT only
+ */
+router.patch(
+  '/:id/void',
+  requireRole(['ADMIN', 'ACCOUNTANT']),
+  controller.voidInvoice
+);
+
+/**
  * Create invoice
  * Accessible by: SALES_OFFICER, ACCOUNTANT, ADMIN
  */

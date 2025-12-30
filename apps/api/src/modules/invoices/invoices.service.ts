@@ -4,8 +4,10 @@ import { InvoicesRepository } from './invoices.repository.js';
 import { SettingsService } from '../settings/settings.service.js';
 import { FifoDeductionService } from '../inventory/fifo-deduction.service.js';
 import { CreditLimitService } from '../clients/credit-limit.service.js';
+import { StockReversalService } from './stock-reversal.service.js';
 import { CreateInvoiceDto, validateCreateInvoice } from './dto/create-invoice.dto.js';
 import { InvoiceFilterDto } from './dto/invoice-filter.dto.js';
+import { VoidInvoiceDto } from './dto/void-invoice.dto.js';
 import { generateInvoiceNumber } from '../../utils/invoice-number.util.js';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../utils/errors.js';
 import logger from '../../lib/logger.js';
@@ -15,12 +17,14 @@ export class InvoicesService {
   private settingsService: SettingsService;
   private fifoService: FifoDeductionService;
   private creditLimitService: CreditLimitService;
+  private stockReversalService: StockReversalService;
 
   constructor(private prisma: PrismaClient) {
     this.repository = new InvoicesRepository(prisma);
     this.settingsService = new SettingsService(prisma);
     this.fifoService = new FifoDeductionService(prisma);
     this.creditLimitService = new CreditLimitService(prisma);
+    this.stockReversalService = new StockReversalService(prisma);
   }
 
   /**
@@ -332,5 +336,104 @@ export class InvoicesService {
       throw new NotFoundError('Invoice not found');
     }
     return invoice;
+  }
+
+  /**
+   * Void an invoice and reverse stock deductions
+   * Story 3.4: Invoice Voiding and Stock Reversal
+   */
+  async voidInvoice(invoiceId: string, userId: string, dto: VoidInvoiceDto) {
+    // Validate invoice exists
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      include: {
+        items: true,
+        client: true,
+      },
+    });
+
+    if (!invoice) {
+      throw new NotFoundError('Invoice not found');
+    }
+
+    // Validate not already voided
+    if (invoice.status === 'VOIDED') {
+      throw new BadRequestError('Invoice is already voided');
+    }
+
+    // Validate no payments recorded
+    const hasPayments = await this.prisma.paymentAllocation.count({
+      where: { invoiceId },
+    });
+
+    if (hasPayments > 0) {
+      throw new BadRequestError(
+        'Cannot void invoice with recorded payments. Please void payments first.'
+      );
+    }
+
+    // Validate status is PENDING
+    if (invoice.status !== 'PENDING') {
+      throw new BadRequestError('Can only void invoices with PENDING status');
+    }
+
+    // Execute void operation in transaction
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Reverse stock
+      await this.stockReversalService.reverseInvoiceStock(invoiceId, userId, tx);
+
+      // 2. Update client balance (CREDIT invoices only)
+      if (invoice.paymentType === 'CREDIT') {
+        const currentBalance = parseFloat(invoice.client.balance.toString());
+        const invoiceTotal = parseFloat(invoice.total.toString());
+        const newBalance = Math.max(0, currentBalance - invoiceTotal);
+
+        await tx.client.update({
+          where: { id: invoice.clientId },
+          data: { balance: new Prisma.Decimal(newBalance.toFixed(2)) },
+        });
+
+        logger.info('Client balance updated for voided invoice', {
+          clientId: invoice.clientId,
+          oldBalance: currentBalance,
+          newBalance,
+          reduction: invoiceTotal,
+        });
+      }
+
+      // 3. Update invoice status
+      const voidedInvoice = await tx.invoice.update({
+        where: { id: invoiceId },
+        data: {
+          status: 'VOIDED',
+          voidedAt: new Date(),
+          voidedBy: userId,
+          voidReason: dto.reason,
+        },
+        include: {
+          client: true,
+          items: true,
+          warehouse: true,
+          voider: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      // 4. Log audit
+      logger.info('Invoice voided successfully', {
+        invoiceId,
+        invoiceNumber: invoice.invoiceNumber,
+        userId,
+        reason: dto.reason,
+        itemsReversed: invoice.items.length,
+      });
+
+      return voidedInvoice;
+    });
   }
 }

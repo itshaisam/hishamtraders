@@ -505,6 +505,7 @@ model User {
   createdAdjustments  StockAdjustment[] @relation("AdjustmentCreator")
   reviewedAdjustments StockAdjustment[] @relation("AdjustmentReviewer")
   payments            Payment[]         @relation("PaymentRecorder")
+  voidedInvoices      Invoice[]         @relation("VoidedInvoices")  // Story 3.4
 
   @@index([email])
   @@index([roleId])
@@ -662,6 +663,7 @@ enum InvoiceStatus {
   PAID
   OVERDUE
   CANCELLED
+  VOIDED  // Story 3.4: Invoice voiding
 }
 
 enum InvoicePaymentType {
@@ -685,11 +687,17 @@ model Invoice {
   status        InvoiceStatus        @default(PENDING)
   notes         String?              @db.Text
 
+  // Story 3.4: Void tracking
+  voidedAt      DateTime?
+  voidedBy      String?
+  voidReason    String?              @db.Text
+
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
 
   client        Client               @relation(fields: [clientId], references: [id])
   warehouse     Warehouse            @relation(fields: [warehouseId], references: [id])
+  voider        User?                @relation("VoidedInvoices", fields: [voidedBy], references: [id])
   items         InvoiceItem[]
   allocations   PaymentAllocation[]  // Story 3.6: Payment allocations
 

@@ -52,3 +52,26 @@ export const useCreateInvoice = () => {
     },
   });
 };
+
+/**
+ * Hook to void an invoice (Story 3.4)
+ */
+export const useVoidInvoice = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ invoiceId, reason }: { invoiceId: string; reason: string }) =>
+      invoicesService.voidInvoice(invoiceId, reason),
+    onSuccess: (invoice, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoice', variables.invoiceId] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      toast.success(`Invoice ${invoice.invoiceNumber} voided successfully`);
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to void invoice';
+      toast.error(message);
+    },
+  });
+};
