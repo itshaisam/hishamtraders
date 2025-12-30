@@ -1,12 +1,59 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
-import { useInvoiceById } from '../../../hooks/useInvoices';
+import { useInvoiceById, useVoidInvoice, useInvoices } from '../../../hooks/useInvoices';
+import { VoidInvoiceModal } from '../components/VoidInvoiceModal';
+import { useAuthStore } from '../../../stores/auth.store';
 
 export function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: invoice, isLoading, error } = useInvoiceById(id!);
+  const { user } = useAuthStore();
+  const voidMutation = useVoidInvoice();
+  const [showVoidModal, setShowVoidModal] = useState(false);
+
+  // Check if user can void this invoice
+  const canVoid =
+    invoice?.status === 'PENDING' &&
+    (user?.role?.name === 'ADMIN' || user?.role?.name === 'ACCOUNTANT');
+
+  const handleVoidConfirm = (reason: string) => {
+    if (!id) return;
+    voidMutation.mutate(
+      { invoiceId: id, reason },
+      {
+        onSuccess: () => {
+          setShowVoidModal(false);
+        },
+      }
+    );
+  };
+
+  // Fetch all invoices for this client (for credit history)
+  const { data: clientInvoicesData } = useInvoices(
+    invoice?.clientId ? { clientId: invoice.clientId, limit: 1000 } : undefined
+  );
+
+  // Calculate credit history totals
+  const creditHistory = useMemo(() => {
+    if (!clientInvoicesData?.data) return null;
+
+    // Filter out VOIDED invoices from totals
+    const activeInvoices = clientInvoicesData.data.filter(inv => inv.status !== 'VOIDED');
+
+    const totalCredit = activeInvoices.reduce((sum, inv) => sum + Number(inv.total), 0);
+    const totalPaid = activeInvoices.reduce((sum, inv) => sum + Number(inv.paidAmount), 0);
+    const outstandingBalance = totalCredit - totalPaid;
+
+    return {
+      invoices: clientInvoicesData.data, // Include all for display (including voided with strikethrough)
+      totalCredit,
+      totalPaid,
+      outstandingBalance,
+    };
+  }, [clientInvoicesData]);
 
   if (isLoading) {
     return (
@@ -36,6 +83,8 @@ export function InvoiceDetailPage() {
         return 'bg-red-100 text-red-800';
       case 'CANCELLED':
         return 'bg-gray-100 text-gray-800';
+      case 'VOIDED':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -53,18 +102,45 @@ export function InvoiceDetailPage() {
         </button>
       </div>
 
+      {/* Voided Alert */}
+      {invoice?.status === 'VOIDED' && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <h4 className="font-semibold text-red-900 mb-2">Invoice Voided</h4>
+          <div className="text-sm text-red-700 space-y-1">
+            <div>Voided on: {format(new Date(invoice.voidedAt!), 'PPP')}</div>
+            {invoice.voider && <div>Voided by: {invoice.voider.name}</div>}
+            <div className="mt-2">
+              <strong>Reason:</strong> {invoice.voidReason}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{invoice.invoiceNumber}</h1>
+            <h1 className={`text-3xl font-bold mb-2 ${invoice.status === 'VOIDED' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+              {invoice.invoiceNumber}
+            </h1>
             <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusBadgeColor(invoice.status)}`}>
               {invoice.status}
             </span>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-600">Created</p>
-            <p className="text-sm font-medium">{format(new Date(invoice.createdAt), 'dd MMM yyyy, HH:mm')}</p>
+          <div className="flex items-center gap-3">
+            {canVoid && (
+              <button
+                onClick={() => setShowVoidModal(true)}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
+              >
+                <XCircle className="h-4 w-4" />
+                Void Invoice
+              </button>
+            )}
+            <div className="text-right">
+              <p className="text-sm text-gray-600">Created</p>
+              <p className="text-sm font-medium">{format(new Date(invoice.createdAt), 'dd MMM yyyy, HH:mm')}</p>
+            </div>
           </div>
         </div>
 
@@ -204,6 +280,114 @@ export function InvoiceDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Client Credit History Section - For PDF/Print */}
+      {creditHistory && (
+        <div className="bg-white rounded-lg shadow p-6 mt-6">
+          <h2 className="text-xl font-semibold mb-4 border-b pb-2">
+            Client Credit History - {invoice.client.name}
+          </h2>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-600 mb-1">Total Credit</p>
+              <p className="text-2xl font-bold text-blue-900">
+                PKR {creditHistory.totalCredit.toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-600 mb-1">Total Paid</p>
+              <p className="text-2xl font-bold text-green-900">
+                PKR {creditHistory.totalPaid.toLocaleString()}
+              </p>
+            </div>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-600 mb-1">Outstanding Balance</p>
+              <p className="text-2xl font-bold text-red-900">
+                PKR {creditHistory.outstandingBalance.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          {/* Invoice Breakdown Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="text-left py-2 px-3">Invoice #</th>
+                  <th className="text-left py-2 px-3">Date</th>
+                  <th className="text-right py-2 px-3">Total</th>
+                  <th className="text-right py-2 px-3">Paid</th>
+                  <th className="text-right py-2 px-3">Balance</th>
+                  <th className="text-left py-2 px-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {creditHistory.invoices.map((inv) => (
+                  <tr
+                    key={inv.id}
+                    className={`${inv.id === invoice.id ? 'bg-yellow-50' : ''} ${
+                      inv.status === 'VOIDED' ? 'opacity-60' : ''
+                    }`}
+                  >
+                    <td className={`py-2 px-3 font-medium ${inv.status === 'VOIDED' ? 'line-through' : ''}`}>
+                      {inv.invoiceNumber}
+                    </td>
+                    <td className="py-2 px-3">
+                      {format(new Date(inv.invoiceDate), 'dd MMM yyyy')}
+                    </td>
+                    <td className="py-2 px-3 text-right">
+                      PKR {Number(inv.total).toLocaleString()}
+                    </td>
+                    <td className="py-2 px-3 text-right text-green-600">
+                      PKR {Number(inv.paidAmount).toLocaleString()}
+                    </td>
+                    <td className="py-2 px-3 text-right text-red-600">
+                      PKR {(Number(inv.total) - Number(inv.paidAmount)).toLocaleString()}
+                    </td>
+                    <td className="py-2 px-3">
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeColor(inv.status)}`}
+                      >
+                        {inv.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-gray-50 border-t-2 font-bold">
+                <tr>
+                  <td colSpan={2} className="py-2 px-3">
+                    TOTALS (excluding voided)
+                  </td>
+                  <td className="py-2 px-3 text-right">
+                    PKR {creditHistory.totalCredit.toLocaleString()}
+                  </td>
+                  <td className="py-2 px-3 text-right text-green-600">
+                    PKR {creditHistory.totalPaid.toLocaleString()}
+                  </td>
+                  <td className="py-2 px-3 text-right text-red-600">
+                    PKR {creditHistory.outstandingBalance.toLocaleString()}
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Void Invoice Modal */}
+      {showVoidModal && invoice && (
+        <VoidInvoiceModal
+          invoice={invoice}
+          isOpen={showVoidModal}
+          onClose={() => setShowVoidModal(false)}
+          onConfirm={handleVoidConfirm}
+          isLoading={voidMutation.isPending}
+        />
+      )}
     </div>
   );
 }

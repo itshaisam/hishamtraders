@@ -49,6 +49,8 @@ export function InvoicesPage() {
         return 'bg-red-100 text-red-800';
       case 'CANCELLED':
         return 'bg-gray-100 text-gray-800';
+      case 'VOIDED':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -124,6 +126,7 @@ export function InvoicesPage() {
               <option value="PAID">Paid</option>
               <option value="OVERDUE">Overdue</option>
               <option value="CANCELLED">Cancelled</option>
+              <option value="VOIDED">Voided</option>
             </select>
           </div>
 
