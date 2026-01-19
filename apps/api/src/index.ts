@@ -23,6 +23,7 @@ import { clientRoutes } from './modules/clients/clients.routes.js';
 import { invoiceRoutes } from './modules/invoices/invoices.routes.js';
 import { reportsRoutes } from './modules/reports/reports.routes.js';
 import { settingsRoutes } from './modules/settings/settings.routes.js';
+import { expenseRoutes } from './modules/expenses/expenses.routes';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
@@ -83,6 +84,7 @@ app.use('/api/v1/clients', clientRoutes);
 app.use('/api/v1/invoices', invoiceRoutes);
 app.use('/api/v1/reports', reportsRoutes);
 app.use('/api/v1/settings', settingsRoutes);
+app.use('/api/v1/expenses', expenseRoutes);
 app.use('/api/v1', dashboardRoutes);
 
 // 404 handler (must be after all routes)

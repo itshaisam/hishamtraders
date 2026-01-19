@@ -15,4 +15,7 @@ router.get('/credit-limits/summary', controller.getCreditLimitSummary);
 // Tax reports (Story 3.5)
 router.get('/tax-summary', controller.getTaxSummary);
 
+// Expense reports (Story 3.7)
+router.get('/expense-summary', controller.getExpenseSummary);
+
 export { router as reportsRoutes };

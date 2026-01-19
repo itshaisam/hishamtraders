@@ -349,6 +349,21 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
           </div>
         )}
 
+        {/* Expenses (Admin & Accountant) */}
+        {(isAdmin() || hasRole(['ACCOUNTANT'])) && (
+          <Link
+            to="/expenses"
+            className={`mt-2 flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+              isActive('/expenses')
+                ? 'bg-blue-50 text-blue-600'
+                : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <DollarSign size={20} />
+            {!isCollapsed && <span className="text-sm font-medium">Expenses</span>}
+          </Link>
+        )}
+
         {/* Reports */}
         <Link
           to="/reports"

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { CreditLimitReportService } from './credit-limit-report.service.js';
+import { expenseService } from '../expenses/expenses.service';
 import logger from '../../lib/logger.js';
 
 const prisma = new PrismaClient();
@@ -81,6 +82,37 @@ export class ReportsController {
         dateFrom,
         dateTo,
         totalTax: summary.totalTaxCollected,
+        userId: req.user?.id,
+      });
+
+      res.json({
+        success: true,
+        data: summary,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * GET /api/reports/expense-summary
+   * Get expense summary grouped by category for a date range (Story 3.7)
+   */
+  getExpenseSummary = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dateFrom = req.query.dateFrom
+        ? new Date(req.query.dateFrom as string)
+        : new Date(new Date().getFullYear(), 0, 1); // Default: start of current year
+      const dateTo = req.query.dateTo
+        ? new Date(req.query.dateTo as string)
+        : new Date(); // Default: today
+
+      const summary = await expenseService.getExpenseSummary(dateFrom, dateTo);
+
+      logger.info('Expense summary report generated', {
+        dateFrom,
+        dateTo,
+        totalExpenses: summary.totalExpenses,
         userId: req.user?.id,
       });
 

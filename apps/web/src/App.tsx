@@ -35,6 +35,7 @@ import { ClientDetailPage } from './features/clients/pages/ClientDetailPage';
 import { InvoicesPage } from './features/invoices/pages/InvoicesPage';
 import { CreateInvoicePage } from './features/invoices/pages/CreateInvoicePage';
 import { InvoiceDetailPage } from './features/invoices/pages/InvoiceDetailPage';
+import { ExpensesPage } from './features/expenses/pages/ExpensesPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -412,6 +413,18 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <InvoiceDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Expenses route */}
+          <Route
+            path="/expenses"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ExpensesPage />
                 </Layout>
               </ProtectedRoute>
             }
