@@ -1,86 +1,146 @@
 version: '3.8'
 
 services:
+  # ============================================================================
   # MySQL Database Service
+  # Persistent storage for all ERP data
+  # ============================================================================
   mysql:
     image: mysql:8.0
-    container_name: hisham_mysql
+    container_name: hisham_mysql_prod
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-hisham_erp}
-      MYSQL_USER: ${MYSQL_USER:-hisham_user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-hisham_password}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Karachi
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./docker/mysql-init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_backups:/backups
+      - ./docker/mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --max-connections=200
+      --innodb-buffer-pool-size=2G
+      --innodb-log-file-size=512M
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 40s
     networks:
       - hisham-network
 
-  # Node.js API Service
+  # ============================================================================
+  # Node.js API Service (Express + Prisma)
+  # Backend application server
+  # ============================================================================
   api:
     build:
       context: .
-      dockerfile: apps/api/Dockerfile
-    container_name: hisham_api
+      dockerfile: apps/api/Dockerfile.production
+      args:
+        NODE_ENV: production
+    container_name: hisham_api_prod
+    restart: unless-stopped
     ports:
       - "3001:3001"
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: mysql://hisham_user:hisham_password@mysql:3306/hisham_erp
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
-      JWT_EXPIRES_IN: 24h
-      LOG_LEVEL: debug
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-hisham_erp}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      TZ: Asia/Karachi
     depends_on:
       mysql:
         condition: service_healthy
-    volumes:
-      - ./apps/api/src:/app/apps/api/src
-      - ./prisma:/app/prisma
-    command: sh -c "pnpm run prisma:migrate && pnpm -F @hishamtraders/api dev"
     networks:
       - hisham-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
 
-  # React Frontend Service
+  # ============================================================================
+  # React Frontend Service (Nginx + Static Assets)
+  # Client-side web application
+  # ============================================================================
   web:
     build:
       context: .
-      dockerfile: apps/web/Dockerfile
-    container_name: hisham_web
+      dockerfile: apps/web/Dockerfile.production
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: hisham_web_prod
+    restart: unless-stopped
     ports:
-      - "5173:5173"
+      - "80:80"
     environment:
-      NODE_ENV: development
-      VITE_API_URL: http://localhost:3001/api/v1
+      TZ: Asia/Karachi
     depends_on:
-      - api
-    volumes:
-      - ./apps/web/src:/app/apps/web/src
-      - ./apps/web/public:/app/apps/web/public
+      api:
+        condition: service_healthy
     networks:
       - hisham-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5173/"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 20s
 
+  # ============================================================================
+  # MySQL Backup Service
+  # Automated daily backups with retention policy
+  # ============================================================================
+  backup:
+    image: mysql:8.0
+    container_name: hisham_backup_prod
+    restart: unless-stopped
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-hisham_erp}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+    volumes:
+      - mysql_backups:/backups
+      - ./scripts/backup-mysql.sh:/backup-mysql.sh:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - hisham-network
+    entrypoint: /bin/bash
+    command: >
+      -c "
+      echo '0 2 * * * /backup-mysql.sh >> /var/log/backup.log 2>&1' | crontab -
+      && echo 'Backup cron job installed - Daily at 2 AM'
+      && crond -f -l 2
+      "
+
+# ============================================================================
+# Named Volumes for Data Persistence
+# ============================================================================
 volumes:
   mysql_data:
     driver: local
+  mysql_backups:
+    driver: local
 
+# ============================================================================
+# Internal Network for Container Communication
+# ============================================================================
 networks:
   hisham-network:
     driver: bridge
