@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ClientService, CreateClientDto, UpdateClientDto } from './clients.service';
+import { ClientService, CreateClientDto, UpdateClientDto } from './clients.service.js';
 import { ClientStatus } from '@prisma/client';
 
 export class ClientController {

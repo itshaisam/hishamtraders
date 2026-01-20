@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { expenseService } from './expenses.service';
-import { expenseRepository } from './expenses.repository';
-import { auditLogger } from '../audit/audit.service';
+import { expenseService } from './expenses.service.js';
+import { expenseRepository } from './expenses.repository.js';
+import { auditLogger } from '../audit/audit.service.js';
 import { ExpenseCategory, PaymentMethod } from '@prisma/client';
-import { BadRequestError, NotFoundError } from '../../shared/errors';
+import { BadRequestError, NotFoundError } from '../../shared/errors.js';
 
 // Mock dependencies
 vi.mock('./expenses.repository');

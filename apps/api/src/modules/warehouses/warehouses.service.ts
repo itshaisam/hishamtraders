@@ -1,9 +1,9 @@
 import { Warehouse, WarehouseStatus } from '@prisma/client';
-import { WarehousesRepository } from './warehouses.repository';
-import { CreateWarehouseDto } from './dto/create-warehouse.dto';
-import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
-import { NotFoundError, BadRequestError } from '../../utils/errors';
-import logger from '../../lib/logger';
+import { WarehousesRepository } from './warehouses.repository.js';
+import { CreateWarehouseDto } from './dto/create-warehouse.dto.js';
+import { UpdateWarehouseDto } from './dto/update-warehouse.dto.js';
+import { NotFoundError, BadRequestError } from '../../utils/errors.js';
+import logger from '../../lib/logger.js';
 
 export class WarehousesService {
   private repository: WarehousesRepository;

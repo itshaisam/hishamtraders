@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { CreditLimitReportService } from './credit-limit-report.service.js';
-import { expenseService } from '../expenses/expenses.service';
+import { expenseService } from '../expenses/expenses.service.js';
 import logger from '../../lib/logger.js';
 
 const prisma = new PrismaClient();

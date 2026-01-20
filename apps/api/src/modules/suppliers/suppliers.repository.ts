@@ -1,6 +1,6 @@
 import { PrismaClient, Supplier, SupplierStatus } from '@prisma/client';
-import { CreateSupplierDto } from './dto/create-supplier.dto';
-import { UpdateSupplierDto } from './dto/update-supplier.dto';
+import { CreateSupplierDto } from './dto/create-supplier.dto.js';
+import { UpdateSupplierDto } from './dto/update-supplier.dto.js';
 
 const prisma = new PrismaClient();
 

@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { InventoryRepository } from './inventory.repository';
+import { InventoryRepository } from './inventory.repository.js';
 
 const prisma = new PrismaClient();
 

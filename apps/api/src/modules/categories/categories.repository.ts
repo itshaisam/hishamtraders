@@ -1,7 +1,7 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '../../lib/prisma.js';
 import { ProductCategory } from '@prisma/client';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CreateCategoryDto } from './dto/create-category.dto.js';
+import { UpdateCategoryDto } from './dto/update-category.dto.js';
 
 export class CategoriesRepository {
   async findAll(): Promise<ProductCategory[]> {

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../../lib/logger.js';
-import { countriesService } from './countries.service';
+import { countriesService } from './countries.service.js';
 
 export class CountriesController {
   async getAll(req: Request, res: Response, next: NextFunction) {

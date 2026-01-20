@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../../lib/logger.js';
-import { createProductSchema } from './dto/create-product.dto';
-import { updateProductSchema } from './dto/update-product.dto';
-import { productFilterSchema } from './dto/product-filter.dto';
-import { productsService } from './products.service';
+import { createProductSchema } from './dto/create-product.dto.js';
+import { updateProductSchema } from './dto/update-product.dto.js';
+import { productFilterSchema } from './dto/product-filter.dto.js';
+import { productsService } from './products.service.js';
 
 export class ProductsController {
   async create(req: Request, res: Response, next: NextFunction) {

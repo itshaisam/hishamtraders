@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { StockMovementService } from './stock-movement.service';
+import { StockMovementService } from './stock-movement.service.js';
 import { MovementType } from '@prisma/client';
 
 export class StockMovementController {

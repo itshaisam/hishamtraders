@@ -1,7 +1,7 @@
 import { PrismaClient, ProductVariant, VariantStatus, Prisma } from '@prisma/client';
-import { CreateVariantDto } from './dto/create-variant.dto';
-import { UpdateVariantDto } from './dto/update-variant.dto';
-import { VariantFilterDto } from './dto/variant-filter.dto';
+import { CreateVariantDto } from './dto/create-variant.dto.js';
+import { UpdateVariantDto } from './dto/update-variant.dto.js';
+import { VariantFilterDto } from './dto/variant-filter.dto.js';
 
 const prisma = new PrismaClient();
 

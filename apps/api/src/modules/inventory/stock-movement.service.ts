@@ -3,7 +3,7 @@ import {
   StockMovementRepository,
   StockMovementFilters,
   PaginatedStockMovements,
-} from './stock-movement.repository';
+} from './stock-movement.repository.js';
 
 export interface MovementWithBalance {
   id: string;

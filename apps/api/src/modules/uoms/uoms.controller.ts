@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { createUomSchema } from './dto/create-uom.dto';
-import { updateUomSchema } from './dto/update-uom.dto';
-import { uomsService } from './uoms.service';
+import { createUomSchema } from './dto/create-uom.dto.js';
+import { updateUomSchema } from './dto/update-uom.dto.js';
+import { uomsService } from './uoms.service.js';
 
 export class UomsController {
   async create(req: Request, res: Response, next: NextFunction) {

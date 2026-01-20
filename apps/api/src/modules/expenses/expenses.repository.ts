@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '../../lib/prisma.js';
 import { Expense, ExpenseCategory, Prisma } from '@prisma/client';
 
 export interface ExpenseFilters {

@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../../lib/logger.js';
-import { BadRequestError, ValidationError } from '../../utils/errors';
-import { createSupplierSchema } from './dto/create-supplier.dto';
-import { updateSupplierSchema } from './dto/update-supplier.dto';
-import { supplierFilterSchema } from './dto/supplier-filter.dto';
-import { suppliersService } from './suppliers.service';
+import { BadRequestError, ValidationError } from '../../utils/errors.js';
+import { createSupplierSchema } from './dto/create-supplier.dto.js';
+import { updateSupplierSchema } from './dto/update-supplier.dto.js';
+import { supplierFilterSchema } from './dto/supplier-filter.dto.js';
+import { suppliersService } from './suppliers.service.js';
 
 export class SuppliersController {
   async create(req: Request, res: Response, next: NextFunction) {

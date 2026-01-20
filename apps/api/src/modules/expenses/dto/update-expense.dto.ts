@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createExpenseSchema } from './create-expense.dto';
+import { createExpenseSchema } from './create-expense.dto.js';
 
 export const updateExpenseSchema = createExpenseSchema.partial();
 

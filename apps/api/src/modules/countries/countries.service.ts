@@ -1,6 +1,6 @@
 import logger from '../../lib/logger.js';
-import { NotFoundError } from '../../utils/errors';
-import { countriesRepository } from './countries.repository';
+import { NotFoundError } from '../../utils/errors.js';
+import { countriesRepository } from './countries.repository.js';
 import { Country } from '@prisma/client';
 
 export class CountriesService {

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { WarehousesService } from './warehouses.service';
-import { createWarehouseSchema } from './dto/create-warehouse.dto';
-import { updateWarehouseSchema } from './dto/update-warehouse.dto';
+import { WarehousesService } from './warehouses.service.js';
+import { createWarehouseSchema } from './dto/create-warehouse.dto.js';
+import { updateWarehouseSchema } from './dto/update-warehouse.dto.js';
 import { WarehouseStatus } from '@prisma/client';
 
 export class WarehousesController {

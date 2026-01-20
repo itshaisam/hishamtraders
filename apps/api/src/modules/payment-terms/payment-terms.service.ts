@@ -1,6 +1,6 @@
 import logger from '../../lib/logger.js';
-import { NotFoundError } from '../../utils/errors';
-import { paymentTermsRepository } from './payment-terms.repository';
+import { NotFoundError } from '../../utils/errors.js';
+import { paymentTermsRepository } from './payment-terms.repository.js';
 import { PaymentTerm } from '@prisma/client';
 
 export class PaymentTermsService {

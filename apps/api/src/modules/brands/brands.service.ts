@@ -1,8 +1,8 @@
 import logger from '../../lib/logger.js';
-import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors';
-import { CreateBrandDto } from './dto/create-brand.dto';
-import { UpdateBrandDto } from './dto/update-brand.dto';
-import { brandsRepository } from './brands.repository';
+import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors.js';
+import { CreateBrandDto } from './dto/create-brand.dto.js';
+import { UpdateBrandDto } from './dto/update-brand.dto.js';
+import { brandsRepository } from './brands.repository.js';
 import { Brand } from '@prisma/client';
 
 export class BrandsService {

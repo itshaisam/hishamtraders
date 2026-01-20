@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PrismaClient } from '@prisma/client';
-import { CreditLimitService } from './credit-limit.service';
-import { NotFoundError } from '../../utils/errors';
+import { CreditLimitService } from './credit-limit.service.js';
+import { NotFoundError } from '../../utils/errors.js';
 
 // Mock Prisma
 vi.mock('@prisma/client', () => ({

@@ -1,6 +1,6 @@
 import { PrismaClient, Product, ProductStatus } from '@prisma/client';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateProductDto } from './dto/create-product.dto.js';
+import { UpdateProductDto } from './dto/update-product.dto.js';
 
 const prisma = new PrismaClient();
 

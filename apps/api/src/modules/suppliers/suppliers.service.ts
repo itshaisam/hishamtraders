@@ -1,8 +1,8 @@
 import logger from '../../lib/logger.js';
-import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors';
-import { CreateSupplierDto } from './dto/create-supplier.dto';
-import { UpdateSupplierDto } from './dto/update-supplier.dto';
-import { suppliersRepository } from './suppliers.repository';
+import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors.js';
+import { CreateSupplierDto } from './dto/create-supplier.dto.js';
+import { UpdateSupplierDto } from './dto/update-supplier.dto.js';
+import { suppliersRepository } from './suppliers.repository.js';
 import { Supplier, SupplierStatus } from '@prisma/client';
 
 export class SuppliersService {

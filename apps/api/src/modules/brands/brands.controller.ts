@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../../lib/logger.js';
-import { BadRequestError, ValidationError } from '../../utils/errors';
-import { createBrandSchema } from './dto/create-brand.dto';
-import { updateBrandSchema } from './dto/update-brand.dto';
-import { brandsService } from './brands.service';
+import { BadRequestError, ValidationError } from '../../utils/errors.js';
+import { createBrandSchema } from './dto/create-brand.dto.js';
+import { updateBrandSchema } from './dto/update-brand.dto.js';
+import { brandsService } from './brands.service.js';
 
 export class BrandsController {
   async create(req: Request, res: Response, next: NextFunction) {

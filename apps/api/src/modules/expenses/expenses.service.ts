@@ -1,8 +1,8 @@
 import { Expense } from '@prisma/client';
-import { expenseRepository, ExpenseFilters } from './expenses.repository';
-import { CreateExpenseDto } from './dto/create-expense.dto';
-import { UpdateExpenseDto } from './dto/update-expense.dto';
-import { BadRequestError, NotFoundError } from '../../utils/errors';
+import { expenseRepository, ExpenseFilters } from './expenses.repository.js';
+import { CreateExpenseDto } from './dto/create-expense.dto.js';
+import { UpdateExpenseDto } from './dto/update-expense.dto.js';
+import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 
 export class ExpenseService {
   async create(data: CreateExpenseDto, userId: string): Promise<Expense> {

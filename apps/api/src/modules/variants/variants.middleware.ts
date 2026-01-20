@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../../types/auth.types';
+import { AuthRequest } from '../../types/auth.types.js';
 import { AuditService } from '../../services/audit.service.js';
 
 // Audit logging middleware for product variants

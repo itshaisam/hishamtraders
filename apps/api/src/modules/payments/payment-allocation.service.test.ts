@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PrismaClient, InvoiceStatus } from '@prisma/client';
-import { PaymentAllocationService } from './payment-allocation.service';
+import { PaymentAllocationService } from './payment-allocation.service.js';
 
 // Mock PrismaClient
 const mockPrisma = {

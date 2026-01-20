@@ -1,8 +1,8 @@
 import logger from '../../lib/logger.js';
-import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
-import { categoriesRepository } from './categories.repository';
+import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors.js';
+import { CreateCategoryDto } from './dto/create-category.dto.js';
+import { UpdateCategoryDto } from './dto/update-category.dto.js';
+import { categoriesRepository } from './categories.repository.js';
 import { ProductCategory } from '@prisma/client';
 
 export class CategoriesService {

@@ -1,9 +1,9 @@
 import { PrismaClient, PurchaseOrder, POItem, POStatus, POCost } from '@prisma/client';
-import { PurchaseOrderFilters } from './dto/purchase-order-filter.dto';
-import { CreatePurchaseOrderRequest, POItemInput } from './dto/create-purchase-order.dto';
-import { UpdatePurchaseOrderRequest } from './dto/update-purchase-order.dto';
-import { AddPOCostRequest } from './dto/add-po-cost.dto';
-import { UpdateImportDetailsRequest } from './dto/update-import-details.dto';
+import { PurchaseOrderFilters } from './dto/purchase-order-filter.dto.js';
+import { CreatePurchaseOrderRequest, POItemInput } from './dto/create-purchase-order.dto.js';
+import { UpdatePurchaseOrderRequest } from './dto/update-purchase-order.dto.js';
+import { AddPOCostRequest } from './dto/add-po-cost.dto.js';
+import { UpdateImportDetailsRequest } from './dto/update-import-details.dto.js';
 
 export class PurchaseOrderRepository {
   constructor(private prisma: PrismaClient) {}

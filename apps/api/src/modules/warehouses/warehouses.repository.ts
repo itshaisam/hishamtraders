@@ -1,6 +1,6 @@
 import { PrismaClient, Warehouse, WarehouseStatus } from '@prisma/client';
-import { CreateWarehouseDto } from './dto/create-warehouse.dto';
-import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
+import { CreateWarehouseDto } from './dto/create-warehouse.dto.js';
+import { UpdateWarehouseDto } from './dto/update-warehouse.dto.js';
 
 const prisma = new PrismaClient();
 

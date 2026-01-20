@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import { InventoryRepository } from './inventory.repository';
-import { NotFoundError, BadRequestError } from '../../utils/errors';
-import logger from '../../lib/logger';
+import { InventoryRepository } from './inventory.repository.js';
+import { NotFoundError, BadRequestError } from '../../utils/errors.js';
+import logger from '../../lib/logger.js';
 import { format } from 'date-fns';
 
 const prisma = new PrismaClient();

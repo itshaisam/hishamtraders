@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PrismaClient } from '@prisma/client';
-import { InvoicesService } from './invoices.service';
-import { BadRequestError, ForbiddenError } from '../../utils/errors';
+import { InvoicesService } from './invoices.service.js';
+import { BadRequestError, ForbiddenError } from '../../utils/errors.js';
 
 // Mock Prisma and dependencies
 vi.mock('@prisma/client', () => ({

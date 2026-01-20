@@ -1,7 +1,7 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '../../lib/prisma.js';
 import { Brand } from '@prisma/client';
-import { CreateBrandDto } from './dto/create-brand.dto';
-import { UpdateBrandDto } from './dto/update-brand.dto';
+import { CreateBrandDto } from './dto/create-brand.dto.js';
+import { UpdateBrandDto } from './dto/update-brand.dto.js';
 
 export class BrandsRepository {
   async findAll(): Promise<Brand[]> {

@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { StockAdjustmentService } from './stock-adjustment.service';
+import { StockAdjustmentService } from './stock-adjustment.service.js';
 import {
   createAdjustmentSchema,
   rejectAdjustmentSchema,
   adjustmentFiltersSchema,
-} from './dto/stock-adjustment.dto';
+} from './dto/stock-adjustment.dto.js';
 
 export class StockAdjustmentController {
   private adjustmentService: StockAdjustmentService;

@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { expenseService } from './expenses.service';
-import { createExpenseSchema } from './dto/create-expense.dto';
-import { updateExpenseSchema } from './dto/update-expense.dto';
-import { expenseFilterSchema } from './dto/expense-filter.dto';
-import { AuthRequest } from '../../types/auth.types';
+import { expenseService } from './expenses.service.js';
+import { createExpenseSchema } from './dto/create-expense.dto.js';
+import { updateExpenseSchema } from './dto/update-expense.dto.js';
+import { expenseFilterSchema } from './dto/expense-filter.dto.js';
+import { AuthRequest } from '../../types/auth.types.js';
 
 export class ExpenseController {
   async create(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {

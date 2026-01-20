@@ -1,8 +1,8 @@
 import logger from '../../lib/logger.js';
-import { ConflictError, NotFoundError } from '../../utils/errors';
-import { CreateUomDto } from './dto/create-uom.dto';
-import { UpdateUomDto } from './dto/update-uom.dto';
-import { uomsRepository } from './uoms.repository';
+import { ConflictError, NotFoundError } from '../../utils/errors.js';
+import { CreateUomDto } from './dto/create-uom.dto.js';
+import { UpdateUomDto } from './dto/update-uom.dto.js';
+import { uomsRepository } from './uoms.repository.js';
 import { UnitOfMeasure } from '@prisma/client';
 
 export class UomsService {

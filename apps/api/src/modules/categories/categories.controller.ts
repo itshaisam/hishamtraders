@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../../lib/logger.js';
-import { BadRequestError, ValidationError } from '../../utils/errors';
-import { createCategorySchema } from './dto/create-category.dto';
-import { updateCategorySchema } from './dto/update-category.dto';
-import { categoriesService } from './categories.service';
+import { BadRequestError, ValidationError } from '../../utils/errors.js';
+import { createCategorySchema } from './dto/create-category.dto.js';
+import { updateCategorySchema } from './dto/update-category.dto.js';
+import { categoriesService } from './categories.service.js';
 
 export class CategoriesController {
   async create(req: Request, res: Response, next: NextFunction) {

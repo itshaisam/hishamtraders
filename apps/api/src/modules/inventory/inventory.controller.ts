@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { InventoryService, InventoryFilters } from './inventory.service';
+import { InventoryService, InventoryFilters } from './inventory.service.js';
 
 export class InventoryController {
   private inventoryService: InventoryService;

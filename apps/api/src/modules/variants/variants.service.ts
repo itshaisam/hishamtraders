@@ -1,10 +1,10 @@
 import logger from '../../lib/logger.js';
-import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors';
-import { CreateVariantDto } from './dto/create-variant.dto';
-import { UpdateVariantDto } from './dto/update-variant.dto';
-import { VariantFilterDto } from './dto/variant-filter.dto';
-import { variantsRepository } from './variants.repository';
-import { productsRepository } from '../products/products.repository';
+import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors.js';
+import { CreateVariantDto } from './dto/create-variant.dto.js';
+import { UpdateVariantDto } from './dto/update-variant.dto.js';
+import { VariantFilterDto } from './dto/variant-filter.dto.js';
+import { variantsRepository } from './variants.repository.js';
+import { productsRepository } from '../products/products.repository.js';
 import { generateVariantSKU, isVariantSkuUnique } from '../products/utils/generate-sku.js';
 import { ProductVariant } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';

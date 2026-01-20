@@ -1,9 +1,9 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../../types/auth.types';
-import { createVariantSchema } from './dto/create-variant.dto';
-import { updateVariantSchema } from './dto/update-variant.dto';
-import { variantFilterSchema } from './dto/variant-filter.dto';
-import { variantsService } from './variants.service';
+import { AuthRequest } from '../../types/auth.types.js';
+import { createVariantSchema } from './dto/create-variant.dto.js';
+import { updateVariantSchema } from './dto/update-variant.dto.js';
+import { variantFilterSchema } from './dto/variant-filter.dto.js';
+import { variantsService } from './variants.service.js';
 
 export class VariantsController {
   async create(req: AuthRequest, res: Response, next: NextFunction) {

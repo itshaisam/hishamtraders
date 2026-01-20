@@ -1,8 +1,8 @@
 import logger from '../../lib/logger.js';
-import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
-import { productsRepository } from './products.repository';
+import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors.js';
+import { CreateProductDto } from './dto/create-product.dto.js';
+import { UpdateProductDto } from './dto/update-product.dto.js';
+import { productsRepository } from './products.repository.js';
 import { generateSKU, isSkuUnique } from './utils/generate-sku.js';
 import { Product, ProductStatus } from '@prisma/client';
 

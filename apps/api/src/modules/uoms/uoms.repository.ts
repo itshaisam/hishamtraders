@@ -1,7 +1,7 @@
-import { prisma } from '../../lib/prisma';
+import { prisma } from '../../lib/prisma.js';
 import { UnitOfMeasure } from '@prisma/client';
-import { CreateUomDto } from './dto/create-uom.dto';
-import { UpdateUomDto } from './dto/update-uom.dto';
+import { CreateUomDto } from './dto/create-uom.dto.js';
+import { UpdateUomDto } from './dto/update-uom.dto.js';
 
 export class UomsRepository {
   async findAll(): Promise<UnitOfMeasure[]> {

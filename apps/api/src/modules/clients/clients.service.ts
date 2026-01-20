@@ -1,5 +1,5 @@
 import { Client, ClientStatus } from '@prisma/client';
-import { ClientRepository, ClientFilters } from './clients.repository';
+import { ClientRepository, ClientFilters } from './clients.repository.js';
 
 export interface CreateClientDto {
   name: string;

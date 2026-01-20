@@ -1,7 +1,7 @@
 import { PrismaClient, AdjustmentType, AdjustmentStatus } from '@prisma/client';
-import { StockAdjustmentRepository } from './stock-adjustment.repository';
-import { InventoryRepository } from './inventory.repository';
-import { AuditService } from '../../services/audit.service';
+import { StockAdjustmentRepository } from './stock-adjustment.repository.js';
+import { InventoryRepository } from './inventory.repository.js';
+import { AuditService } from '../../services/audit.service.js';
 
 const prisma = new PrismaClient();
 

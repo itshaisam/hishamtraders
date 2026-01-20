@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../../lib/logger.js';
-import { paymentTermsService } from './payment-terms.service';
+import { paymentTermsService } from './payment-terms.service.js';
 
 export class PaymentTermsController {
   async getAll(req: Request, res: Response, next: NextFunction) {
