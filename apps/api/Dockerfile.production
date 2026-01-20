@@ -19,8 +19,14 @@ COPY package.json pnpm-lock.yaml ./
 # Copy API package.json
 COPY apps/api/package.json ./apps/api/
 
+# Install build dependencies for native modules (bcrypt)
+RUN apk add --no-cache python3 make g++
+
 # Install production dependencies only (ignore prepare scripts)
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+
+# Rebuild native modules (bcrypt) for Alpine Linux
+RUN cd apps/api && pnpm rebuild bcrypt --build-from-source
 
 # ============================================================================
 # Stage 2: Build
