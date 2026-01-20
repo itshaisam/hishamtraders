@@ -19,8 +19,8 @@ COPY package.json pnpm-lock.yaml ./
 # Copy web package.json
 COPY apps/web/package.json ./apps/web/
 
-# Install production dependencies
-RUN pnpm install --prod --frozen-lockfile
+# Install production dependencies (ignore prepare scripts)
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 # ============================================================================
 # Stage 2: Build
@@ -68,9 +68,7 @@ FROM nginx:1.25-alpine AS runtime
 # Install curl for health checks
 RUN apk add --no-cache curl
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nginx && \
-    adduser --system --uid 1001 nginx
+# Nginx user already exists in the base image, no need to create
 
 # Copy built application from builder stage
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
