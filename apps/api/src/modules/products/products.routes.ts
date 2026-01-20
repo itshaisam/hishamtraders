@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { authenticate } from '../../middleware/auth.middleware';
-import { requirePermission } from '../../middleware/permission.middleware';
-import { productsController } from './products.controller';
-import { auditProductAction } from './products.middleware';
+import { authenticate } from '../../middleware/auth.middleware.js';
+import { requirePermission } from '../../middleware/permission.middleware.js';
+import { productsController } from './products.controller.js';
+import { auditProductAction } from './products.middleware.js';
 
 const router = Router();
 

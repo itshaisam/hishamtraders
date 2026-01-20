@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { authenticate } from '../../middleware/auth.middleware';
-import { requirePermission } from '../../middleware/permission.middleware';
-import { brandsController } from './brands.controller';
+import { authenticate } from '../../middleware/auth.middleware.js';
+import { requirePermission } from '../../middleware/permission.middleware.js';
+import { brandsController } from './brands.controller.js';
 
 const router = Router();
 

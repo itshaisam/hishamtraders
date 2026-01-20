@@ -64,7 +64,8 @@ FROM node:20-alpine AS runtime
 WORKDIR /app
 
 # Install pnpm and prisma (needed for migrations)
-RUN npm install -g pnpm@latest prisma@latest
+# Pin to Prisma 6.19.0 to match package.json
+RUN npm install -g pnpm@latest prisma@6.19.0
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \

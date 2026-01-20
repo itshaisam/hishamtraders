@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { authenticate } from '../../middleware/auth.middleware';
-import { paymentTermsController } from './payment-terms.controller';
+import { authenticate } from '../../middleware/auth.middleware.js';
+import { paymentTermsController } from './payment-terms.controller.js';
 
 const router = Router();
 

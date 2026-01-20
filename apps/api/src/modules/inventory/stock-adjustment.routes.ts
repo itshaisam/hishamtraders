@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { StockAdjustmentController } from './stock-adjustment.controller';
+import { StockAdjustmentController } from './stock-adjustment.controller.js';
 import { authenticate } from '../../middleware/auth.middleware.js';
 import { requireRole } from '../../middleware/role.middleware.js';
 

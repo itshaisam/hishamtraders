@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { authenticate } from '../../middleware/auth.middleware';
-import { countriesController } from './countries.controller';
+import { authenticate } from '../../middleware/auth.middleware.js';
+import { countriesController } from './countries.controller.js';
 
 const router = Router();
 

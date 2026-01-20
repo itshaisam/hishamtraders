@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { WarehousesController } from './warehouses.controller';
-import { authenticate } from '../../middleware/auth.middleware';
-import { requirePermission } from '../../middleware/permission.middleware';
-import { auditLog } from './warehouses.middleware';
+import { WarehousesController } from './warehouses.controller.js';
+import { authenticate } from '../../middleware/auth.middleware.js';
+import { requirePermission } from '../../middleware/permission.middleware.js';
+import { auditLog } from './warehouses.middleware.js';
 
 const router = Router();
 const controller = new WarehousesController();

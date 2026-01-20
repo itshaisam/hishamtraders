@@ -6,7 +6,7 @@ import { PurchaseOrderService } from './purchase-orders.service.js';
 import { PurchaseOrderRepository } from './purchase-orders.repository.js';
 import { LandedCostService } from './landed-cost.service.js';
 import { auditPurchaseOrderAction } from './purchase-orders.middleware.js';
-import { requireRole } from '../../middleware/role.middleware';
+import { requireRole } from '../../middleware/role.middleware.js';
 
 const prisma = new PrismaClient();
 const router = Router();

@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { StockMovementController } from './stock-movement.controller';
-import { authenticate } from '../../middleware/auth.middleware';
+import { StockMovementController } from './stock-movement.controller.js';
+import { authenticate } from '../../middleware/auth.middleware.js';
 
 const router = Router();
 const controller = new StockMovementController();
