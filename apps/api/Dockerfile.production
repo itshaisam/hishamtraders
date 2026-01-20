@@ -48,7 +48,8 @@ COPY prisma ./prisma/
 # Generate Prisma Client
 RUN pnpm --filter @hishamtraders/api db:generate
 
-# Copy source code
+# Copy source code and TypeScript configs
+COPY tsconfig.json ./
 COPY apps/api/src ./apps/api/src
 COPY apps/api/tsconfig.json ./apps/api/
 
