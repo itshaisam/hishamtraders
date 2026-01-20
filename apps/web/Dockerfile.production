@@ -42,6 +42,9 @@ COPY apps/web/package.json ./apps/web/
 # Install all dependencies (including dev)
 RUN pnpm install --frozen-lockfile
 
+# Copy root tsconfig
+COPY tsconfig.json ./
+
 # Copy source code
 COPY apps/web/src ./apps/web/src
 COPY apps/web/public ./apps/web/public
