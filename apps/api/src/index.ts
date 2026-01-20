@@ -23,7 +23,7 @@ import { clientRoutes } from './modules/clients/clients.routes.js';
 import { invoiceRoutes } from './modules/invoices/invoices.routes.js';
 import { reportsRoutes } from './modules/reports/reports.routes.js';
 import { settingsRoutes } from './modules/settings/settings.routes.js';
-import { expenseRoutes } from './modules/expenses/expenses.routes';
+import { expenseRoutes } from './modules/expenses/expenses.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';

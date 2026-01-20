@@ -63,8 +63,8 @@ RUN pnpm --filter @hishamtraders/api build
 FROM node:20-alpine AS runtime
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm@latest
+# Install pnpm and prisma (needed for migrations)
+RUN npm install -g pnpm@latest prisma@latest
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
