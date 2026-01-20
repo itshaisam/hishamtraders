@@ -84,8 +84,8 @@ COPY --from=builder /app/apps/api/package.json ./apps/api/
 
 # Copy Prisma files and generated client
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma 2>/dev/null || true
 
 # Set proper permissions
 RUN chown -R expressjs:nodejs /app
