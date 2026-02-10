@@ -16,7 +16,7 @@ router.get('/admin/stats', requireRole(['ADMIN']), dashboardController.getAdminS
 router.get('/warehouse/stats', requireRole(['ADMIN', 'WAREHOUSE_MANAGER']), dashboardController.getWarehouseStats);
 
 // Sales Officer stats
-router.get('/sales/stats', requireRole(['ADMIN', 'SALES_OFFICER']), dashboardController.getSalesStats);
+router.get('/sales/stats', requireRole(['ADMIN', 'SALES_OFFICER', 'ACCOUNTANT']), dashboardController.getSalesStats);
 
 // Accountant stats
 router.get('/accountant/stats', requireRole(['ADMIN', 'ACCOUNTANT']), dashboardController.getAccountantStats);

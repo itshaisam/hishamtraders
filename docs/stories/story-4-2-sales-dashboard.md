@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Epic 3 (Sales & Payments)
-**Status:** Draft
+**Status:** Implemented
 
 ---
 
@@ -20,34 +20,34 @@
 ## Acceptance Criteria
 
 1. **Backend API:**
-   - [ ] `GET /api/v1/sales/stats` returns sales metrics (expand existing endpoint)
-   - [ ] Today's sales: count and total value (invoices today, excluding `VOIDED`)
-   - [ ] Week's sales: count and total (last 7 days)
-   - [ ] Month's sales: count and total (current month)
-   - [ ] Top 5 clients by revenue (this month)
-   - [ ] Overdue invoices: count and total (`status IN ('PENDING', 'PARTIAL') AND dueDate < today`)
-   - [ ] Clients approaching credit limit (balance/creditLimit > 80%)
-   - [ ] Weekly sales trend (last 7 days, daily totals)
+   - [x]`GET /api/v1/sales/stats` returns sales metrics (expand existing endpoint)
+   - [x]Today's sales: count and total value (invoices today, excluding `VOIDED`)
+   - [x]Week's sales: count and total (last 7 days)
+   - [x]Month's sales: count and total (current month)
+   - [x]Top 5 clients by revenue (this month)
+   - [x]Overdue invoices: count and total (`status IN ('PENDING', 'PARTIAL') AND dueDate < today`)
+   - [x]Clients approaching credit limit (balance/creditLimit > 80%)
+   - [x]Weekly sales trend (last 7 days, daily totals)
 
 2. **Frontend Dashboard:**
-   - [ ] Sales performance cards (today, week, month — count + value)
-   - [ ] Weekly sales trend bar/line chart
-   - [ ] Top clients table (name, revenue)
-   - [ ] Overdue invoices list with aging color-coding
-   - [ ] Credit limit alerts widget
-   - [ ] Quick actions: Create Invoice, Record Payment
-   - [ ] Empty state handling when no data
+   - [x]Sales performance cards (today, week, month — count + value)
+   - [x]Weekly sales trend bar/line chart
+   - [x]Top clients table (name, revenue)
+   - [x]Overdue invoices list with aging color-coding
+   - [x]Credit limit alerts widget
+   - [x]Quick actions: Create Invoice, Record Payment
+   - [x]Empty state handling when no data
 
 3. **Authorization:**
-   - [ ] `SALES_OFFICER`: All sales data (no territory filtering — see note)
-   - [ ] `ACCOUNTANT`: All sales data (read-only)
-   - [ ] `ADMIN`: Full access (also available via Admin Dashboard tab)
-   - [ ] Other roles: 403 Forbidden
+   - [x]`SALES_OFFICER`: All sales data (no territory filtering — see note)
+   - [x]`ACCOUNTANT`: All sales data (read-only)
+   - [x]`ADMIN`: Full access (also available via Admin Dashboard tab)
+   - [x]Other roles: 403 Forbidden
 
 4. **Performance:**
-   - [ ] TanStack Query with `staleTime: 180000` (3 min), `refetchInterval: 60000` (1 min)
-   - [ ] `Promise.all()` for parallel metric queries
-   - [ ] Top clients/overdue: max 50 records
+   - [x]TanStack Query with `staleTime: 180000` (3 min), `refetchInterval: 60000` (1 min)
+   - [x]`Promise.all()` for parallel metric queries
+   - [x]Top clients/overdue: max 50 records
 
 ---
 

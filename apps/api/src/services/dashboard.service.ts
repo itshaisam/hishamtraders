@@ -229,12 +229,160 @@ export class DashboardService {
   }
 
   async getSalesStats() {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      todaySales,
+      todayCount,
+      weekSales,
+      weekCount,
+      monthSales,
+      monthCount,
+      overdueInvoices,
+      topClientsRaw,
+      creditAlertClients,
+      weeklyTrendRaw,
+    ] = await Promise.all([
+      // Today's sales total
+      prisma.invoice.aggregate({
+        _sum: { total: true },
+        where: { invoiceDate: { gte: todayStart }, status: { not: 'VOIDED' } },
+      }),
+      // Today's sales count
+      prisma.invoice.count({
+        where: { invoiceDate: { gte: todayStart }, status: { not: 'VOIDED' } },
+      }),
+      // Week's sales total
+      prisma.invoice.aggregate({
+        _sum: { total: true },
+        where: { invoiceDate: { gte: weekStart }, status: { not: 'VOIDED' } },
+      }),
+      // Week's sales count
+      prisma.invoice.count({
+        where: { invoiceDate: { gte: weekStart }, status: { not: 'VOIDED' } },
+      }),
+      // Month's sales total
+      prisma.invoice.aggregate({
+        _sum: { total: true },
+        where: { invoiceDate: { gte: monthStart }, status: { not: 'VOIDED' } },
+      }),
+      // Month's sales count
+      prisma.invoice.count({
+        where: { invoiceDate: { gte: monthStart }, status: { not: 'VOIDED' } },
+      }),
+      // Overdue invoices
+      prisma.invoice.findMany({
+        where: {
+          status: { in: ['PENDING', 'PARTIAL'] },
+          dueDate: { lt: todayStart },
+        },
+        select: {
+          id: true,
+          invoiceNumber: true,
+          total: true,
+          paidAmount: true,
+          dueDate: true,
+          client: { select: { name: true } },
+        },
+        orderBy: { dueDate: 'asc' },
+        take: 50,
+      }),
+      // Top 5 clients by revenue this month
+      prisma.invoice.groupBy({
+        by: ['clientId'],
+        _sum: { total: true },
+        _count: true,
+        where: {
+          invoiceDate: { gte: monthStart },
+          status: { not: 'VOIDED' },
+        },
+        orderBy: { _sum: { total: 'desc' } },
+        take: 5,
+      }),
+      // Credit limit alerts (>80% utilization)
+      prisma.client.findMany({
+        where: { status: 'ACTIVE', creditLimit: { gt: 0 } },
+        select: { id: true, name: true, balance: true, creditLimit: true },
+      }),
+      // Weekly sales trend (last 7 days)
+      prisma.$queryRaw<Array<{ date: Date | string; total: Prisma.Decimal; count: bigint }>>`
+        SELECT DATE(invoiceDate) as date, SUM(total) as total, COUNT(*) as count
+        FROM invoices
+        WHERE invoiceDate >= ${weekStart}
+          AND status != 'VOIDED'
+        GROUP BY DATE(invoiceDate)
+        ORDER BY date ASC
+      `,
+    ]);
+
+    // Resolve top client names
+    const topClientIds = topClientsRaw.map(tc => tc.clientId);
+    const topClientDetails = topClientIds.length > 0
+      ? await prisma.client.findMany({
+          where: { id: { in: topClientIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+
+    const topClients = topClientsRaw.map(tc => {
+      const client = topClientDetails.find(c => c.id === tc.clientId);
+      return {
+        clientId: tc.clientId,
+        name: client?.name || 'Unknown',
+        revenue: parseFloat((tc._sum.total || 0).toString()),
+        invoiceCount: tc._count,
+      };
+    });
+
+    // Format overdue invoices with aging
+    const formattedOverdue = overdueInvoices.map(inv => {
+      const daysOverdue = Math.floor((todayStart.getTime() - new Date(inv.dueDate).getTime()) / (1000 * 60 * 60 * 24));
+      return {
+        id: inv.id,
+        invoiceNumber: inv.invoiceNumber,
+        clientName: inv.client.name,
+        total: parseFloat(inv.total.toString()),
+        paidAmount: parseFloat(inv.paidAmount.toString()),
+        outstanding: parseFloat(inv.total.toString()) - parseFloat(inv.paidAmount.toString()),
+        dueDate: inv.dueDate,
+        daysOverdue,
+      };
+    });
+
+    // Credit limit alerts
+    const creditAlerts = creditAlertClients
+      .map(c => {
+        const balance = parseFloat(c.balance.toString());
+        const limit = parseFloat(c.creditLimit.toString());
+        const utilization = limit > 0 ? Math.round((balance / limit) * 100) : 0;
+        return { clientId: c.id, name: c.name, balance, creditLimit: limit, utilization };
+      })
+      .filter(c => c.utilization > 80)
+      .sort((a, b) => b.utilization - a.utilization);
+
+    // Format weekly trend
+    const weeklyTrend = (weeklyTrendRaw as Array<{ date: Date | string; total: Prisma.Decimal; count: bigint }>).map(row => ({
+      date: row.date instanceof Date ? row.date.toISOString().split('T')[0] : String(row.date).split('T')[0],
+      revenue: parseFloat(row.total.toString()),
+      count: Number(row.count),
+    }));
+
     return {
-      todaysSalesTotal: 0,
-      todaysSalesCount: 0,
-      creditLimitAlerts: 0,
-      recentInvoicesCount: 0,
-      recentInvoices: [],
+      todaySalesTotal: parseFloat((todaySales._sum.total || 0).toString()),
+      todaySalesCount: todayCount,
+      weekSalesTotal: parseFloat((weekSales._sum.total || 0).toString()),
+      weekSalesCount: weekCount,
+      monthSalesTotal: parseFloat((monthSales._sum.total || 0).toString()),
+      monthSalesCount: monthCount,
+      topClients,
+      overdueInvoices: formattedOverdue,
+      overdueCount: formattedOverdue.length,
+      overdueTotal: formattedOverdue.reduce((sum, inv) => sum + inv.outstanding, 0),
+      creditAlerts,
+      weeklyTrend,
     };
   }
 
