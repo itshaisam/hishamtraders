@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { useInvoiceById, useVoidInvoice, useInvoices } from '../../../hooks/useInvoices';
 import { VoidInvoiceModal } from '../components/VoidInvoiceModal';
@@ -17,6 +17,11 @@ export function InvoiceDetailPage() {
   // Check if user can void this invoice
   const canVoid =
     invoice?.status === 'PENDING' &&
+    (user?.role?.name === 'ADMIN' || user?.role?.name === 'ACCOUNTANT');
+
+  // Check if user can create a return for this invoice
+  const canReturn =
+    (invoice?.status === 'PAID' || invoice?.status === 'PARTIAL') &&
     (user?.role?.name === 'ADMIN' || user?.role?.name === 'ACCOUNTANT');
 
   const handleVoidConfirm = (reason: string) => {
@@ -128,6 +133,15 @@ export function InvoiceDetailPage() {
             </span>
           </div>
           <div className="flex items-center gap-3">
+            {canReturn && (
+              <button
+                onClick={() => navigate(`/returns/create/${invoice.id}`)}
+                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 flex items-center gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Create Return
+              </button>
+            )}
             {canVoid && (
               <button
                 onClick={() => setShowVoidModal(true)}

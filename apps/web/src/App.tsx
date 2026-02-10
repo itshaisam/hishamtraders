@@ -39,6 +39,9 @@ import { ExpensesPage } from './features/expenses/pages/ExpensesPage';
 import PaymentHistoryPage from './features/payments/pages/PaymentHistoryPage';
 import CashFlowReportPage from './features/reports/pages/CashFlowReportPage';
 import { TaxSettingsPage } from './features/settings/pages/TaxSettingsPage';
+import { ReturnsPage } from './features/returns/pages/ReturnsPage';
+import { CreateReturnPage } from './features/returns/pages/CreateReturnPage';
+import { CreditNoteDetailPage } from './features/returns/pages/CreditNoteDetailPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -456,6 +459,40 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Returns / Credit Notes routes (Story 3.9) */}
+          <Route
+            path="/returns"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ReturnsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/returns/create/:invoiceId"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateReturnPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/returns/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreditNoteDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Settings routes (Story 3.10) */}
           <Route
             path="/settings/tax"

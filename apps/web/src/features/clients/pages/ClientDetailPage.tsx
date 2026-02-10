@@ -1,11 +1,13 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, RotateCcw } from 'lucide-react';
 import { ClientForm } from '../components/ClientForm';
 import { CreditUtilizationDisplay } from '../components/CreditUtilizationDisplay';
 import { ClientPaymentHistory } from '../components/ClientPaymentHistory';
 import { useClient, useUpdateClient } from '../../../hooks/useClients';
+import { useCreditNotes } from '../../../hooks/useCreditNotes';
 import { Button, Breadcrumbs } from '../../../components/ui';
+import { format } from 'date-fns';
 
 /**
  * ClientDetailPage - Full page for editing an existing client
@@ -18,6 +20,7 @@ export const ClientDetailPage: React.FC = () => {
 
   // Extract client data from API response
   const client = response?.data;
+  const { data: creditNotesData } = useCreditNotes(id ? { clientId: id, limit: 10 } : undefined);
 
   const handleSubmit = async (data: any) => {
     if (!id) return;
@@ -116,6 +119,71 @@ export const ClientDetailPage: React.FC = () => {
           </div>
           <ClientPaymentHistory clientId={id!} />
         </div>
+
+        {/* Credit Notes Section - Story 3.9 */}
+        {creditNotesData?.data && creditNotesData.data.length > 0 && (
+          <>
+            <hr className="my-6 border-gray-200" />
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <RotateCcw className="h-5 w-5 text-gray-500" />
+                  Credit Notes
+                </h2>
+                <Link
+                  to="/returns"
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  View All
+                </Link>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="text-left py-2 px-3">CN #</th>
+                      <th className="text-left py-2 px-3">Invoice</th>
+                      <th className="text-left py-2 px-3">Date</th>
+                      <th className="text-right py-2 px-3">Amount</th>
+                      <th className="text-left py-2 px-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {creditNotesData.data.map((cn) => (
+                      <tr key={cn.id} className="hover:bg-gray-50">
+                        <td className="py-2 px-3">
+                          <Link to={`/returns/${cn.id}`} className="text-blue-600 hover:underline font-medium">
+                            {cn.creditNoteNumber}
+                          </Link>
+                        </td>
+                        <td className="py-2 px-3">
+                          <Link to={`/invoices/${cn.invoiceId}`} className="text-blue-600 hover:underline">
+                            {cn.invoice?.invoiceNumber}
+                          </Link>
+                        </td>
+                        <td className="py-2 px-3 text-gray-600">
+                          {format(new Date(cn.createdAt), 'dd MMM yyyy')}
+                        </td>
+                        <td className="py-2 px-3 text-right font-medium">
+                          PKR {Number(cn.totalAmount).toLocaleString()}
+                        </td>
+                        <td className="py-2 px-3">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            cn.status === 'OPEN' ? 'bg-blue-100 text-blue-800' :
+                            cn.status === 'APPLIED' ? 'bg-green-100 text-green-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {cn.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
