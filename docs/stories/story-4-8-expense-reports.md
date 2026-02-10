@@ -20,58 +20,72 @@
 ## Acceptance Criteria
 
 1. **Expense Report:**
-   - [ ] GET /api/reports/expenses
-   - [ ] Filters: date range (required), category
-   - [ ] Shows: Date, Category, Amount, Description, Paid To, Method
+   - [ ] `GET /api/v1/reports/expenses` — detailed expense list
+   - [ ] Filters: `dateFrom` (required), `dateTo` (required), `category`
+   - [ ] Shows: Date, Category, Amount, Description, Payment Method, Recorded By
+   - [ ] Summary: Total expenses, Count, Average per expense
 
 2. **Expense by Category:**
-   - [ ] GET /api/reports/expenses-by-category
+   - [ ] Expand existing `GET /api/v1/reports/expense-summary` endpoint
    - [ ] Shows: Category, Total Amount, Count, % of Total
+   - [ ] Already partially implemented (see note)
 
 3. **Expense Trend:**
-   - [ ] GET /api/reports/expenses-trend
-   - [ ] Monthly trend (last 12 months)
-   - [ ] Shows: Month, Total Expenses
+   - [ ] `GET /api/v1/reports/expenses-trend` — monthly trend
+   - [ ] Shows: Month, Total Expenses (last 12 months)
+   - [ ] Optional: line chart on frontend
 
 4. **Frontend:**
-   - [ ] Expense Reports page with filters
-   - [ ] Detailed list and category summary
-   - [ ] Optional monthly trend chart
-   - [ ] Export to Excel
+   - [ ] Expense Reports page with tabs (Detail / By Category / Trend)
+   - [ ] Date range picker for detail and category views
+   - [ ] Responsive table with summary row
+   - [ ] Export to Excel (Story 4.9)
+   - [ ] Empty state when no results
 
-5. **Authorization & Role-Based Access:**
-   - [ ] Accountant: Full expense data access
-   - [ ] Admin: Full access
-   - [ ] Sales Officer, Warehouse Manager, Recovery Agent: 403 Forbidden
+5. **Authorization:**
+   - [ ] `ACCOUNTANT`: Full expense data access
+   - [ ] `ADMIN`: Full access
+   - [ ] Other roles: 403 Forbidden
 
-6. **Performance & Caching:**
-   - [ ] Page size default: 50 items
-   - [ ] Max items returned: 5,000 per report
-   - [ ] Cache TTL: 10 minutes (expense data changes regularly)
-   - [ ] API timeout: 15 seconds maximum
-   - [ ] Pre-calculate category aggregations for performance
-   - [ ] Pagination validation: max pageSize = 100
-
-7. **Real-Time Data Updates:**
-   - [ ] Cache TTL: 10 minutes
-   - [ ] Manual refresh button available
-   - [ ] Show "Report generated at" timestamp on page
-   - [ ] Cache invalidation: On expense creation, modification, or deletion
-   - [ ] Network error: Show cached data with warning
-
-8. **Error Handling:**
-   - [ ] Validate date range (from <= to, max 1 year)
-   - [ ] Handle missing category/user data (show as 'Unknown')
-   - [ ] Return HTTP 400 with error details if filters invalid
-   - [ ] Max 10,000 rows for Excel export
-   - [ ] Display partial data with error toast if calculation fails
-   - [ ] Catch and log percentage calculation errors (division by zero)
-   - [ ] Handle missing expense records gracefully
+6. **Performance:**
+   - [ ] Offset-based pagination: default `limit=50`, max `limit=100` (detail view)
+   - [ ] TanStack Query with `staleTime: 300000` (5 min)
+   - [ ] Date range validation: `dateFrom <= dateTo`, max 1 year span
 
 ---
 
 ## Dev Notes
 
+### Implementation Status
+
+**Backend:** Partial — `GET /api/v1/reports/expense-summary` already exists in `apps/api/src/modules/reports/reports.controller.ts`. It groups expenses by category with date range filter. Needs expansion for detail list and trend.
+
+**Frontend:** No expense report page exists.
+
+**Route registration:** Expand `apps/api/src/modules/reports/reports.routes.ts`.
+
+### Schema Field Reference
+
+```
+Expense:  id, category (ExpenseCategory), amount (Decimal), description (Text), date (DateTime),
+          paymentMethod (PaymentMethod), receiptUrl, recordedBy, createdAt, updatedAt
+          user → User relation (via recordedBy FK)
+          (NO paidTo field)
+
+ExpenseCategory enum: RENT | UTILITIES | SALARIES | SUPPLIES | MAINTENANCE | MARKETING | TRANSPORT | MISC
+
+PaymentMethod enum: CASH | BANK_TRANSFER | CHEQUE | MOBILE_PAYMENT | OTHER
+```
+
+### Key Corrections from Original Doc
+
+1. **Expense has NO `paidTo` field** — Removed from "Shows" list. The model only tracks category, amount, description, date, paymentMethod, and recordedBy (user).
+
+2. **`expense-summary` endpoint already exists** — No need to create from scratch. Expand it or keep it as-is and add the detail + trend endpoints.
+
+3. **API paths** are `/api/v1/reports/expenses*` (not `/api/reports/expenses*`).
+
+### Expense Detail Report (Correct)
 ```typescript
 async function getExpenseReport(filters: {
   dateFrom: Date;
@@ -81,65 +95,62 @@ async function getExpenseReport(filters: {
   const expenses = await prisma.expense.findMany({
     where: {
       date: { gte: filters.dateFrom, lte: filters.dateTo },
-      ...(filters.category && { category: filters.category })
+      ...(filters.category && { category: filters.category }),
     },
-    include: { user: true },
-    orderBy: { date: 'desc' }
+    include: { user: { select: { name: true } } },
+    orderBy: { date: 'desc' },
+    skip: offset,
+    take: limit,
   });
 
-  return expenses.map(exp => ({
+  const items = expenses.map(exp => ({
     date: exp.date,
     category: exp.category,
     amount: parseFloat(exp.amount.toString()),
     description: exp.description,
     paymentMethod: exp.paymentMethod,
-    recordedBy: exp.user.name
+    recordedBy: exp.user.name,
   }));
-}
 
-async function getExpensesByCategory(filters: { dateFrom: Date; dateTo: Date }) {
-  const expenses = await prisma.expense.findMany({
+  // Summary (all matching, not paginated)
+  const allExpenses = await prisma.expense.aggregate({
     where: {
-      date: { gte: filters.dateFrom, lte: filters.dateTo }
-    }
+      date: { gte: filters.dateFrom, lte: filters.dateTo },
+      ...(filters.category && { category: filters.category }),
+    },
+    _sum: { amount: true },
+    _count: true,
   });
 
-  const categoryData = expenses.reduce((acc, exp) => {
-    if (!acc[exp.category]) {
-      acc[exp.category] = { total: 0, count: 0 };
-    }
-    acc[exp.category].total += parseFloat(exp.amount.toString());
-    acc[exp.category].count++;
-    return acc;
-  }, {} as Record<string, { total: number; count: number }>);
-
-  const totalExpenses = Object.values(categoryData).reduce((sum, c) => sum + c.total, 0);
-
-  return Object.entries(categoryData).map(([category, data]) => ({
-    category,
-    totalAmount: data.total,
-    count: data.count,
-    percentage: totalExpenses > 0 ? (data.total / totalExpenses) * 100 : 0
-  }));
+  return {
+    items,
+    summary: {
+      totalExpenses: parseFloat(allExpenses._sum.amount?.toString() || '0'),
+      count: allExpenses._count,
+      average: allExpenses._count > 0
+        ? parseFloat(allExpenses._sum.amount?.toString() || '0') / allExpenses._count
+        : 0,
+    },
+  };
 }
+```
 
+### Expense Trend (Correct)
+```typescript
 async function getExpensesTrend() {
   const twelveMonthsAgo = new Date();
   twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
 
   const expenses = await prisma.expense.findMany({
     where: { date: { gte: twelveMonthsAgo } },
-    select: { date: true, amount: true }
+    select: { date: true, amount: true },
   });
 
-  const monthlyData = expenses.reduce((acc, exp) => {
-    const monthKey = format(exp.date, 'yyyy-MM');
-    if (!acc[monthKey]) {
-      acc[monthKey] = 0;
-    }
-    acc[monthKey] += parseFloat(exp.amount.toString());
-    return acc;
-  }, {} as Record<string, number>);
+  const monthlyData: Record<string, number> = {};
+  expenses.forEach(exp => {
+    const monthKey = `${exp.date.getFullYear()}-${String(exp.date.getMonth() + 1).padStart(2, '0')}`;
+    monthlyData[monthKey] = (monthlyData[monthKey] || 0) + parseFloat(exp.amount.toString());
+  });
 
   return Object.entries(monthlyData)
     .map(([month, total]) => ({ month, total }))
@@ -147,10 +158,20 @@ async function getExpensesTrend() {
 }
 ```
 
----
+### Module Structure
 
-## Change Log
+```
+apps/api/src/modules/reports/
+  expense-report.service.ts     (NEW — getExpenseReport, getExpensesTrend)
+  reports.controller.ts         (EXPAND — add expense detail + trend handlers)
+  reports.routes.ts             (EXPAND — add GET /expenses, GET /expenses-trend)
+                                (expense-summary already exists)
 
-| Date       | Version | Description            | Author |
-|------------|---------|------------------------|--------|
-| 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+apps/web/src/features/reports/pages/
+  ExpenseReportPage.tsx         (NEW)
+```
+
+### POST-MVP DEFERRED
+
+- **Server-side caching / pre-calculated aggregations**: Use TanStack Query client-side caching.
+- **Expense trend chart**: Optional — table view is sufficient for MVP. Chart can be added with recharts later.

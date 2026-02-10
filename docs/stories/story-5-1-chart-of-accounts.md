@@ -5,7 +5,7 @@
 **Priority:** Critical
 **Estimated Effort:** 10-12 hours
 **Dependencies:** Epic 1 (Foundation)
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2
 
 ---
 
@@ -20,95 +20,46 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] AccountHead table created with fields: id, code (unique), name, accountType, parentId, description, openingBalance, currentBalance, status
-   - [ ] Account types: ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE
+   - [ ] `AccountHead` model: id, code (unique), name, accountType, parentId (self-relation), description, openingBalance, currentBalance, status
+   - [ ] `AccountType` enum: ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE
+   - [ ] `AccountStatus` enum: ACTIVE, INACTIVE
    - [ ] Standard numbering: 1000-1999 (Assets), 2000-2999 (Liabilities), 3000-3999 (Equity), 4000-4999 (Revenue), 5000-5999 (Expenses)
 
 2. **Backend API:**
-   - [ ] POST /api/account-heads - Creates new account
-   - [ ] GET /api/account-heads - Returns hierarchical account list (tree structure)
-   - [ ] GET /api/account-heads/:id - Returns account details with balance
-   - [ ] PUT /api/account-heads/:id - Updates account (name, description only; code immutable)
-   - [ ] DELETE /api/account-heads/:id - Soft-deletes (only if no transactions)
+   - [ ] `POST /api/v1/account-heads` — Create new account
+   - [ ] `GET /api/v1/account-heads` — Return hierarchical account list (tree structure)
+   - [ ] `GET /api/v1/account-heads/:id` — Return account details with balance
+   - [ ] `PUT /api/v1/account-heads/:id` — Update account (name, description only; code immutable)
+   - [ ] `DELETE /api/v1/account-heads/:id` — Soft-delete (only if no transactions and no children)
 
 3. **Hierarchical Structure:**
-   - [ ] Parent accounts can have child accounts
+   - [ ] Parent accounts can have child accounts (self-referential FK)
    - [ ] Example: 1100 Bank Accounts → 1101 Bank A, 1102 Bank B
    - [ ] Opening balances entered for initial setup
 
 4. **Frontend:**
    - [ ] Chart of Accounts page displays tree hierarchy
    - [ ] Add/edit accounts with type validation
-   - [ ] Display account balances (current, opening, difference)
+   - [ ] Display account balances (current, opening)
 
-5. **Authorization & Role-Based Access:**
-   - [ ] Only Admin and Accountant can manage Chart of Accounts
-   - [ ] Account creation/updates logged in audit trail
+5. **Authorization:**
+   - [ ] Only `ADMIN` and `ACCOUNTANT` can manage accounts
    - [ ] Other roles: 403 Forbidden
 
-6. **Performance & Caching:**
-   - [ ] Cache hierarchy indefinitely (static reference data)
-   - [ ] Cache invalidation: Only on account creation/modification
-   - [ ] API timeout: 5 seconds maximum
-   - [ ] Hierarchy query optimized with indexes on code, type
-
-7. **Error Handling:**
-   - [ ] Validate code uniqueness (return 400 if duplicate)
-   - [ ] Validate code range matches account type
-   - [ ] Prevent deletion if account has transactions
-   - [ ] Prevent deletion if account has child accounts
-   - [ ] Display validation errors with specific reason
-
----
-
-## Tasks / Subtasks
-
-### Backend Tasks
-
-- [ ] **Task 1: Database Schema**
-  - [ ] Create AccountHead model
-  - [ ] Create AccountType enum
-  - [ ] Create AccountStatus enum
-  - [ ] Run migration
-
-- [ ] **Task 2: Account Repository**
-  - [ ] Create account-heads.repository.ts
-  - [ ] Implement CRUD methods
-  - [ ] Implement hierarchy query (parent/child relationships)
-
-- [ ] **Task 3: Account Service**
-  - [ ] Create account-heads.service.ts
-  - [ ] Validate code uniqueness
-  - [ ] Validate code ranges by type
-  - [ ] Validate parent-child relationships
-  - [ ] Check for transactions before delete
-
-- [ ] **Task 4: Controller & Routes**
-  - [ ] Create account-heads.controller.ts
-  - [ ] Implement all CRUD endpoints
-  - [ ] Apply authorization guards
-
-- [ ] **Task 5: Seed Standard Accounts**
-  - [ ] Create seed script for standard Chart of Accounts
-  - [ ] Include all standard accounts (1000-5999)
-
-### Frontend Tasks
-
-- [ ] **Task 6: Chart of Accounts Page**
-  - [ ] Create ChartOfAccountsPage.tsx
-  - [ ] Tree view component for hierarchy
-  - [ ] Add/Edit account modal
-  - [ ] Account type selector with validation
-
-- [ ] **Task 7: Testing**
-  - [ ] Backend tests for hierarchy queries
-  - [ ] Frontend tests for tree display
+6. **Seed Standard Accounts:**
+   - [ ] Create seed script with standard Chart of Accounts (see Dev Notes)
 
 ---
 
 ## Dev Notes
 
-### Database Schema
+### Implementation Status
+
+**Backend:** Not started. `AccountHead` model does not exist in schema.
+
+**Frontend:** No Chart of Accounts page exists.
+
+### Database Schema (Proposed)
 
 ```prisma
 model AccountHead {
@@ -143,131 +94,6 @@ enum AccountType {
 enum AccountStatus {
   ACTIVE
   INACTIVE
-}
-```
-
-### Account Service
-
-```typescript
-interface CreateAccountDto {
-  code: string;
-  name: string;
-  accountType: AccountType;
-  parentId?: string;
-  description?: string;
-  openingBalance?: number;
-}
-
-class AccountHeadService {
-  async createAccount(data: CreateAccountDto): Promise<AccountHead> {
-    // Validate code uniqueness
-    const existing = await prisma.accountHead.findUnique({
-      where: { code: data.code }
-    });
-    if (existing) {
-      throw new BadRequestError('Account code already exists');
-    }
-
-    // Validate code range matches account type
-    const codeNum = parseInt(data.code);
-    const validRanges = {
-      ASSET: [1000, 1999],
-      LIABILITY: [2000, 2999],
-      EQUITY: [3000, 3999],
-      REVENUE: [4000, 4999],
-      EXPENSE: [5000, 5999]
-    };
-
-    const [min, max] = validRanges[data.accountType];
-    if (codeNum < min || codeNum > max) {
-      throw new BadRequestError(
-        `Code ${data.code} is invalid for account type ${data.accountType}. Must be between ${min}-${max}`
-      );
-    }
-
-    // Validate parent exists and is same type
-    if (data.parentId) {
-      const parent = await prisma.accountHead.findUnique({
-        where: { id: data.parentId }
-      });
-      if (!parent) {
-        throw new NotFoundError('Parent account not found');
-      }
-      if (parent.accountType !== data.accountType) {
-        throw new BadRequestError('Parent account must be same type');
-      }
-    }
-
-    // Create account
-    const account = await prisma.accountHead.create({
-      data: {
-        code: data.code,
-        name: data.name,
-        accountType: data.accountType,
-        parentId: data.parentId,
-        description: data.description,
-        openingBalance: data.openingBalance || 0,
-        currentBalance: data.openingBalance || 0
-      }
-    });
-
-    return account;
-  }
-
-  async getAccountHierarchy(): Promise<any[]> {
-    // Get all accounts
-    const accounts = await prisma.accountHead.findMany({
-      orderBy: { code: 'asc' }
-    });
-
-    // Build tree structure
-    const accountMap = new Map();
-    const roots: any[] = [];
-
-    // First pass: create map
-    accounts.forEach(acc => {
-      accountMap.set(acc.id, { ...acc, children: [] });
-    });
-
-    // Second pass: build hierarchy
-    accounts.forEach(acc => {
-      const node = accountMap.get(acc.id);
-      if (acc.parentId) {
-        const parent = accountMap.get(acc.parentId);
-        if (parent) {
-          parent.children.push(node);
-        }
-      } else {
-        roots.push(node);
-      }
-    });
-
-    return roots;
-  }
-
-  async deleteAccount(id: string): Promise<void> {
-    // Check for child accounts
-    const children = await prisma.accountHead.count({
-      where: { parentId: id }
-    });
-    if (children > 0) {
-      throw new BadRequestError('Cannot delete account with child accounts');
-    }
-
-    // Check for journal entries
-    const journalLines = await prisma.journalEntryLine.count({
-      where: { accountHeadId: id }
-    });
-    if (journalLines > 0) {
-      throw new BadRequestError('Cannot delete account with transactions');
-    }
-
-    // Soft delete
-    await prisma.accountHead.update({
-      where: { id },
-      data: { status: 'INACTIVE' }
-    });
-  }
 }
 ```
 
@@ -308,136 +134,32 @@ const STANDARD_ACCOUNTS = [
   { code: '5300', name: 'Utilities Expense', type: 'EXPENSE', parent: '5000' },
   { code: '5400', name: 'Salaries Expense', type: 'EXPENSE', parent: '5000' },
   { code: '5500', name: 'Transport Expense', type: 'EXPENSE', parent: '5000' },
-  { code: '5900', name: 'Other Expenses', type: 'EXPENSE', parent: '5000' }
+  { code: '5900', name: 'Other Expenses', type: 'EXPENSE', parent: '5000' },
 ];
-
-async function seedChartOfAccounts() {
-  for (const account of STANDARD_ACCOUNTS) {
-    const parentAccount = account.parent
-      ? await prisma.accountHead.findUnique({ where: { code: account.parent } })
-      : null;
-
-    await prisma.accountHead.create({
-      data: {
-        code: account.code,
-        name: account.name,
-        accountType: account.type,
-        parentId: parentAccount?.id
-      }
-    });
-  }
-}
 ```
 
-### Frontend - Tree View Component
+### Validation Rules
 
-```tsx
-interface AccountNode {
-  id: string;
-  code: string;
-  name: string;
-  accountType: string;
-  currentBalance: number;
-  children: AccountNode[];
-}
+- Code must be unique
+- Code must fall within valid range for its account type (1000-1999 Asset, etc.)
+- Parent must be same account type
+- Cannot delete account with child accounts
+- Cannot delete account with journal entry lines
 
-const AccountTreeNode: FC<{ node: AccountNode; level: number }> = ({ node, level }) => {
-  const [expanded, setExpanded] = useState(true);
+### Module Structure
 
-  return (
-    <div>
-      <div
-        className={cn('flex items-center py-2 px-4 hover:bg-gray-50', {
-          'font-bold': level === 0
-        })}
-        style={{ paddingLeft: `${level * 24 + 16}px` }}
-      >
-        {node.children.length > 0 && (
-          <button onClick={() => setExpanded(!expanded)} className="mr-2">
-            {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-          </button>
-        )}
-        <span className="flex-1">
-          {node.code} - {node.name}
-        </span>
-        <span className="text-gray-600">
-          Rs.{node.currentBalance.toFixed(2)}
-        </span>
-      </div>
+```
+apps/api/src/modules/account-heads/
+  account-heads.controller.ts
+  account-heads.service.ts
+  account-heads.repository.ts
+  account-heads.routes.ts
 
-      {expanded && node.children.map(child => (
-        <AccountTreeNode key={child.id} node={child} level={level + 1} />
-      ))}
-    </div>
-  );
-};
-
-export const ChartOfAccountsPage: FC = () => {
-  const { data: accounts, isLoading } = useGetAccountHierarchy();
-  const [showAddModal, setShowAddModal] = useState(false);
-
-  if (isLoading) return <Spinner />;
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Chart of Accounts</h1>
-        <Button onClick={() => setShowAddModal(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Account
-        </Button>
-      </div>
-
-      <Card>
-        <Card.Body>
-          {accounts?.map(account => (
-            <AccountTreeNode key={account.id} node={account} level={0} />
-          ))}
-        </Card.Body>
-      </Card>
-
-      {showAddModal && (
-        <AddAccountModal onClose={() => setShowAddModal(false)} />
-      )}
-    </div>
-  );
-};
+apps/web/src/features/accounting/pages/
+  ChartOfAccountsPage.tsx
 ```
 
----
+### POST-MVP DEFERRED
 
-## Testing
-
-### Backend Testing
-- Account code uniqueness validation
-- Code range validation by account type
-- Parent-child relationship validation
-- Hierarchy query correctness
-- Cannot delete account with transactions
-- Cannot delete account with children
-
-### Frontend Testing
-- Tree hierarchy display
-- Expand/collapse functionality
-- Add account modal
-- Account type validation
-
----
-
-## Change Log
-
-| Date       | Version | Description            | Author |
-|------------|---------|------------------------|--------|
-| 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
-
----
-
-## Dev Agent Record
-
-*To be populated by dev agent*
-
----
-
-## QA Results
-
-*To be populated by QA agent*
+- **Server-side caching with invalidation**: Use TanStack Query client-side caching. Account hierarchy is small data.
+- **Account code auto-suggestion**: Manual entry is fine for MVP.

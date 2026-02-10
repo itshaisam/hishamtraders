@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 10-12 hours
 **Dependencies:** Story 6.2
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
@@ -20,42 +20,55 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] StockTransfer table with status workflow
+   - [ ] StockTransfer table with status workflow (see Dev Notes)
    - [ ] StockTransferItem table for line items
-   - [ ] Transfer number format: ST-YYYYMMDD-XXX
+   - [ ] Transfer number format: `ST-YYYYMMDD-XXX`
 
 2. **Status Workflow:**
    - [ ] PENDING → APPROVED → IN_TRANSIT → RECEIVED
    - [ ] When APPROVED: Gate pass auto-created for source warehouse (status depends on warehouse gate pass mode)
-     - If AUTO mode: Gate pass APPROVED, inventory deducted immediately
-     - If MANUAL mode: Gate pass PENDING, awaits warehouse manager approval
    - [ ] When IN_TRANSIT: Inventory decremented from source (if not already deducted in AUTO mode)
-   - [ ] When RECEIVED: Inventory incremented at destination with SAME unit cost as source
+   - [ ] When RECEIVED: Inventory incremented at destination using `product.costPrice` (not `inventory.unitCost` — doesn't exist)
 
 3. **Backend API:**
-   - [ ] POST /api/stock-transfers - creates transfer
-   - [ ] PUT /api/stock-transfers/:id/approve - approves
-   - [ ] PUT /api/stock-transfers/:id/receive - completes
-   - [ ] GET /api/stock-transfers - list with filters
+   - [ ] `POST /api/v1/stock-transfers` — creates transfer
+   - [ ] `PUT /api/v1/stock-transfers/:id/approve` — approves + creates gate pass
+   - [ ] `PUT /api/v1/stock-transfers/:id/receive` — completes transfer
+   - [ ] `GET /api/v1/stock-transfers` — list with filters
 
 4. **Batch Tracking:**
-   - [ ] Each StockTransferItem = ONE batch from ONE bin location (not multiple batches per line)
-   - [ ] Batch/lot numbers and bin locations maintained across transfer
+   - [ ] Each StockTransferItem = ONE batch from ONE bin location
+   - [ ] Batch/lot numbers maintained across transfer
    - [ ] If warehouse has same product in multiple bins, create separate line items per bin
 
 5. **Frontend:**
    - [ ] Stock Transfer page
    - [ ] Create Transfer form
-   - [ ] Status progress indicator
+   - [ ] Status progress indicator (Tailwind divs, not Stepper)
    - [ ] Destination warehouse can mark as received
 
 6. **Authorization:**
    - [ ] Warehouse Manager and Admin
-   - [ ] Transfers logged in audit trail
+   - [ ] Transfers logged via `AuditService.log()`
 
 ---
 
 ## Dev Notes
+
+### Implementation Status
+
+**Backend:** Not started. Depends on Story 6.2 (Gate Pass creation).
+
+### Key Corrections
+
+1. **API paths**: All use `/api/v1/stock-transfers` (not `/api/stock-transfers`)
+2. **`inventory.unitCost`** — Inventory model has NO `unitCost` field. When creating inventory at destination, use `product.costPrice` from Product model.
+3. **`movementType: 'TRANSFER_IN'`** — NOT in MovementType enum. Use existing `TRANSFER` for both outbound and inbound. Differentiate by `quantity` sign (+/-) or `notes`.
+4. **`referenceType: 'STOCK_TRANSFER'`** — NOT in ReferenceType enum. Use existing `TRANSFER`.
+5. **`gatePass @relation`** on StockTransfer needs a FK field (`gatePassId`) and the GatePass model needs a `stockTransferId` FK or vice versa.
+6. **`auditLogger.log()`** → `AuditService.log()` with correct action enum values.
+
+### Schema (Proposed — NEW models)
 
 ```prisma
 model StockTransfer {
@@ -63,6 +76,7 @@ model StockTransfer {
   transferNumber   String              @unique
   fromWarehouseId  String
   toWarehouseId    String
+  gatePassId       String?             @unique  // FK to gate pass (optional until approved)
   transferDate     DateTime            @default(now())
   status           StockTransferStatus @default(PENDING)
   requestedBy      String
@@ -75,8 +89,8 @@ model StockTransfer {
   fromWarehouse    Warehouse           @relation("TransfersFrom", fields: [fromWarehouseId], references: [id])
   toWarehouse      Warehouse           @relation("TransfersTo", fields: [toWarehouseId], references: [id])
   requester        User                @relation("RequestedTransfers", fields: [requestedBy], references: [id])
+  gatePass         GatePass?           @relation(fields: [gatePassId], references: [id])
   items            StockTransferItem[]
-  gatePass         GatePass?           @relation
 
   @@map("stock_transfers")
 }
@@ -105,17 +119,42 @@ enum StockTransferStatus {
 }
 ```
 
+**Warehouse model** needs new relations:
+```prisma
+// ADD to Warehouse model:
+transfersFrom StockTransfer[] @relation("TransfersFrom")
+transfersTo   StockTransfer[] @relation("TransfersTo")
+```
+
+**User model** needs new relation:
+```prisma
+// ADD to User model:
+requestedTransfers StockTransfer[] @relation("RequestedTransfers")
+```
+
+**Product model** needs new relation:
+```prisma
+// ADD to Product model:
+stockTransferItems StockTransferItem[]
+```
+
+**GatePass model** needs new relation:
+```prisma
+// ADD to GatePass model:
+stockTransfer StockTransfer?
+```
+
+### Transfer Service
+
 ```typescript
 async function createStockTransfer(
   data: CreateStockTransferDto,
   userId: string
 ): Promise<StockTransfer> {
-  // Validate warehouses are different
   if (data.fromWarehouseId === data.toWarehouseId) {
     throw new BadRequestError('Cannot transfer to same warehouse');
   }
 
-  // Generate transfer number
   const transferNumber = await generateTransferNumber();
 
   const transfer = await prisma.stockTransfer.create({
@@ -125,11 +164,17 @@ async function createStockTransfer(
       toWarehouseId: data.toWarehouseId,
       requestedBy: userId,
       notes: data.notes,
-      items: {
-        create: data.items
-      }
+      items: { create: data.items }
     },
     include: { items: { include: { product: true } } }
+  });
+
+  await AuditService.log({
+    userId,
+    action: 'CREATE',
+    entityType: 'StockTransfer',
+    entityId: transfer.id,
+    notes: `Transfer ${transferNumber} created`,
   });
 
   return transfer;
@@ -139,12 +184,12 @@ async function approveStockTransfer(
   transferId: string,
   userId: string
 ): Promise<StockTransfer> {
-  const transfer = await prisma.stockTransfer.findUnique({
+  const transfer = await prisma.stockTransfer.findUniqueOrThrow({
     where: { id: transferId },
     include: { items: true }
   });
 
-  if (transfer?.status !== 'PENDING') {
+  if (transfer.status !== 'PENDING') {
     throw new BadRequestError('Transfer must be pending to approve');
   }
 
@@ -152,12 +197,12 @@ async function approveStockTransfer(
   const gatePass = await createGatePass({
     warehouseId: transfer.fromWarehouseId,
     purpose: 'TRANSFER',
-    referenceType: 'STOCK_TRANSFER',
+    referenceType: 'TRANSFER',    // Use existing ReferenceType enum value
     referenceId: transferId,
     items: transfer.items.map(item => ({
       productId: item.productId,
-      batchNo: item.batchNo,
-      binLocation: item.fromBinLocation,
+      batchNo: item.batchNo ?? undefined,
+      binLocation: item.fromBinLocation ?? undefined,
       quantity: item.quantity
     }))
   }, userId);
@@ -166,28 +211,40 @@ async function approveStockTransfer(
     where: { id: transferId },
     data: {
       status: 'APPROVED',
-      approvedBy: userId
+      approvedBy: userId,
+      gatePassId: gatePass.id
     }
+  });
+
+  await AuditService.log({
+    userId,
+    action: 'UPDATE',
+    entityType: 'StockTransfer',
+    entityId: transferId,
+    notes: `Transfer ${transfer.transferNumber} approved, gate pass ${gatePass.gatePassNumber} created`,
   });
 
   return updated;
 }
+```
 
+### Receive Transfer (Increment Destination)
+
+```typescript
 async function receiveStockTransfer(
   transferId: string,
   userId: string
 ): Promise<StockTransfer> {
-  const transfer = await prisma.stockTransfer.findUnique({
+  const transfer = await prisma.stockTransfer.findUniqueOrThrow({
     where: { id: transferId },
-    include: { items: true, gatePass: true }
+    include: { items: { include: { product: true } }, gatePass: true }
   });
 
-  if (transfer?.status !== 'IN_TRANSIT') {
+  if (transfer.status !== 'IN_TRANSIT') {
     throw new BadRequestError('Transfer must be in transit to receive');
   }
 
   await prisma.$transaction(async (tx) => {
-    // Increment inventory at destination
     for (const item of transfer.items) {
       const existing = await tx.inventory.findFirst({
         where: {
@@ -203,15 +260,8 @@ async function receiveStockTransfer(
           data: { quantity: { increment: item.quantity } }
         });
       } else {
-        // Get source inventory to copy unit cost
-        const sourceInventory = await tx.inventory.findFirst({
-          where: {
-            productId: item.productId,
-            warehouseId: transfer.fromWarehouseId,
-            ...(item.batchNo && { batchNo: item.batchNo })
-          }
-        });
-
+        // Create new inventory record at destination
+        // NOTE: Inventory has NO unitCost field — just create with quantity
         await tx.inventory.create({
           data: {
             productId: item.productId,
@@ -219,19 +269,18 @@ async function receiveStockTransfer(
             quantity: item.quantity,
             batchNo: item.batchNo,
             binLocation: item.toBinLocation,
-            unitCost: sourceInventory?.unitCost || 0 // Copy from source inventory
           }
         });
       }
 
-      // Create stock movement
+      // Create stock movement for receiving
       await tx.stockMovement.create({
         data: {
           productId: item.productId,
           warehouseId: transfer.toWarehouseId,
-          movementType: 'TRANSFER_IN',
+          movementType: 'TRANSFER',      // Use existing enum value (not TRANSFER_IN)
           quantity: item.quantity,
-          referenceType: 'STOCK_TRANSFER',
+          referenceType: 'TRANSFER',     // Use existing enum value (not STOCK_TRANSFER)
           referenceId: transferId,
           movementDate: new Date(),
           userId
@@ -239,13 +288,9 @@ async function receiveStockTransfer(
       });
     }
 
-    // Update transfer status
     await tx.stockTransfer.update({
       where: { id: transferId },
-      data: {
-        status: 'RECEIVED',
-        receivedBy: userId
-      }
+      data: { status: 'RECEIVED', receivedBy: userId }
     });
 
     // Complete gate pass
@@ -257,9 +302,35 @@ async function receiveStockTransfer(
     }
   });
 
+  await AuditService.log({
+    userId,
+    action: 'UPDATE',
+    entityType: 'StockTransfer',
+    entityId: transferId,
+    notes: `Transfer ${transfer.transferNumber} received at destination`,
+  });
+
   return transfer;
 }
 ```
+
+### Module Structure
+
+```
+apps/api/src/modules/stock-transfers/
+  stock-transfer.controller.ts  (NEW)
+  stock-transfer.service.ts     (NEW)
+  stock-transfer.routes.ts      (NEW)
+
+apps/web/src/features/stock-transfers/pages/
+  StockTransferListPage.tsx      (NEW)
+  CreateStockTransferPage.tsx    (NEW)
+  StockTransferDetailPage.tsx    (NEW)
+```
+
+### POST-MVP DEFERRED
+
+- **Partial receiving**: For MVP, all items received at once. Partial line-item receiving deferred.
 
 ---
 
@@ -268,3 +339,4 @@ async function receiveStockTransfer(
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), removed inventory.unitCost (doesn't exist), use existing enum values TRANSFER/TRANSFER (not TRANSFER_IN/STOCK_TRANSFER), added gatePassId FK to StockTransfer, auditLogger→AuditService, documented all required relation additions | Claude (AI Review) |

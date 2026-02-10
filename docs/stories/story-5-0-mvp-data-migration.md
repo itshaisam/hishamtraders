@@ -5,7 +5,7 @@
 **Priority:** Critical (for Phase 2)
 **Estimated Effort:** 8-12 hours
 **Dependencies:** All MVP Stories (Epics 1-4), Story 5.1 (Chart of Accounts)
-**Status:** New
+**Status:** New — Phase 2
 
 ---
 
@@ -20,47 +20,69 @@
 ## Acceptance Criteria
 
 1.  **Script Creation:**
-    *   [ ] A script is created (e.g., `prisma/migrations/scripts/backfill-gl.ts`) that can be run once to populate the `JournalEntry` table.
-    *   [ ] The script is idempotent, meaning it can be run multiple times without creating duplicate entries. It should check if a journal entry for a specific transaction already exists before creating one.
+    *   [ ] Script at `prisma/migrations/scripts/backfill-gl.ts`, runnable once to populate `JournalEntry` table.
+    *   [ ] Idempotent: checks if journal entry for a transaction already exists before creating.
 
 2.  **Transaction Coverage:**
-    *   [ ] The script processes all `Invoices` created during the MVP phase and generates the corresponding journal entries (Debit A/R, Credit Sales, Credit Tax).
-    *   [ ] The script processes all `Client Payments` and generates the corresponding journal entries (Debit Bank, Credit A/R).
-    *   [ ] The script processes all `Purchase Order Receipts` and generates journal entries (Debit Inventory, Credit A/P).
-    *   [ ] The script processes all `Supplier Payments` and generates journal entries (Debit A/P, Credit Bank).
-    *   [ ] The script processes all `Expenses` and generates journal entries (Debit Expense Account, Credit Bank/Cash).
-    *   [ ] The script processes all `Stock Adjustments` (Wastage/Damage) and generates journal entries (Debit Inventory Loss, Credit Inventory).
+    *   [ ] Invoices → Debit A/R, Credit Sales Revenue, Credit Tax Payable
+    *   [ ] Client Payments → Debit Bank, Credit A/R
+    *   [ ] PO Receipts → Debit Inventory, Credit A/P
+    *   [ ] Supplier Payments → Debit A/P, Credit Bank
+    *   [ ] Expenses → Debit Expense Account, Credit Bank/Cash
+    *   [ ] Stock Adjustments (Wastage/Damage) → Debit Inventory Loss, Credit Inventory
 
-3.  **Data Integrity & Validation:**
-    *   [ ] After the script runs, the `currentBalance` of all accounts in the `AccountHead` table is correctly updated.
-    *   [ ] A post-migration validation step is included: the script generates a Trial Balance report and confirms that total debits equal total credits.
-    *   [ ] The script handles potential edge cases, such as voided invoices from the MVP phase (these should be ignored).
+3.  **Data Integrity:**
+    *   [ ] After script runs, `AccountHead.currentBalance` is correctly updated for all accounts.
+    *   [ ] Post-migration validation: generate Trial Balance, confirm debits = credits.
+    *   [ ] Voided invoices are ignored.
 
-4.  **Execution & Documentation:**
-    *   [ ] The script is documented in the project's `README.md` with clear instructions on how and when to run it.
-    *   [ ] The script logs its progress, indicating how many of each transaction type were processed.
+4.  **Execution:**
+    *   [ ] Script logs progress (count of each transaction type processed).
+    *   [ ] Documented in README with run instructions.
 
 ---
 
 ## Dev Notes
 
-### Migration Strategy
+### Implementation Status
 
-This script should be run **once** during the deployment of Phase 2. It bridges the gap between the simplified accounting of the MVP and the double-entry system of Phase 2.
+**Backend:** Not started. Depends on Story 5.1 (AccountHead model) and Story 5.2 (JournalEntry model).
 
-### Idempotency Check
+### Schema Field Reference (Existing MVP Models)
 
-To ensure the script can be run multiple times without creating duplicates, each auto-generated journal entry should be linked to its source transaction.
+```
+Invoice:      id, invoiceNumber, invoiceDate, clientId, total, taxAmount, taxRate, paidAmount, status
+              (NO subtotal field — compute as: total - taxAmount)
+              (status: PENDING | PARTIAL | PAID | OVERDUE | CANCELLED | VOIDED)
 
+Payment:      id, paymentType (SUPPLIER | CLIENT), clientId, supplierId, amount, method, date
+              paymentReferenceType, referenceId
+
+PurchaseOrder: id, poNumber, supplierId, totalAmount (NOT totalCost), status
+               (NO receivedDate field — use GoodsReceipt or createdAt as proxy)
+
+Expense:      id, category (ExpenseCategory), amount, description, date, paymentMethod
+              (NO paidTo field)
+
+StockAdjustment: id, productId, warehouseId, adjustmentType, quantity, reason, status
+```
+
+### Key Corrections from Original Concept
+
+1. **`invoice.subtotal` does NOT exist** — Compute subtotal as `invoice.total - invoice.taxAmount`.
+2. **`invoice.tax` → `invoice.taxAmount`**
+3. **`po.receivedDate` does NOT exist** — PurchaseOrder has no received date. Use goods receipt date or `createdAt`.
+4. **`po.totalCost` → `po.totalAmount`**
+5. **`createdBy: 'SYSTEM'`** — JournalEntry.createdBy is a User FK. Need a real system user record (seed a "SYSTEM" user during Phase 2 setup, or use the admin user's ID).
+
+### Idempotency Check (Correct)
 ```typescript
-// Example check within the script
 const existingEntry = await prisma.journalEntry.findFirst({
   where: {
     referenceType: 'INVOICE',
     referenceId: invoice.id,
   },
 });
-
 if (!existingEntry) {
   // Create the journal entry for this invoice
 }
@@ -68,29 +90,13 @@ if (!existingEntry) {
 
 ### Transaction Processing Order
 
-The script should process transactions in chronological order to ensure account balances are calculated correctly.
+1. PO Receipts (establish inventory value)
+2. Invoices (establish revenue and A/R)
+3. Client Payments (reduce A/R)
+4. Supplier Payments (reduce A/P)
+5. Expenses (operational costs)
+6. Stock Adjustments (inventory changes)
 
-1.  **Purchase Order Receipts:** To establish inventory value.
-2.  **Invoices:** To establish revenue and accounts receivable.
-3.  **Client Payments:** To reduce accounts receivable.
-4.  **Supplier Payments:** To reduce accounts payable.
-5.  **Expenses:** To record operational costs.
-6.  **Stock Adjustments:** To account for inventory changes.
+### POST-MVP DEFERRED
 
-### Validation Step
-
-After processing all transactions, the script should perform a final validation.
-
-```typescript
-// At the end of the migration script
-console.log('Validating General Ledger...');
-
-const trialBalance = await getTrialBalance(new Date()); // Use the service from Story 5.4
-
-if (trialBalance.isBalanced) {
-  console.log('✅ Migration successful! Trial balance is balanced.');
-} else {
-  console.error('❌ Migration failed! Trial balance is NOT balanced.');
-  console.error(`Difference: ${trialBalance.difference}`);
-}
-```
+- **Incremental migration**: Script runs once during Phase 2 deployment. No incremental mode needed.

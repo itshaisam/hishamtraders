@@ -5,7 +5,7 @@
 **Priority:** Low
 **Estimated Effort:** 4-6 hours
 **Dependencies:** Story 6.5
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
@@ -20,12 +20,12 @@
 ## Acceptance Criteria
 
 1. **Backend API:**
-   - [ ] POST /api/inventory/bin-transfer - creates bin transfer
-   - [ ] Payload: productId, warehouseId, fromBinLocation, toBinLocation, quantity, batchNo, reason
-   - [ ] Validation: sufficient stock in source bin
-   - [ ] Inventory record updated: bin location changed
-   - [ ] StockMovement created (type=BIN_TRANSFER)
-   - [ ] GET /api/inventory/bin-transfers - transfer history
+   - [ ] `POST /api/v1/inventory/bin-transfer` — creates bin transfer
+   - [ ] Payload: `productId`, `warehouseId`, `fromBinLocation`, `toBinLocation`, `quantity`, `batchNo`, `reason`
+   - [ ] Validation: sufficient stock in source bin, both bins ACTIVE
+   - [ ] Inventory record updated: decrement source, increment/create destination
+   - [ ] StockMovement created (`movementType: 'ADJUSTMENT'`)
+   - [ ] `GET /api/v1/inventory/bin-transfers` — transfer history
 
 2. **Frontend:**
    - [ ] Bin Transfer page
@@ -36,11 +36,34 @@
 
 3. **Authorization:**
    - [ ] Warehouse Manager and Admin
-   - [ ] Bin transfers logged in audit trail
+   - [ ] Bin transfers logged via `AuditService.log()`
 
 ---
 
 ## Dev Notes
+
+### Implementation Status
+
+**Backend:** Not started. Depends on Story 6.5 (BinLocation model).
+
+### Key Corrections
+
+1. **API paths**: Use `/api/v1/inventory/bin-transfer` (not `/api/inventory/bin-transfer`)
+2. **`inventory.unitCost`** — Inventory model has NO `unitCost` field. When creating new inventory record at destination, omit `unitCost` entirely.
+3. **`movementType: 'BIN_TRANSFER'`** — NOT in MovementType enum. Use existing `'ADJUSTMENT'` (closest match — internal location change).
+4. **`binLocation.isDeleted`** — BinLocation has NO `isDeleted` field (see Story 6.5 revision). Check `status !== 'ACTIVE'` instead.
+5. **`auditLogger.log()`** → `AuditService.log()` with correct fields:
+   ```typescript
+   await AuditService.log({
+     userId,
+     action: 'CREATE',
+     entityType: 'BinTransfer',       // NOT 'resource'
+     entityId: undefined,             // No dedicated model — log as note
+     notes: `Bin transfer: ${fromBin} → ${toBin}, product ${productId}, qty ${quantity}. Reason: ${reason}`,
+   });
+   ```
+
+### Bin Transfer Service (Corrected)
 
 ```typescript
 interface BinTransferDto {
@@ -67,13 +90,13 @@ async function createBinTransfer(
     })
   ]);
 
-  // Both bins must exist, be ACTIVE, and not deleted
-  if (!fromBin || fromBin.status !== 'ACTIVE' || fromBin.isDeleted) {
-    throw new BadRequestError('Source bin not found, inactive, or deleted');
+  // Check status — NO isDeleted field (use status check)
+  if (!fromBin || fromBin.status !== 'ACTIVE') {
+    throw new BadRequestError('Source bin not found or inactive');
   }
 
-  if (!toBin || toBin.status !== 'ACTIVE' || toBin.isDeleted) {
-    throw new BadRequestError('Destination bin not found, inactive, or deleted');
+  if (!toBin || toBin.status !== 'ACTIVE') {
+    throw new BadRequestError('Destination bin not found or inactive');
   }
 
   // Find inventory in source bin
@@ -113,6 +136,7 @@ async function createBinTransfer(
         data: { quantity: { increment: data.quantity } }
       });
     } else {
+      // NOTE: Inventory has NO unitCost field — omit it
       await tx.inventory.create({
         data: {
           productId: data.productId,
@@ -120,7 +144,6 @@ async function createBinTransfer(
           quantity: data.quantity,
           binLocation: data.toBinLocation,
           batchNo: data.batchNo,
-          unitCost: sourceInventory.unitCost
         }
       });
     }
@@ -130,8 +153,8 @@ async function createBinTransfer(
       data: {
         productId: data.productId,
         warehouseId: data.warehouseId,
-        movementType: 'BIN_TRANSFER',
-        quantity: 0, // Net zero movement (just location change)
+        movementType: 'ADJUSTMENT',    // Use existing enum (not BIN_TRANSFER)
+        quantity: 0,                   // Net zero movement (just location change)
         movementDate: new Date(),
         userId,
         notes: `Bin transfer: ${data.fromBinLocation} → ${data.toBinLocation}. Reason: ${data.reason}`
@@ -139,20 +162,28 @@ async function createBinTransfer(
     });
   });
 
-  await auditLogger.log({
-    action: 'BIN_TRANSFER',
+  await AuditService.log({
     userId,
-    resource: 'Inventory',
-    details: {
-      productId: data.productId,
-      fromBin: data.fromBinLocation,
-      toBin: data.toBinLocation,
-      quantity: data.quantity,
-      reason: data.reason
-    }
+    action: 'CREATE',
+    entityType: 'BinTransfer',
+    notes: `Bin transfer: ${data.fromBinLocation} → ${data.toBinLocation}, qty ${data.quantity}. Reason: ${data.reason}`,
   });
 }
 ```
+
+### Module Structure
+
+```
+apps/api/src/modules/bins/
+  bin.service.ts        (EXPAND — add createBinTransfer, getBinTransferHistory)
+
+apps/web/src/features/warehouse/pages/
+  BinTransferPage.tsx    (NEW)
+```
+
+### POST-MVP DEFERRED
+
+- **BinTransfer model**: For MVP, bin transfers are recorded only via StockMovement + AuditLog. A dedicated BinTransfer model could be added later for better querying/reporting.
 
 ---
 
@@ -161,3 +192,4 @@ async function createBinTransfer(
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), removed inventory.unitCost (doesn't exist), use ADJUSTMENT enum instead of BIN_TRANSFER, removed binLocation.isDeleted (use status check), auditLogger→AuditService | Claude (AI Review) |

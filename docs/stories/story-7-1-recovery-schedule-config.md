@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Epic 3 (Clients)
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
@@ -20,12 +20,12 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] Client table expanded: recoveryDay (enum), recoveryAgentId
+   - [ ] Client table expanded: `recoveryDay` (RecoveryDay enum), `recoveryAgentId` (FK to User) — NEW fields
    - [ ] Recovery days: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, NONE
 
 2. **Backend API:**
-   - [ ] PUT /api/clients/:id - updates recoveryDay and recoveryAgentId
-   - [ ] GET /api/recovery/schedule?date=YYYY-MM-DD - returns clients scheduled for that day
+   - [ ] `PUT /api/v1/clients/:id` — updates recoveryDay and recoveryAgentId
+   - [ ] `GET /api/v1/recovery/schedule?date=YYYY-MM-DD` — returns clients scheduled for that day
    - [ ] Calculates day of week from date and filters clients
 
 3. **Response Data:**
@@ -33,29 +33,44 @@
 
 4. **Frontend:**
    - [ ] Client form includes Recovery Day dropdown
-   - [ ] Client form includes Recovery Agent dropdown
+   - [ ] Client form includes Recovery Agent dropdown (users with RECOVERY_AGENT role)
    - [ ] Client detail page displays recovery schedule
 
 5. **Authorization:**
    - [ ] Accountant, Admin can configure
-   - [ ] Recovery schedule changes logged
+   - [ ] Recovery schedule changes logged via `AuditService.log()`
 
 ---
 
 ## Dev Notes
 
+### Implementation Status
+
+**Backend:** Not started. Depends on Client model (Epic 3).
+
+### Key Corrections
+
+1. **API paths**: All use `/api/v1/` prefix (not `/api/`).
+2. **`client.recoveryDay`** and **`client.recoveryAgentId`** are NEW fields — not present in current Client model. Requires Prisma migration.
+3. **InvoiceStatus `'UNPAID'`** does NOT exist. Use `'PENDING'` instead. Valid values: PENDING, PARTIAL, PAID, OVERDUE, CANCELLED, VOIDED.
+4. **`auditLogger.log()`** replaced with `AuditService.log()` using correct fields.
+5. **Frontend**: Trimmed to notes only — just extend existing Client form with two new dropdowns.
+
+### Schema Changes Required
+
+**Add to existing Client model:**
 ```prisma
-model Client {
-  // ... existing fields
-  recoveryDay      RecoveryDay?     @default(NONE)
-  recoveryAgentId  String?
+// ADD to Client model:
+recoveryDay      RecoveryDay?  @default(NONE)
+recoveryAgentId  String?
 
-  recoveryAgent    User?            @relation("RecoveryAgentClients", fields: [recoveryAgentId], references: [id])
-  recoveryVisits   RecoveryVisit[]
+recoveryAgent    User?         @relation("RecoveryAgentClients", fields: [recoveryAgentId], references: [id])
+recoveryVisits   RecoveryVisit[]   // Story 7.4
+paymentPromises  PaymentPromise[]  // Story 7.5
+```
 
-  // ... other relations
-}
-
+**New enum:**
+```prisma
 enum RecoveryDay {
   MONDAY
   TUESDAY
@@ -67,12 +82,19 @@ enum RecoveryDay {
 }
 ```
 
+**Add to User model:**
+```prisma
+// ADD to User model:
+recoveryClients  Client[]  @relation("RecoveryAgentClients")
+```
+
+### Backend: Schedule Query
+
 ```typescript
+// GET /api/v1/recovery/schedule?date=YYYY-MM-DD
 async function getRecoverySchedule(date: Date): Promise<any[]> {
-  // Get day of week
   const dayOfWeek = format(date, 'EEEE').toUpperCase() as RecoveryDay;
 
-  // Get clients scheduled for this day
   const clients = await prisma.client.findMany({
     where: {
       recoveryDay: dayOfWeek,
@@ -83,7 +105,7 @@ async function getRecoverySchedule(date: Date): Promise<any[]> {
       recoveryAgent: true,
       invoices: {
         where: {
-          status: { in: ['UNPAID', 'PARTIAL'] }
+          status: { in: ['PENDING', 'PARTIAL'] }
         }
       },
       payments: {
@@ -118,6 +140,44 @@ async function getRecoverySchedule(date: Date): Promise<any[]> {
 }
 ```
 
+### Backend: Update Schedule
+
+```typescript
+// PUT /api/v1/clients/:id (extend existing endpoint)
+// Add recoveryDay and recoveryAgentId to update DTO
+
+await AuditService.log({
+  userId,
+  action: 'UPDATE',
+  entityType: 'Client',
+  entityId: clientId,
+  notes: `Recovery schedule updated: day=${recoveryDay}, agent=${recoveryAgentId}`
+});
+```
+
+### Module Structure
+
+```
+apps/api/src/modules/recovery/
+  recovery.controller.ts     (NEW)
+  recovery.service.ts        (NEW)
+  recovery.routes.ts         (NEW)
+
+apps/web/src/features/clients/
+  ClientForm.tsx              (EXPAND — add recoveryDay and recoveryAgent dropdowns)
+```
+
+### Frontend Notes
+
+- Add `RecoveryDay` dropdown to existing Client create/edit form (MONDAY..SATURDAY, NONE).
+- Add `Recovery Agent` dropdown populated from users with RECOVERY_AGENT role.
+- No new page required — extend existing client management UI.
+
+### POST-MVP DEFERRED
+
+- **Bulk assignment UI**: Assign multiple clients to a day/agent at once.
+- **Route optimization**: GPS-based ordering of daily schedule.
+
 ---
 
 ## Change Log
@@ -125,3 +185,4 @@ async function getRecoverySchedule(date: Date): Promise<any[]> {
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), InvoiceStatus UNPAID->PENDING, noted recoveryDay and recoveryAgentId as NEW Client fields requiring migration, auditLogger->AuditService, trimmed frontend to notes only | Claude (AI Review) |

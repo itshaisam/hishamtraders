@@ -3,323 +3,149 @@
 **Epic:** Epic 8 - Audit Trail Viewer & Advanced Features
 **Story ID:** STORY-8.6
 **Priority:** Medium
-**Estimated Effort:** 10-12 hours
+**Estimated Effort:** 6-8 hours
 **Dependencies:** All existing epics
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
 ## User Story
 
 **As a** user,
-**I want** optimized mobile experience with offline support,
-**So that** I can use the system on the go without constant connectivity.
+**I want** an optimized mobile experience with basic PWA install support,
+**So that** I can use the system on mobile devices with a native-like experience.
 
 ---
 
 ## Acceptance Criteria
 
 1. **Progressive Web App (PWA) Configuration:**
-   - [ ] manifest.json with app name, icons, theme colors
-   - [ ] Service worker for offline support
+   - [ ] `manifest.json` with app name, icons, theme colors
+   - [ ] Service worker via `vite-plugin-pwa` (Workbox-based) for asset caching
    - [ ] Install prompt for "Add to Home Screen"
 
-2. **Offline Functionality:**
-   - [ ] Cache critical pages (dashboard, inventory list, client list)
-   - [ ] Allow viewing cached data when offline
-   - [ ] Queue actions (payments, adjustments, stock adjustments, recovery visits) for sync when online
-   - [ ] Queue stored in IndexedDB with max 5 retries per action
-   - [ ] Exponential backoff retry strategy (1s, 2s, 4s, 8s)
+2. **Basic Caching (via vite-plugin-pwa / Workbox):**
+   - [ ] Pre-cache the app shell (HTML, JS, CSS bundles — Vite-hashed filenames handled automatically)
+   - [ ] Runtime cache API responses with stale-while-revalidate strategy (5-minute TTL)
    - [ ] Display "Offline Mode" banner when disconnected
-   - [ ] Display sync status indicator (pending, syncing, synced, error)
 
-3. **Mobile-Optimized Workflows:**
-   - [ ] Payment recording (simplified form with large buttons)
-   - [ ] Stock lookup (barcode scan + quick view)
-   - [ ] Client balance check (search client, display balance)
-   - [ ] Invoice creation (touch-optimized, numeric keypad for quantities)
-
-4. **Touch-Friendly UI:**
-   - [ ] Buttons min 44px tap target
-   - [ ] Swipe gestures (swipe to delete, swipe to approve)
-   - [ ] Pull-to-refresh on list pages
-   - [ ] Bottom navigation bar for key actions
-
-5. **Mobile-Specific Features:**
-   - [ ] Click-to-call phone numbers
-   - [ ] Tap to open address in Google Maps
-   - [ ] Camera access for barcode scanning
-   - [ ] Tap to expand accordion sections
-
-6. **Responsive Breakpoints:**
+3. **Responsive Design:**
    - [ ] Mobile: 320px - 767px (portrait and landscape)
    - [ ] Tablet: 768px - 1023px
    - [ ] Desktop: 1024px+
+   - [ ] All existing pages render correctly at all breakpoints
 
-7. **PWA Features:**
-   - [ ] Install prompt displays on mobile browsers
-   - [ ] Service worker caches API responses for 5 minutes (stale-while-revalidate)
-   - [ ] Syncs queued actions automatically when connection restored
-   - [ ] Displays sync status indicator (syncing, synced, offline)
+4. **Touch-Friendly UI:**
+   - [ ] Buttons min 44px tap target
+   - [ ] Tap to expand accordion sections
+   - [ ] Adequate spacing between interactive elements on mobile
 
-8. **Authorization:**
+5. **Mobile-Specific Features:**
+   - [ ] Click-to-call phone numbers (`tel:` links)
+   - [ ] Tap to open address in Google Maps
+   - [ ] Responsive tables (horizontal scroll or card layout on mobile)
+
+6. **Authorization:**
    - [ ] All roles benefit from mobile optimization
+
+---
+
+## POST-MVP Deferred
+
+The following features are deferred to post-MVP. They are documented here for future reference but are NOT part of this story's scope:
+
+- **Offline queue with IndexedDB** — queuing mutations (payments, adjustments) for sync when online. Requires careful conflict resolution logic.
+- **Background sync** — `self.addEventListener('sync', ...)` for retrying queued actions.
+- **Exponential backoff retry strategy** — over-engineered for MVP.
+- **Swipe gestures** — swipe to delete, swipe to approve.
+- **Pull-to-refresh** — on list pages.
+- **Bottom navigation bar** — for key mobile actions.
+- **Barcode/camera scanning** — requires additional library integration.
+- **Mobile-optimized invoice creation** — touch-optimized numeric keypad for quantities.
 
 ---
 
 ## Dev Notes
 
-**manifest.json:**
-```json
-{
-  "name": "Hisham Traders ERP",
-  "short_name": "HT ERP",
-  "description": "Enterprise Resource Planning System",
-  "start_url": "/",
-  "display": "standalone",
-  "theme_color": "#3b82f6",
-  "background_color": "#ffffff",
-  "icons": [
-    {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
-}
+### Install vite-plugin-pwa
+
+```bash
+cd apps/web
+npm install -D vite-plugin-pwa
 ```
 
-**Service Worker (service-worker.js):**
-```javascript
-const CACHE_NAME = 'ht-erp-v1';
-const urlsToCache = [
-  '/',
-  '/dashboard',
-  '/inventory',
-  '/clients',
-  '/static/css/main.css',
-  '/static/js/main.js'
-];
+### Vite Configuration (vite.config.ts)
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) {
-        return response;
-      }
-
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200) {
-          return response;
-        }
-
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
-        return response;
-      });
-    })
-  );
-});
-
-// Offline Queue Management with IndexedDB
-async function syncQueuedActions() {
-  const db = await openDB('erp-queue');
-  const actions = await db.getAll('actions');
-
-  for (const action of actions) {
-    try {
-      await executeQueuedAction(action, db);
-      await db.delete('actions', action.id);
-    } catch (error) {
-      console.error('Sync failed for action:', action.id, error);
-      await updateActionRetry(action, db);
-    }
-  }
-}
-
-async function executeQueuedAction(action, db) {
-  const response = await fetch(action.url, {
-    method: action.method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(action.payload)
-  });
-
-  if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-  }
-
-  return response.json();
-}
-
-async function updateActionRetry(action, db) {
-  const maxRetries = 5;
-  const retryDelays = [1000, 2000, 4000, 8000, 16000]; // Exponential backoff
-
-  if (!action.retryCount) {
-    action.retryCount = 0;
-  }
-
-  if (action.retryCount >= maxRetries) {
-    // Mark action as permanently failed
-    action.status = 'FAILED';
-    action.lastError = 'Max retries exceeded';
-    await db.put('actions', action);
-  } else {
-    // Schedule next retry
-    const nextRetryDelay = retryDelays[action.retryCount];
-    action.retryCount += 1;
-    action.nextRetryAt = Date.now() + nextRetryDelay;
-    action.status = 'PENDING';
-    await db.put('actions', action);
-  }
-}
-
-// Background sync triggered when connection restored
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-actions') {
-    event.waitUntil(syncQueuedActions());
-  }
-});
-```
-
-**Offline Queue Structure (IndexedDB):**
 ```typescript
-// Queue item interface
-interface OfflineQueueItem {
-  id: string; // UUID
-  action: QueueableAction; // Action type
-  timestamp: Date; // When queued
-  payload: Record<string, any>; // API request body
-  url: string; // API endpoint
-  method: 'POST' | 'PUT' | 'PATCH'; // HTTP method
-  retryCount: number; // Number of retries attempted
-  maxRetries: number; // Default: 5
-  nextRetryAt?: number; // Timestamp for next retry
-  status: 'PENDING' | 'SYNCING' | 'FAILED'; // Queue item status
-  lastError?: string; // Error message if failed
-  createdAt: Date; // Created timestamp
-  updatedAt: Date; // Last update timestamp
-}
+import { VitePWA } from 'vite-plugin-pwa';
 
-// Queueable actions
-enum QueueableAction {
-  CREATE_PAYMENT = 'CREATE_PAYMENT',
-  CREATE_INVOICE = 'CREATE_INVOICE',
-  UPDATE_STOCK_ADJUSTMENT = 'UPDATE_STOCK_ADJUSTMENT',
-  LOG_RECOVERY_VISIT = 'LOG_RECOVERY_VISIT'
-}
-
-// IndexedDB Schema
-interface QueueDB {
-  actions: OfflineQueueItem[];
-}
-
-// Storage implementation
-class OfflineQueueManager {
-  private db: IDBDatabase;
-  private storeName = 'offline-actions';
-
-  async init(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open('erp-offline-queue', 1);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        this.db = request.result;
-        resolve();
-      };
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
-        store.createIndex('status', 'status', { unique: false });
-        store.createIndex('action', 'action', { unique: false });
-        store.createIndex('nextRetryAt', 'nextRetryAt', { unique: false });
-      };
-    });
-  }
-
-  async enqueue(item: Omit<OfflineQueueItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<OfflineQueueItem> {
-    const queueItem: OfflineQueueItem = {
-      ...item,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      retryCount: 0,
-      maxRetries: 5,
-      status: 'PENDING'
-    };
-
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction([this.storeName], 'readwrite');
-      const store = tx.objectStore(this.storeName);
-      const request = store.add(queueItem);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(queueItem);
-    });
-  }
-
-  async getPendingActions(): Promise<OfflineQueueItem[]> {
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction([this.storeName], 'readonly');
-      const store = tx.objectStore(this.storeName);
-      const index = store.index('status');
-      const request = index.getAll('PENDING');
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-  }
-
-  async updateStatus(id: string, status: 'PENDING' | 'SYNCING' | 'FAILED', error?: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction([this.storeName], 'readwrite');
-      const store = tx.objectStore(this.storeName);
-      const getRequest = store.get(id);
-
-      getRequest.onsuccess = () => {
-        const item = getRequest.result;
-        item.status = status;
-        item.updatedAt = new Date();
-        if (error) item.lastError = error;
-
-        const updateRequest = store.put(item);
-        updateRequest.onerror = () => reject(updateRequest.error);
-        updateRequest.onsuccess = () => resolve();
-      };
-    });
-  }
-
-  async remove(id: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction([this.storeName], 'readwrite');
-      const store = tx.objectStore(this.storeName);
-      const request = store.delete(id);
-
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
-    });
-  }
-}
+export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'icons/*.png'],
+      manifest: {
+        name: 'Hisham Traders ERP',
+        short_name: 'HT ERP',
+        description: 'Enterprise Resource Planning System',
+        start_url: '/',
+        display: 'standalone',
+        theme_color: '#3b82f6',
+        background_color: '#ffffff',
+        icons: [
+          {
+            src: '/icons/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          }
+        ]
+      },
+      workbox: {
+        // Pre-cache app shell (Vite hashed filenames handled automatically)
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Runtime caching for API calls
+        runtimeCaching: [
+          {
+            urlPattern: /^http:\/\/localhost:3001\/api\/v1\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 300 // 5 minutes
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
+      }
+    })
+  ]
+});
 ```
 
-**Frontend - Offline Detection:**
+> **Note:** `vite-plugin-pwa` uses Workbox under the hood. It automatically handles Vite's hashed filenames in the precache manifest. Do NOT write a manual `service-worker.js` with hardcoded paths like `/static/css/main.css` -- Vite hashes all output filenames.
+
+### Frontend -- Offline Detection Banner
+
 ```tsx
+import { useState, useEffect, FC } from 'react';
+import { Alert } from '../../components/ui/Alert';
+
 export const OfflineBanner: FC = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -339,12 +165,58 @@ export const OfflineBanner: FC = () => {
   if (isOnline) return null;
 
   return (
-    <div className="bg-yellow-500 text-white p-3 text-center">
-      You are currently offline. Changes will sync when connection is restored.
+    <div className="bg-yellow-500 text-white p-3 text-center text-sm font-medium">
+      You are currently offline. Some features may be unavailable.
     </div>
   );
 };
 ```
+
+### Responsive Table Wrapper
+
+```tsx
+// Wrap existing Table components on mobile for horizontal scroll
+export const ResponsiveTableWrapper: FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <div className="overflow-x-auto -mx-4 sm:mx-0">
+      <div className="inline-block min-w-full align-middle">
+        {children}
+      </div>
+    </div>
+  );
+};
+```
+
+### Click-to-Call Pattern
+
+```tsx
+// In client detail pages, wrap phone numbers:
+<a href={`tel:${client.phone}`} className="text-blue-600 hover:underline">
+  {client.phone}
+</a>
+
+// In client detail pages, wrap addresses for Google Maps:
+<a
+  href={`https://maps.google.com/?q=${encodeURIComponent(client.city + ' ' + client.area)}`}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="text-blue-600 hover:underline"
+>
+  {client.city}, {client.area}
+</a>
+```
+
+---
+
+### Key Corrections (from v1.0)
+
+1. **Removed hand-rolled service worker** -- v1.0 had a manual `service-worker.js` with hardcoded paths like `/static/css/main.css` and `/static/js/main.js`. Vite uses hashed filenames so those paths would never match. Replaced with `vite-plugin-pwa` which handles this correctly.
+2. **Removed IndexedDB offline queue** -- `OfflineQueueManager` class with `openDB` (from `idb` library, never imported) and full retry logic was over-engineered for MVP. Deferred to post-MVP.
+3. **Removed exponential backoff retry strategy** -- queued actions with max 5 retries and backoff (1s, 2s, 4s, 8s) is post-MVP complexity.
+4. **Removed background sync** -- `self.addEventListener('sync', ...)` handler deferred to post-MVP.
+5. **Removed swipe gestures, pull-to-refresh, bottom nav bar** -- all deferred to post-MVP.
+6. **Removed barcode scanning** -- Product model has no `barcode` field. Camera-based scanning deferred.
+7. **Simplified scope** -- MVP focuses on responsive design, manifest.json, and basic service worker via vite-plugin-pwa. Estimated effort reduced from 10-12 hours to 6-8 hours.
 
 ---
 
@@ -353,3 +225,4 @@ export const OfflineBanner: FC = () => {
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Major revision: replaced hand-rolled service worker with vite-plugin-pwa, removed IndexedDB offline queue / background sync / exponential backoff (deferred to post-MVP), removed swipe gestures / pull-to-refresh / bottom nav bar, simplified to responsive design + basic PWA for MVP | Claude (Dev Review) |

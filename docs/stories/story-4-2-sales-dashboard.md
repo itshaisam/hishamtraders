@@ -13,173 +13,110 @@
 
 **As a** sales officer,
 **I want** a sales-focused dashboard showing performance metrics,
-**So that** I can track my sales targets and overdue clients.
+**So that** I can track sales activity and monitor overdue clients.
 
 ---
 
 ## Acceptance Criteria
 
 1. **Backend API:**
-   - [ ] GET /api/dashboard/sales returns sales metrics
-   - [ ] Today's sales (count and total value)
-   - [ ] Week's sales (count and total value)
-   - [ ] Month's sales (count and total value)
+   - [ ] `GET /api/v1/sales/stats` returns sales metrics (expand existing endpoint)
+   - [ ] Today's sales: count and total value (invoices today, excluding `VOIDED`)
+   - [ ] Week's sales: count and total (last 7 days)
+   - [ ] Month's sales: count and total (current month)
    - [ ] Top 5 clients by revenue (this month)
-   - [ ] Overdue invoices count and total amount
-   - [ ] Clients approaching credit limit (>80% utilization)
-   - [ ] Weekly sales trend (last 7 days)
+   - [ ] Overdue invoices: count and total (`status IN ('PENDING', 'PARTIAL') AND dueDate < today`)
+   - [ ] Clients approaching credit limit (balance/creditLimit > 80%)
+   - [ ] Weekly sales trend (last 7 days, daily totals)
 
 2. **Frontend Dashboard:**
-   - [ ] Sales performance cards (today, week, month)
-   - [ ] Weekly sales trend chart
-   - [ ] Top clients table
-   - [ ] Overdue clients list with color-coding
+   - [ ] Sales performance cards (today, week, month — count + value)
+   - [ ] Weekly sales trend bar/line chart
+   - [ ] Top clients table (name, revenue)
+   - [ ] Overdue invoices list with aging color-coding
    - [ ] Credit limit alerts widget
    - [ ] Quick actions: Create Invoice, Record Payment
-   - [ ] The dashboard gracefully handles an "empty state" by displaying informative messages or placeholder content when there is no data to show.
+   - [ ] Empty state handling when no data
 
-3. **Authorization & Role-Based Access:**
-   - [ ] Sales Officer: Own sales data only (filtered by assigned territory/region)
-   - [ ] Accountant: View all sales data
-   - [ ] Admin: Full access
+3. **Authorization:**
+   - [ ] `SALES_OFFICER`: All sales data (no territory filtering — see note)
+   - [ ] `ACCOUNTANT`: All sales data (read-only)
+   - [ ] `ADMIN`: Full access (also available via Admin Dashboard tab)
    - [ ] Other roles: 403 Forbidden
 
-4. **Performance & Caching:**
-   - [ ] Max 50 records for top clients/overdue lists
-   - [ ] Weekly trend: return all 7 days (no pagination needed)
-   - [ ] Cache TTL: 3 minutes (more frequent updates than admin dashboard)
-   - [ ] API timeout: 8 seconds maximum
-   - [ ] Pagination: 10 items default for lists
-
-5. **Real-Time Data Updates:**
-   - [ ] Auto-refresh every 15 seconds during business hours
-   - [ ] Manual refresh button available
-   - [ ] Show "Last updated at" timestamp
-   - [ ] Pause auto-updates after hours (optional)
-   - [ ] Network error: Show cached data with warning
-
-6. **Error Handling:**
-   - [ ] Catch and log failures in trend calculation
-   - [ ] Return HTTP 400 with error details if filters invalid
-   - [ ] Validate date range (from <= to, max 1 year)
-   - [ ] Display partial data with error toast if calculation fails
+4. **Performance:**
+   - [ ] TanStack Query with `staleTime: 180000` (3 min), `refetchInterval: 60000` (1 min)
+   - [ ] `Promise.all()` for parallel metric queries
+   - [ ] Top clients/overdue: max 50 records
 
 ---
 
 ## Dev Notes
 
-```typescript
-interface SalesDashboardMetrics {
-  todaySales: { count: number; total: number };
-  weekSales: { count: number; total: number };
-  monthSales: { count: number; total: number };
-  topClients: Array<{ id: string; name: string; revenue: number }>;
-  overdueInvoices: { count: number; total: number };
-  creditLimitAlerts: Array<{ clientId: string; clientName: string; utilization: number }>;
-  weeklyTrend: Array<{ date: string; sales: number }>;
-}
+### Implementation Status
 
-async function getSalesDashboard(): Promise<SalesDashboardMetrics> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+**Backend:** Scaffold exists at `apps/api/src/services/dashboard.service.ts` — `getSalesStats()` returns mock zeros. Needs real implementation.
 
-  const weekAgo = new Date(today);
-  weekAgo.setDate(weekAgo.getDate() - 7);
+**Frontend:** `apps/web/src/components/dashboards/SalesDashboard.tsx` exists (content not yet checked — likely similar scaffold).
 
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+**Route:** `GET /api/v1/sales/stats` already registered with `requireRole(['ADMIN', 'SALES_OFFICER'])`.
 
-  // Today's sales
-  const todayInvoices = await prisma.invoice.findMany({
-    where: { invoiceDate: { gte: today }, status: { not: 'VOIDED' } }
-  });
-  const todaySales = {
-    count: todayInvoices.length,
-    total: todayInvoices.reduce((sum, inv) => sum + parseFloat(inv.total.toString()), 0)
-  };
+### Schema Field Reference
 
-  // Week's sales
-  const weekInvoices = await prisma.invoice.findMany({
-    where: { invoiceDate: { gte: weekAgo }, status: { not: 'VOIDED' } }
-  });
-  const weekSales = {
-    count: weekInvoices.length,
-    total: weekInvoices.reduce((sum, inv) => sum + parseFloat(inv.total.toString()), 0)
-  };
+```
+Invoice:  invoiceDate, total, status (PENDING | PARTIAL | PAID | OVERDUE | CANCELLED | VOIDED)
+          dueDate, paidAmount, clientId
+          (NO "UNPAID" status — use PENDING for unpaid invoices)
 
-  // Month's sales
-  const monthInvoices = await prisma.invoice.findMany({
-    where: { invoiceDate: { gte: monthStart }, status: { not: 'VOIDED' } }
-  });
-  const monthSales = {
-    count: monthInvoices.length,
-    total: monthInvoices.reduce((sum, inv) => sum + parseFloat(inv.total.toString()), 0)
-  };
+Client:   id, name, balance (Decimal), creditLimit (Decimal), status (ACTIVE | INACTIVE)
+          invoices → Invoice[] relation
 
-  // Top clients by revenue (this month)
-  const clientRevenue = monthInvoices.reduce((acc, inv) => {
-    if (!acc[inv.clientId]) {
-      acc[inv.clientId] = 0;
-    }
-    acc[inv.clientId] += parseFloat(inv.total.toString());
-    return acc;
-  }, {} as Record<string, number>);
-
-  const topClientIds = Object.entries(clientRevenue)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5)
-    .map(([id]) => id);
-
-  const topClients = await prisma.client.findMany({
-    where: { id: { in: topClientIds } }
-  });
-
-  // Overdue invoices
-  const overdueInvoices = await prisma.invoice.findMany({
-    where: {
-      status: { in: ['UNPAID', 'PARTIAL'] },
-      dueDate: { lt: today }
-    }
-  });
-
-  // Credit limit alerts (>80%)
-  const clients = await prisma.client.findMany({
-    where: { status: 'ACTIVE' }
-  });
-  const creditLimitAlerts = clients
-    .filter(c => {
-      const balance = parseFloat(c.balance.toString());
-      const limit = parseFloat(c.creditLimit.toString());
-      return limit > 0 && (balance / limit) > 0.8;
-    })
-    .map(c => ({
-      clientId: c.id,
-      clientName: c.name,
-      utilization: (parseFloat(c.balance.toString()) / parseFloat(c.creditLimit.toString())) * 100
-    }));
-
-  return {
-    todaySales,
-    weekSales,
-    monthSales,
-    topClients: topClients.map(c => ({
-      id: c.id,
-      name: c.name,
-      revenue: clientRevenue[c.id]
-    })),
-    overdueInvoices: {
-      count: overdueInvoices.length,
-      total: overdueInvoices.reduce((sum, inv) => sum + parseFloat(inv.total.toString()), 0)
-    },
-    creditLimitAlerts,
-    weeklyTrend: [] // Calculate daily sales for last 7 days
-  };
-}
+InvoiceItem: invoiceId, productId, quantity, unitPrice, discount, total
+             product → Product relation
 ```
 
----
+### Key Corrections from Original Doc
 
-## Change Log
+1. **`UNPAID` status does NOT exist** — overdue query should use:
+   ```typescript
+   where: {
+     status: { in: ['PENDING', 'PARTIAL'] },
+     dueDate: { lt: today }
+   }
+   ```
 
-| Date       | Version | Description            | Author |
-|------------|---------|------------------------|--------|
-| 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+2. **No territory/region filtering** — The schema has no territory, region, or sales assignment concept on User or Client. For MVP, all sales officers see all sales data. Territory-based filtering is POST-MVP.
+
+3. **API path** is `GET /api/v1/sales/stats` (not `GET /api/dashboard/sales`).
+
+### Credit Limit Alerts Calculation
+```typescript
+const activeClients = await prisma.client.findMany({
+  where: { status: 'ACTIVE', creditLimit: { gt: 0 } },
+  select: { id: true, name: true, balance: true, creditLimit: true }
+});
+const alerts = activeClients
+  .filter(c => {
+    const utilization = parseFloat(c.balance.toString()) / parseFloat(c.creditLimit.toString());
+    return utilization > 0.8;
+  })
+  .map(c => ({
+    clientId: c.id,
+    clientName: c.name,
+    balance: parseFloat(c.balance.toString()),
+    creditLimit: parseFloat(c.creditLimit.toString()),
+    utilization: Math.round(
+      (parseFloat(c.balance.toString()) / parseFloat(c.creditLimit.toString())) * 100
+    ),
+  }));
+```
+
+### Existing Report to Reuse
+The credit limit report already exists at `apps/api/src/modules/reports/credit-limit-report.service.ts` with `getHighUtilizationClients(threshold)`. Reuse this for the alerts widget instead of re-implementing.
+
+### POST-MVP DEFERRED
+
+- **Territory/region filtering**: No schema support. Add when sales territories are defined.
+- **Sales officer "own sales" filtering**: Would require `createdBy` tracking on invoices + user FK. Defer.
+- **Auto-refresh pause after hours**: Over-engineered. Use standard refetchInterval.
+- **WebSocket**: Not needed. TanStack Query polling is sufficient.

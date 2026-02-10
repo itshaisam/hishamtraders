@@ -5,7 +5,7 @@
 **Priority:** Medium
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Story 7.1, Story 7.4, Story 7.5
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
@@ -20,46 +20,35 @@
 ## Acceptance Criteria
 
 1. **Report Types:**
-   - [ ] Recovery Schedule Report (clients by day)
    - [ ] Visit Activity Report (visits by agent/date)
-   - [ ] Payment Promise Report (promises with status)
    - [ ] Collection Summary Report (collections by agent/period)
    - [ ] Overdue Clients Report (aging buckets)
-   - [ ] Recovery Agent Productivity Report
+   - [ ] Agent Productivity Report (visits per day, success rate)
+   - [ ] Payment Promise Report (promises with status)
+   - [ ] Recovery Schedule Report (clients by day)
 
 2. **Backend API:**
-   - [ ] GET /api/reports/recovery/schedule - recovery schedule report
-   - [ ] GET /api/reports/recovery/visits - visit activity report
-   - [ ] GET /api/reports/recovery/promises - payment promise report
-   - [ ] GET /api/reports/recovery/collections - collection summary
-   - [ ] GET /api/reports/recovery/overdue - overdue clients report
-   - [ ] GET /api/reports/recovery/productivity - agent productivity
+   - [ ] `GET /api/v1/reports/recovery/visits` — visit activity
+   - [ ] `GET /api/v1/reports/recovery/collections` — collection summary
+   - [ ] `GET /api/v1/reports/recovery/overdue` — overdue clients
+   - [ ] `GET /api/v1/reports/recovery/productivity` — agent productivity
+   - [ ] `GET /api/v1/reports/recovery/promises` — payment promises
+   - [ ] `GET /api/v1/reports/recovery/schedule` — recovery schedule
 
 3. **Common Filters:**
-   - [ ] Date range
-   - [ ] Recovery agent
-   - [ ] Client
-   - [ ] Visit outcome
-   - [ ] Promise status
+   - [ ] Date range (using `<input type="date">`, no `DatePicker`)
+   - [ ] Recovery agent, client, visit outcome, promise status
 
-4. **Export Formats:**
-   - [ ] Excel (.xlsx)
-   - [ ] PDF (formatted reports)
-   - [ ] CSV
+4. **Export:**
+   - [ ] Excel export via server-side `exceljs` (Story 4.9 pattern, NOT frontend `XLSX`)
 
-5. **Report Features:**
-   - [ ] Sortable columns
-   - [ ] Summary totals
-   - [ ] Drill-down capability (click to view details)
-   - [ ] Scheduled reports (email delivery)
+5. **Frontend:**
+   - [ ] Reports Center page linking to each report
+   - [ ] Each report has dedicated page with filters and data table
+   - [ ] Use `<Card>` with children directly (no `Card.Body`)
+   - [ ] Date inputs: `<input type="date">`
 
-6. **Frontend:**
-   - [ ] Reports Center page with report categories
-   - [ ] Each report has dedicated page with filters
-   - [ ] Export buttons
-   - [ ] Print-friendly view
-
-7. **Authorization:**
+6. **Authorization:**
    - [ ] Admin and Accountant can view all reports
    - [ ] Recovery Agent can view only their own data
 
@@ -67,8 +56,24 @@
 
 ## Dev Notes
 
+### Implementation Status
+
+**Backend:** Not started. Depends on RecoveryVisit (7.4) and PaymentPromise (7.5) models.
+
+### Key Corrections
+
+1. **API paths**: All use `/api/v1/reports/recovery/...` (not `/api/reports/recovery/...`)
+2. **`Card.Body`** does not exist — use `<Card>` with children directly
+3. **`DatePicker`** does not exist — use `<input type="date">`
+4. **`XLSX` on frontend** — use server-side `exceljs` instead (Story 4.9 pattern)
+5. **InvoiceStatus `'UNPAID'`** does not exist — use `'PENDING'`
+6. **N+1 in `getCollectionSummaryReport`**: Loops agents, queries visits + promises per agent. Note as performance concern.
+7. **N+1 in `getOverdueClientsReport`**: Loads all clients then processes in JS. Acceptable for small datasets but note concern for scaling.
+
+### Backend Service (corrected)
+
 ```typescript
-// Visit Activity Report
+// --- Visit Activity Report ---
 interface VisitActivityReport {
   visitNumber: string;
   visitDate: Date;
@@ -81,57 +86,34 @@ interface VisitActivityReport {
   notes: string;
 }
 
-async function getVisitActivityReport(
-  filters: {
-    dateFrom: Date;
-    dateTo: Date;
-    agentId?: string;
-    clientId?: string;
-    outcome?: string;
-  }
-): Promise<VisitActivityReport[]> {
-  const where: any = {
-    visitDate: {
-      gte: filters.dateFrom,
-      lte: filters.dateTo
-    }
-  };
-
-  if (filters.agentId) {
-    where.visitedBy = filters.agentId;
-  }
-
-  if (filters.clientId) {
-    where.clientId = filters.clientId;
-  }
-
-  if (filters.outcome) {
-    where.outcome = filters.outcome;
-  }
+async function getVisitActivityReport(filters: {
+  dateFrom: Date; dateTo: Date; agentId?: string; clientId?: string; outcome?: string;
+}): Promise<VisitActivityReport[]> {
+  const where: any = { visitDate: { gte: filters.dateFrom, lte: filters.dateTo } };
+  if (filters.agentId) where.visitedBy = filters.agentId;
+  if (filters.clientId) where.clientId = filters.clientId;
+  if (filters.outcome) where.outcome = filters.outcome;
 
   const visits = await prisma.recoveryVisit.findMany({
     where,
-    include: {
-      agent: true,
-      client: true
-    },
+    include: { agent: true, client: true },
     orderBy: { visitDate: 'desc' }
   });
 
-  return visits.map(visit => ({
-    visitNumber: visit.visitNumber,
-    visitDate: visit.visitDate,
-    agentName: visit.agent.name,
-    clientName: visit.client.name,
-    outcome: visit.outcome,
-    amountCollected: parseFloat(visit.amountCollected.toString()),
-    promiseMade: !!visit.promiseDate,
-    promiseAmount: visit.promiseAmount ? parseFloat(visit.promiseAmount.toString()) : undefined,
-    notes: visit.notes || ''
+  return visits.map(v => ({
+    visitNumber: v.visitNumber,
+    visitDate: v.visitDate,
+    agentName: v.agent.name,
+    clientName: v.client.name,
+    outcome: v.outcome,
+    amountCollected: Number(v.amountCollected),
+    promiseMade: !!v.promiseDate,
+    promiseAmount: v.promiseAmount ? Number(v.promiseAmount) : undefined,
+    notes: v.notes || ''
   }));
 }
 
-// Collection Summary Report
+// --- Collection Summary Report (N+1 warning: queries per agent) ---
 interface CollectionSummary {
   agentName: string;
   totalCollections: number;
@@ -142,80 +124,41 @@ interface CollectionSummary {
   promisesFulfilled: number;
 }
 
-async function getCollectionSummaryReport(
-  filters: {
-    dateFrom: Date;
-    dateTo: Date;
-    agentId?: string;
-  }
-): Promise<CollectionSummary[]> {
-  const agentWhere: any = {
-    role: 'RECOVERY_AGENT',
-    status: 'ACTIVE'
-  };
+async function getCollectionSummaryReport(filters: {
+  dateFrom: Date; dateTo: Date; agentId?: string;
+}): Promise<CollectionSummary[]> {
+  const agentWhere: any = { role: { name: 'RECOVERY_AGENT' }, status: 'active' };
+  if (filters.agentId) agentWhere.id = filters.agentId;
 
-  if (filters.agentId) {
-    agentWhere.id = filters.agentId;
-  }
-
-  const agents = await prisma.user.findMany({
-    where: agentWhere
-  });
-
+  const agents = await prisma.user.findMany({ where: agentWhere });
   const summaries: CollectionSummary[] = [];
 
+  // NOTE: N+1 — queries visits + promises per agent. Consider batching for production.
   for (const agent of agents) {
-    // Get visits
     const visits = await prisma.recoveryVisit.findMany({
-      where: {
-        visitedBy: agent.id,
-        visitDate: {
-          gte: filters.dateFrom,
-          lte: filters.dateTo
-        }
-      }
+      where: { visitedBy: agent.id, visitDate: { gte: filters.dateFrom, lte: filters.dateTo } }
     });
+    const totalCollections = visits.reduce((s, v) => s + Number(v.amountCollected), 0);
+    const collectionsCount = visits.filter(v => Number(v.amountCollected) > 0).length;
 
-    const totalCollections = visits.reduce(
-      (sum, v) => sum + parseFloat(v.amountCollected.toString()),
-      0
-    );
-
-    const collectionsCount = visits.filter(v => parseFloat(v.amountCollected.toString()) > 0).length;
-
-    const averageCollection = collectionsCount > 0 ? totalCollections / collectionsCount : 0;
-
-    const clientsVisited = new Set(visits.map(v => v.clientId)).size;
-
-    // Get promises
     const promises = await prisma.paymentPromise.findMany({
-      where: {
-        createdBy: agent.id,
-        createdAt: {
-          gte: filters.dateFrom,
-          lte: filters.dateTo
-        }
-      }
+      where: { createdBy: agent.id, createdAt: { gte: filters.dateFrom, lte: filters.dateTo } }
     });
-
-    const promisesMade = promises.length;
-    const promisesFulfilled = promises.filter(p => p.status === 'FULFILLED').length;
 
     summaries.push({
       agentName: agent.name,
       totalCollections,
       collectionsCount,
-      averageCollection,
-      clientsVisited,
-      promisesMade,
-      promisesFulfilled
+      averageCollection: collectionsCount > 0 ? totalCollections / collectionsCount : 0,
+      clientsVisited: new Set(visits.map(v => v.clientId)).size,
+      promisesMade: promises.length,
+      promisesFulfilled: promises.filter(p => p.status === 'FULFILLED').length
     });
   }
-
   return summaries.sort((a, b) => b.totalCollections - a.totalCollections);
 }
 
-// Overdue Clients Report
+// --- Overdue Clients Report (N+1 warning: processes all clients in JS) ---
 interface OverdueClient {
   clientName: string;
   contactPerson: string;
@@ -230,101 +173,57 @@ interface OverdueClient {
   lastVisitDate?: Date;
 }
 
-async function getOverdueClientsReport(
-  filters: {
-    agentId?: string;
-    area?: string;
-    minDaysOverdue?: number;
-  }
-): Promise<OverdueClient[]> {
+async function getOverdueClientsReport(filters: {
+  agentId?: string; area?: string; minDaysOverdue?: number;
+}): Promise<OverdueClient[]> {
   const today = new Date();
-  const where: any = {
-    balance: { gt: 0 },
-    status: 'ACTIVE'
-  };
-
-  if (filters.agentId) {
-    where.recoveryAgentId = filters.agentId;
-  }
-
-  if (filters.area) {
-    where.area = filters.area;
-  }
+  const where: any = { balance: { gt: 0 }, status: 'ACTIVE' };
+  if (filters.agentId) where.recoveryAgentId = filters.agentId;
+  if (filters.area) where.area = filters.area;
 
   const clients = await prisma.client.findMany({
     where,
     include: {
       recoveryAgent: true,
-      invoices: {
-        where: {
-          status: { in: ['UNPAID', 'PARTIAL'] }
-        }
-      },
-      payments: {
-        orderBy: { date: 'desc' },
-        take: 1
-      },
-      recoveryVisits: {
-        orderBy: { visitDate: 'desc' },
-        take: 1
-      }
+      invoices: { where: { status: { in: ['PENDING', 'PARTIAL'] } } },  // NOT 'UNPAID'
+      payments: { orderBy: { date: 'desc' }, take: 1 },
+      recoveryVisits: { orderBy: { visitDate: 'desc' }, take: 1 }
     }
   });
 
-  const overdueClients: OverdueClient[] = [];
-
+  const result: OverdueClient[] = [];
   for (const client of clients) {
-    const overdueInvoices = client.invoices.filter(
-      inv => inv.dueDate && inv.dueDate < today
+    const overdueInvs = client.invoices.filter(inv => inv.dueDate && inv.dueDate < today);
+    if (overdueInvs.length === 0) continue;
+
+    const overdueAmount = overdueInvs.reduce(
+      (s, inv) => s + Number(inv.total) - Number(inv.paidAmount), 0
     );
+    const oldest = overdueInvs.sort((a, b) => a.dueDate!.getTime() - b.dueDate!.getTime())[0];
+    const daysOverdue = differenceInDays(today, oldest.dueDate!);
 
-    if (overdueInvoices.length === 0) continue;
+    if (filters.minDaysOverdue && daysOverdue < filters.minDaysOverdue) continue;
 
-    const overdueAmount = overdueInvoices.reduce(
-      (sum, inv) => sum + parseFloat(inv.total.toString()) - parseFloat(inv.paidAmount.toString()),
-      0
-    );
+    const agingBucket = daysOverdue <= 7 ? '1-7 days'
+      : daysOverdue <= 14 ? '8-14 days'
+      : daysOverdue <= 30 ? '15-30 days' : '30+ days';
 
-    const oldestInvoice = overdueInvoices.sort(
-      (a, b) => a.dueDate!.getTime() - b.dueDate!.getTime()
-    )[0];
-
-    const daysOverdue = differenceInDays(today, oldestInvoice.dueDate!);
-
-    if (filters.minDaysOverdue && daysOverdue < filters.minDaysOverdue) {
-      continue;
-    }
-
-    let agingBucket: string;
-    if (daysOverdue <= 7) {
-      agingBucket = '1-7 days';
-    } else if (daysOverdue <= 14) {
-      agingBucket = '8-14 days';
-    } else if (daysOverdue <= 30) {
-      agingBucket = '15-30 days';
-    } else {
-      agingBucket = '30+ days';
-    }
-
-    overdueClients.push({
+    result.push({
       clientName: client.name,
       contactPerson: client.contactPerson || '',
       phone: client.phone || '',
       area: client.area || '',
       recoveryAgent: client.recoveryAgent?.name || 'Unassigned',
-      totalBalance: parseFloat(client.balance.toString()),
-      overdueAmount,
-      daysOverdue,
-      agingBucket,
+      totalBalance: Number(client.balance),
+      overdueAmount, daysOverdue, agingBucket,
       lastPaymentDate: client.payments[0]?.date,
       lastVisitDate: client.recoveryVisits[0]?.visitDate
     });
   }
-
-  return overdueClients.sort((a, b) => b.overdueAmount - a.overdueAmount);
+  return result.sort((a, b) => b.overdueAmount - a.overdueAmount);
 }
 
-// Agent Productivity Report
+// --- Agent Productivity Report ---
 interface AgentProductivity {
   agentName: string;
   workingDays: number;
@@ -336,300 +235,70 @@ interface AgentProductivity {
   collectionPerVisit: number;
 }
 
-async function getAgentProductivityReport(
-  filters: {
-    dateFrom: Date;
-    dateTo: Date;
-    agentId?: string;
-  }
-): Promise<AgentProductivity[]> {
-  const agentWhere: any = {
-    role: 'RECOVERY_AGENT',
-    status: 'ACTIVE'
-  };
+async function getAgentProductivityReport(filters: {
+  dateFrom: Date; dateTo: Date; agentId?: string;
+}): Promise<AgentProductivity[]> {
+  const agentWhere: any = { role: { name: 'RECOVERY_AGENT' }, status: 'active' };
+  if (filters.agentId) agentWhere.id = filters.agentId;
 
-  if (filters.agentId) {
-    agentWhere.id = filters.agentId;
-  }
-
-  const agents = await prisma.user.findMany({
-    where: agentWhere
-  });
-
+  const agents = await prisma.user.findMany({ where: agentWhere });
   const workingDays = differenceInDays(filters.dateTo, filters.dateFrom) + 1;
-
-  const productivityReports: AgentProductivity[] = [];
+  const reports: AgentProductivity[] = [];
 
   for (const agent of agents) {
     const visits = await prisma.recoveryVisit.findMany({
-      where: {
-        visitedBy: agent.id,
-        visitDate: {
-          gte: filters.dateFrom,
-          lte: filters.dateTo
-        }
-      }
+      where: { visitedBy: agent.id, visitDate: { gte: filters.dateFrom, lte: filters.dateTo } }
     });
-
     const totalVisits = visits.length;
-    const visitsPerDay = workingDays > 0 ? totalVisits / workingDays : 0;
-
     const successfulVisits = visits.filter(
       v => ['PAYMENT_COLLECTED', 'PARTIAL_PAYMENT', 'PROMISE_MADE'].includes(v.outcome)
     ).length;
+    const totalCollected = visits.reduce((s, v) => s + Number(v.amountCollected), 0);
 
-    const successRate = totalVisits > 0 ? (successfulVisits / totalVisits) * 100 : 0;
-
-    const totalCollected = visits.reduce(
-      (sum, v) => sum + parseFloat(v.amountCollected.toString()),
-      0
-    );
-
-    const collectionPerVisit = totalVisits > 0 ? totalCollected / totalVisits : 0;
-
-    productivityReports.push({
-      agentName: agent.name,
-      workingDays,
-      totalVisits,
-      visitsPerDay: Math.round(visitsPerDay * 10) / 10,
+    reports.push({
+      agentName: agent.name, workingDays, totalVisits,
+      visitsPerDay: Math.round((totalVisits / Math.max(workingDays, 1)) * 10) / 10,
       successfulVisits,
-      successRate: Math.round(successRate * 10) / 10,
+      successRate: totalVisits > 0 ? Math.round((successfulVisits / totalVisits) * 1000) / 10 : 0,
       totalCollected,
-      collectionPerVisit: Math.round(collectionPerVisit)
+      collectionPerVisit: totalVisits > 0 ? Math.round(totalCollected / totalVisits) : 0
     });
   }
-
-  return productivityReports.sort((a, b) => b.totalCollected - a.totalCollected);
+  return reports.sort((a, b) => b.totalCollected - a.totalCollected);
 }
 ```
 
-**Frontend:**
-```tsx
-import { FC, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Download, FileText, Calendar } from 'lucide-react';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
-import * as XLSX from 'xlsx';
+### Module Structure
 
-export const RecoveryReportsCenterPage: FC = () => {
-  const reports = [
-    {
-      id: 'visit-activity',
-      name: 'Visit Activity Report',
-      description: 'Detailed log of all recovery visits',
-      icon: Calendar,
-      path: '/reports/recovery/visits'
-    },
-    {
-      id: 'collection-summary',
-      name: 'Collection Summary',
-      description: 'Collections by agent and period',
-      icon: DollarSign,
-      path: '/reports/recovery/collections'
-    },
-    {
-      id: 'overdue-clients',
-      name: 'Overdue Clients',
-      description: 'Clients with overdue payments',
-      icon: AlertCircle,
-      path: '/reports/recovery/overdue'
-    },
-    {
-      id: 'agent-productivity',
-      name: 'Agent Productivity',
-      description: 'Recovery agent performance metrics',
-      icon: TrendingUp,
-      path: '/reports/recovery/productivity'
-    },
-    {
-      id: 'payment-promises',
-      name: 'Payment Promises',
-      description: 'Promise tracking and fulfillment',
-      icon: CheckCircle,
-      path: '/reports/recovery/promises'
-    }
-  ];
-
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Recovery Reports</h1>
-
-      <div className="grid grid-cols-3 gap-6">
-        {reports.map(report => (
-          <Card
-            key={report.id}
-            className="hover:shadow-lg cursor-pointer transition-shadow"
-            onClick={() => navigate(report.path)}
-          >
-            <Card.Body>
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <report.icon className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">{report.name}</h3>
-                  <p className="text-sm text-gray-600">{report.description}</p>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Visit Activity Report Page
-export const VisitActivityReportPage: FC = () => {
-  const [filters, setFilters] = useState({
-    dateFrom: startOfMonth(new Date()),
-    dateTo: endOfMonth(new Date()),
-    agentId: '',
-    outcome: ''
-  });
-
-  const { data: visits, isLoading } = useQuery({
-    queryKey: ['visit-activity-report', filters],
-    queryFn: () =>
-      fetch(
-        `/api/reports/recovery/visits?${new URLSearchParams({
-          dateFrom: filters.dateFrom.toISOString(),
-          dateTo: filters.dateTo.toISOString(),
-          agentId: filters.agentId,
-          outcome: filters.outcome
-        })}`
-      ).then(res => res.json())
-  });
-
-  const handleExport = () => {
-    const worksheet = XLSX.utils.json_to_sheet(
-      visits?.map((visit: any) => ({
-        'Visit #': visit.visitNumber,
-        Date: format(visit.visitDate, 'yyyy-MM-dd'),
-        Agent: visit.agentName,
-        Client: visit.clientName,
-        Outcome: visit.outcome,
-        'Amount Collected': visit.amountCollected,
-        'Promise Amount': visit.promiseAmount || '-',
-        Notes: visit.notes
-      })) || []
-    );
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Visit Activity');
-    XLSX.writeFile(workbook, `visit-activity-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
-  };
-
-  if (isLoading) return <Spinner />;
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Visit Activity Report</h1>
-        <Button onClick={handleExport}>
-          <Download className="h-4 w-4 mr-2" />
-          Export to Excel
-        </Button>
-      </div>
-
-      <Card className="mb-6">
-        <Card.Body>
-          <div className="grid grid-cols-4 gap-4">
-            <DatePicker
-              label="From Date"
-              value={filters.dateFrom}
-              onChange={(date) => setFilters(prev => ({ ...prev, dateFrom: date }))}
-            />
-            <DatePicker
-              label="To Date"
-              value={filters.dateTo}
-              onChange={(date) => setFilters(prev => ({ ...prev, dateTo: date }))}
-            />
-            <Select
-              label="Recovery Agent"
-              value={filters.agentId}
-              onChange={(e) => setFilters(prev => ({ ...prev, agentId: e.target.value }))}
-            >
-              <option value="">All Agents</option>
-              {/* Agent options */}
-            </Select>
-            <Select
-              label="Outcome"
-              value={filters.outcome}
-              onChange={(e) => setFilters(prev => ({ ...prev, outcome: e.target.value }))}
-            >
-              <option value="">All Outcomes</option>
-              <option value="PAYMENT_COLLECTED">Payment Collected</option>
-              <option value="PROMISE_MADE">Promise Made</option>
-              <option value="CLIENT_UNAVAILABLE">Client Unavailable</option>
-              <option value="REFUSED_TO_PAY">Refused to Pay</option>
-            </Select>
-          </div>
-        </Card.Body>
-      </Card>
-
-      <Table>
-        <thead>
-          <tr>
-            <th>Visit #</th>
-            <th>Date</th>
-            <th>Agent</th>
-            <th>Client</th>
-            <th>Outcome</th>
-            <th>Amount Collected</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {visits?.map((visit: any) => (
-            <tr key={visit.visitNumber}>
-              <td>{visit.visitNumber}</td>
-              <td>{format(visit.visitDate, 'PPP')}</td>
-              <td>{visit.agentName}</td>
-              <td>{visit.clientName}</td>
-              <td>
-                <Badge>{visit.outcome}</Badge>
-              </td>
-              <td className="font-semibold text-green-600">
-                {visit.amountCollected > 0 ? `Rs.${visit.amountCollected.toLocaleString()}` : '-'}
-              </td>
-              <td className="text-sm">{visit.notes || '-'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-
-      <div className="mt-4 p-4 bg-gray-50 rounded">
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <div>
-            <div className="text-gray-600">Total Visits</div>
-            <div className="text-xl font-bold">{visits?.length || 0}</div>
-          </div>
-          <div>
-            <div className="text-gray-600">Total Collected</div>
-            <div className="text-xl font-bold text-green-600">
-              Rs.{visits?.reduce((sum: number, v: any) => sum + v.amountCollected, 0).toLocaleString()}
-            </div>
-          </div>
-          <div>
-            <div className="text-gray-600">Success Rate</div>
-            <div className="text-xl font-bold">
-              {visits?.length > 0
-                ? Math.round(
-                    (visits.filter((v: any) => v.amountCollected > 0 || v.promiseMade).length /
-                      visits.length) *
-                      100
-                  )
-                : 0}
-              %
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 ```
+apps/api/src/modules/reports/recovery/
+  visit-activity.controller.ts        (NEW)
+  collection-summary.controller.ts    (NEW)
+  overdue-clients.controller.ts       (NEW)
+  agent-productivity.controller.ts    (NEW)
+  recovery-reports.service.ts         (NEW — shared service)
+
+apps/web/src/features/reports/pages/
+  RecoveryReportsCenterPage.tsx       (NEW)
+  VisitActivityReportPage.tsx         (NEW)
+  CollectionSummaryPage.tsx           (NEW)
+  OverdueClientsReportPage.tsx        (NEW)
+  AgentProductivityPage.tsx           (NEW)
+```
+
+### Frontend Notes
+
+- **Reports Center**: Grid of report cards with name, description, and icon. Click navigates to individual report page.
+- **Each report page**: Filter bar at top (date inputs, agent/outcome dropdowns), data table below, summary row at bottom. Export button triggers server-side Excel generation and download.
+- **Excel export**: `GET /api/v1/reports/recovery/{type}/export?...filters` returns `.xlsx` file via `exceljs` (Story 4.9 pattern). No frontend `XLSX` library.
+- Use `<Card>` directly, no `Card.Body`. Use `<input type="date">`, no `DatePicker`.
+
+### POST-MVP DEFERRED
+
+- **Scheduled reports** (email delivery on a cron)
+- **PDF export** (formatted reports)
+- **Drill-down** from summary to detail
+- **Batched queries** to eliminate N+1 in collection summary and productivity reports
 
 ---
 
@@ -638,3 +307,4 @@ export const VisitActivityReportPage: FC = () => {
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), Card.Body removed, DatePicker→input[type=date], XLSX→server-side exceljs, UNPAID→PENDING, noted N+1 issues in collection summary and overdue reports, trimmed frontend to notes | Claude (AI Review) |

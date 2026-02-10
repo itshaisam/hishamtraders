@@ -5,7 +5,7 @@
 **Priority:** Medium
 **Estimated Effort:** 10-12 hours
 **Dependencies:** Story 5.7
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2
 
 ---
 
@@ -19,37 +19,26 @@
 
 ## Acceptance Criteria
 
-1. BankReconciliation table: id, bankAccountId, statementDate, statementBalance, systemBalance, status
-2. BankReconciliationItem table: id, reconciliationId, journalEntryLineId, matched, notes
-3. POST /api/bank-reconciliation creates reconciliation session
-4. GET /api/bank-reconciliation/:id/unmatched returns unmatched transactions
-5. POST /api/bank-reconciliation/:id/match marks transaction as matched
-6. Status: IN_PROGRESS → COMPLETED
-7. Frontend allows upload bank statement (CSV/Excel) or manual entry
-8. Frontend displays system transactions for period
-9. Frontend allows matching statement to system entries
-
-10. **Authorization & Role-Based Access:**
-    - [ ] Accountant and Admin can perform reconciliation
-    - [ ] Other roles: 403 Forbidden
-    - [ ] Reconciliation process logged in audit trail
-
-11. **Performance & Caching:**
-    - [ ] No caching for reconciliation data (real-time accuracy required)
-    - [ ] API timeout: 20 seconds maximum (matching logic can be complex)
-    - [ ] Pagination: max 500 unmatched transactions per request
-
-12. **Error Handling:**
-    - [ ] Validate statement date is valid
-    - [ ] Handle CSV/Excel parsing errors gracefully
-    - [ ] Prevent duplicate reconciliations for same statement
-    - [ ] If statement balance ≠ system balance: Display difference clearly
-    - [ ] Handle missing/invalid transaction data (skip with warning)
-    - [ ] Catch matching logic errors and display to user
+1. **Schema:** `BankReconciliation` and `BankReconciliationItem` models (see Dev Notes)
+2. `POST /api/v1/bank-reconciliation` — Create reconciliation session
+3. `GET /api/v1/bank-reconciliation/:id/unmatched` — Return unmatched transactions
+4. `POST /api/v1/bank-reconciliation/:id/match` — Mark transaction as matched
+5. `POST /api/v1/bank-reconciliation/:id/complete` — Mark reconciliation as COMPLETED
+6. Status workflow: `IN_PROGRESS` → `COMPLETED`
+7. Frontend: Upload bank statement (CSV) or manual entry
+8. Frontend: Display system transactions for period alongside statement items
+9. Frontend: Match statement items to system entries
+10. **Authorization:** Only `ACCOUNTANT` and `ADMIN`
 
 ---
 
 ## Dev Notes
+
+### Implementation Status
+
+**Backend:** Not started. Depends on AccountHead + JournalEntry models.
+
+### Database Schema (Proposed)
 
 ```prisma
 model BankReconciliation {
@@ -92,49 +81,13 @@ enum ReconciliationStatus {
 }
 ```
 
-```typescript
-async function createReconciliation(data: {
-  bankAccountId: string;
-  statementDate: Date;
-  statementBalance: number;
-}, userId: string): Promise<BankReconciliation> {
-  // Get system balance for bank account
-  const account = await prisma.accountHead.findUnique({
-    where: { id: data.bankAccountId }
-  });
+### Key Corrections
 
-  const systemBalance = parseFloat(account!.currentBalance.toString());
+1. **API paths**: All use `/api/v1/bank-reconciliation` prefix (not `/api/bank-reconciliation`)
+2. **User model** needs relation added: `bankReconciliations BankReconciliation[]`
+3. **JournalEntryLine** needs relation added: `reconciliationItems BankReconciliationItem[]`
 
-  return await prisma.bankReconciliation.create({
-    data: {
-      bankAccountId: data.bankAccountId,
-      statementDate: data.statementDate,
-      statementBalance: data.statementBalance,
-      systemBalance,
-      reconciledBy: userId
-    }
-  });
-}
+### POST-MVP DEFERRED
 
-async function matchTransaction(
-  reconciliationId: string,
-  itemId: string,
-  journalLineId: string
-): Promise<void> {
-  await prisma.bankReconciliationItem.update({
-    where: { id: itemId },
-    data: {
-      journalEntryLineId: journalLineId,
-      matched: true
-    }
-  });
-}
-```
-
----
-
-## Change Log
-
-| Date       | Version | Description            | Author |
-|------------|---------|------------------------|--------|
-| 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+- **Auto-matching algorithm**: Manual matching for MVP. Auto-suggest matches by amount/date deferred.
+- **CSV/Excel parsing**: Can start with manual entry of statement items. File upload deferred.

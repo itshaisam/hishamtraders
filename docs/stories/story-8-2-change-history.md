@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 8-10 hours
 **Dependencies:** Epic 1 (Audit logging infrastructure)
-**Status:** Draft - Phase 2
+**Status:** Draft -- Phase 2 (v2.0 -- Revised)
 
 ---
 
@@ -34,7 +34,7 @@
    - [ ] Product, Client, Supplier, PurchaseOrder, Invoice, Payment
 
 4. **Backend API:**
-   - [ ] GET /api/change-history/:entityType/:entityId - returns version history
+   - [ ] GET /api/v1/change-history/:entityType/:entityId - returns version history
    - [ ] Response includes: version number, changedBy (user), changedAt (timestamp), snapshot
 
 5. **Frontend - Entity Detail Pages:**
@@ -60,6 +60,8 @@
 
 ## Dev Notes
 
+### New Schema (ChangeHistory model does NOT exist yet -- must be added)
+
 ```prisma
 model ChangeHistory {
   id          String   @id @default(cuid())
@@ -79,18 +81,43 @@ model ChangeHistory {
 }
 ```
 
+> **Note:** This requires adding a `changeHistory ChangeHistory[]` relation on the User model as well.
+
 ### Snapshot Field Whitelisting
 
-Define which fields should be stored for each entity type:
+Define which fields should be stored for each entity type. Fields must match actual schema columns:
 
 ```typescript
 const ENTITY_SNAPSHOT_WHITELIST: Record<string, string[]> = {
-  PRODUCT: ['id', 'name', 'sku', 'category', 'costPrice', 'salePrice', 'description', 'barcode', 'status'],
-  CLIENT: ['id', 'name', 'contactPerson', 'email', 'phone', 'address', 'city', 'area', 'taxId', 'creditLimit', 'status'],
-  INVOICE: ['id', 'invoiceNumber', 'clientId', 'issueDate', 'dueDate', 'subtotal', 'taxAmount', 'total', 'status', 'notes'],
-  PAYMENT: ['id', 'invoiceId', 'amount', 'paymentDate', 'paymentMethod', 'reference', 'status'],
-  SUPPLIER: ['id', 'name', 'contactPerson', 'email', 'phone', 'address', 'taxId', 'paymentTerms', 'status'],
-  PURCHASE_ORDER: ['id', 'poNumber', 'supplierId', 'orderDate', 'expectedDelivery', 'subtotal', 'taxAmount', 'total', 'status']
+  PRODUCT: [
+    'id', 'name', 'sku', 'categoryId', 'brandId', 'uomId',
+    'costPrice', 'sellingPrice', 'reorderLevel', 'binLocation', 'status'
+  ],
+  CLIENT: [
+    'id', 'name', 'contactPerson', 'email', 'phone',
+    'city', 'area', 'creditLimit', 'paymentTermsDays', 'balance',
+    'status', 'taxExempt', 'taxExemptReason'
+  ],
+  INVOICE: [
+    'id', 'invoiceNumber', 'clientId', 'warehouseId',
+    'invoiceDate', 'dueDate', 'paymentType',
+    'subtotal', 'taxAmount', 'taxRate', 'total', 'paidAmount',
+    'status', 'notes'
+  ],
+  PAYMENT: [
+    'id', 'supplierId', 'clientId', 'paymentType',
+    'paymentReferenceType', 'referenceId', 'amount',
+    'method', 'referenceNumber', 'date', 'notes', 'recordedBy'
+  ],
+  SUPPLIER: [
+    'id', 'name', 'contactPerson', 'email', 'phone',
+    'address', 'countryId', 'paymentTermId', 'status'
+  ],
+  PURCHASE_ORDER: [
+    'id', 'poNumber', 'supplierId', 'orderDate',
+    'expectedArrivalDate', 'totalAmount', 'status',
+    'containerNo', 'notes'
+  ]
 };
 
 async function captureChangeHistory(
@@ -154,18 +181,16 @@ async function captureChangeHistory(
     });
   }
 
-  // Log to audit trail
-  await auditLogger.log({
-    action: 'SNAPSHOT_CREATED',
+  // Log to audit trail using AuditService
+  await AuditService.log({
     userId: changedBy,
-    resource: entityType,
-    resourceId: entityId,
-    details: {
-      version: newVersion,
-      snapshotSize,
-      fieldCount: Object.keys(filteredSnapshot).length,
-      changeReason
-    }
+    action: 'CREATE',
+    entityType: 'ChangeHistory',
+    entityId,
+    notes: `Snapshot v${newVersion} created for ${entityType} ${entityId}. ` +
+           `Fields: ${Object.keys(filteredSnapshot).length}, ` +
+           `Size: ${snapshotSize}B` +
+           (changeReason ? `. Reason: ${changeReason}` : '')
   });
 }
 
@@ -175,7 +200,11 @@ async function getChangeHistory(
 ): Promise<any[]> {
   const history = await prisma.changeHistory.findMany({
     where: { entityType, entityId },
-    include: { user: true },
+    include: {
+      user: {
+        select: { name: true, email: true }
+      }
+    },
     orderBy: { version: 'desc' }
   });
 
@@ -190,23 +219,38 @@ async function getChangeHistory(
 ```
 
 **Frontend:**
+
+> Use `apiClient` from `@/lib/api-client` (axios). Do NOT use raw `fetch()`.
+> `Modal` component exists and can be used directly.
+
 ```tsx
+import { FC, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
+
 export const ChangeHistoryModal: FC<{
   entityType: string;
   entityId: string;
   currentData: any;
-}> = ({ entityType, entityId, currentData }) => {
+  onClose: () => void;
+}> = ({ entityType, entityId, currentData, onClose }) => {
   const [selectedVersions, setSelectedVersions] = useState<[number, number]>([0, 1]);
 
   const { data: history } = useQuery({
     queryKey: ['change-history', entityType, entityId],
     queryFn: () =>
-      fetch(`/api/change-history/${entityType}/${entityId}`).then(res => res.json())
+      apiClient
+        .get(`/change-history/${entityType}/${entityId}`)
+        .then(res => res.data)
   });
 
   const versions = [
     { version: 0, label: 'Current', data: currentData, changedBy: '-', changedAt: new Date() },
-    ...(history || [])
+    ...(history || []).map((h: any) => ({
+      ...h,
+      label: `Version ${h.version}`,
+      data: h.snapshot
+    }))
   ];
 
   const [version1, version2] = selectedVersions;
@@ -218,12 +262,12 @@ export const ChangeHistoryModal: FC<{
     field: key,
     oldValue: data2[key],
     newValue: data1[key],
-    changed: data1[key] !== data2[key]
+    changed: JSON.stringify(data1[key]) !== JSON.stringify(data2[key])
   }));
 
   return (
-    <Modal>
-      <h2>Change History</h2>
+    <Modal onClose={onClose}>
+      <h2 className="text-lg font-bold mb-4">Change History</h2>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <Select
@@ -250,27 +294,44 @@ export const ChangeHistoryModal: FC<{
       <table className="w-full">
         <thead>
           <tr>
-            <th>Field</th>
-            <th>Old Value</th>
-            <th>New Value</th>
+            <th className="text-left py-2">Field</th>
+            <th className="text-left py-2">Old Value</th>
+            <th className="text-left py-2">New Value</th>
           </tr>
         </thead>
         <tbody>
           {changes.map(change => (
             <tr key={change.field} className={change.changed ? 'bg-yellow-50' : ''}>
-              <td>{change.field}</td>
-              <td>{String(change.oldValue)}</td>
-              <td>{String(change.newValue)}</td>
+              <td className="py-2 font-medium">{change.field}</td>
+              <td className="py-2">{change.oldValue != null ? String(change.oldValue) : '-'}</td>
+              <td className="py-2">{change.newValue != null ? String(change.newValue) : '-'}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <Button>Restore This Version</Button>
+      <div className="mt-4 flex justify-end">
+        <Button variant="primary">Restore This Version</Button>
+      </div>
     </Modal>
   );
 };
 ```
+
+---
+
+### Key Corrections (from v1.0)
+
+1. **API path:** Changed `/api/change-history/` to `/api/v1/change-history/` to match the project's API base URL convention.
+2. **`auditLogger.log()` replaced with `AuditService.log()`:** The actual service class is `AuditService` with static method `log()`. It accepts `{ userId, action, entityType, entityId?, notes? }` -- NOT `resource`, `resourceId`, `details`.
+3. **`action: 'SNAPSHOT_CREATED'` replaced with `action: 'CREATE'`:** The `AuditService` only accepts: `CREATE | UPDATE | DELETE | VIEW | LOGIN | LOGOUT | PERMISSION_CHECK`. Custom action strings are not valid.
+4. **PAYMENT whitelist corrected:** The old whitelist referenced `invoiceId` directly, but Payment uses `PaymentAllocation` for invoice links. The field is `referenceId` (deprecated for client payments). Updated to match actual Payment model fields: `supplierId`, `clientId`, `paymentType`, `paymentReferenceType`, `referenceId`, `amount`, `method`, `referenceNumber`, `date`, `notes`, `recordedBy`.
+5. **PRODUCT whitelist corrected:** Removed `salePrice` (actual field is `sellingPrice`), `category` (actual field is `categoryId`), `description`/`barcode` (do not exist on Product). Added `brandId`, `uomId`, `reorderLevel`, `binLocation`.
+6. **INVOICE whitelist corrected:** Added `warehouseId`, `paymentType`, `taxRate`, `paidAmount`. Replaced `issueDate` with `invoiceDate` (actual field name).
+7. **SUPPLIER whitelist corrected:** Replaced `taxId`/`paymentTerms` with `countryId`/`paymentTermId` (actual FK fields).
+8. **PURCHASE_ORDER whitelist corrected:** Replaced `expectedDelivery`, `subtotal`, `taxAmount`, `total` with `expectedArrivalDate`, `totalAmount` (actual fields). Added `containerNo`.
+9. **CLIENT whitelist corrected:** Replaced `address`/`taxId` with `city`/`area`/`paymentTermsDays`/`balance`/`taxExempt`/`taxExemptReason` (actual fields).
+10. **`fetch()` replaced with `apiClient`:** Frontend uses the project's axios-based `apiClient` from `@/lib/api-client`.
 
 ---
 
@@ -279,3 +340,4 @@ export const ChangeHistoryModal: FC<{
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: corrected API paths, fixed AuditService call signature, corrected all entity snapshot whitelists to match actual schema fields, replaced fetch with apiClient | Claude (Tech Review) |

@@ -5,7 +5,7 @@
 **Priority:** Critical
 **Estimated Effort:** 12-16 hours
 **Dependencies:** Story 5.2 (Journal Entries), Epic 2, Epic 3
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2
 
 ---
 
@@ -21,302 +21,135 @@
 
 1. **Sale Invoice** auto-creates journal entry:
    - Debit: Accounts Receivable (1200) = invoice total
-   - Credit: Sales Revenue (4100) = invoice subtotal
-   - Credit: Tax Payable (2200) = tax amount
-   - On cash sale: Debit Bank instead of A/R
+   - Credit: Sales Revenue (4100) = invoice total - taxAmount
+   - Credit: Tax Payable (2200) = taxAmount (if > 0)
 
 2. **Client Payment** auto-creates journal entry:
    - Debit: Bank Account (1101) = payment amount
    - Credit: Accounts Receivable (1200) = payment amount
 
 3. **Purchase Order Receipt** auto-creates journal entry:
-   - Debit: Inventory (1300) = landed cost
-   - Credit: Accounts Payable (2100) = total PO amount
+   - Debit: Inventory (1300) = PO totalAmount + additional costs
+   - Credit: Accounts Payable (2100) = same total
 
 4. **Supplier Payment** auto-creates journal entry:
    - Debit: Accounts Payable (2100) = payment amount
    - Credit: Bank Account (1101) = payment amount
 
 5. **Expense** auto-creates journal entry:
-   - Debit: Expense Account (5XXX, based on category) = expense amount
-   - Credit: Bank Account or Petty Cash = expense amount
+   - Debit: Expense Account (5XXX, mapped from category) = amount
+   - Credit: Bank Account (1101) or Petty Cash (1102) = amount
 
 6. **Stock Adjustment (wastage/damage)** auto-creates journal entry:
-   - Debit: Inventory Loss (5150) = qty × cost
-   - Credit: Inventory (1300) = qty × cost
+   - Debit: Inventory Loss (5150) = qty x product.costPrice
+   - Credit: Inventory (1300) = same amount
 
 7. **Implementation:**
-   - [ ] Journal entries created automatically when transaction saved
-   - [ ] Entries linked to source: referenceType, referenceId
-   - [ ] Auto-created entries have status = POSTED (immutable)
-   - [ ] Configuration mapping: expense categories → account codes
+   - [ ] Journal entries created within the same `$transaction` as the source transaction
+   - [ ] Entries linked to source: `referenceType`, `referenceId`
+   - [ ] Auto-created entries have `status = POSTED` (immutable)
+   - [ ] Category-to-account mapping via hardcoded config (see Dev Notes)
 
-8. **Authorization & Role-Based Access:**
-   - [ ] System-generated (automatic, no user authorization required)
-   - [ ] Posted entries are immutable and locked
-   - [ ] Audit trail: Records system as creator
-
-9. **Performance & Caching:**
-   - [ ] Account code lookups cached (account codes rarely change)
-   - [ ] Transaction to journal entry mapping: < 500ms per transaction
-   - [ ] Bulk operations (batch receipts): Process in transaction
-   - [ ] API timeout: 15 seconds maximum
-
-10. **Error Handling:**
-    - [ ] If account mapping missing: Log error, create entry with fallback account
-    - [ ] If account doesn't exist: Raise error and fail transaction creation
-    - [ ] Balance calculation errors: Catch and log with transaction details
-    - [ ] Retry logic for failed auto-entries (3 attempts with exponential backoff)
-    - [ ] Notify admin if auto-entry creation fails for critical transaction
+8. **Authorization:**
+   - [ ] System-generated — no user authorization required
+   - [ ] Auto entries use the triggering user's ID as `createdBy`
 
 ---
 
 ## Dev Notes
 
-### Automatic Journal Entry Service
+### Implementation Status
+
+**Backend:** Not started. Depends on Story 5.2 (JournalEntry model).
+
+### Schema Field Reference (Existing MVP Models — Correct Names)
+
+```
+Invoice:       total, taxAmount, taxRate, invoiceDate, invoiceNumber
+               (NO subtotal field — compute as: total - taxAmount)
+               (NO tax field — use taxAmount)
+               client → Client relation
+
+PurchaseOrder: totalAmount (NOT totalCost), poNumber, supplierId
+               costs → POCost[] relation (SHIPPING | CUSTOMS | TAX | OTHER)
+               (NO receivedDate — use goods receipt date or new Date())
+               (NO payments relation)
+
+Expense:       category (ExpenseCategory), amount, description, date, paymentMethod
+               (NO paidTo field)
+
+StockAdjustment: productId, warehouseId, adjustmentType, quantity, reason
+                 product → Product relation (use product.costPrice for value)
+```
+
+### Key Corrections from Original Doc
+
+1. **`invoice.subtotal` does NOT exist** — Compute as `invoice.total - invoice.taxAmount`:
+   ```typescript
+   const subtotal = parseFloat(invoice.total.toString()) - parseFloat(invoice.taxAmount.toString());
+   ```
+
+2. **`invoice.tax` → `invoice.taxAmount`**
+
+3. **`po.totalCost` → `po.totalAmount`**
+
+4. **`po.receivedDate` does NOT exist** — Use `new Date()` or the goods receipt timestamp.
+
+5. **`createdBy: 'SYSTEM'`** is invalid — `JournalEntry.createdBy` is a User FK. Use the triggering user's ID (the user who created the invoice/payment/etc.).
+
+6. **No retry with exponential backoff** — If the journal entry fails, the entire transaction should roll back (it's inside `$transaction`). No separate retry needed.
+
+### Expense Category → Account Code Mapping
 
 ```typescript
-class AutoJournalEntryService {
-  async createFromInvoice(invoice: Invoice): Promise<JournalEntry> {
-    const lines: any[] = [
-      // Debit: Accounts Receivable
-      {
-        accountHeadId: await this.getAccountByCode('1200'), // A/R
-        debitAmount: parseFloat(invoice.total.toString()),
-        creditAmount: 0,
-        description: `Sales to ${invoice.client.name}`
-      },
-      // Credit: Sales Revenue
-      {
-        accountHeadId: await this.getAccountByCode('4100'), // Sales Revenue
-        debitAmount: 0,
-        creditAmount: parseFloat(invoice.subtotal.toString()),
-        description: 'Sales revenue'
-      }
-    ];
+const EXPENSE_ACCOUNT_MAP: Record<ExpenseCategory, string> = {
+  RENT: '5200',
+  UTILITIES: '5300',
+  SALARIES: '5400',
+  TRANSPORT: '5500',
+  SUPPLIES: '5900',
+  MAINTENANCE: '5900',
+  MARKETING: '5900',
+  MISC: '5900',
+};
+```
 
-    // Credit: Tax Payable (if tax > 0)
-    if (parseFloat(invoice.tax.toString()) > 0) {
-      lines.push({
-        accountHeadId: await this.getAccountByCode('2200'), // Tax Payable
-        debitAmount: 0,
-        creditAmount: parseFloat(invoice.tax.toString()),
-        description: 'Sales tax'
-      });
-    }
+### Payment Method → Credit Account Mapping
 
-    return await this.createJournalEntry({
-      date: invoice.invoiceDate,
-      description: `Sales Invoice ${invoice.invoiceNumber}`,
-      referenceType: 'INVOICE',
-      referenceId: invoice.id,
-      lines
-    });
-  }
-
-  async createFromClientPayment(payment: Payment, allocations: PaymentAllocation[]): Promise<JournalEntry> {
-    const lines = [
-      // Debit: Bank Account
-      {
-        accountHeadId: await this.getAccountByCode('1101'), // Bank
-        debitAmount: parseFloat(payment.amount.toString()),
-        creditAmount: 0,
-        description: 'Payment received'
-      },
-      // Credit: Accounts Receivable
-      {
-        accountHeadId: await this.getAccountByCode('1200'), // A/R
-        debitAmount: 0,
-        creditAmount: parseFloat(payment.amount.toString()),
-        description: 'Payment from client'
-      }
-    ];
-
-    return await this.createJournalEntry({
-      date: payment.date,
-      description: `Payment from client`,
-      referenceType: 'PAYMENT',
-      referenceId: payment.id,
-      lines
-    });
-  }
-
-  async createFromPOReceipt(po: PurchaseOrder): Promise<JournalEntry> {
-    const productCost = parseFloat(po.totalCost.toString());
-    const additionalCosts = po.costs.reduce(
-      (sum, cost) => sum + parseFloat(cost.amount.toString()),
-      0
-    );
-    const totalLandedCost = productCost + additionalCosts;
-
-    const lines = [
-      // Debit: Inventory
-      {
-        accountHeadId: await this.getAccountByCode('1300'),
-        debitAmount: totalLandedCost,
-        creditAmount: 0,
-        description: 'Inventory received'
-      },
-      // Credit: Accounts Payable
-      {
-        accountHeadId: await this.getAccountByCode('2100'),
-        debitAmount: 0,
-        creditAmount: totalLandedCost,
-        description: `Purchase from ${po.supplier.name}`
-      }
-    ];
-
-    return await this.createJournalEntry({
-      date: po.receivedDate || new Date(),
-      description: `PO ${po.poNumber} received`,
-      referenceType: 'PO',
-      referenceId: po.id,
-      lines
-    });
-  }
-
-  async createFromExpense(expense: Expense): Promise<JournalEntry> {
-    // Map expense category to account code
-    const expenseAccountMapping = {
-      RENT: '5200',
-      UTILITIES: '5300',
-      SALARIES: '5400',
-      TRANSPORT: '5500',
-      SUPPLIES: '5900',
-      MAINTENANCE: '5900',
-      MARKETING: '5900',
-      MISC: '5900'
-    };
-
-    const accountCode = expenseAccountMapping[expense.category];
-
-    const lines = [
-      // Debit: Expense Account
-      {
-        accountHeadId: await this.getAccountByCode(accountCode),
-        debitAmount: parseFloat(expense.amount.toString()),
-        creditAmount: 0,
-        description: expense.description
-      },
-      // Credit: Bank/Petty Cash
-      {
-        accountHeadId: expense.paymentMethod === 'CASH'
-          ? await this.getAccountByCode('1102') // Petty Cash
-          : await this.getAccountByCode('1101'), // Bank
-        debitAmount: 0,
-        creditAmount: parseFloat(expense.amount.toString()),
-        description: 'Payment for expense'
-      }
-    ];
-
-    return await this.createJournalEntry({
-      date: expense.date,
-      description: `Expense: ${expense.description}`,
-      referenceType: 'EXPENSE',
-      referenceId: expense.id,
-      lines
-    });
-  }
-
-  async createFromStockAdjustment(adjustment: StockAdjustment): Promise<JournalEntry> {
-    // Calculate value: quantity × unit cost
-    const value = adjustment.quantity * parseFloat(adjustment.product.costPrice.toString());
-
-    const lines = [
-      // Debit: Inventory Loss
-      {
-        accountHeadId: await this.getAccountByCode('5150'),
-        debitAmount: value,
-        creditAmount: 0,
-        description: `${adjustment.type}: ${adjustment.product.name}`
-      },
-      // Credit: Inventory
-      {
-        accountHeadId: await this.getAccountByCode('1300'),
-        debitAmount: 0,
-        creditAmount: value,
-        description: 'Inventory reduction'
-      }
-    ];
-
-    return await this.createJournalEntry({
-      date: adjustment.date,
-      description: `Stock adjustment: ${adjustment.type}`,
-      referenceType: 'STOCK_ADJUSTMENT',
-      referenceId: adjustment.id,
-      lines
-    });
-  }
-
-  private async getAccountByCode(code: string): Promise<string> {
-    const account = await prisma.accountHead.findUnique({
-      where: { code }
-    });
-    if (!account) {
-      throw new Error(`Account with code ${code} not found`);
-    }
-    return account.id;
-  }
-
-  private async createJournalEntry(data: any): Promise<JournalEntry> {
-    const entryNumber = await generateEntryNumber(data.date);
-
-    return await prisma.journalEntry.create({
-      data: {
-        entryNumber,
-        date: data.date,
-        description: data.description,
-        referenceType: data.referenceType,
-        referenceId: data.referenceId,
-        status: 'POSTED',
-        createdBy: 'SYSTEM',
-        approvedBy: 'SYSTEM',
-        lines: {
-          create: data.lines
-        }
-      },
-      include: { lines: true }
-    });
-  }
+```typescript
+function getCreditAccountForExpense(method: PaymentMethod): string {
+  return method === 'CASH' ? '1102' : '1101';  // Petty Cash vs Bank
 }
 ```
 
-### Integration Points
+### Integration Pattern
 
-**In Invoice Service:**
+All auto-entries are created **inside the same `$transaction`** as the source:
+
 ```typescript
-async createInvoice(data: CreateInvoiceDto, userId: string): Promise<Invoice> {
-  const invoice = await prisma.$transaction(async (tx) => {
-    // Create invoice
-    const inv = await tx.invoice.create({ ... });
+// In invoices.service.ts createInvoice()
+return await prisma.$transaction(async (tx) => {
+  const invoice = await tx.invoice.create({ ... });
+  // ... stock deduction, client balance update ...
 
-    // Create automatic journal entry
-    await autoJournalEntryService.createFromInvoice(inv);
-
-    return inv;
-  });
+  // Auto journal entry
+  await autoJournalService.createFromInvoice(tx, invoice, userId);
 
   return invoice;
-}
+});
 ```
 
-**Configuration Table:**
-```prisma
-model AccountMapping {
-  id            String   @id @default(cuid())
-  sourceType    String   // 'EXPENSE_CATEGORY', 'PAYMENT_METHOD', etc.
-  sourceValue   String   // 'RENT', 'CASH', etc.
-  accountCode   String   // '5200', '1102', etc.
+Note: Pass `tx` (transaction client) to the auto-journal service, NOT the global prisma client.
 
-  @@unique([sourceType, sourceValue])
-  @@map("account_mappings")
-}
+### Module Structure
+
+```
+apps/api/src/modules/journal-entries/
+  auto-journal.service.ts       (NEW — createFromInvoice, createFromPayment, etc.)
 ```
 
----
+### POST-MVP DEFERRED
 
-## Change Log
-
-| Date       | Version | Description            | Author |
-|------------|---------|------------------------|--------|
-| 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+- **AccountMapping configuration table**: For MVP, use hardcoded mapping. Configurable mapping table deferred.
+- **Retry with exponential backoff / admin notifications**: Not needed — journal entry is created inside `$transaction`. If it fails, the whole transaction rolls back.
+- **Cash sale variant (Debit Bank instead of A/R)**: All invoices go through A/R for now. Cash sale accounting deferred.

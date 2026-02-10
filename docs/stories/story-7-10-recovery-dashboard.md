@@ -4,8 +4,8 @@
 **Story ID:** STORY-7.10
 **Priority:** Medium
 **Estimated Effort:** 6-8 hours
-**Dependencies:** All previous Epic 7 stories
-**Status:** Draft - Phase 2
+**Dependencies:** All previous Epic 7 stories (7.1-7.9), especially Story 7.6 (Alert model)
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
@@ -20,48 +20,53 @@
 ## Acceptance Criteria
 
 1. **Dashboard Widgets:**
-   - [ ] Today's Schedule (clients to visit)
-   - [ ] Due Promises (promises due today/overdue)
-   - [ ] Collection Metrics (today/week/month)
-   - [ ] Overdue Summary (total overdue amount by aging)
+   - [ ] Today's Schedule (clients to visit based on recoveryDay)
+   - [ ] Due Promises (promises due today or overdue)
+   - [ ] Collection Metrics (today / this week / this month)
+   - [ ] Overdue Summary (total amount by aging buckets)
    - [ ] Recent Visits (last 5 visits)
-   - [ ] Alert Summary (unacknowledged alerts)
-   - [ ] Promise Fulfillment Rate
+   - [ ] Alert Summary (unacknowledged alerts count + critical count)
+   - [ ] Promise Fulfillment Rate (last 30 days)
    - [ ] Top 5 Overdue Clients
 
 2. **Backend API:**
-   - [ ] GET /api/dashboard/recovery - returns all dashboard data
-   - [ ] Response optimized (single query for all widgets)
+   - [ ] `GET /api/v1/dashboard/recovery` — returns all dashboard data in one response
+   - [ ] Role-scoped: Recovery Agent sees only their data; Admin sees all
 
 3. **Interactive Features:**
    - [ ] Click widget to navigate to detail page
    - [ ] Quick actions: Log Visit, Record Payment, View Client
-   - [ ] Refresh button
-   - [ ] Date range selector for metrics
+   - [ ] Auto-refresh every 5 minutes, manual refresh button
 
-4. **Role-Based Views:**
-   - [ ] Recovery Agent: Only their assigned clients and data
-   - [ ] Admin/Accountant: Organization-wide metrics
+4. **Frontend:**
+   - [ ] Recovery Dashboard page with widget-based grid layout
+   - [ ] Overdue summary pie chart via `recharts` (external dependency — must install)
+   - [ ] Use `<Card>` with children directly (no `Card.Body`)
+   - [ ] Responsive grid for mobile
 
-5. **Real-Time Updates:**
-   - [ ] Auto-refresh every 5 minutes
-   - [ ] Manual refresh button
-   - [ ] Last updated timestamp
-
-6. **Mobile Optimization:**
-   - [ ] Responsive grid layout
-   - [ ] Touch-friendly buttons
-   - [ ] Swipeable widgets (mobile)
-
-7. **Frontend:**
-   - [ ] Recovery Dashboard page
-   - [ ] Widget-based layout (drag-and-drop optional - Phase 3)
-   - [ ] Charts and visualizations
-   - [ ] Action buttons
+5. **Authorization:**
+   - [ ] Recovery Agent: only their assigned clients and data
+   - [ ] Admin/Accountant: organization-wide metrics
 
 ---
 
 ## Dev Notes
+
+### Implementation Status
+
+**Backend:** Not started. This is the final "glue" story — aggregates data from earlier Epic 7 stories' models.
+
+### Key Corrections
+
+1. **API path**: `GET /api/v1/dashboard/recovery` (not `/api/dashboard/recovery`)
+2. **`Card.Body`** does not exist — use `<Card>` with children directly
+3. **`recharts`**: External dependency, must be installed
+4. **InvoiceStatus `'UNPAID'`** does not exist — use `'PENDING'`
+5. **`prisma.alert`**: Depends on Story 7.6 which defines the Alert model. Must implement 7.6 first.
+6. **Performance concern**: The dashboard service issues many queries (schedule, promises, 3x payments, clients with invoices, visits, alerts, fulfillment). Consider caching responses or combining queries where possible.
+7. **`format(today, 'EEEE').toUpperCase()`**: Gives English day names (e.g., "MONDAY"). This works with the `RecoveryDay` enum but note locale dependency — always use English locale for date-fns `format`.
+
+### Response Interface
 
 ```typescript
 interface RecoveryDashboardData {
@@ -69,685 +74,178 @@ interface RecoveryDashboardData {
     totalClients: number;
     totalOutstanding: number;
     clients: Array<{
-      clientId: string;
-      clientName: string;
-      phone: string;
-      overdueAmount: number;
-      daysOverdue: number;
+      clientId: string; clientName: string; phone: string;
+      overdueAmount: number; daysOverdue: number;
     }>;
   };
   duePromises: {
-    totalPromises: number;
-    totalAmount: number;
-    overduePromises: number;
+    totalPromises: number; totalAmount: number; overduePromises: number;
     promises: Array<{
-      promiseId: string;
-      clientName: string;
-      promiseAmount: number;
-      promiseDate: Date;
-      isOverdue: boolean;
+      promiseId: string; clientName: string;
+      promiseAmount: number; promiseDate: Date; isOverdue: boolean;
     }>;
   };
-  collectionMetrics: {
-    today: number;
-    thisWeek: number;
-    thisMonth: number;
-  };
+  collectionMetrics: { today: number; thisWeek: number; thisMonth: number };
   overdueSummary: {
     total: number;
-    buckets: {
-      days1to7: number;
-      days8to14: number;
-      days15to30: number;
-      days30plus: number;
-    };
+    buckets: { days1to7: number; days8to14: number; days15to30: number; days30plus: number };
   };
   recentVisits: Array<{
-    visitNumber: string;
-    clientName: string;
-    visitDate: Date;
-    outcome: string;
-    amountCollected: number;
+    visitNumber: string; clientName: string; visitDate: Date;
+    outcome: string; amountCollected: number;
   }>;
-  alerts: {
-    totalUnacknowledged: number;
-    criticalCount: number;
-  };
+  alerts: { totalUnacknowledged: number; criticalCount: number };
   promiseFulfillmentRate: number;
   topOverdueClients: Array<{
-    clientId: string;
-    clientName: string;
-    overdueAmount: number;
-    daysOverdue: number;
+    clientId: string; clientName: string; overdueAmount: number; daysOverdue: number;
   }>;
 }
+```
 
+### Key Backend Logic (corrected)
+
+```typescript
 async function getRecoveryDashboard(
-  userId: string,
-  role: string
+  userId: string, role: string
 ): Promise<RecoveryDashboardData> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
   const endOfToday = new Date();
   endOfToday.setHours(23, 59, 59, 999);
 
-  // Determine scope (agent's clients or all clients)
-  const clientWhere: any = {
-    status: 'ACTIVE'
-  };
+  const clientWhere: any = { status: 'ACTIVE' };
+  if (role === 'RECOVERY_AGENT') clientWhere.recoveryAgentId = userId;
 
-  if (role === 'RECOVERY_AGENT') {
-    clientWhere.recoveryAgentId = userId;
-  }
-
-  // Today's Schedule
+  // --- Today's Schedule ---
+  // Note: format(today, 'EEEE') returns English day name. Use { locale: enUS } if needed.
   const dayOfWeek = format(today, 'EEEE').toUpperCase() as RecoveryDay;
   const todaysClients = await prisma.client.findMany({
-    where: {
-      ...clientWhere,
-      recoveryDay: dayOfWeek,
-      balance: { gt: 0 }
-    },
+    where: { ...clientWhere, recoveryDay: dayOfWeek, balance: { gt: 0 } },
     include: {
       invoices: {
-        where: {
-          status: { in: ['UNPAID', 'PARTIAL'] },
-          dueDate: { lt: endOfToday }
-        }
+        where: { status: { in: ['PENDING', 'PARTIAL'] }, dueDate: { lt: endOfToday } }  // NOT 'UNPAID'
       }
     },
-    take: 10,
-    orderBy: { balance: 'desc' }
+    take: 10, orderBy: { balance: 'desc' }
   });
 
-  const todaysSchedule = {
-    totalClients: todaysClients.length,
-    totalOutstanding: todaysClients.reduce(
-      (sum, c) => sum + parseFloat(c.balance.toString()),
-      0
-    ),
-    clients: todaysClients.slice(0, 5).map(client => {
-      const overdueInvoices = client.invoices;
-      const overdueAmount = overdueInvoices.reduce(
-        (sum, inv) => sum + parseFloat(inv.total.toString()) - parseFloat(inv.paidAmount.toString()),
-        0
-      );
-      const daysOverdue = overdueInvoices.length > 0
-        ? differenceInDays(today, overdueInvoices[0].dueDate!)
-        : 0;
-
-      return {
-        clientId: client.id,
-        clientName: client.name,
-        phone: client.phone || '',
-        overdueAmount,
-        daysOverdue
-      };
-    })
-  };
-
-  // Due Promises
-  const promiseWhere: any = {
-    status: 'PENDING',
-    promiseDate: { lte: endOfToday }
-  };
-
-  if (role === 'RECOVERY_AGENT') {
-    promiseWhere.createdBy = userId;
-  }
-
+  // --- Due Promises ---
+  const promiseWhere: any = { status: 'PENDING', promiseDate: { lte: endOfToday } };
+  if (role === 'RECOVERY_AGENT') promiseWhere.createdBy = userId;
   const duePromises = await prisma.paymentPromise.findMany({
-    where: promiseWhere,
-    include: { client: true },
-    orderBy: { promiseDate: 'asc' },
-    take: 10
+    where: promiseWhere, include: { client: true },
+    orderBy: { promiseDate: 'asc' }, take: 10
   });
 
-  const duePromisesData = {
-    totalPromises: duePromises.length,
-    totalAmount: duePromises.reduce(
-      (sum, p) => sum + parseFloat(p.promiseAmount.toString()),
-      0
-    ),
-    overduePromises: duePromises.filter(p => p.promiseDate < today).length,
-    promises: duePromises.slice(0, 5).map(promise => ({
-      promiseId: promise.id,
-      clientName: promise.client.name,
-      promiseAmount: parseFloat(promise.promiseAmount.toString()),
-      promiseDate: promise.promiseDate,
-      isOverdue: promise.promiseDate < today
-    }))
-  };
-
-  // Collection Metrics
+  // --- Collection Metrics (today / week / month) ---
   const startOfWeek = new Date(today);
   startOfWeek.setDate(today.getDate() - today.getDay());
-
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
   const paymentWhere: any = {};
-  if (role === 'RECOVERY_AGENT') {
-    paymentWhere.client = { recoveryAgentId: userId };
-  }
+  if (role === 'RECOVERY_AGENT') paymentWhere.client = { recoveryAgentId: userId };
 
-  const [todayPayments, weekPayments, monthPayments] = await Promise.all([
-    prisma.payment.findMany({
-      where: {
-        ...paymentWhere,
-        date: { gte: today, lte: endOfToday }
-      }
-    }),
-    prisma.payment.findMany({
-      where: {
-        ...paymentWhere,
-        date: { gte: startOfWeek, lte: endOfToday }
-      }
-    }),
-    prisma.payment.findMany({
-      where: {
-        ...paymentWhere,
-        date: { gte: startOfMonth, lte: endOfToday }
-      }
-    })
+  const [todayPay, weekPay, monthPay] = await Promise.all([
+    prisma.payment.findMany({ where: { ...paymentWhere, date: { gte: today, lte: endOfToday } } }),
+    prisma.payment.findMany({ where: { ...paymentWhere, date: { gte: startOfWeek, lte: endOfToday } } }),
+    prisma.payment.findMany({ where: { ...paymentWhere, date: { gte: startOfMonth, lte: endOfToday } } }),
   ]);
 
-  const collectionMetrics = {
-    today: todayPayments.reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0),
-    thisWeek: weekPayments.reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0),
-    thisMonth: monthPayments.reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0)
-  };
-
-  // Overdue Summary
+  // --- Overdue Summary (by aging buckets) ---
   const allClients = await prisma.client.findMany({
     where: clientWhere,
-    include: {
-      invoices: {
-        where: {
-          status: { in: ['UNPAID', 'PARTIAL'] }
-        }
-      }
-    }
+    include: { invoices: { where: { status: { in: ['PENDING', 'PARTIAL'] } } } }  // NOT 'UNPAID'
   });
 
-  const overdueSummary = {
-    total: 0,
-    buckets: {
-      days1to7: 0,
-      days8to14: 0,
-      days15to30: 0,
-      days30plus: 0
-    }
-  };
-
+  const overdueSummary = { total: 0, buckets: { days1to7: 0, days8to14: 0, days15to30: 0, days30plus: 0 } };
   for (const client of allClients) {
-    for (const invoice of client.invoices) {
-      if (!invoice.dueDate || invoice.dueDate >= today) continue;
-
-      const daysOverdue = differenceInDays(today, invoice.dueDate);
-      const amount = parseFloat(invoice.total.toString()) - parseFloat(invoice.paidAmount.toString());
-
-      overdueSummary.total += amount;
-
-      if (daysOverdue <= 7) {
-        overdueSummary.buckets.days1to7 += amount;
-      } else if (daysOverdue <= 14) {
-        overdueSummary.buckets.days8to14 += amount;
-      } else if (daysOverdue <= 30) {
-        overdueSummary.buckets.days15to30 += amount;
-      } else {
-        overdueSummary.buckets.days30plus += amount;
-      }
+    for (const inv of client.invoices) {
+      if (!inv.dueDate || inv.dueDate >= today) continue;
+      const d = differenceInDays(today, inv.dueDate);
+      const amt = Number(inv.total) - Number(inv.paidAmount);
+      overdueSummary.total += amt;
+      if (d <= 7) overdueSummary.buckets.days1to7 += amt;
+      else if (d <= 14) overdueSummary.buckets.days8to14 += amt;
+      else if (d <= 30) overdueSummary.buckets.days15to30 += amt;
+      else overdueSummary.buckets.days30plus += amt;
     }
   }
 
-  // Recent Visits
+  // --- Recent Visits ---
   const visitWhere: any = {};
-  if (role === 'RECOVERY_AGENT') {
-    visitWhere.visitedBy = userId;
-  }
-
+  if (role === 'RECOVERY_AGENT') visitWhere.visitedBy = userId;
   const recentVisits = await prisma.recoveryVisit.findMany({
-    where: visitWhere,
-    include: { client: true },
-    orderBy: { visitDate: 'desc' },
-    take: 5
+    where: visitWhere, include: { client: true },
+    orderBy: { visitDate: 'desc' }, take: 5
   });
 
-  const recentVisitsData = recentVisits.map(visit => ({
-    visitNumber: visit.visitNumber,
-    clientName: visit.client.name,
-    visitDate: visit.visitDate,
-    outcome: visit.outcome,
-    amountCollected: parseFloat(visit.amountCollected.toString())
-  }));
+  // --- Alerts (depends on Story 7.6 Alert model) ---
+  const alertWhere: any = { acknowledged: false };
+  if (role === 'RECOVERY_AGENT') alertWhere.targetUserId = userId;
+  const alerts = await prisma.alert.findMany({ where: alertWhere });
 
-  // Alerts
-  const alertWhere: any = {
-    acknowledged: false
-  };
-
-  if (role === 'RECOVERY_AGENT') {
-    alertWhere.targetUserId = userId;
-  }
-
-  const alerts = await prisma.alert.findMany({
-    where: alertWhere
-  });
-
-  const alertsData = {
-    totalUnacknowledged: alerts.length,
-    criticalCount: alerts.filter(a => a.priority === 'CRITICAL').length
-  };
-
-  // Promise Fulfillment Rate (last 30 days)
+  // --- Promise Fulfillment Rate (last 30 days) ---
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(today.getDate() - 30);
-
-  const fulfillmentWhere: any = {
+  const fulfillWhere: any = {
     promiseDate: { gte: thirtyDaysAgo, lte: endOfToday },
     status: { in: ['FULFILLED', 'PARTIAL', 'BROKEN'] }
   };
-
-  if (role === 'RECOVERY_AGENT') {
-    fulfillmentWhere.createdBy = userId;
-  }
-
-  const promises = await prisma.paymentPromise.findMany({
-    where: fulfillmentWhere
-  });
-
+  if (role === 'RECOVERY_AGENT') fulfillWhere.createdBy = userId;
+  const promises = await prisma.paymentPromise.findMany({ where: fulfillWhere });
   const fulfilled = promises.filter(p => p.status === 'FULFILLED').length;
   const partial = promises.filter(p => p.status === 'PARTIAL').length;
-  const total = promises.length;
+  const rate = promises.length > 0 ? ((fulfilled + partial * 0.5) / promises.length) * 100 : 0;
 
-  const promiseFulfillmentRate = total > 0
-    ? ((fulfilled + partial * 0.5) / total) * 100
-    : 0;
-
-  // Top 5 Overdue Clients
-  const topOverdueClients = allClients
-    .map(client => {
-      const overdueInvoices = client.invoices.filter(
-        inv => inv.dueDate && inv.dueDate < today
-      );
-      const overdueAmount = overdueInvoices.reduce(
-        (sum, inv) => sum + parseFloat(inv.total.toString()) - parseFloat(inv.paidAmount.toString()),
-        0
-      );
-      const daysOverdue = overdueInvoices.length > 0
-        ? Math.max(...overdueInvoices.map(inv => differenceInDays(today, inv.dueDate!)))
-        : 0;
-
-      return {
-        clientId: client.id,
-        clientName: client.name,
-        overdueAmount,
-        daysOverdue
-      };
+  // --- Top 5 Overdue Clients ---
+  const topOverdue = allClients
+    .map(c => {
+      const overdue = c.invoices.filter(inv => inv.dueDate && inv.dueDate < today);
+      const amt = overdue.reduce((s, inv) => s + Number(inv.total) - Number(inv.paidAmount), 0);
+      const days = overdue.length > 0
+        ? Math.max(...overdue.map(inv => differenceInDays(today, inv.dueDate!))) : 0;
+      return { clientId: c.id, clientName: c.name, overdueAmount: amt, daysOverdue: days };
     })
     .filter(c => c.overdueAmount > 0)
     .sort((a, b) => b.overdueAmount - a.overdueAmount)
     .slice(0, 5);
 
-  return {
-    todaysSchedule,
-    duePromises: duePromisesData,
-    collectionMetrics,
-    overdueSummary,
-    recentVisits: recentVisitsData,
-    alerts: alertsData,
-    promiseFulfillmentRate: Math.round(promiseFulfillmentRate * 10) / 10,
-    topOverdueClients
+  // Assemble response (mapping omitted for brevity — see interface above)
+  return { todaysSchedule: { /* ... */ }, duePromises: { /* ... */ },
+    collectionMetrics: { today: sum(todayPay), thisWeek: sum(weekPay), thisMonth: sum(monthPay) },
+    overdueSummary, recentVisits: recentVisits.map(/* ... */),
+    alerts: { totalUnacknowledged: alerts.length, criticalCount: alerts.filter(a => a.priority === 'CRITICAL').length },
+    promiseFulfillmentRate: Math.round(rate * 10) / 10,
+    topOverdueClients: topOverdue
   };
 }
 ```
 
-**Frontend:**
-```tsx
-import { FC, useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import {
-  Calendar,
-  DollarSign,
-  Users,
-  AlertCircle,
-  TrendingUp,
-  CheckCircle,
-  Phone,
-  MapPin
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+### Module Structure
 
-export const RecoveryDashboardPage: FC = () => {
-  const [lastUpdated, setLastUpdated] = useState(new Date());
-
-  const { data: dashboard, isLoading, refetch } = useQuery({
-    queryKey: ['recovery-dashboard'],
-    queryFn: () => fetch('/api/dashboard/recovery').then(res => res.json()),
-    refetchInterval: 5 * 60 * 1000 // Auto-refresh every 5 minutes
-  });
-
-  const handleRefresh = () => {
-    refetch();
-    setLastUpdated(new Date());
-  };
-
-  if (isLoading) return <Spinner />;
-
-  const overdueChartData = [
-    { name: '1-7 days', value: dashboard?.overdueSummary.buckets.days1to7, color: '#fbbf24' },
-    { name: '8-14 days', value: dashboard?.overdueSummary.buckets.days8to14, color: '#f97316' },
-    { name: '15-30 days', value: dashboard?.overdueSummary.buckets.days15to30, color: '#ef4444' },
-    { name: '30+ days', value: dashboard?.overdueSummary.buckets.days30plus, color: '#991b1b' }
-  ].filter(item => item.value > 0);
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Recovery Dashboard</h1>
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-600">
-            Last updated: {format(lastUpdated, 'HH:mm:ss')}
-          </div>
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {/* Collection Metrics */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card>
-          <Card.Body>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-gray-600">Today's Collections</div>
-                <div className="text-3xl font-bold text-green-600">
-                  Rs.{dashboard?.collectionMetrics.today.toLocaleString()}
-                </div>
-              </div>
-              <DollarSign className="h-10 w-10 text-green-600" />
-            </div>
-          </Card.Body>
-        </Card>
-
-        <Card>
-          <Card.Body>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-gray-600">This Week</div>
-                <div className="text-3xl font-bold text-blue-600">
-                  Rs.{dashboard?.collectionMetrics.thisWeek.toLocaleString()}
-                </div>
-              </div>
-              <TrendingUp className="h-10 w-10 text-blue-600" />
-            </div>
-          </Card.Body>
-        </Card>
-
-        <Card>
-          <Card.Body>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-gray-600">This Month</div>
-                <div className="text-3xl font-bold text-purple-600">
-                  Rs.{dashboard?.collectionMetrics.thisMonth.toLocaleString()}
-                </div>
-              </div>
-              <Calendar className="h-10 w-10 text-purple-600" />
-            </div>
-          </Card.Body>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        {/* Today's Schedule */}
-        <Card>
-          <Card.Body>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-lg">Today's Schedule</h3>
-              <Badge>{dashboard?.todaysSchedule.totalClients} clients</Badge>
-            </div>
-
-            {dashboard?.todaysSchedule.clients.length === 0 ? (
-              <div className="text-center text-gray-500 py-4">
-                No clients scheduled for today
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {dashboard?.todaysSchedule.clients.map((client: any) => (
-                  <div key={client.clientId} className="border-l-4 border-red-500 pl-3 py-2 bg-gray-50 rounded">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold">{client.clientName}</div>
-                        <div className="text-sm text-gray-600">{client.phone}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-red-600 font-semibold">
-                          Rs.{client.overdueAmount.toLocaleString()}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {client.daysOverdue} days overdue
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                      <Button size="sm" variant="outline" onClick={() => window.location.href = `tel:${client.phone}`}>
-                        <Phone className="h-3 w-3 mr-1" />
-                        Call
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => navigate(`/recovery/visit/${client.clientId}`)}>
-                        Log Visit
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <Button
-              variant="link"
-              className="w-full mt-4"
-              onClick={() => navigate('/recovery/route')}
-            >
-              View Full Route
-            </Button>
-          </Card.Body>
-        </Card>
-
-        {/* Due Promises */}
-        <Card>
-          <Card.Body>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-lg">Due Promises</h3>
-              <Badge className="bg-yellow-100 text-yellow-800">
-                {dashboard?.duePromises.totalPromises} promises
-              </Badge>
-            </div>
-
-            {dashboard?.duePromises.promises.length === 0 ? (
-              <div className="text-center text-gray-500 py-4">
-                No promises due today
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {dashboard?.duePromises.promises.map((promise: any) => (
-                  <div
-                    key={promise.promiseId}
-                    className={`border-l-4 ${promise.isOverdue ? 'border-red-500' : 'border-blue-500'} pl-3 py-2 bg-gray-50 rounded`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold">{promise.clientName}</div>
-                        <div className="text-sm text-gray-600">
-                          {format(promise.promiseDate, 'PPP')}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-semibold">
-                          Rs.{promise.promiseAmount.toLocaleString()}
-                        </div>
-                        {promise.isOverdue && (
-                          <Badge className="bg-red-100 text-red-800 text-xs">OVERDUE</Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <Button
-              variant="link"
-              className="w-full mt-4"
-              onClick={() => navigate('/recovery/promises/due')}
-            >
-              View All Due Promises
-            </Button>
-          </Card.Body>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-3 gap-6 mb-6">
-        {/* Overdue Summary */}
-        <Card>
-          <Card.Body>
-            <h3 className="font-semibold mb-4">Overdue Summary</h3>
-            <div className="text-3xl font-bold text-red-600 mb-4">
-              Rs.{dashboard?.overdueSummary.total.toLocaleString()}
-            </div>
-            {overdueChartData.length > 0 && (
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={overdueChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {overdueChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => `Rs.${value.toLocaleString()}`} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </Card.Body>
-        </Card>
-
-        {/* Promise Fulfillment */}
-        <Card>
-          <Card.Body>
-            <h3 className="font-semibold mb-4">Promise Fulfillment</h3>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-blue-600 mb-2">
-                {dashboard?.promiseFulfillmentRate}%
-              </div>
-              <div className="text-sm text-gray-600">Last 30 days</div>
-            </div>
-            <div className="mt-4 bg-gray-200 rounded-full h-4">
-              <div
-                className="bg-blue-600 h-4 rounded-full transition-all"
-                style={{ width: `${dashboard?.promiseFulfillmentRate}%` }}
-              ></div>
-            </div>
-          </Card.Body>
-        </Card>
-
-        {/* Alerts */}
-        <Card>
-          <Card.Body>
-            <h3 className="font-semibold mb-4">Alerts</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-yellow-600" />
-                  <span className="text-sm">Unacknowledged</span>
-                </div>
-                <span className="text-2xl font-bold">{dashboard?.alerts.totalUnacknowledged}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-red-600" />
-                  <span className="text-sm">Critical</span>
-                </div>
-                <span className="text-2xl font-bold text-red-600">
-                  {dashboard?.alerts.criticalCount}
-                </span>
-              </div>
-            </div>
-            <Button
-              variant="link"
-              className="w-full mt-4"
-              onClick={() => navigate('/alerts')}
-            >
-              View All Alerts
-            </Button>
-          </Card.Body>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6">
-        {/* Top Overdue Clients */}
-        <Card>
-          <Card.Body>
-            <h3 className="font-semibold mb-4">Top Overdue Clients</h3>
-            <div className="space-y-2">
-              {dashboard?.topOverdueClients.map((client: any, index: number) => (
-                <div key={client.clientId} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                  <div className="flex items-center gap-3">
-                    <div className="text-lg font-bold text-gray-400">#{index + 1}</div>
-                    <div>
-                      <div className="font-semibold">{client.clientName}</div>
-                      <div className="text-xs text-gray-500">{client.daysOverdue} days overdue</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-red-600">
-                      Rs.{client.overdueAmount.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card.Body>
-        </Card>
-
-        {/* Recent Visits */}
-        <Card>
-          <Card.Body>
-            <h3 className="font-semibold mb-4">Recent Visits</h3>
-            <div className="space-y-2">
-              {dashboard?.recentVisits.map((visit: any) => (
-                <div key={visit.visitNumber} className="p-2 hover:bg-gray-50 rounded">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="font-semibold">{visit.clientName}</div>
-                    <Badge>{visit.outcome}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="text-gray-600">{format(visit.visitDate, 'PPp')}</div>
-                    {visit.amountCollected > 0 && (
-                      <div className="font-semibold text-green-600">
-                        Rs.{visit.amountCollected.toLocaleString()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card.Body>
-        </Card>
-      </div>
-    </div>
-  );
-};
 ```
+apps/api/src/modules/dashboard/
+  recovery-dashboard.controller.ts    (NEW)
+  recovery-dashboard.service.ts       (NEW)
+
+apps/web/src/features/dashboard/pages/
+  RecoveryDashboardPage.tsx           (NEW)
+```
+
+### Frontend Notes
+
+- **Layout**: 3-column grid for collection metrics (today/week/month). 2-column grid for Today's Schedule + Due Promises. 3-column grid for Overdue Summary (pie chart via `recharts`), Promise Fulfillment (progress bar), Alerts summary. 2-column grid for Top Overdue Clients table + Recent Visits list.
+- **Quick actions**: "Log Visit" and "Call" buttons on each scheduled client. "Record Payment" on due promises.
+- **Auto-refresh**: `refetchInterval: 5 * 60 * 1000` on React Query. Manual refresh button with "Last updated" timestamp.
+- **Navigation**: Click any widget to go to its detail page (e.g., click alerts widget to go to `/alerts`).
+- Use `<Card>` directly (no `Card.Body`). `recharts` for PieChart in overdue summary.
+
+### POST-MVP DEFERRED
+
+- **Drag-and-drop widget layout** (Phase 3)
+- **Caching** dashboard response (Redis or in-memory, TTL ~1 min) to reduce query load
+- **Swipeable widgets** for mobile
+- **Locale-aware day names** (currently assumes English)
 
 ---
 
@@ -756,3 +254,4 @@ export const RecoveryDashboardPage: FC = () => {
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: Fixed API path (/api/v1/), Card.Body removed, UNPAID→PENDING, noted dependency on Story 7.6 for Alert model, recharts as external dep, noted performance concern with many queries, noted English locale for day names, trimmed frontend to notes | Claude (AI Review) |

@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Story 7.1
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
@@ -20,8 +20,8 @@
 ## Acceptance Criteria
 
 1. **Backend API:**
-   - [ ] GET /api/recovery/schedule/today - returns clients scheduled for logged-in recovery agent
-   - [ ] If user is Admin/Accountant, can specify ?agentId=xxx
+   - [ ] `GET /api/v1/recovery/schedule/today` — returns clients scheduled for logged-in recovery agent
+   - [ ] If user is Admin/Accountant, can specify `?agentId=xxx`
    - [ ] Clients filtered by: recoveryDay matches today, balance > 0, status = ACTIVE
    - [ ] Sorted by: overdueAmount DESC (highest priority first), then balance DESC
 
@@ -31,16 +31,15 @@
 3. **Frontend:**
    - [ ] Recovery Route page shows today's clients
    - [ ] Card-based layout with client details
-   - [ ] Click-to-call phone integration
-   - [ ] Google Maps integration for address
-   - [ ] Visit log button
-   - [ ] Collect payment button
+   - [ ] Click-to-call phone integration (`tel:` links)
+   - [ ] Google Maps link for address navigation
+   - [ ] Visit log button (links to Story 7.4)
+   - [ ] Collect payment button (links to payment recording)
    - [ ] Priority badge (HIGH/MEDIUM/LOW based on overdue days)
 
 4. **Mobile Optimization:**
    - [ ] Responsive design for mobile devices
    - [ ] Large touch targets for buttons
-   - [ ] Offline capability (cache today's route)
 
 5. **Authorization:**
    - [ ] Recovery Agent can see only their assigned clients
@@ -50,8 +49,30 @@
 
 ## Dev Notes
 
+### Implementation Status
+
+**Backend:** Not started. Depends on Story 7.1 (Client schema changes).
+
+### Key Corrections
+
+1. **API paths**: All use `/api/v1/` prefix (not `/api/`).
+2. **InvoiceStatus `'UNPAID'`** does NOT exist. Use `'PENDING'` instead.
+3. **`Card.Body`** does NOT exist. Use `<Card>` with children directly.
+4. **`client.latitude` / `client.longitude`** do NOT exist on Client model. Use `client.address`, `client.area`, `client.city` for display. GPS coordinates noted as optional future addition.
+5. **`client.recoveryVisits`** and **`client.paymentPromises`** are new relations added in Story 7.4 and 7.5 schemas respectively.
+6. **`Spinner`** component not verified to exist — use plain HTML loading indicator or note as component to create.
+7. **PWA / Service Worker / offline capability** removed entirely — over-engineering for MVP.
+8. **Frontend** trimmed to skeleton and notes.
+
+### Backend: Today's Route Query
+
 ```typescript
-async function getTodayRecoveryRoute(userId: string, role: string): Promise<any[]> {
+// GET /api/v1/recovery/schedule/today?agentId=xxx
+async function getTodayRecoveryRoute(
+  userId: string,
+  role: string,
+  agentId?: string
+): Promise<any[]> {
   const today = new Date();
   const dayOfWeek = format(today, 'EEEE').toUpperCase() as RecoveryDay;
 
@@ -61,9 +82,11 @@ async function getTodayRecoveryRoute(userId: string, role: string): Promise<any[
     status: 'ACTIVE'
   };
 
-  // If recovery agent, filter by their ID
+  // Recovery agents see only their own clients
   if (role === 'RECOVERY_AGENT') {
     where.recoveryAgentId = userId;
+  } else if (agentId) {
+    where.recoveryAgentId = agentId;
   }
 
   const clients = await prisma.client.findMany({
@@ -71,7 +94,7 @@ async function getTodayRecoveryRoute(userId: string, role: string): Promise<any[
     include: {
       invoices: {
         where: {
-          status: { in: ['UNPAID', 'PARTIAL'] }
+          status: { in: ['PENDING', 'PARTIAL'] }
         },
         orderBy: { dueDate: 'asc' }
       },
@@ -79,11 +102,11 @@ async function getTodayRecoveryRoute(userId: string, role: string): Promise<any[
         orderBy: { date: 'desc' },
         take: 1
       },
-      recoveryVisits: {
+      recoveryVisits: {          // NEW relation from Story 7.4
         orderBy: { visitDate: 'desc' },
         take: 1
       },
-      paymentPromises: {
+      paymentPromises: {         // NEW relation from Story 7.5
         where: {
           promiseDate: { gte: today }
         },
@@ -111,13 +134,9 @@ async function getTodayRecoveryRoute(userId: string, role: string): Promise<any[
       : 0;
 
     let priority: string;
-    if (daysOverdue > 30) {
-      priority = 'HIGH';
-    } else if (daysOverdue > 14) {
-      priority = 'MEDIUM';
-    } else {
-      priority = 'LOW';
-    }
+    if (daysOverdue > 30) priority = 'HIGH';
+    else if (daysOverdue > 14) priority = 'MEDIUM';
+    else priority = 'LOW';
 
     return {
       clientId: client.id,
@@ -125,10 +144,6 @@ async function getTodayRecoveryRoute(userId: string, role: string): Promise<any[
       contactPerson: client.contactPerson,
       phone: client.phone,
       address: `${client.address}, ${client.area}, ${client.city}`,
-      coordinates: {
-        lat: client.latitude,
-        lng: client.longitude
-      },
       currentBalance: parseFloat(client.balance.toString()),
       overdueAmount,
       daysOverdue,
@@ -138,7 +153,6 @@ async function getTodayRecoveryRoute(userId: string, role: string): Promise<any[
       paymentPromiseDate: client.paymentPromises[0]?.promiseDate
     };
   }).sort((a, b) => {
-    // Sort by overdueAmount DESC, then balance DESC
     if (b.overdueAmount !== a.overdueAmount) {
       return b.overdueAmount - a.overdueAmount;
     }
@@ -147,230 +161,33 @@ async function getTodayRecoveryRoute(userId: string, role: string): Promise<any[
 }
 ```
 
-**Frontend:**
-```tsx
-import { FC } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Phone, MapPin, Calendar, DollarSign } from 'lucide-react';
-import { format } from 'date-fns';
+### Module Structure
 
-interface RecoveryRouteClient {
-  clientId: string;
-  clientName: string;
-  contactPerson: string;
-  phone: string;
-  address: string;
-  coordinates: { lat: number; lng: number };
-  currentBalance: number;
-  overdueAmount: number;
-  daysOverdue: number;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
-  lastPaymentDate?: Date;
-  lastVisitDate?: Date;
-  paymentPromiseDate?: Date;
-}
+```
+apps/api/src/modules/recovery/
+  recovery.controller.ts     (EXPAND — add today route endpoint)
+  recovery.service.ts        (EXPAND — add getTodayRecoveryRoute)
+  recovery.routes.ts         (EXPAND — add GET /schedule/today)
 
-export const RecoveryRoutePage: FC = () => {
-  const { data: clients, isLoading } = useQuery({
-    queryKey: ['recovery-route-today'],
-    queryFn: () => fetch('/api/recovery/schedule/today').then(res => res.json())
-  });
-
-  const handleCall = (phone: string) => {
-    window.location.href = `tel:${phone}`;
-  };
-
-  const handleNavigate = (address: string, coords: { lat: number; lng: number }) => {
-    if (coords.lat && coords.lng) {
-      window.open(
-        `https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}`,
-        '_blank'
-      );
-    } else {
-      window.open(
-        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
-        '_blank'
-      );
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'HIGH': return 'bg-red-100 text-red-800';
-      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
-      case 'LOW': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  if (isLoading) {
-    return <Spinner />;
-  }
-
-  return (
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Today's Recovery Route</h1>
-        <div className="text-sm text-gray-600">
-          {format(new Date(), 'EEEE, PPP')}
-        </div>
-      </div>
-
-      {clients?.length === 0 ? (
-        <div className="text-center text-gray-500 py-8">
-          No clients scheduled for today.
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {clients?.map((client: RecoveryRouteClient, index: number) => (
-            <Card key={client.clientId} className="shadow-md">
-              <Card.Body>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-semibold">{index + 1}.</span>
-                      <h3 className="text-lg font-semibold">{client.clientName}</h3>
-                    </div>
-                    <p className="text-sm text-gray-600">{client.contactPerson}</p>
-                  </div>
-                  <Badge className={getPriorityColor(client.priority)}>
-                    {client.priority}
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <div className="text-sm text-gray-600">Current Balance</div>
-                    <div className="text-lg font-semibold">
-                      Rs.{client.currentBalance.toLocaleString()}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-600">Overdue Amount</div>
-                    <div className="text-lg font-semibold text-red-600">
-                      Rs.{client.overdueAmount.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-
-                {client.daysOverdue > 0 && (
-                  <div className="mb-4 p-2 bg-red-50 rounded text-sm text-red-700">
-                    Overdue: {client.daysOverdue} days
-                  </div>
-                )}
-
-                {client.paymentPromiseDate && (
-                  <div className="mb-4 p-2 bg-blue-50 rounded text-sm text-blue-700 flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Payment promised: {format(client.paymentPromiseDate, 'PPP')}
-                  </div>
-                )}
-
-                <div className="mb-4">
-                  <div className="text-sm text-gray-600 mb-1">Address</div>
-                  <div className="text-sm">{client.address}</div>
-                </div>
-
-                {client.lastPaymentDate && (
-                  <div className="text-xs text-gray-500 mb-4">
-                    Last payment: {format(client.lastPaymentDate, 'PPP')}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    onClick={() => handleCall(client.phone)}
-                    variant="primary"
-                    className="w-full"
-                  >
-                    <Phone className="h-4 w-4 mr-2" />
-                    Call
-                  </Button>
-                  <Button
-                    onClick={() => handleNavigate(client.address, client.coordinates)}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Navigate
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <Button
-                    onClick={() => navigate(`/recovery/visit/${client.clientId}`)}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Log Visit
-                  </Button>
-                  <Button
-                    onClick={() => navigate(`/payments/new?clientId=${client.clientId}`)}
-                    variant="success"
-                    className="w-full"
-                  >
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    Collect Payment
-                  </Button>
-                </div>
-              </Card.Body>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-6 p-4 bg-gray-50 rounded">
-        <h3 className="font-semibold mb-2">Route Summary</h3>
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <div>
-            <div className="text-gray-600">Total Clients</div>
-            <div className="text-lg font-semibold">{clients?.length || 0}</div>
-          </div>
-          <div>
-            <div className="text-gray-600">Total Outstanding</div>
-            <div className="text-lg font-semibold">
-              Rs.{clients?.reduce((sum: number, c: RecoveryRouteClient) => sum + c.currentBalance, 0).toLocaleString() || 0}
-            </div>
-          </div>
-          <div>
-            <div className="text-gray-600">Total Overdue</div>
-            <div className="text-lg font-semibold text-red-600">
-              Rs.{clients?.reduce((sum: number, c: RecoveryRouteClient) => sum + c.overdueAmount, 0).toLocaleString() || 0}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+apps/web/src/features/recovery/pages/
+  RecoveryRoutePage.tsx       (NEW — card-based list of today's clients)
 ```
 
-**Mobile PWA Features:**
-```typescript
-// Service Worker for offline capability
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-recovery-visits') {
-    event.waitUntil(syncRecoveryVisits());
-  }
-});
+### Frontend Notes
 
-async function syncRecoveryVisits() {
-  const db = await openDB('recovery-db');
-  const visits = await db.getAll('pending-visits');
+- Create `RecoveryRoutePage.tsx` with card-based layout.
+- Use `<Card>` component (no `Card.Body` — pass children directly).
+- Each card shows: client name, balance, overdue amount, priority badge, action buttons.
+- Action buttons: Call (`tel:` link), Navigate (Google Maps URL with address), Log Visit (link to /recovery/visit/:clientId), Collect Payment (link to /payments/new?clientId=xxx).
+- Route summary at bottom: total clients, total outstanding, total overdue.
+- Priority colors: HIGH = red, MEDIUM = yellow, LOW = green.
+- Loading state: simple "Loading..." text or a spinner if the component exists.
 
-  for (const visit of visits) {
-    try {
-      await fetch('/api/recovery/visits', {
-        method: 'POST',
-        body: JSON.stringify(visit)
-      });
-      await db.delete('pending-visits', visit.id);
-    } catch (error) {
-      console.error('Failed to sync visit:', error);
-    }
-  }
-}
-```
+### POST-MVP DEFERRED
+
+- **GPS coordinates on Client model**: `latitude`/`longitude` fields for precise navigation. Currently use address string for Google Maps search.
+- **PWA / Service Worker / offline caching**: Too much over-engineering for MVP. Defer entirely.
+- **Route optimization**: Auto-sort by geographic proximity.
 
 ---
 
@@ -379,3 +196,4 @@ async function syncRecoveryVisits() {
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), InvoiceStatus UNPAID->PENDING, removed Card.Body, noted client.latitude/longitude as non-existent (deferred), noted recoveryVisits/paymentPromises as new relations, removed PWA/Service Worker code entirely, trimmed frontend to skeleton + notes | Claude (AI Review) |

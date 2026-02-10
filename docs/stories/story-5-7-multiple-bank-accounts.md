@@ -5,7 +5,7 @@
 **Priority:** Medium
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Story 5.1
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2
 
 ---
 
@@ -19,98 +19,86 @@
 
 ## Acceptance Criteria
 
-1. Chart of Accounts includes multiple bank account heads (1101, 1102, etc.)
-2. Payment table includes bankAccountId field
+1. Chart of Accounts includes multiple bank account heads under 1100 (e.g., 1101, 1102, etc.)
+2. **Schema change:** Add `bankAccountId` (optional FK to AccountHead) on `Payment` model
 3. When recording payment, user selects which bank account
-4. GET /api/account-heads/:id/balance returns balance for bank account
-5. Bank balances updated via journal entries
-6. GET /api/bank-accounts returns all bank accounts with balances
-7. Frontend Bank Accounts page lists all with balances
-8. Frontend allows adding new bank account
-9. Frontend payment form includes bank account dropdown
-
-10. **Authorization & Role-Based Access:**
-    - [ ] Accountant and Admin can manage bank accounts
-    - [ ] All roles can view bank account balances
-    - [ ] Bank account creation/updates logged in audit trail
-
-11. **Performance & Caching:**
-    - [ ] Cache bank accounts list: Indefinitely (static reference data)
-    - [ ] Cache invalidation: Only on account creation/modification
-    - [ ] Balance lookups cached: 5 minutes
-    - [ ] API timeout: 5 seconds maximum
-
-12. **Error Handling:**
-    - [ ] Validate code range (11XX for bank accounts)
-    - [ ] Prevent duplicate account codes
-    - [ ] Handle missing parent account (1100) gracefully
-    - [ ] Display validation errors with specific reason
+4. `GET /api/v1/bank-accounts` returns all bank-type accounts with balances
+5. Bank balances updated via journal entries (Story 5.3)
+6. Frontend: Bank Accounts page lists all accounts with balances
+7. Frontend: Payment form includes bank account dropdown
+8. **Authorization:** `ACCOUNTANT` and `ADMIN` can manage bank accounts
 
 ---
 
 ## Dev Notes
 
-```prisma
-model Payment {
-  id            String         @id @default(cuid())
-  paymentType   PaymentType
-  bankAccountId String?        // References AccountHead (code 11XX)
-  amount        Decimal        @db.Decimal(12, 2)
-  method        PaymentMethod
-  date          DateTime
-  notes         String?        @db.Text
-  recordedBy    String
+### Implementation Status
 
-  bankAccount   AccountHead?   @relation(fields: [bankAccountId], references: [id])
-  // ...other fields
-}
+**Backend:** Not started. Depends on AccountHead model (Story 5.1).
+
+**Current Payment model fields** (for reference):
+```
+Payment: id, paymentType (SUPPLIER|CLIENT), clientId, supplierId, amount, method,
+         referenceNumber, date, notes, recordedBy, paymentReferenceType, referenceId
+         (NO bankAccountId — needs to be ADDED)
 ```
 
-```typescript
-async function getBankAccounts(): Promise<any[]> {
-  const bankAccounts = await prisma.accountHead.findMany({
-    where: {
-      code: { startsWith: '11' },
-      accountType: 'ASSET',
-      status: 'ACTIVE'
-    },
-    orderBy: { code: 'asc' }
-  });
+### Schema Change Required
 
-  return bankAccounts.map(acc => ({
-    id: acc.id,
-    code: acc.code,
-    name: acc.name,
-    balance: parseFloat(acc.currentBalance.toString())
-  }));
+Add to `Payment` model:
+```prisma
+bankAccountId String?
+bankAccount   AccountHead? @relation(fields: [bankAccountId], references: [id])
+```
+
+This is a nullable FK because:
+- Existing payments (from MVP) won't have a bank account assigned
+- Cash payments may not map to a bank account
+
+### Key Corrections
+
+1. **API paths**: Use `/api/v1/bank-accounts` (not `/api/bank-accounts`)
+2. **`AccountHead` needs a `payments` relation** added for the FK:
+   ```prisma
+   // In AccountHead model:
+   payments AccountHead[] // only for bank accounts (11XX codes)
+   ```
+
+### Bank Account Service
+
+```typescript
+async function getBankAccounts() {
+  return prisma.accountHead.findMany({
+    where: { code: { startsWith: '11' }, accountType: 'ASSET', status: 'ACTIVE' },
+    orderBy: { code: 'asc' },
+    select: { id: true, code: true, name: true, currentBalance: true },
+  });
 }
 
-async function createBankAccount(data: { name: string }): Promise<AccountHead> {
-  // Find next available code (11XX)
-  const existingBankAccounts = await prisma.accountHead.findMany({
+async function createBankAccount(name: string) {
+  const existing = await prisma.accountHead.findMany({
     where: { code: { startsWith: '11' } },
-    orderBy: { code: 'desc' }
+    orderBy: { code: 'desc' },
   });
 
-  const nextCode = existingBankAccounts.length > 0
-    ? (parseInt(existingBankAccounts[0].code) + 1).toString()
+  const nextCode = existing.length > 0
+    ? (parseInt(existing[0].code) + 1).toString()
     : '1101';
 
-  return await prisma.accountHead.create({
+  const parent = await prisma.accountHead.findUnique({ where: { code: '1100' } });
+
+  return prisma.accountHead.create({
     data: {
       code: nextCode,
-      name: data.name,
+      name,
       accountType: 'ASSET',
-      parentId: (await prisma.accountHead.findUnique({ where: { code: '1100' } }))?.id
+      parentId: parent?.id,
     }
   });
 }
 ```
 
----
+### POST-MVP DEFERRED
 
-## Change Log
-
-| Date       | Version | Description            | Author |
-|------------|---------|------------------------|--------|
-| 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+- **Server-side caching**: Use TanStack Query.
+- **Bank account statements import**: Deferred to Story 5.8 (Bank Reconciliation).

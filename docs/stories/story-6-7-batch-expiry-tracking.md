@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 8-10 hours
 **Dependencies:** Epic 2 (Inventory)
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
@@ -20,22 +20,22 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] Inventory table expanded: expiryDate (nullable)
-   - [ ] Product table expanded: hasExpiry (boolean), shelfLifeDays (integer)
+   - [ ] Inventory table expanded: `expiryDate` (DateTime, nullable) — NEW field
+   - [ ] Product table expanded: `hasExpiry` (Boolean, default false), `shelfLifeDays` (Int, nullable) — NEW fields
 
 2. **Stock Receiving:**
-   - [ ] When receiving stock, if product.hasExpiry = true:
-   - [ ] Prompt for expiry date or auto-calculate: receivedDate + shelfLifeDays
+   - [ ] When receiving stock, if `product.hasExpiry = true`:
+   - [ ] Prompt for expiry date or auto-calculate: `receivedDate + shelfLifeDays`
 
 3. **Expiry Monitoring:**
-   - [ ] GET /api/inventory/expiring - products expiring within X days (default 60)
-   - [ ] Automated daily job creates alerts:
-     - 60 days: LOW_PRIORITY
-     - 30 days: MEDIUM_PRIORITY
-     - 7 days: HIGH_PRIORITY
+   - [ ] `GET /api/v1/inventory/expiring` — products expiring within X days (default 60)
+   - [ ] Response includes priority classification:
+     - 60 days: LOW
+     - 30 days: MEDIUM
+     - 7 days: HIGH
      - Expired: CRITICAL
 
-4. **FIFO with Expiry:**
+4. **FIFO with Expiry (FEFO):**
    - [ ] When creating invoice, FIFO considers expiry (earliest expiry first)
    - [ ] Warn if batch expiring within 30 days
    - [ ] Block sale of expired batches
@@ -48,60 +48,73 @@
 
 6. **Authorization:**
    - [ ] Warehouse Manager configures expiry settings
-   - [ ] Expiry date changes logged
+   - [ ] Expiry date changes logged via `AuditService.log()`
 
 ---
 
 ## Dev Notes
 
+### Implementation Status
+
+**Backend:** Not started. Depends on Inventory + Product models (Epic 2).
+
+### Key Corrections
+
+1. **API path**: Use `/api/v1/inventory/expiring` (not `/api/inventory/expiring`)
+2. **`prisma.alert.create()`** — There is NO `Alert` model in the schema. Alerts/notifications are deferred to post-MVP. For MVP, the expiry endpoint returns data and the frontend displays it — no persisted alert records.
+3. **MySQL NULLS LAST** — Prisma's `orderBy: { expiryDate: { sort: 'asc', nulls: 'last' } }` with `nulls` option does NOT work on MySQL. MySQL has no native NULLS FIRST/LAST support. Use `orderBy: [{ expiryDate: 'asc' }]` and handle nulls in application code, OR use `prisma.$queryRaw` with `ORDER BY ISNULL(expiryDate), expiryDate ASC`.
+4. **`differenceInDays`** — Import from `date-fns` (already used elsewhere in the project).
+
+### Schema Changes Required
+
+**Add to existing Product model:**
 ```prisma
-model Product {
-  // ... existing fields
-  hasExpiry      Boolean  @default(false)
-  shelfLifeDays  Int?
-
-  // ... relations
-}
-
-model Inventory {
-  // ... existing fields
-  expiryDate     DateTime?
-
-  // ... relations
-}
+// ADD to Product model:
+hasExpiry      Boolean  @default(false)
+shelfLifeDays  Int?
 ```
 
+**Add to existing Inventory model:**
+```prisma
+// ADD to Inventory model:
+expiryDate     DateTime?
+```
+
+### FIFO with Expiry (FEFO — Corrected for MySQL)
+
 ```typescript
-// FIFO with Expiry Consideration
 async function deductStockFIFO(
   productId: string,
   warehouseId: string,
   quantityNeeded: number
 ): Promise<BatchDeduction[]> {
-  const inventoryRecords = await prisma.inventory.findMany({
+  // MySQL doesn't support NULLS LAST — use raw query or two-step approach
+  // Approach: query expiring inventory first, then non-expiring
+  const expiringInventory = await prisma.inventory.findMany({
     where: {
       productId,
       warehouseId,
       quantity: { gt: 0 },
-      // Exclude expired batches
-      OR: [
-        { expiryDate: null },
-        { expiryDate: { gt: new Date() } }
-      ]
+      expiryDate: { not: null, gt: new Date() }  // Non-expired, has expiry
     },
-    // Order by expiry date (FEFO - First Expiry First Out)
-    // NULLs go LAST (non-expiring products picked last)
-    // Then by creation date (FIFO within same expiry)
     orderBy: [
-      {
-        expiryDate: {
-          sort: 'asc',
-          nulls: 'last' // Non-expiring products picked LAST
-        }
-      },
-      { createdAt: 'asc' } // Within same expiry, FIFO
+      { expiryDate: 'asc' },   // Earliest expiry first
+      { createdAt: 'asc' }     // FIFO within same expiry
     ]
   });
+
+  const nonExpiringInventory = await prisma.inventory.findMany({
+    where: {
+      productId,
+      warehouseId,
+      quantity: { gt: 0 },
+      expiryDate: null  // No expiry date
+    },
+    orderBy: { createdAt: 'asc' }  // FIFO
+  });
+
+  // Combine: expiring first, then non-expiring
+  const inventoryRecords = [...expiringInventory, ...nonExpiringInventory];
 
   let remainingQty = quantityNeeded;
   const deductions: BatchDeduction[] = [];
@@ -113,8 +126,7 @@ async function deductStockFIFO(
     if (record.expiryDate) {
       const daysToExpiry = differenceInDays(record.expiryDate, new Date());
       if (daysToExpiry <= 30) {
-        // Log warning or return warning to user
-        console.warn(`Batch ${record.batchNo} expires in ${daysToExpiry} days`);
+        // Return warning to caller (don't console.warn in production)
       }
     }
 
@@ -134,9 +146,14 @@ async function deductStockFIFO(
 
   return deductions;
 }
+```
 
-// Get Expiring Products
-async function getExpiringProducts(daysAhead: number = 60): Promise<any[]> {
+### Get Expiring Products
+
+```typescript
+async function getExpiringProducts(
+  daysAhead: number = 60
+): Promise<ExpiringProductItem[]> {
   const futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + daysAhead);
 
@@ -144,7 +161,7 @@ async function getExpiringProducts(daysAhead: number = 60): Promise<any[]> {
     where: {
       expiryDate: {
         lte: futureDate,
-        gt: new Date()
+        gt: new Date()      // Not already expired
       },
       quantity: { gt: 0 }
     },
@@ -157,45 +174,42 @@ async function getExpiringProducts(daysAhead: number = 60): Promise<any[]> {
 
   return inventory.map(inv => {
     const daysToExpiry = differenceInDays(inv.expiryDate!, new Date());
-    let priority: string;
+    let priority: 'HIGH' | 'MEDIUM' | 'LOW';
 
-    if (daysToExpiry <= 7) {
-      priority = 'HIGH';
-    } else if (daysToExpiry <= 30) {
-      priority = 'MEDIUM';
-    } else {
-      priority = 'LOW';
-    }
+    if (daysToExpiry <= 7) priority = 'HIGH';
+    else if (daysToExpiry <= 30) priority = 'MEDIUM';
+    else priority = 'LOW';
 
     return {
       productName: inv.product.name,
       batchNo: inv.batchNo,
       warehouse: inv.warehouse.name,
       quantity: inv.quantity,
-      expiryDate: inv.expiryDate,
+      expiryDate: inv.expiryDate!,
       daysToExpiry,
       priority
     };
   });
 }
-
-// Daily Expiry Alert Job (runs via cron)
-async function checkExpiryAlerts(): Promise<void> {
-  const expiring = await getExpiringProducts(60);
-
-  for (const item of expiring) {
-    // Create alert based on priority
-    await prisma.alert.create({
-      data: {
-        type: 'EXPIRY_WARNING',
-        priority: item.priority,
-        message: `${item.productName} (Batch ${item.batchNo}) expires in ${item.daysToExpiry} days`,
-        targetUsers: ['WAREHOUSE_MANAGER', 'ADMIN']
-      }
-    });
-  }
-}
 ```
+
+### Module Structure
+
+```
+apps/api/src/modules/inventory/
+  inventory.service.ts      (EXPAND — add getExpiringProducts, deductStockFIFO with expiry)
+  inventory.controller.ts   (EXPAND — add GET /expiring endpoint)
+  inventory.routes.ts       (EXPAND)
+
+apps/web/src/features/inventory/pages/
+  ExpiringStockPage.tsx      (NEW)
+```
+
+### POST-MVP DEFERRED
+
+- **Alert model & daily cron job**: No Alert model exists. For MVP, expiry data is fetched on-demand via API. Automated daily alerts deferred.
+- **Dashboard "Near Expiry" widget**: Can be added to dashboard using the same API endpoint.
+- **CRITICAL expired stock**: For MVP, return expired items in a separate query. Formal blocking enforcement can be added later.
 
 ---
 
@@ -204,3 +218,4 @@ async function checkExpiryAlerts(): Promise<void> {
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), removed prisma.alert (model doesn't exist), fixed MySQL NULLS LAST incompatibility (split into two queries), removed console.warn, deferred daily cron job and Alert model | Claude (AI Review) |

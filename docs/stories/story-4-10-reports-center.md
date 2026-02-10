@@ -3,8 +3,8 @@
 **Epic:** Epic 4 - Dashboards & Reports
 **Story ID:** STORY-4.10
 **Priority:** Low
-**Estimated Effort:** 4-6 hours
-**Dependencies:** All report stories (4.4-4.9)
+**Estimated Effort:** 3-4 hours
+**Dependencies:** At least some report stories (4.4-4.8) implemented
 **Status:** Draft
 
 ---
@@ -20,56 +20,63 @@
 ## Acceptance Criteria
 
 1. **Reports Center Page:**
-   - [ ] Lists all reports categorized:
-     - Inventory Reports: Stock Report, Stock Valuation, Stock Movements
-     - Sales Reports: Sales by Date, Sales by Client, Sales by Product
-     - Payment Reports: Payment Collection, Outstanding Receivables
-     - Purchase Reports: Import/Container Report, Supplier Performance
-     - Financial Reports: Expense Report, Expense by Category, Expense Trend
-   - [ ] Each report: Name, Description, Icon, Link
-   - [ ] Reports filtered by user role (show only accessible reports)
+   - [ ] Route: `/reports` — lists all reports grouped by category
+   - [ ] Categories: Inventory, Sales, Payments, Purchases, Financial
+   - [ ] Each report: Name, Description, Icon, Link to report page
+   - [ ] Reports filtered by user role (only show reports user can access)
 
 2. **Design:**
-   - [ ] Card/tile layout for report categories
-   - [ ] Responsive (mobile, tablet, desktop)
+   - [ ] Card/tile layout with responsive grid (1 col mobile, 2 col tablet, 3 col desktop)
+   - [ ] Category headers grouping related reports
+   - [ ] Hover effects on cards
    - [ ] Dashboard includes "View All Reports" link
 
-3. **Navigation & Authorization:**
-   - [ ] Clicking report card navigates to specific report page with filters
-   - [ ] Reports filtered by user role: only show accessible reports (no 403 errors on center page)
-   - [ ] Navigation validated: prevent direct access to unauthorized report pages (403 Forbidden)
-
-4. **Performance & Caching:**
-   - [ ] No database queries (static report definitions)
-   - [ ] Page load time: <500ms
-   - [ ] Report metadata cached client-side indefinitely
-   - [ ] No API calls required for reports center itself
-
-5. **Frontend Design:**
-   - [ ] Category sections organized logically
-   - [ ] Each report card shows: icon, name, description
-   - [ ] Hover effects and visual feedback on card selection
-   - [ ] Responsive grid layout: 1 column (mobile), 2 columns (tablet), 3 columns (desktop)
-   - [ ] "View All Reports" link on related dashboards
-
-6. **Error Handling:**
-   - [ ] Gracefully handle missing navigation targets
-   - [ ] Log unauthorized navigation attempts
-   - [ ] Display user-friendly message if navigating to inaccessible report
+3. **Authorization:**
+   - [ ] Reports center page accessible by all authenticated roles
+   - [ ] Individual report cards filtered by role — user only sees reports they can access
+   - [ ] No API calls — this is a static page with client-side role filtering
 
 ---
 
 ## Dev Notes
 
+### Implementation Status
+
+**Backend:** No backend needed — this is a static frontend page. Report definitions are hardcoded.
+
+**Frontend:** No reports center page exists. Sidebar has a "Reports" menu with "Cash Flow" link only.
+
+### Existing Report Routes
+
+Already registered or to be created by Stories 4.4-4.8:
+
+```
+/reports/cash-flow         — Cash Flow Report (already exists)
+/reports/stock             — Stock Report (Story 4.4)
+/reports/stock-valuation   — Stock Valuation (Story 4.4)
+/reports/sales             — Sales Report (Story 4.5)
+/reports/sales-by-client   — Sales by Client (Story 4.5)
+/reports/sales-by-product  — Sales by Product (Story 4.5)
+/reports/payments          — Payment Collection (Story 4.6)
+/reports/receivables       — Outstanding Receivables (Story 4.6)
+/reports/imports           — Import Cost Report (Story 4.7)
+/reports/expenses          — Expense Report (Story 4.8)
+/reports/expenses-trend    — Expense Trend (Story 4.8)
+```
+
+### Report Definitions (Correct)
+
 ```typescript
+// apps/web/src/features/reports/data/reportDefinitions.ts
+
 interface ReportCard {
   id: string;
   name: string;
   description: string;
-  category: string;
-  icon: string;
+  category: 'Inventory' | 'Sales' | 'Payments' | 'Purchases' | 'Financial';
+  icon: string;  // lucide-react icon name
   route: string;
-  roles: string[]; // Roles that can access this report
+  roles: string[];
 }
 
 const REPORTS: ReportCard[] = [
@@ -77,144 +84,211 @@ const REPORTS: ReportCard[] = [
   {
     id: 'stock-report',
     name: 'Stock Report',
-    description: 'Current stock levels across warehouses',
+    description: 'Current stock levels across all warehouses',
     category: 'Inventory',
     icon: 'Package',
     route: '/reports/stock',
-    roles: ['ADMIN', 'ACCOUNTANT', 'WAREHOUSE_MANAGER', 'SALES_OFFICER']
+    roles: ['ADMIN', 'ACCOUNTANT', 'WAREHOUSE_MANAGER', 'SALES_OFFICER'],
   },
   {
     id: 'stock-valuation',
     name: 'Stock Valuation',
-    description: 'Inventory valuation by category',
+    description: 'Inventory valuation grouped by category',
     category: 'Inventory',
     icon: 'DollarSign',
     route: '/reports/stock-valuation',
-    roles: ['ADMIN', 'ACCOUNTANT']
+    roles: ['ADMIN', 'ACCOUNTANT'],
   },
+
   // Sales Reports
   {
     id: 'sales-report',
     name: 'Sales Report',
-    description: 'Detailed sales by date, client, product',
+    description: 'Detailed sales by date, client, and product',
     category: 'Sales',
     icon: 'TrendingUp',
     route: '/reports/sales',
-    roles: ['ADMIN', 'ACCOUNTANT', 'SALES_OFFICER']
+    roles: ['ADMIN', 'ACCOUNTANT', 'SALES_OFFICER'],
   },
   {
     id: 'sales-by-client',
     name: 'Sales by Client',
-    description: 'Client-wise sales summary',
+    description: 'Client-wise sales revenue summary',
     category: 'Sales',
     icon: 'Users',
     route: '/reports/sales-by-client',
-    roles: ['ADMIN', 'ACCOUNTANT', 'SALES_OFFICER']
+    roles: ['ADMIN', 'ACCOUNTANT', 'SALES_OFFICER'],
   },
+  {
+    id: 'sales-by-product',
+    name: 'Sales by Product',
+    description: 'Product-wise quantity sold and revenue',
+    category: 'Sales',
+    icon: 'BarChart3',
+    route: '/reports/sales-by-product',
+    roles: ['ADMIN', 'ACCOUNTANT', 'SALES_OFFICER'],
+  },
+
   // Payment Reports
   {
     id: 'payment-collection',
     name: 'Payment Collection',
-    description: 'Client payments received',
+    description: 'Client payments received with method breakdown',
     category: 'Payments',
     icon: 'CreditCard',
     route: '/reports/payments',
-    roles: ['ADMIN', 'ACCOUNTANT', 'RECOVERY_AGENT']
+    roles: ['ADMIN', 'ACCOUNTANT', 'RECOVERY_AGENT'],
   },
   {
     id: 'receivables',
     name: 'Outstanding Receivables',
-    description: 'Client outstanding balances',
+    description: 'Client outstanding balances with aging',
     category: 'Payments',
     icon: 'AlertCircle',
     route: '/reports/receivables',
-    roles: ['ADMIN', 'ACCOUNTANT', 'RECOVERY_AGENT']
+    roles: ['ADMIN', 'ACCOUNTANT', 'RECOVERY_AGENT'],
   },
+  {
+    id: 'cash-flow',
+    name: 'Cash Flow',
+    description: 'Cash inflows and outflows over time',
+    category: 'Payments',
+    icon: 'ArrowUpDown',
+    route: '/reports/cash-flow',
+    roles: ['ADMIN', 'ACCOUNTANT'],
+  },
+
   // Purchase Reports
   {
     id: 'import-report',
     name: 'Import Cost Report',
-    description: 'Landed cost analysis',
+    description: 'PO landed cost analysis with cost breakdown',
     category: 'Purchases',
     icon: 'Ship',
     route: '/reports/imports',
-    roles: ['ADMIN', 'ACCOUNTANT']
+    roles: ['ADMIN', 'ACCOUNTANT'],
   },
+
   // Financial Reports
   {
     id: 'expense-report',
     name: 'Expense Report',
-    description: 'Detailed expense tracking',
+    description: 'Detailed expenses by category and period',
     category: 'Financial',
     icon: 'Receipt',
     route: '/reports/expenses',
-    roles: ['ADMIN', 'ACCOUNTANT']
-  }
+    roles: ['ADMIN', 'ACCOUNTANT'],
+  },
+  {
+    id: 'expense-trend',
+    name: 'Expense Trend',
+    description: 'Monthly expense totals over last 12 months',
+    category: 'Financial',
+    icon: 'LineChart',
+    route: '/reports/expenses-trend',
+    roles: ['ADMIN', 'ACCOUNTANT'],
+  },
 ];
 ```
 
-**Frontend - Reports Center Page:**
+### Reports Center Page (Correct)
 
 ```tsx
-export const ReportsCenterPage: FC = () => {
-  const currentUser = useCurrentUser();
+// apps/web/src/features/reports/pages/ReportsCenterPage.tsx
+
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../../stores/auth.store';
+import { REPORTS } from '../data/reportDefinitions';
+import * as Icons from 'lucide-react';
+
+export default function ReportsCenterPage() {
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const userRole = user?.role?.name || '';
 
   // Filter reports by user role
-  const accessibleReports = REPORTS.filter(report =>
-    report.roles.includes(currentUser.role)
-  );
+  const accessibleReports = REPORTS.filter(r => r.roles.includes(userRole));
 
   // Group by category
-  const groupedReports = accessibleReports.reduce((acc, report) => {
-    if (!acc[report.category]) {
-      acc[report.category] = [];
-    }
+  const grouped = accessibleReports.reduce((acc, report) => {
+    if (!acc[report.category]) acc[report.category] = [];
     acc[report.category].push(report);
     return acc;
-  }, {} as Record<string, ReportCard[]>);
+  }, {} as Record<string, typeof REPORTS>);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Reports Center</h1>
+    <div className="space-y-8">
+      <h1 className="text-2xl font-bold text-gray-900">Reports Center</h1>
 
-      {Object.entries(groupedReports).map(([category, reports]) => (
+      {Object.entries(grouped).map(([category, reports]) => (
         <div key={category}>
-          <h2 className="text-xl font-semibold mb-4">{category} Reports</h2>
-
+          <h2 className="text-lg font-semibold text-gray-700 mb-3">{category} Reports</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {reports.map(report => (
-              <Card
-                key={report.id}
-                className="cursor-pointer hover:shadow-lg transition"
-                onClick={() => navigate(report.route)}
-              >
-                <Card.Body>
+            {reports.map(report => {
+              const IconComponent = (Icons as any)[report.icon];
+              return (
+                <div
+                  key={report.id}
+                  onClick={() => navigate(report.route)}
+                  className="p-4 bg-white rounded-lg border border-gray-200 cursor-pointer hover:shadow-md hover:border-blue-300 transition"
+                >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-100 rounded">
-                      <Icon name={report.icon} className="h-6 w-6 text-blue-600" />
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      {IconComponent && <IconComponent size={20} className="text-blue-600" />}
                     </div>
                     <div>
-                      <h3 className="font-semibold">{report.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {report.description}
-                      </p>
+                      <h3 className="font-medium text-gray-900">{report.name}</h3>
+                      <p className="text-sm text-gray-500 mt-1">{report.description}</p>
                     </div>
                   </div>
-                </Card.Body>
-              </Card>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}
+
+      {accessibleReports.length === 0 && (
+        <p className="text-gray-500 text-center py-8">No reports available for your role.</p>
+      )}
     </div>
   );
-};
+}
 ```
 
----
+### Key Corrections from Original Doc
 
-## Change Log
+1. **`useCurrentUser()` does NOT exist** — Use `useAuthStore()` and access `user?.role?.name`.
+2. **`<Card>` / `<Card.Body>` not a real component** — Use plain `div` with Tailwind classes (consistent with rest of codebase).
+3. **Route paths corrected** — All routes use `/reports/*` prefix matching actual router setup.
 
-| Date       | Version | Description            | Author |
-|------------|---------|------------------------|--------|
-| 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+### Route Registration (Frontend)
+
+In `apps/web/src/App.tsx`, add:
+```tsx
+<Route path="/reports" element={<ReportsCenterPage />} />
+```
+
+### Sidebar Update
+
+Expand the Reports menu in `Sidebar.tsx` to include a "All Reports" link:
+```tsx
+<Link to="/reports">All Reports</Link>
+<Link to="/reports/cash-flow">Cash Flow</Link>
+```
+
+### Module Structure
+
+```
+apps/web/src/features/reports/
+  data/
+    reportDefinitions.ts        (NEW — REPORTS array)
+  pages/
+    ReportsCenterPage.tsx       (NEW)
+```
+
+### POST-MVP DEFERRED
+
+- **Search/filter within reports center**: Not needed at current scale (~11 reports). Add if report count grows significantly.
+- **Favorited/recently viewed reports**: Nice-to-have, not needed for MVP.
+- **Report scheduling**: Way out of scope.

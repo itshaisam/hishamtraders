@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 8-10 hours
 **Dependencies:** Epic 1 (Audit logging infrastructure)
-**Status:** Draft - Phase 2
+**Status:** Draft -- Phase 2 (v2.0 -- Revised)
 
 ---
 
@@ -20,22 +20,22 @@
 ## Acceptance Criteria
 
 1. **Backend API:**
-   - [ ] GET /api/audit-logs - returns audit log entries with pagination (default 50 per page)
+   - [ ] GET /api/v1/audit-logs - returns audit log entries with pagination (default 50 per page)
    - [ ] Supports pagination: page, limit parameters
    - [ ] Sorted by timestamp DESC (newest first)
 
 2. **Filters Supported:**
    - [ ] userId (user who performed action)
    - [ ] entityType (Product, Invoice, Payment, Client, etc.)
-   - [ ] action (CREATE, UPDATE, DELETE, VIEW)
+   - [ ] action (CREATE, UPDATE, DELETE, VIEW, LOGIN, LOGOUT, PERMISSION_CHECK)
    - [ ] dateFrom, dateTo (timestamp range)
    - [ ] entityId (specific record ID)
    - [ ] ipAddress (source IP address)
 
 3. **Search Capability:**
-   - [ ] Search by: entity ID, user email/name, reference number (invoice #, PO #)
-   - [ ] Case-insensitive partial match
-   - [ ] Performance optimized with database indexes on frequently searched fields
+   - [ ] Search by: entity ID, user email/name, notes content
+   - [ ] Case-insensitive partial match (MySQL is case-insensitive by default with utf8 collation -- no special mode needed)
+   - [ ] Performance optimized with existing database indexes on frequently searched fields
 
 4. **Response Data:**
    - [ ] timestamp, userId, userName, userEmail, action, entityType, entityId, ipAddress
@@ -43,12 +43,13 @@
    - [ ] Total count for pagination
 
 5. **Detailed Log Entry:**
-   - [ ] GET /api/audit-logs/:id - returns full audit log entry
+   - [ ] GET /api/v1/audit-logs/:id - returns full audit log entry
    - [ ] Includes complete changedFields JSON (old and new values)
+   - [ ] Includes notes field content
 
 6. **Frontend - Audit Trail Page:**
-   - [ ] Filter panel: User dropdown, Entity Type dropdown, Action dropdown, Date Range picker
-   - [ ] Search bar: Entity ID, User, Reference Number
+   - [ ] Filter panel: User dropdown, Entity Type dropdown, Action dropdown, Date Range (native date inputs)
+   - [ ] Search bar: Entity ID, User, Notes text
    - [ ] Results table: Timestamp | User | Action | Entity Type | Entity ID | IP Address | Details
    - [ ] Expandable rows show changed fields (old vs new values)
    - [ ] Pagination controls
@@ -61,54 +62,64 @@
 
 8. **Authorization:**
    - [ ] Admin can access full audit trail viewer
-   - [ ] Other roles can view audit history for entities they own (e.g., Sales Officer sees audit for their invoices)
+   - [ ] Non-admin users can view only their own audit logs (filter by userId = current user)
 
 ---
 
 ## Dev Notes
 
-### Database Schema with Performance Indexes
+### Existing Database Schema (DO NOT recreate)
+
+The AuditLog model already exists in `prisma/schema.prisma`:
 
 ```prisma
 model AuditLog {
-  id              String   @id @default(cuid())
-  timestamp       DateTime @default(now())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  action          String   // CREATE, UPDATE, DELETE, VIEW
-  entityType      String   // Product, Invoice, Payment, etc.
-  entityId        String   // Reference to entity ID
-  ipAddress       String?
-  changedFields   Json?    // Full change details
-  metadata        Json?    // Additional metadata (e.g., referenceNumber)
+  id            String   @id @default(cuid())
+  userId        String
+  action        String   // CREATE, UPDATE, DELETE, VIEW, LOGIN, LOGOUT, PERMISSION_CHECK
+  entityType    String   // User, Product, Invoice, Payment, etc.
+  entityId      String?
+  timestamp     DateTime @default(now())
+  ipAddress     String?
+  userAgent     String?
+  changedFields Json?    // { field: { old: value, new: value } }
+  notes         String?  @db.Text
 
-  // Performance indexes
-  @@index([userId, timestamp])     // Filter by user and date
-  @@index([entityType, entityId])  // Filter by entity type and ID
-  @@index([action])                // Filter by action type
-  @@index([timestamp])             // Sort by timestamp
-  @@index([entityId])              // Search by entity ID
-  @@fulltext([entityId])           // Full-text search support (MySQL)
+  user User @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([timestamp])
+  @@index([entityType, entityId])
+  @@index([action])
   @@map("audit_logs")
 }
 ```
 
-### Search Optimization Notes
+**Existing indexes cover query needs:**
+1. **[userId]** -- Filter by user
+2. **[timestamp]** -- Default sorting (newest first) and date range queries
+3. **[entityType, entityId]** -- Find all changes to a specific entity
+4. **[action]** -- Filter critical operations (DELETE)
 
-The following indexes are crucial for query performance:
+> **Note:** There is no `metadata` field on AuditLog. Use the `notes` field for supplementary text search (e.g., reference numbers placed in notes by the calling service).
 
-1. **[userId, timestamp]** - Most common filter combination (user actions on a date)
-2. **[entityType, entityId]** - Find all changes to a specific entity
-3. **[action]** - Filter critical operations (DELETE)
-4. **[timestamp]** - Default sorting (newest first) and date range queries
-5. **[entityId]** - Individual entity lookup and search
-6. **fulltext([entityId])** - MySQL full-text search for partial matches
+### AuditService Reference
 
-For PostgreSQL, add GIN index for better full-text search:
-```prisma
-@@index([entityId(ops: "gin_trgm_ops")]) // PostgreSQL trigram index for LIKE
+The existing `AuditService.log()` accepts:
+```typescript
+interface AuditLogData {
+  userId: string;
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW' | 'LOGIN' | 'LOGOUT' | 'PERMISSION_CHECK';
+  entityType: string;
+  entityId?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  changedFields?: Prisma.InputJsonValue;
+  notes?: string;
+}
 ```
+
+### Backend Implementation
 
 ```typescript
 interface AuditLogFilters {
@@ -132,7 +143,7 @@ interface AuditLogListItem {
   userEmail: string;
   action: string;
   entityType: string;
-  entityId: string;
+  entityId: string | null;
   ipAddress: string;
   changedFieldsSummary: string[]; // Field names only
 }
@@ -148,24 +159,9 @@ async function getAuditLogs(
 
   const where: any = {};
 
-  // Authorization: Non-admins can only see logs for entities they own
+  // Authorization: Non-admins can only see their own audit logs
   if (userRole !== 'ADMIN') {
-    // Get entities owned by user (invoices, payments created by them)
-    const ownedInvoices = await prisma.invoice.findMany({
-      where: { createdBy: userId },
-      select: { id: true }
-    });
-    const ownedPayments = await prisma.payment.findMany({
-      where: { createdBy: userId },
-      select: { id: true }
-    });
-
-    const ownedEntityIds = [
-      ...ownedInvoices.map(i => i.id),
-      ...ownedPayments.map(p => p.id)
-    ];
-
-    where.entityId = { in: ownedEntityIds };
+    where.userId = userId;
   }
 
   // Apply filters
@@ -196,12 +192,14 @@ async function getAuditLogs(
   }
 
   // Search functionality
+  // NOTE: MySQL is case-insensitive by default -- do NOT use mode: 'insensitive'
+  // NOTE: AuditLog has no `metadata` field -- search `notes` instead
   if (filters.search) {
     where.OR = [
-      { entityId: { contains: filters.search, mode: 'insensitive' } },
-      { user: { name: { contains: filters.search, mode: 'insensitive' } } },
-      { user: { email: { contains: filters.search, mode: 'insensitive' } } },
-      { metadata: { path: ['referenceNumber'], string_contains: filters.search } }
+      { entityId: { contains: filters.search } },
+      { user: { name: { contains: filters.search } } },
+      { user: { email: { contains: filters.search } } },
+      { notes: { contains: filters.search } }
     ];
   }
 
@@ -273,27 +271,35 @@ async function getAuditLogDetails(logId: string): Promise<any> {
     entityType: log.entityType,
     entityId: log.entityId,
     ipAddress: log.ipAddress,
+    userAgent: log.userAgent,
     changedFields: log.changedFields, // Full JSON
-    metadata: log.metadata
+    notes: log.notes
   };
 }
 ```
 
 **Frontend:**
+
+> Use the `apiClient` from `@/lib/api-client` (axios instance with baseURL `http://localhost:3001/api/v1`). Do NOT use raw `fetch()`.
+> `DatePicker` component does not exist -- use native `<input type="date">` elements.
+> `Card.Body` does not exist -- use `<Card>` with a `<div className="p-6">` inside.
+
 ```tsx
 import { FC, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Download, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
+import { apiClient } from '@/lib/api-client';
 
 interface AuditLog {
   id: string;
   timestamp: Date;
+  userId: string;
   userName: string;
   userEmail: string;
   action: string;
   entityType: string;
-  entityId: string;
+  entityId: string | null;
   ipAddress: string;
   changedFieldsSummary: string[];
 }
@@ -303,8 +309,8 @@ export const AuditTrailPage: FC = () => {
     userId: '',
     entityType: '',
     action: '',
-    dateFrom: null as Date | null,
-    dateTo: null as Date | null,
+    dateFrom: '',
+    dateTo: '',
     search: '',
     page: 1,
     limit: 50
@@ -315,18 +321,9 @@ export const AuditTrailPage: FC = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['audit-logs', filters],
     queryFn: () =>
-      fetch(
-        `/api/audit-logs?${new URLSearchParams({
-          userId: filters.userId,
-          entityType: filters.entityType,
-          action: filters.action,
-          dateFrom: filters.dateFrom?.toISOString() || '',
-          dateTo: filters.dateTo?.toISOString() || '',
-          search: filters.search,
-          page: filters.page.toString(),
-          limit: filters.limit.toString()
-        })}`
-      ).then(res => res.json())
+      apiClient
+        .get('/audit-logs', { params: filters })
+        .then(res => res.data)
   });
 
   const toggleRow = (logId: string) => {
@@ -345,6 +342,8 @@ export const AuditTrailPage: FC = () => {
       case 'CREATE': return 'text-green-600 bg-green-50';
       case 'UPDATE': return 'text-blue-600 bg-blue-50';
       case 'VIEW': return 'text-gray-600 bg-gray-50';
+      case 'LOGIN': return 'text-purple-600 bg-purple-50';
+      case 'LOGOUT': return 'text-orange-600 bg-orange-50';
       default: return 'text-gray-600 bg-gray-50';
     }
   };
@@ -369,7 +368,7 @@ export const AuditTrailPage: FC = () => {
 
       {/* Filters */}
       <Card className="mb-6">
-        <Card.Body>
+        <div className="p-6">
           <div className="grid grid-cols-4 gap-4 mb-4">
             <Select
               label="User"
@@ -377,7 +376,7 @@ export const AuditTrailPage: FC = () => {
               onChange={(e) => setFilters(prev => ({ ...prev, userId: e.target.value, page: 1 }))}
             >
               <option value="">All Users</option>
-              {/* User options */}
+              {/* User options populated from users query */}
             </Select>
 
             <Select
@@ -404,13 +403,15 @@ export const AuditTrailPage: FC = () => {
               <option value="UPDATE">Update</option>
               <option value="DELETE">Delete</option>
               <option value="VIEW">View</option>
+              <option value="LOGIN">Login</option>
+              <option value="LOGOUT">Logout</option>
             </Select>
 
             <div className="relative">
               <Input
                 type="text"
                 label="Search"
-                placeholder="Entity ID, User, Reference..."
+                placeholder="Entity ID, User, Notes..."
                 value={filters.search}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
               />
@@ -419,24 +420,32 @@ export const AuditTrailPage: FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <DatePicker
-              label="From Date"
-              value={filters.dateFrom}
-              onChange={(date) => setFilters(prev => ({ ...prev, dateFrom: date, page: 1 }))}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+              <input
+                type="date"
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={filters.dateFrom}
+                onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value, page: 1 }))}
+              />
+            </div>
 
-            <DatePicker
-              label="To Date"
-              value={filters.dateTo}
-              onChange={(date) => setFilters(prev => ({ ...prev, dateTo: date, page: 1 }))}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+              <input
+                type="date"
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={filters.dateTo}
+                onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value, page: 1 }))}
+              />
+            </div>
           </div>
-        </Card.Body>
+        </div>
       </Card>
 
       {/* Results */}
       <Card>
-        <Card.Body>
+        <div className="p-6">
           <div className="mb-4 text-sm text-gray-600">
             Showing {((filters.page - 1) * filters.limit) + 1} - {Math.min(filters.page * filters.limit, data?.total || 0)} of {data?.total || 0} entries
           </div>
@@ -487,9 +496,13 @@ export const AuditTrailPage: FC = () => {
                     </td>
                     <td>{log.entityType}</td>
                     <td>
-                      <Link to={`/${log.entityType.toLowerCase()}s/${log.entityId}`}>
-                        {log.entityId.substring(0, 8)}...
-                      </Link>
+                      {log.entityId ? (
+                        <Link to={`/${log.entityType.toLowerCase()}s/${log.entityId}`}>
+                          {log.entityId.substring(0, 8)}...
+                        </Link>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="text-sm text-gray-600">{log.ipAddress}</td>
                     <td>
@@ -550,7 +563,7 @@ export const AuditTrailPage: FC = () => {
               Next
             </Button>
           </div>
-        </Card.Body>
+        </div>
       </Card>
     </div>
   );
@@ -560,7 +573,8 @@ export const AuditTrailPage: FC = () => {
 const AuditLogDetails: FC<{ logId: string }> = ({ logId }) => {
   const { data: details, isLoading } = useQuery({
     queryKey: ['audit-log-details', logId],
-    queryFn: () => fetch(`/api/audit-logs/${logId}`).then(res => res.json())
+    queryFn: () =>
+      apiClient.get(`/audit-logs/${logId}`).then(res => res.data)
   });
 
   if (isLoading) return <Spinner />;
@@ -600,12 +614,12 @@ const AuditLogDetails: FC<{ logId: string }> = ({ logId }) => {
         <p className="text-gray-500">No field changes recorded</p>
       )}
 
-      {details?.metadata && (
+      {details?.notes && (
         <div className="mt-4">
-          <h5 className="font-semibold mb-2">Metadata</h5>
-          <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
-            {JSON.stringify(details.metadata, null, 2)}
-          </pre>
+          <h5 className="font-semibold mb-2">Notes</h5>
+          <p className="text-sm text-gray-700 bg-gray-100 p-3 rounded">
+            {details.notes}
+          </p>
         </div>
       )}
     </div>
@@ -615,8 +629,24 @@ const AuditLogDetails: FC<{ logId: string }> = ({ logId }) => {
 
 ---
 
+### Key Corrections (from v1.0)
+
+1. **API paths:** Changed `/api/audit-logs` to `/api/v1/audit-logs` to match the project's API base URL convention.
+2. **Card.Body removed:** `Card.Body` does not exist in the component library. Replaced with `<div className="p-6">` inside `<Card>`.
+3. **`mode: 'insensitive'` removed:** MySQL with utf8 collation is case-insensitive by default. Prisma's `mode: 'insensitive'` is not supported on MySQL and would cause runtime errors.
+4. **DatePicker replaced:** `DatePicker` component does not exist. Replaced with native `<input type="date">` elements.
+5. **AuditLog schema:** The model already exists in `prisma/schema.prisma`. Removed the "new schema" proposal and instead reference the existing schema. Removed `@@fulltext` index (not needed) and PostgreSQL GIN index reference (this project uses MySQL only).
+6. **Non-admin authorization fixed:** Invoice has NO `createdBy` field, so the old approach of querying owned invoices was invalid. Replaced with simpler rule: non-admins see only their own audit logs (`where.userId = userId`).
+7. **`metadata` field references removed:** AuditLog has no `metadata` field. Search uses the `notes` field with `contains` instead of JSON path queries on nonexistent `metadata`.
+8. **`fetch()` replaced with `apiClient`:** All frontend data fetching now uses the project's axios-based `apiClient` from `@/lib/api-client`, which provides auth headers, error handling, and correct base URL.
+9. **Action list expanded:** Added LOGIN, LOGOUT to the action filter dropdown to match the `AuditService` action enum.
+10. **Null entityId handling:** `entityId` is nullable (`String?`) in the schema. Added null-safe rendering in the table.
+
+---
+
 ## Change Log
 
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: corrected API paths, removed nonexistent components (Card.Body, DatePicker), fixed MySQL query patterns, aligned with actual AuditLog schema, replaced fetch with apiClient, fixed authorization logic | Claude (Tech Review) |

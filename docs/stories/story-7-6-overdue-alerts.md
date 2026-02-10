@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Epic 3 (Clients), Story 7.1
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
@@ -20,58 +20,71 @@
 ## Acceptance Criteria
 
 1. **Alert Configuration:**
-   - [ ] Configuration table for alert rules
-   - [ ] Default rules:
+   - [ ] AlertRule table for configurable alert rules
+   - [ ] Default rules seeded:
      - 7 days overdue: Alert recovery agent (LOW priority)
      - 14 days overdue: Alert recovery agent + accountant (MEDIUM priority)
-     - 30 days overdue: Alert recovery agent + accountant + admin (HIGH priority)
-     - 60+ days overdue: Alert all + mark as critical (CRITICAL priority)
+     - 30 days overdue: Alert all roles (HIGH priority)
+     - 60+ days overdue: Alert all + mark CRITICAL
 
 2. **Database Schema:**
-   - [ ] AlertRule table: daysOverdue, priority, targetRoles[], action (NOTIFY/EMAIL/SMS)
-   - [ ] Alert table expanded: relatedType (CLIENT_OVERDUE), relatedId (clientId)
+   - [ ] AlertRule model: daysOverdue, priority, targetRoles (JSON), action
+   - [ ] Alert model: type, priority, message, relatedType, relatedId, targetUserId
+   - [ ] This story is the **canonical definition** for Alert/AlertRule — other stories reference it
 
 3. **Daily Alert Job:**
-   - [ ] Run daily to check overdue invoices
-   - [ ] Create alerts based on rules
-   - [ ] Avoid duplicate alerts (check if alert already exists for same client and rule)
+   - [ ] Cron job checks overdue invoices daily (separate setup, not in API server)
+   - [ ] Creates alerts based on matching rules
+   - [ ] Deduplicates: skip if unacknowledged alert exists for same client + priority within 24h
 
 4. **Backend API:**
-   - [ ] GET /api/alerts - get user's alerts
-   - [ ] PUT /api/alerts/:id/acknowledge - mark alert as acknowledged
-   - [ ] GET /api/alerts/overdue-clients - overdue client summary
+   - [ ] `GET /api/v1/alerts` — get current user's unacknowledged alerts
+   - [ ] `PUT /api/v1/alerts/:id/acknowledge` — mark alert as acknowledged
+   - [ ] `GET /api/v1/alerts/overdue-clients` — overdue client summary
 
-5. **Alert Actions:**
-   - [ ] NOTIFY: In-app notification
-   - [ ] EMAIL: Send email to target users
-   - [ ] SMS: Send SMS to recovery agent (optional)
+5. **Escalation Workflow:**
+   - [ ] 30+ days overdue with no visit in 7 days: create CRITICAL alert for admins
 
 6. **Frontend:**
-   - [ ] Alert bell icon in navbar with count badge
-   - [ ] Alert dropdown panel
-   - [ ] Alerts page (all alerts with filters)
-   - [ ] Click alert navigates to client page
-   - [ ] Acknowledge button
+   - [ ] Alert bell icon in navbar with unread count badge
+   - [ ] Alert dropdown panel with recent alerts
+   - [ ] Alerts listing page with type filters
+   - [ ] Click alert navigates to client detail
+   - [ ] Acknowledge button per alert
+   - [ ] Use `<Card>` with children directly (no `Card.Body`)
 
-7. **Escalation Workflow:**
-   - [ ] If alert not acknowledged within 24 hours, escalate priority
-   - [ ] If 30+ days overdue with no visit in 7 days, create high-priority task
-
-8. **Authorization:**
-   - [ ] Each user sees only their alerts
+7. **Authorization:**
+   - [ ] Each user sees only alerts targeted to them
    - [ ] Admin can configure alert rules
 
 ---
 
 ## Dev Notes
 
+### Implementation Status
+
+**Backend:** Not started. Introduces new Alert and AlertRule models.
+
+### Key Corrections
+
+1. **API paths**: All use `/api/v1/` prefix (not `/api/`)
+2. **`Card.Body`** does not exist as a component — use `<Card>` with children directly
+3. **`targetRoles String[]`**: MySQL does not support array types. Use `Json` type instead
+4. **`getUserAlerts()` had duplicate `OR` clauses** — invalid Prisma syntax. Fixed with `AND` wrapping
+5. **`alertRule.upsert({ where: { name } })`**: Requires `@@unique` on `name` or use `findFirst` + `create`. Added `@unique` on AlertRule.name
+6. **`sendAlertEmail()` / `sendAlertSMS()`**: Deferred entirely for MVP — NOTIFY only
+7. **`auditLogger.log()`** replaced with `AuditService.log()`. Action limited to: `CREATE | UPDATE | DELETE | VIEW | LOGIN | LOGOUT | PERMISSION_CHECK`
+8. **InvoiceStatus `'UNPAID'`** does not exist — use `'PENDING'` instead
+
+### Schema (NEW models — canonical definitions)
+
 ```prisma
 model AlertRule {
   id           String         @id @default(cuid())
-  name         String
+  name         String         @unique   // @@unique required for upsert
   daysOverdue  Int
   priority     AlertPriority
-  targetRoles  String[]       // JSON array of roles
+  targetRoles  Json           // JSON array of role strings, e.g. ["RECOVERY_AGENT","ADMIN"]
   action       AlertAction    @default(NOTIFY)
   isActive     Boolean        @default(true)
   createdAt    DateTime       @default(now())
@@ -84,7 +97,7 @@ model Alert {
   type            AlertType
   priority        AlertPriority
   message         String         @db.Text
-  relatedType     String?
+  relatedType     String?        // "CLIENT", "INVOICE", etc.
   relatedId       String?
   targetUserId    String?
   targetRole      String?
@@ -97,6 +110,8 @@ model Alert {
   targetUser      User?          @relation("AlertTargetUser", fields: [targetUserId], references: [id])
   acknowledger    User?          @relation("AlertAcknowledger", fields: [acknowledgedBy], references: [id])
 
+  @@index([targetUserId, acknowledged])
+  @@index([type, relatedId])
   @@map("alerts")
 }
 
@@ -105,36 +120,33 @@ enum AlertType {
   PROMISE_BROKEN
   STOCK_LOW
   EXPIRY_WARNING
-  ADJUSTMENT_APPROVAL_REQUIRED
   CREDIT_LIMIT_EXCEEDED
 }
 
-enum AlertPriority {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
-}
-
-enum AlertAction {
-  NOTIFY
-  EMAIL
-  SMS
-}
+enum AlertPriority { LOW  MEDIUM  HIGH  CRITICAL }
+enum AlertAction   { NOTIFY  EMAIL  SMS }
 ```
 
+**User model** needs new relations:
+```prisma
+// ADD to User model:
+alertsReceived     Alert[] @relation("AlertTargetUser")
+alertsAcknowledged Alert[] @relation("AlertAcknowledger")
+```
+
+### Backend Service (corrected)
+
 ```typescript
+// --- Overdue check job (runs via cron, separate process) ---
 async function checkOverduePayments(): Promise<void> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Get active alert rules
   const rules = await prisma.alertRule.findMany({
     where: { isActive: true },
     orderBy: { daysOverdue: 'asc' }
   });
 
-  // Get clients with overdue invoices
   const clients = await prisma.client.findMany({
     where: {
       balance: { gt: 0 },
@@ -143,98 +155,72 @@ async function checkOverduePayments(): Promise<void> {
     include: {
       invoices: {
         where: {
-          status: { in: ['UNPAID', 'PARTIAL'] },
+          status: { in: ['PENDING', 'PARTIAL'] },  // NOT 'UNPAID'
           dueDate: { lt: today }
         },
         orderBy: { dueDate: 'asc' }
       },
       recoveryAgent: true,
-      recoveryVisits: {
-        orderBy: { visitDate: 'desc' },
-        take: 1
-      }
+      recoveryVisits: { orderBy: { visitDate: 'desc' }, take: 1 }
     }
   });
 
   for (const client of clients) {
     if (client.invoices.length === 0) continue;
-
-    // Calculate days overdue (oldest invoice)
     const oldestInvoice = client.invoices[0];
     const daysOverdue = differenceInDays(today, oldestInvoice.dueDate!);
 
-    // Find applicable rule
     const applicableRule = rules
-      .filter(rule => daysOverdue >= rule.daysOverdue)
+      .filter(r => daysOverdue >= r.daysOverdue)
       .sort((a, b) => b.daysOverdue - a.daysOverdue)[0];
-
     if (!applicableRule) continue;
 
-    // Check if alert already exists for this client and rule
-    const existingAlert = await prisma.alert.findFirst({
+    // Deduplicate: skip if same client + priority alert exists in last 24h
+    const existing = await prisma.alert.findFirst({
       where: {
         type: 'CLIENT_OVERDUE',
         relatedType: 'CLIENT',
         relatedId: client.id,
         priority: applicableRule.priority,
         acknowledged: false,
-        createdAt: {
-          gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
-        }
+        createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
       }
     });
+    if (existing) continue;
 
-    if (existingAlert) continue; // Don't create duplicate alert
-
-    // Calculate total overdue amount
     const overdueAmount = client.invoices.reduce(
-      (sum, inv) => sum + parseFloat(inv.total.toString()) - parseFloat(inv.paidAmount.toString()),
-      0
+      (sum, inv) => sum + Number(inv.total) - Number(inv.paidAmount), 0
     );
 
-    // Get target users
-    const targetUsers = await getTargetUsers(applicableRule.targetRoles, client.recoveryAgentId);
+    // targetRoles is Json — parse it
+    const roles = applicableRule.targetRoles as string[];
+    const targetUsers = await getTargetUsers(roles, client.recoveryAgentId);
 
-    // Create alerts for each target user
     for (const userId of targetUsers) {
-      const alert = await prisma.alert.create({
+      await prisma.alert.create({
         data: {
           type: 'CLIENT_OVERDUE',
           priority: applicableRule.priority,
-          message: `${client.name} has ${daysOverdue} days overdue payment (Rs.${overdueAmount.toLocaleString()})`,
+          message: `${client.name}: ${daysOverdue} days overdue (Rs.${overdueAmount.toLocaleString()})`,
           relatedType: 'CLIENT',
           relatedId: client.id,
           targetUserId: userId
         }
       });
-
-      // Perform actions based on rule
-      if (applicableRule.action === 'EMAIL') {
-        await sendAlertEmail(userId, alert);
-      } else if (applicableRule.action === 'SMS') {
-        await sendAlertSMS(userId, alert);
-      }
     }
 
-    // Special escalation: 30+ days overdue with no visit in 7 days
+    // Escalation: 30+ days overdue, no visit in 7 days → CRITICAL for admins
     if (daysOverdue >= 30) {
       const lastVisit = client.recoveryVisits[0];
-      const daysSinceVisit = lastVisit
-        ? differenceInDays(today, lastVisit.visitDate)
-        : 999;
-
+      const daysSinceVisit = lastVisit ? differenceInDays(today, lastVisit.visitDate) : 999;
       if (daysSinceVisit > 7) {
-        // Create high-priority task for recovery agent
-        const adminUsers = await prisma.user.findMany({
-          where: { role: 'ADMIN' }
-        });
-
-        for (const admin of adminUsers) {
+        const admins = await prisma.user.findMany({ where: { role: { name: 'ADMIN' } } });
+        for (const admin of admins) {
           await prisma.alert.create({
             data: {
               type: 'CLIENT_OVERDUE',
               priority: 'CRITICAL',
-              message: `URGENT: ${client.name} has ${daysOverdue} days overdue (Rs.${overdueAmount.toLocaleString()}) with no visit in ${daysSinceVisit} days`,
+              message: `URGENT: ${client.name} — ${daysOverdue} days overdue, no visit in ${daysSinceVisit} days`,
               relatedType: 'CLIENT',
               relatedId: client.id,
               targetUserId: admin.id
@@ -246,326 +232,41 @@ async function checkOverduePayments(): Promise<void> {
   }
 }
 
-async function getTargetUsers(roles: string[], recoveryAgentId?: string | null): Promise<string[]> {
-  const userIds: string[] = [];
-
-  for (const role of roles) {
-    if (role === 'RECOVERY_AGENT' && recoveryAgentId) {
-      userIds.push(recoveryAgentId);
-    } else {
-      const users = await prisma.user.findMany({
-        where: { role: role as any, status: 'ACTIVE' }
-      });
-      userIds.push(...users.map(u => u.id));
-    }
-  }
-
-  return [...new Set(userIds)]; // Remove duplicates
-}
-
-async function acknowledgeAlert(alertId: string, userId: string): Promise<Alert> {
-  const alert = await prisma.alert.findUnique({
-    where: { id: alertId }
-  });
-
-  if (!alert) {
-    throw new NotFoundError('Alert not found');
-  }
-
-  if (alert.targetUserId !== userId) {
-    throw new ForbiddenError('You cannot acknowledge this alert');
-  }
-
-  return await prisma.alert.update({
-    where: { id: alertId },
-    data: {
-      acknowledged: true,
-      acknowledgedBy: userId,
-      acknowledgedAt: new Date()
-    }
-  });
-}
-
-async function getUserAlerts(userId: string): Promise<any[]> {
+// --- getUserAlerts (fixed duplicate OR clause) ---
+async function getUserAlerts(userId: string): Promise<Alert[]> {
   const user = await prisma.user.findUnique({
-    where: { id: userId }
+    where: { id: userId },
+    include: { role: true }
   });
 
-  const alerts = await prisma.alert.findMany({
+  return prisma.alert.findMany({
     where: {
-      OR: [
-        { targetUserId: userId },
-        { targetRole: user?.role }
-      ],
-      acknowledged: false,
-      OR: [
-        { expiresAt: null },
-        { expiresAt: { gt: new Date() } }
+      AND: [
+        { OR: [{ targetUserId: userId }, { targetRole: user?.role?.name }] },
+        { acknowledged: false },
+        { OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] }
       ]
     },
-    orderBy: [
-      { priority: 'desc' },
-      { createdAt: 'desc' }
-    ],
+    orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
     take: 50
   });
-
-  return alerts.map(alert => ({
-    id: alert.id,
-    type: alert.type,
-    priority: alert.priority,
-    message: alert.message,
-    relatedType: alert.relatedType,
-    relatedId: alert.relatedId,
-    createdAt: alert.createdAt
-  }));
 }
 ```
 
-**Frontend:**
-```tsx
-import { FC, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bell, Check, X, AlertCircle } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+### Seed Default Alert Rules
 
-// Alert Bell Icon with Badge
-export const AlertBell: FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const { data: alerts } = useQuery({
-    queryKey: ['alerts'],
-    queryFn: () => fetch('/api/alerts').then(res => res.json()),
-    refetchInterval: 60000 // Refetch every minute
-  });
-
-  const unreadCount = alerts?.length || 0;
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-full hover:bg-gray-100"
-      >
-        <Bell className="h-6 w-6" />
-        {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border z-50">
-          <div className="p-4 border-b">
-            <h3 className="font-semibold">Notifications</h3>
-          </div>
-
-          <div className="max-h-96 overflow-y-auto">
-            {alerts?.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                No new notifications
-              </div>
-            ) : (
-              alerts?.map((alert: any) => (
-                <AlertItem key={alert.id} alert={alert} onClose={() => setIsOpen(false)} />
-              ))
-            )}
-          </div>
-
-          <div className="p-3 border-t text-center">
-            <a href="/alerts" className="text-sm text-blue-600 hover:underline">
-              View all notifications
-            </a>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const AlertItem: FC<{ alert: any; onClose: () => void }> = ({ alert, onClose }) => {
-  const queryClient = useQueryClient();
-
-  const acknowledgeMutation = useMutation({
-    mutationFn: (alertId: string) =>
-      fetch(`/api/alerts/${alertId}/acknowledge`, { method: 'PUT' }).then(res => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['alerts']);
-    }
-  });
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'CRITICAL': return 'text-red-600 bg-red-50';
-      case 'HIGH': return 'text-orange-600 bg-orange-50';
-      case 'MEDIUM': return 'text-yellow-600 bg-yellow-50';
-      case 'LOW': return 'text-blue-600 bg-blue-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  const handleClick = () => {
-    if (alert.relatedType === 'CLIENT' && alert.relatedId) {
-      window.location.href = `/clients/${alert.relatedId}`;
-      onClose();
-    }
-  };
-
-  return (
-    <div
-      className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${getPriorityColor(alert.priority)}`}
-      onClick={handleClick}
-    >
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-start gap-2">
-          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-          <div>
-            <Badge className={getPriorityColor(alert.priority)}>
-              {alert.priority}
-            </Badge>
-          </div>
-        </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            acknowledgeMutation.mutate(alert.id);
-          }}
-          className="text-gray-400 hover:text-gray-600"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      <p className="text-sm mb-2">{alert.message}</p>
-
-      <div className="text-xs text-gray-500">
-        {formatDistanceToNow(new Date(alert.createdAt), { addSuffix: true })}
-      </div>
-    </div>
-  );
-};
-
-// Alerts Page
-export const AlertsPage: FC = () => {
-  const [filter, setFilter] = useState<string>('all');
-  const queryClient = useQueryClient();
-
-  const { data: alerts, isLoading } = useQuery({
-    queryKey: ['alerts-page', filter],
-    queryFn: () => {
-      const url = filter === 'all'
-        ? '/api/alerts'
-        : `/api/alerts?type=${filter}`;
-      return fetch(url).then(res => res.json());
-    }
-  });
-
-  const acknowledgeAll = useMutation({
-    mutationFn: async () => {
-      const promises = alerts?.map((alert: any) =>
-        fetch(`/api/alerts/${alert.id}/acknowledge`, { method: 'PUT' })
-      );
-      await Promise.all(promises);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['alerts-page']);
-      toast.success('All alerts acknowledged');
-    }
-  });
-
-  if (isLoading) return <Spinner />;
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Notifications</h1>
-        <Button onClick={() => acknowledgeAll.mutate()}>
-          <Check className="h-4 w-4 mr-2" />
-          Acknowledge All
-        </Button>
-      </div>
-
-      <Card className="mb-6">
-        <Card.Body>
-          <div className="flex gap-2">
-            <Button
-              variant={filter === 'all' ? 'primary' : 'outline'}
-              onClick={() => setFilter('all')}
-            >
-              All
-            </Button>
-            <Button
-              variant={filter === 'CLIENT_OVERDUE' ? 'primary' : 'outline'}
-              onClick={() => setFilter('CLIENT_OVERDUE')}
-            >
-              Overdue Clients
-            </Button>
-            <Button
-              variant={filter === 'PROMISE_BROKEN' ? 'primary' : 'outline'}
-              onClick={() => setFilter('PROMISE_BROKEN')}
-            >
-              Broken Promises
-            </Button>
-          </div>
-        </Card.Body>
-      </Card>
-
-      {alerts?.length === 0 ? (
-        <Card>
-          <Card.Body className="text-center text-gray-500 py-8">
-            No notifications to display
-          </Card.Body>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {alerts?.map((alert: any) => (
-            <AlertItem key={alert.id} alert={alert} onClose={() => {}} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-```
-
-**Seed Default Alert Rules:**
 ```typescript
 async function seedAlertRules() {
   const rules = [
-    {
-      name: '7 Days Overdue',
-      daysOverdue: 7,
-      priority: 'LOW',
-      targetRoles: ['RECOVERY_AGENT'],
-      action: 'NOTIFY'
-    },
-    {
-      name: '14 Days Overdue',
-      daysOverdue: 14,
-      priority: 'MEDIUM',
-      targetRoles: ['RECOVERY_AGENT', 'ACCOUNTANT'],
-      action: 'NOTIFY'
-    },
-    {
-      name: '30 Days Overdue',
-      daysOverdue: 30,
-      priority: 'HIGH',
-      targetRoles: ['RECOVERY_AGENT', 'ACCOUNTANT', 'ADMIN'],
-      action: 'EMAIL'
-    },
-    {
-      name: '60+ Days Overdue',
-      daysOverdue: 60,
-      priority: 'CRITICAL',
-      targetRoles: ['RECOVERY_AGENT', 'ACCOUNTANT', 'ADMIN'],
-      action: 'EMAIL'
-    }
+    { name: '7 Days Overdue',  daysOverdue: 7,  priority: 'LOW',      targetRoles: JSON.stringify(['RECOVERY_AGENT']),                  action: 'NOTIFY' },
+    { name: '14 Days Overdue', daysOverdue: 14, priority: 'MEDIUM',   targetRoles: JSON.stringify(['RECOVERY_AGENT', 'ACCOUNTANT']),    action: 'NOTIFY' },
+    { name: '30 Days Overdue', daysOverdue: 30, priority: 'HIGH',     targetRoles: JSON.stringify(['RECOVERY_AGENT', 'ACCOUNTANT', 'ADMIN']), action: 'NOTIFY' },
+    { name: '60+ Days Overdue',daysOverdue: 60, priority: 'CRITICAL', targetRoles: JSON.stringify(['RECOVERY_AGENT', 'ACCOUNTANT', 'ADMIN']), action: 'NOTIFY' }
   ];
 
   for (const rule of rules) {
     await prisma.alertRule.upsert({
-      where: { name: rule.name },
+      where: { name: rule.name },  // Works because name is @unique
       update: {},
       create: rule
     });
@@ -573,14 +274,31 @@ async function seedAlertRules() {
 }
 ```
 
-**Cron Job:**
-```typescript
-// Run daily at 8:00 AM
-cron.schedule('0 8 * * *', async () => {
-  console.log('Running overdue payment alerts check...');
-  await checkOverduePayments();
-});
+### Module Structure
+
 ```
+apps/api/src/modules/alerts/
+  alert.controller.ts        (NEW)
+  alert.service.ts           (NEW)
+  alert.routes.ts            (NEW)
+  overdue-check.job.ts       (NEW — cron job, separate setup)
+
+apps/web/src/features/alerts/
+  AlertBell.tsx              (NEW — navbar bell icon + dropdown)
+  AlertsPage.tsx             (NEW — full listing with filters)
+```
+
+### Frontend Notes
+
+- **AlertBell**: Bell icon in navbar, polls `GET /api/v1/alerts` every 60s, shows count badge. Dropdown lists recent alerts with priority color coding. Click navigates to client page.
+- **AlertsPage**: Full page listing with type filter buttons (All / Overdue / Promises). Uses `<Card>` directly (no `Card.Body`). Acknowledge all button.
+- Use `formatDistanceToNow` from date-fns for relative timestamps.
+
+### POST-MVP DEFERRED
+
+- **EMAIL / SMS actions**: All rules default to NOTIFY for MVP. Email/SMS infrastructure deferred.
+- **Drag-and-drop alert rule ordering**
+- **24h auto-escalation** (if not acknowledged, bump priority)
 
 ---
 
@@ -589,3 +307,4 @@ cron.schedule('0 8 * * *', async () => {
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), Card.Body removed, targetRoles changed from String[] to Json (MySQL), fixed duplicate OR in getUserAlerts, added @unique on AlertRule.name for upsert, UNPAID→PENDING, deferred EMAIL/SMS for MVP, trimmed frontend to notes | Claude (AI Review) |

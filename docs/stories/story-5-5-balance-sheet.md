@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 8-10 hours
 **Dependencies:** Story 5.4 (Trial Balance)
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2
 
 ---
 
@@ -19,126 +19,63 @@
 
 ## Acceptance Criteria
 
-1. GET /api/reports/balance-sheet generates balance sheet
-2. Parameters: asOfDate
+1. `GET /api/v1/reports/balance-sheet` generates balance sheet
+2. Parameters: `asOfDate`
 3. Report structure:
    - ASSETS (Current Assets, Fixed Assets, Total)
    - LIABILITIES (Current, Long-term, Total)
    - EQUITY (Capital, Retained Earnings, Total)
    - **Equation: Total Assets = Total Liabilities + Total Equity**
-4. Retained Earnings = Previous Retained Earnings + Net Profit
-5. Net Profit = Revenue - Expenses
-6. Report exportable to Excel
-7. **Authorization & Role-Based Access:**
-   - [ ] Admin and Accountant can access
-   - [ ] Other roles: 403 Forbidden
-
-8. **Performance & Caching:**
-   - [ ] Cache balance sheet: 10 minutes per date
-   - [ ] Cache invalidation: On journal entry posting
-   - [ ] API timeout: 20 seconds maximum
-   - [ ] Pre-calculate retained earnings to avoid complex queries
-
-9. **Error Handling:**
-    - [ ] Handle missing revenue/expense accounts gracefully (zero balance)
-    - [ ] Balance equation validation: Alert if Assets ≠ Liabilities + Equity
-    - [ ] Calculation errors: Display with specific error details
-    - [ ] Return partial data with error flag if calculation fails
+4. Retained Earnings = Previous Retained Earnings + Net Profit (Revenue - Expenses)
+5. Export to Excel (Story 4.9 pattern)
+6. **Authorization:** Only `ADMIN` and `ACCOUNTANT`
 
 ---
 
 ## Dev Notes
 
+### Implementation Status
+
+**Backend:** Not started. Depends on AccountHead + JournalEntry models.
+
+### Key Corrections
+
+1. **`calculateBalance` must respect account type** — The original code computed `opening + debits - credits` for all accounts. This is only correct for ASSET/EXPENSE. For LIABILITY/EQUITY/REVENUE, the normal balance is credit-side: `opening + credits - debits`.
+
+2. **API path**: `/api/v1/reports/balance-sheet` (not `/api/reports/balance-sheet`)
+
+### Balance Calculation (Correct)
+
 ```typescript
-interface BalanceSheetResult {
-  asOfDate: Date;
-  assets: {
-    currentAssets: AccountBalance[];
-    fixedAssets: AccountBalance[];
-    totalAssets: number;
-  };
-  liabilities: {
-    currentLiabilities: AccountBalance[];
-    longTermLiabilities: AccountBalance[];
-    totalLiabilities: number;
-  };
-  equity: {
-    capital: number;
-    retainedEarnings: number;
-    totalEquity: number;
-  };
-  isBalanced: boolean;
-}
+function calculateAccountBalance(account: AccountHead, journalLines: JournalEntryLine[]): number {
+  const opening = parseFloat(account.openingBalance.toString());
+  const debits = journalLines.reduce((sum, l) => sum + parseFloat(l.debitAmount.toString()), 0);
+  const credits = journalLines.reduce((sum, l) => sum + parseFloat(l.creditAmount.toString()), 0);
 
-async function getBalanceSheet(asOfDate: Date): Promise<BalanceSheetResult> {
-  const accounts = await prisma.accountHead.findMany({
-    where: { status: 'ACTIVE' },
-    include: { journalLines: { where: { journalEntry: { date: { lte: asOfDate }, status: 'POSTED' } } } }
-  });
-
-  const calculateBalance = (account: any) => {
-    const opening = parseFloat(account.openingBalance.toString());
-    const debits = account.journalLines.reduce((sum: number, line: any) =>
-      sum + parseFloat(line.debitAmount.toString()), 0);
-    const credits = account.journalLines.reduce((sum: number, line: any) =>
-      sum + parseFloat(line.creditAmount.toString()), 0);
+  // ASSET/EXPENSE: debit-normal → opening + debits - credits
+  // LIABILITY/EQUITY/REVENUE: credit-normal → opening + credits - debits
+  if (['ASSET', 'EXPENSE'].includes(account.accountType)) {
     return opening + debits - credits;
-  };
-
-  // Assets
-  const assetAccounts = accounts.filter(a => a.accountType === 'ASSET');
-  const currentAssets = assetAccounts
-    .filter(a => parseInt(a.code) < 1400)
-    .map(a => ({ code: a.code, name: a.name, balance: calculateBalance(a) }));
-  const fixedAssets = assetAccounts
-    .filter(a => parseInt(a.code) >= 1400)
-    .map(a => ({ code: a.code, name: a.name, balance: calculateBalance(a) }));
-
-  const totalAssets =
-    currentAssets.reduce((sum, a) => sum + a.balance, 0) +
-    fixedAssets.reduce((sum, a) => sum + a.balance, 0);
-
-  // Liabilities
-  const liabilityAccounts = accounts.filter(a => a.accountType === 'LIABILITY');
-  const currentLiabilities = liabilityAccounts
-    .filter(a => parseInt(a.code) < 2300)
-    .map(a => ({ code: a.code, name: a.name, balance: calculateBalance(a) }));
-  const longTermLiabilities = liabilityAccounts
-    .filter(a => parseInt(a.code) >= 2300)
-    .map(a => ({ code: a.code, name: a.name, balance: calculateBalance(a) }));
-
-  const totalLiabilities =
-    currentLiabilities.reduce((sum, a) => sum + a.balance, 0) +
-    longTermLiabilities.reduce((sum, a) => sum + a.balance, 0);
-
-  // Equity
-  const capitalAccount = accounts.find(a => a.code === '3100');
-  const capital = capitalAccount ? calculateBalance(capitalAccount) : 0;
-
-  // Calculate Net Profit
-  const revenueAccounts = accounts.filter(a => a.accountType === 'REVENUE');
-  const expenseAccounts = accounts.filter(a => a.accountType === 'EXPENSE');
-  const totalRevenue = revenueAccounts.reduce((sum, a) => sum + calculateBalance(a), 0);
-  const totalExpenses = expenseAccounts.reduce((sum, a) => sum + calculateBalance(a), 0);
-  const netProfit = totalRevenue - totalExpenses;
-
-  const retainedEarnings = netProfit; // Simplified; in reality, add previous retained earnings
-  const totalEquity = capital + retainedEarnings;
-
-  return {
-    asOfDate,
-    assets: { currentAssets, fixedAssets, totalAssets },
-    liabilities: { currentLiabilities, longTermLiabilities, totalLiabilities },
-    equity: { capital, retainedEarnings, totalEquity },
-    isBalanced: Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.01
-  };
+  } else {
+    return opening + credits - debits;
+  }
 }
 ```
 
----
+### Module Structure
 
-## Change Log
+```
+apps/api/src/modules/reports/
+  balance-sheet.service.ts      (NEW)
+  reports.controller.ts         (EXPAND)
+  reports.routes.ts             (EXPAND — add GET /balance-sheet)
 
-| Date       | Version | Description            | Author |
-|------------|---------|------------------------|--------|
-| 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+apps/web/src/features/accounting/pages/
+  BalanceSheetPage.tsx           (NEW)
+```
+
+### POST-MVP DEFERRED
+
+- **Server-side caching**: Use TanStack Query.
+- **Comparative balance sheet (current vs prior period)**: Deferred.
+- **Income Statement as separate report**: Can be derived from same data. Deferred to separate story if needed.

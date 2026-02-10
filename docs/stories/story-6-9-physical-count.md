@@ -4,8 +4,8 @@
 **Story ID:** STORY-6.9
 **Priority:** Medium
 **Estimated Effort:** 8-10 hours
-**Dependencies:** Epic 2 (Inventory)
-**Status:** Draft - Phase 2
+**Dependencies:** Epic 2 (Inventory), Story 6.8 (Adjustment Approval)
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
@@ -20,25 +20,24 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] StockCount table: countNumber, warehouseId, countDate, countType (FULL/CYCLE), status, countedBy
-   - [ ] StockCountItem table: stockCountId, productId, binLocation, batchNo, systemQty, countedQty, variance, notes
+   - [ ] `StockCount` table: countNumber, warehouseId, countDate, countType (FULL/CYCLE), status, countedBy
+   - [ ] `StockCountItem` table: stockCountId, productId, binLocation, batchNo, systemQty, countedQty, variance, notes
 
 2. **Count Process:**
-   - [ ] POST /api/stock-counts creates count session
-   - [ ] GET /api/stock-counts/:id/items returns items to count
-   - [ ] PUT /api/stock-counts/:id/items/:itemId updates counted quantity
+   - [ ] `POST /api/v1/stock-counts` — creates count session (populates items from current inventory)
+   - [ ] `GET /api/v1/stock-counts/:id/items` — returns items to count
+   - [ ] `PUT /api/v1/stock-counts/:id/items/:itemId` — updates counted quantity
    - [ ] Variance = countedQty - systemQty
 
 3. **Count Completion:**
-   - [ ] When COMPLETED:
-   - [ ] For each variance, create StockAdjustment (type=PHYSICAL_COUNT or CORRECTION)
-   - [ ] **Calculate adjustment value:** |variance| × product cost price
-   - [ ] Adjustment goes through approval workflow (may be auto-approved if below threshold)
+   - [ ] `PUT /api/v1/stock-counts/:id/complete`
+   - [ ] For each variance: create StockAdjustment (type=CORRECTION for overage, WASTAGE for shortage)
+   - [ ] Calculate adjustment value: `|variance| × product.costPrice`
+   - [ ] Adjustment goes through approval workflow (Story 6.8 — may be auto-approved if below threshold)
    - [ ] Update inventory quantities when adjustment is approved
-   - [ ] Generate variance report
 
 4. **Backend API:**
-   - [ ] GET /api/stock-counts/:id/report - variance report
+   - [ ] `GET /api/v1/stock-counts/:id/report` — variance report
 
 5. **Frontend:**
    - [ ] Stock Count page
@@ -52,11 +51,26 @@
 
 6. **Authorization:**
    - [ ] Warehouse Manager and Admin
-   - [ ] Stock count completion logged
+   - [ ] Stock count completion logged via `AuditService.log()`
 
 ---
 
 ## Dev Notes
+
+### Implementation Status
+
+**Backend:** Not started. Depends on Inventory model and Story 6.8 (Adjustment Approval).
+
+### Key Corrections
+
+1. **API paths**: All use `/api/v1/stock-counts` (not `/api/stock-counts`)
+2. **`movementType: 'PHYSICAL_COUNT'`** — NOT in MovementType enum. Use existing `'ADJUSTMENT'` (physical count variance is an adjustment).
+3. **`referenceType: 'STOCK_COUNT'`** — NOT in ReferenceType enum. Use existing `'ADJUSTMENT'` and include stock count ID in `notes`.
+4. **`prisma.configuration`** — Does NOT exist. Use `prisma.systemSetting` (same as Story 6.8).
+5. **`auditLogger.log()`** → `AuditService.log()` with correct action values.
+6. **Adjustment creation in completion** — Reuse `createStockAdjustment()` from Story 6.8 which handles threshold checks and auto-approval logic.
+
+### Schema (Proposed — NEW models)
 
 ```prisma
 model StockCount {
@@ -105,15 +119,33 @@ enum CountStatus {
 }
 ```
 
+**Warehouse model** needs new relation:
+```prisma
+// ADD to Warehouse model:
+stockCounts StockCount[]
+```
+
+**User model** needs new relation:
+```prisma
+// ADD to User model:
+stockCounts StockCount[]
+```
+
+**Product model** needs new relation:
+```prisma
+// ADD to Product model:
+stockCountItems StockCountItem[]
+```
+
+### Create Stock Count
+
 ```typescript
 async function createStockCount(
   data: CreateStockCountDto,
   userId: string
 ): Promise<StockCount> {
-  // Generate count number
   const countNumber = await generateCountNumber();
 
-  // Get inventory items to count
   const inventoryItems = await prisma.inventory.findMany({
     where: {
       warehouseId: data.warehouseId,
@@ -125,7 +157,6 @@ async function createStockCount(
     include: { product: true }
   });
 
-  // Create stock count with items
   const stockCount = await prisma.stockCount.create({
     data: {
       countNumber,
@@ -146,77 +177,65 @@ async function createStockCount(
     include: { items: { include: { product: true } } }
   });
 
+  await AuditService.log({
+    userId,
+    action: 'CREATE',
+    entityType: 'StockCount',
+    entityId: stockCount.id,
+    notes: `Stock count ${countNumber} created (${data.countType})`,
+  });
+
   return stockCount;
 }
+```
 
-async function updateCountedQty(
-  stockCountId: string,
-  itemId: string,
-  countedQty: number
-): Promise<StockCountItem> {
-  const item = await prisma.stockCountItem.findUnique({
-    where: { id: itemId }
-  });
+### Complete Stock Count (Corrected)
 
-  const variance = countedQty - item!.systemQty;
-
-  return await prisma.stockCountItem.update({
-    where: { id: itemId },
-    data: {
-      countedQty,
-      variance
-    }
-  });
-}
-
+```typescript
 async function completeStockCount(
   stockCountId: string,
   userId: string
 ): Promise<StockCount> {
-  const stockCount = await prisma.stockCount.findUnique({
+  const stockCount = await prisma.stockCount.findUniqueOrThrow({
     where: { id: stockCountId },
     include: { items: true }
   });
 
-  if (stockCount?.status === 'COMPLETED') {
+  if (stockCount.status === 'COMPLETED') {
     throw new BadRequestError('Stock count already completed');
   }
 
   await prisma.$transaction(async (tx) => {
-    // Process each item with variance
-    for (const item of stockCount!.items) {
+    for (const item of stockCount.items) {
       if (item.variance !== 0) {
-        // Get product cost to calculate adjustment value
-        const product = await tx.product.findUnique({
+        const product = await tx.product.findUniqueOrThrow({
           where: { id: item.productId }
         });
 
-        // Calculate adjustment value: |variance| × cost
+        // Value = |variance| × product.costPrice
         const adjustmentValue = Math.abs(item.variance) *
-          parseFloat(product!.costPrice.toString());
+          parseFloat(product.costPrice.toString());
 
         // Determine adjustment type
         const adjustmentType = item.variance > 0 ? 'CORRECTION' : 'WASTAGE';
 
-        // Get approval threshold from configuration
-        const config = await tx.configuration.findUnique({
+        // Get threshold from SystemSetting (NOT prisma.configuration)
+        const setting = await tx.systemSetting.findUnique({
           where: { key: 'ADJUSTMENT_APPROVAL_THRESHOLD' }
         });
-        const threshold = config ? parseFloat(config.value) : 1000;
+        const threshold = setting ? parseFloat(setting.value) : 1000;
 
-        // Determine if approval needed based on value
         const requiresApproval = adjustmentValue >= threshold;
         const status = requiresApproval ? 'PENDING' : 'APPROVED';
 
-        // Create stock adjustment through normal workflow
         const adjustment = await tx.stockAdjustment.create({
           data: {
             productId: item.productId,
-            warehouseId: stockCount!.warehouseId,
+            warehouseId: stockCount.warehouseId,
             type: adjustmentType,
             quantity: Math.abs(item.variance),
             reason: `Physical count variance: ${item.notes || 'No notes'}`,
-            value: adjustmentValue, // Calculate actual value
+            value: adjustmentValue,
             status,
             requestedBy: userId,
             ...(status === 'APPROVED' && {
@@ -226,61 +245,64 @@ async function completeStockCount(
           }
         });
 
-        // Update inventory only if adjustment approved
+        // Only update inventory if auto-approved
         if (status === 'APPROVED') {
           const inventory = await tx.inventory.findFirst({
             where: {
               productId: item.productId,
-              warehouseId: stockCount!.warehouseId,
+              warehouseId: stockCount.warehouseId,
               ...(item.batchNo && { batchNo: item.batchNo })
             }
           });
 
-          await tx.inventory.update({
-            where: { id: inventory!.id },
-            data: { quantity: item.countedQty } // Set to actual counted qty
-          });
+          if (inventory) {
+            await tx.inventory.update({
+              where: { id: inventory.id },
+              data: { quantity: item.countedQty }  // Set to actual counted qty
+            });
+          }
 
-          // Create stock movement
+          // Use existing enum values (not PHYSICAL_COUNT/STOCK_COUNT)
           await tx.stockMovement.create({
             data: {
               productId: item.productId,
-              warehouseId: stockCount!.warehouseId,
-              movementType: 'PHYSICAL_COUNT',
+              warehouseId: stockCount.warehouseId,
+              movementType: 'ADJUSTMENT',     // Use existing enum
               quantity: item.variance,
-              referenceType: 'STOCK_COUNT',
-              referenceId: stockCountId,
+              referenceType: 'ADJUSTMENT',    // Use existing enum
+              referenceId: adjustment.id,
               movementDate: new Date(),
               userId,
-              notes: `Physical count adjustment: ${item.variance > 0 ? '+' : ''}${item.variance}`
+              notes: `Physical count adjustment: ${item.variance > 0 ? '+' : ''}${item.variance} (count: ${stockCount.countNumber})`
             }
           });
         }
       }
     }
 
-    // Mark count as completed
     await tx.stockCount.update({
       where: { id: stockCountId },
-      data: {
-        status: 'COMPLETED',
-        completedAt: new Date()
-      }
+      data: { status: 'COMPLETED', completedAt: new Date() }
     });
   });
 
-  await auditLogger.log({
-    action: 'STOCK_COUNT_COMPLETED',
+  await AuditService.log({
     userId,
-    resource: 'StockCount',
-    resourceId: stockCountId
+    action: 'UPDATE',
+    entityType: 'StockCount',
+    entityId: stockCountId,
+    notes: `Stock count ${stockCount.countNumber} completed`,
   });
 
-  return stockCount!;
+  return stockCount;
 }
+```
 
-async function getVarianceReport(stockCountId: string): Promise<any> {
-  const stockCount = await prisma.stockCount.findUnique({
+### Variance Report
+
+```typescript
+async function getVarianceReport(stockCountId: string) {
+  const stockCount = await prisma.stockCount.findUniqueOrThrow({
     where: { id: stockCountId },
     include: {
       items: {
@@ -290,17 +312,17 @@ async function getVarianceReport(stockCountId: string): Promise<any> {
     }
   });
 
-  const totalVarianceValue = stockCount!.items.reduce((sum, item) => {
+  const totalVarianceValue = stockCount.items.reduce((sum, item) => {
     const value = Math.abs(item.variance) * parseFloat(item.product.costPrice.toString());
     return sum + value;
   }, 0);
 
   return {
-    countNumber: stockCount!.countNumber,
-    countDate: stockCount!.countDate,
-    itemsWithVariance: stockCount!.items.length,
+    countNumber: stockCount.countNumber,
+    countDate: stockCount.countDate,
+    itemsWithVariance: stockCount.items.length,
     totalVarianceValue,
-    items: stockCount!.items.map(item => ({
+    items: stockCount.items.map(item => ({
       productName: item.product.name,
       systemQty: item.systemQty,
       countedQty: item.countedQty,
@@ -312,6 +334,25 @@ async function getVarianceReport(stockCountId: string): Promise<any> {
 }
 ```
 
+### Module Structure
+
+```
+apps/api/src/modules/stock-counts/
+  stock-count.controller.ts   (NEW)
+  stock-count.service.ts      (NEW)
+  stock-count.routes.ts       (NEW)
+
+apps/web/src/features/inventory/pages/
+  StockCountPage.tsx           (NEW)
+  StockCountDetailPage.tsx     (NEW)
+  VarianceReportPage.tsx       (NEW)
+```
+
+### POST-MVP DEFERRED
+
+- **Barcode scanning integration**: Manual entry for MVP.
+- **Scheduled cycle count reminders**: Deferred.
+
 ---
 
 ## Change Log
@@ -319,3 +360,4 @@ async function getVarianceReport(stockCountId: string): Promise<any> {
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), use existing enum values ADJUSTMENT (not PHYSICAL_COUNT/STOCK_COUNT), prisma.configuration→SystemSetting, auditLogger→AuditService with correct action values, documented all required model relations | Claude (AI Review) |

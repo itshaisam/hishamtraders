@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 8-10 hours
 **Dependencies:** Story 6.2
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
@@ -24,44 +24,65 @@
    - [ ] Cannot skip statuses
 
 2. **Status Transitions:**
-   - [ ] PUT /api/gate-passes/:id/approve (PENDING → APPROVED, no inventory change)
-   - [ ] PUT /api/gate-passes/:id/dispatch (APPROVED → IN_TRANSIT, **inventory deducted only in MANUAL mode**)
-   - [ ] PUT /api/gate-passes/:id/complete (IN_TRANSIT → COMPLETED)
-   - [ ] PUT /api/gate-passes/:id/cancel (cancels if PENDING/APPROVED/IN_TRANSIT, restores inventory if deducted)
+   - [ ] `PUT /api/v1/gate-passes/:id/approve` (PENDING → APPROVED, no inventory change)
+   - [ ] `PUT /api/v1/gate-passes/:id/dispatch` (APPROVED → IN_TRANSIT, **inventory deducted only in MANUAL mode**)
+   - [ ] `PUT /api/v1/gate-passes/:id/complete` (IN_TRANSIT → COMPLETED)
+   - [ ] `PUT /api/v1/gate-passes/:id/cancel` (cancels if PENDING/APPROVED/IN_TRANSIT, restores inventory if deducted)
 
 3. **Inventory Deduction:**
-   - [ ] Deducted when status → IN_TRANSIT (if not already deducted)
-   - [ ] StockMovement records created (type=GATE_PASS_OUT)
+   - [ ] In MANUAL mode: Deducted when status → IN_TRANSIT
+   - [ ] In AUTO mode: Already deducted when created (Story 6.2)
+   - [ ] StockMovement records created (use existing `movementType: 'SALE'` or `'TRANSFER'`)
 
 4. **Frontend:**
-   - [ ] Status workflow indicator (stepper/timeline)
+   - [ ] Status workflow indicator (use step indicators with `div` + Tailwind CSS — no Stepper component exists)
    - [ ] Action buttons conditional on status
    - [ ] Display timestamps and users for each status
    - [ ] Print Gate Pass button (PDF/print)
 
 5. **Alerts:**
-   - [ ] Alert for Warehouse Manager when passes await approval
+   - [ ] Alert for Warehouse Manager when passes await approval (defer alert system, use dashboard indicator for MVP)
 
 6. **Authorization:**
    - [ ] Only Warehouse Manager and Admin
-   - [ ] All status changes logged
+   - [ ] All status changes logged via `AuditService.log()`
 
 ---
 
 ## Dev Notes
+
+### Implementation Status
+
+**Backend:** Not started. Depends on Story 6.2 (GatePass creation).
+
+### Key Corrections
+
+1. **API paths**: All use `/api/v1/gate-passes/:id/...` (not `/api/gate-passes/...`)
+2. **`auditLogger.log()`** → Use `AuditService.log()`:
+   ```typescript
+   await AuditService.log({
+     userId,
+     action: 'UPDATE',            // All status transitions are updates
+     entityType: 'GatePass',
+     entityId: gatePassId,
+     notes: `Gate pass ${gatePassNumber} status: ${oldStatus} → ${newStatus}`,
+   });
+   ```
+3. **AuditService `action`** must be `'UPDATE'` for all status transitions (not custom strings like `GATE_PASS_APPROVED`)
+4. **Stepper/Step/StepLabel** components do NOT exist in the UI library. Use plain divs with Tailwind CSS for the status workflow indicator.
+5. **`gatePass.dispatcher`** and **`gatePass.completer`** — GatePass model has `dispatchedBy` and `completedBy` FK fields but no named User relations for them. Either add relations or query User separately.
+6. **Cancel inventory restore** — when restoring inventory on cancel, use `movementType: 'ADJUSTMENT'` (exists in enum) and `referenceType: 'ADJUSTMENT'` (exists in enum).
+
+### Status Transition Service
 
 ```typescript
 async function approveGatePass(
   gatePassId: string,
   userId: string
 ): Promise<GatePass> {
-  const gatePass = await prisma.gatePass.findUnique({
+  const gatePass = await prisma.gatePass.findUniqueOrThrow({
     where: { id: gatePassId }
   });
-
-  if (!gatePass) {
-    throw new NotFoundError('Gate pass not found');
-  }
 
   if (gatePass.status !== 'PENDING') {
     throw new BadRequestError('Gate pass is not pending approval');
@@ -69,19 +90,16 @@ async function approveGatePass(
 
   const updated = await prisma.gatePass.update({
     where: { id: gatePassId },
-    data: {
-      status: 'APPROVED',
-      approvedBy: userId
-    },
+    data: { status: 'APPROVED', approvedBy: userId },
     include: { items: { include: { product: true } } }
   });
 
-  await auditLogger.log({
-    action: 'GATE_PASS_APPROVED',
+  await AuditService.log({
     userId,
-    resource: 'GatePass',
-    resourceId: gatePassId,
-    details: { gatePassNumber: updated.gatePassNumber }
+    action: 'UPDATE',
+    entityType: 'GatePass',
+    entityId: gatePassId,
+    notes: `Gate pass ${updated.gatePassNumber} approved`,
   });
 
   return updated;
@@ -91,37 +109,31 @@ async function dispatchGatePass(
   gatePassId: string,
   userId: string
 ): Promise<GatePass> {
-  const gatePass = await prisma.gatePass.findUnique({
+  const gatePass = await prisma.gatePass.findUniqueOrThrow({
     where: { id: gatePassId },
     include: { warehouse: true }
   });
-
-  if (!gatePass) {
-    throw new NotFoundError('Gate pass not found');
-  }
 
   if (gatePass.status !== 'APPROVED') {
     throw new BadRequestError('Gate pass must be approved before dispatch');
   }
 
-  // Deduct inventory if not already done (MANUAL mode)
+  // Deduct inventory if MANUAL mode (AUTO already deducted on creation)
   if (gatePass.warehouse.gatePassMode === 'MANUAL') {
-    await deductInventoryForGatePass(gatePassId);
+    await deductInventoryForGatePass(gatePassId, userId);
   }
 
   const updated = await prisma.gatePass.update({
     where: { id: gatePassId },
-    data: {
-      status: 'IN_TRANSIT',
-      dispatchedBy: userId
-    }
+    data: { status: 'IN_TRANSIT', dispatchedBy: userId }
   });
 
-  await auditLogger.log({
-    action: 'GATE_PASS_DISPATCHED',
+  await AuditService.log({
     userId,
-    resource: 'GatePass',
-    resourceId: gatePassId
+    action: 'UPDATE',
+    entityType: 'GatePass',
+    entityId: gatePassId,
+    notes: `Gate pass ${gatePass.gatePassNumber} dispatched`,
   });
 
   return updated;
@@ -131,118 +143,116 @@ async function completeGatePass(
   gatePassId: string,
   userId: string
 ): Promise<GatePass> {
-  const gatePass = await prisma.gatePass.findUnique({
+  const gatePass = await prisma.gatePass.findUniqueOrThrow({
     where: { id: gatePassId }
   });
 
-  if (gatePass?.status !== 'IN_TRANSIT') {
+  if (gatePass.status !== 'IN_TRANSIT') {
     throw new BadRequestError('Gate pass must be in transit to complete');
   }
 
   const updated = await prisma.gatePass.update({
     where: { id: gatePassId },
-    data: {
-      status: 'COMPLETED',
-      completedBy: userId
-    }
+    data: { status: 'COMPLETED', completedBy: userId }
   });
 
-  await auditLogger.log({
-    action: 'GATE_PASS_COMPLETED',
+  await AuditService.log({
     userId,
-    resource: 'GatePass',
-    resourceId: gatePassId
+    action: 'UPDATE',
+    entityType: 'GatePass',
+    entityId: gatePassId,
+    notes: `Gate pass ${gatePass.gatePassNumber} completed`,
   });
 
   return updated;
 }
+```
 
+### Cancel with Inventory Restore
+
+```typescript
 async function cancelGatePass(
   gatePassId: string,
   reason: string,
   userId: string
 ): Promise<GatePass> {
-  const gatePass = await prisma.gatePass.findUnique({
+  const gatePass = await prisma.gatePass.findUniqueOrThrow({
     where: { id: gatePassId },
     include: { items: true, warehouse: true }
   });
 
-  // Can cancel PENDING, APPROVED, or IN_TRANSIT statuses
   const cancellableStatuses = ['PENDING', 'APPROVED', 'IN_TRANSIT'];
-  if (!cancellableStatuses.includes(gatePass!.status)) {
+  if (!cancellableStatuses.includes(gatePass.status)) {
     throw new BadRequestError(
-      `Cannot cancel gate pass in ${gatePass!.status} status. ` +
-      'Only PENDING, APPROVED, or IN_TRANSIT can be cancelled.'
+      `Cannot cancel gate pass in ${gatePass.status} status`
     );
   }
 
-  // Restore inventory if it was already deducted
-  if (gatePass!.status === 'PENDING') {
-    // No inventory deducted yet (MANUAL mode), nothing to restore
-  } else if (gatePass!.status === 'APPROVED') {
-    // AUTO mode: inventory was deducted when APPROVED, restore it
-    if (gatePass!.warehouse.gatePassMode === 'AUTO') {
-      await restoreInventoryForGatePass(gatePassId);
-    }
-  } else if (gatePass!.status === 'IN_TRANSIT') {
-    // Goods in transit, must restore inventory regardless of mode
-    await restoreInventoryForGatePass(gatePassId);
+  // Determine if inventory was already deducted
+  const inventoryDeducted =
+    (gatePass.warehouse.gatePassMode === 'AUTO' && gatePass.status !== 'PENDING') ||
+    (gatePass.warehouse.gatePassMode === 'MANUAL' && gatePass.status === 'IN_TRANSIT');
+
+  if (inventoryDeducted) {
+    await restoreInventoryForGatePass(gatePassId, userId);
   }
 
   const updated = await prisma.gatePass.update({
     where: { id: gatePassId },
     data: {
       status: 'CANCELLED',
-      notes: `${gatePass!.notes || ''}\n[CANCELLED] ${reason}`
+      notes: `${gatePass.notes || ''}\n[CANCELLED] ${reason}`
     }
   });
 
-  await auditLogger.log({
-    action: 'GATE_PASS_CANCELLED',
+  await AuditService.log({
     userId,
-    resource: 'GatePass',
-    resourceId: gatePassId,
-    details: {
-      previousStatus: gatePass!.status,
-      reason
-    }
+    action: 'UPDATE',
+    entityType: 'GatePass',
+    entityId: gatePassId,
+    notes: `Gate pass ${gatePass.gatePassNumber} cancelled (was ${gatePass.status}). Reason: ${reason}`,
   });
 
   return updated;
 }
 
-async function restoreInventoryForGatePass(gatePassId: string): Promise<void> {
-  const gatePass = await prisma.gatePass.findUnique({
+async function restoreInventoryForGatePass(
+  gatePassId: string,
+  userId: string
+): Promise<void> {
+  const gatePass = await prisma.gatePass.findUniqueOrThrow({
     where: { id: gatePassId },
     include: { items: true }
   });
 
   await prisma.$transaction(async (tx) => {
-    for (const item of gatePass!.items) {
+    for (const item of gatePass.items) {
       const inventory = await tx.inventory.findFirst({
         where: {
           productId: item.productId,
-          warehouseId: gatePass!.warehouseId,
+          warehouseId: gatePass.warehouseId,
           ...(item.batchNo && { batchNo: item.batchNo })
         }
       });
 
-      await tx.inventory.update({
-        where: { id: inventory!.id },
-        data: { quantity: { increment: item.quantity } }
-      });
+      if (inventory) {
+        await tx.inventory.update({
+          where: { id: inventory.id },
+          data: { quantity: { increment: item.quantity } }
+        });
+      }
 
       await tx.stockMovement.create({
         data: {
           productId: item.productId,
-          warehouseId: gatePass!.warehouseId,
-          movementType: 'ADJUSTMENT',
+          warehouseId: gatePass.warehouseId,
+          movementType: 'ADJUSTMENT',     // Use existing enum value
           quantity: item.quantity,
-          referenceType: 'GATE_PASS_CANCEL',
+          referenceType: 'ADJUSTMENT',    // Use existing enum value
           referenceId: gatePassId,
           movementDate: new Date(),
-          userId: gatePass!.issuedBy,
-          notes: `Gate Pass ${gatePass!.gatePassNumber} cancelled - inventory restored`
+          userId,
+          notes: `Gate Pass ${gatePass.gatePassNumber} cancelled — inventory restored`
         }
       });
     }
@@ -250,52 +260,53 @@ async function restoreInventoryForGatePass(gatePassId: string): Promise<void> {
 }
 ```
 
-**Frontend:**
+### Frontend Status Indicator
+
 ```tsx
-export const GatePassDetailPage: FC = () => {
-  const { id } = useParams();
-  const { data: gatePass } = useGetGatePass(id!);
-  const approveMutation = useApproveGatePass();
-  const dispatchMutation = useDispatchGatePass();
+// Use plain divs with Tailwind — NO Stepper/Step/StepLabel components
+const statusSteps = ['PENDING', 'APPROVED', 'IN_TRANSIT', 'COMPLETED'];
 
-  const statusSteps = [
-    { status: 'PENDING', label: 'Pending', user: gatePass?.issuer.name },
-    { status: 'APPROVED', label: 'Approved', user: gatePass?.approver?.name },
-    { status: 'IN_TRANSIT', label: 'In Transit', user: gatePass?.dispatcher?.name },
-    { status: 'COMPLETED', label: 'Completed', user: gatePass?.completer?.name }
-  ];
-
-  const currentStepIndex = statusSteps.findIndex(s => s.status === gatePass?.status);
-
-  return (
-    <div>
-      <h1>Gate Pass {gatePass?.gatePassNumber}</h1>
-
-      <Stepper activeStep={currentStepIndex}>
-        {statusSteps.map((step, index) => (
-          <Step key={step.status} completed={index < currentStepIndex}>
-            <StepLabel>{step.label}</StepLabel>
-            {step.user && <div className="text-sm text-gray-600">{step.user}</div>}
-          </Step>
-        ))}
-      </Stepper>
-
-      <div className="mt-6 flex gap-4">
-        {gatePass?.status === 'PENDING' && (
-          <Button onClick={() => approveMutation.mutate(id!)}>
-            Approve
-          </Button>
-        )}
-        {gatePass?.status === 'APPROVED' && (
-          <Button onClick={() => dispatchMutation.mutate(id!)}>
-            Dispatch
-          </Button>
-        )}
+<div className="flex items-center gap-2">
+  {statusSteps.map((step, index) => {
+    const isCurrent = step === gatePass.status;
+    const isCompleted = statusSteps.indexOf(gatePass.status) > index;
+    return (
+      <div key={step} className="flex items-center gap-2">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm
+          ${isCompleted ? 'bg-green-500 text-white' :
+            isCurrent ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+          {index + 1}
+        </div>
+        <span className="text-sm">{step.replace('_', ' ')}</span>
+        {index < statusSteps.length - 1 && <div className="w-8 h-px bg-gray-300" />}
       </div>
-    </div>
-  );
-};
+    );
+  })}
+</div>
 ```
+
+### Schema Note: Missing User Relations
+
+GatePass has `dispatchedBy` and `completedBy` fields but the original schema only defines relations for `issuer` and `approver`. To query dispatcher/completer names, either:
+- **Option A**: Add named relations (requires `User` model changes)
+- **Option B**: Query User separately by ID when displaying
+
+For MVP, use Option B to avoid excessive User model relation bloat.
+
+### Module Structure
+
+```
+apps/api/src/modules/gate-passes/
+  gate-pass.service.ts        (EXPAND — add approve, dispatch, complete, cancel)
+
+apps/web/src/features/gate-passes/pages/
+  GatePassDetailPage.tsx       (NEW)
+```
+
+### POST-MVP DEFERRED
+
+- **Alert model**: No `Alert` model exists in schema. For MVP, use dashboard indicators (count of pending gate passes) instead of a formal alert system.
+- **PDF/Print**: Defer to browser print (`window.print()`).
 
 ---
 
@@ -304,3 +315,4 @@ export const GatePassDetailPage: FC = () => {
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), auditLogger→AuditService with action:'UPDATE', use existing enum values for cancel restore (ADJUSTMENT), replaced Stepper/Step/StepLabel with plain Tailwind divs, noted missing dispatcher/completer relations, deferred alert system | Claude (AI Review) |

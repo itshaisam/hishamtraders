@@ -5,7 +5,7 @@
 **Priority:** Low
 **Estimated Effort:** 4-6 hours
 **Dependencies:** Story 5.3
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2
 
 ---
 
@@ -19,104 +19,42 @@
 
 ## Acceptance Criteria
 
-1. Petty Cash account (code 1102) in Chart of Accounts
-2. POST /api/petty-cash/advance - moves money from bank to petty cash
-   - Debit: Petty Cash (1102)
-   - Credit: Bank Account (1101)
-3. Expense paid from petty cash:
-   - Debit: Expense Account (5XXX)
-   - Credit: Petty Cash (1102)
-4. POST /api/petty-cash/settlement - settles petty cash (records expenses, replenishes)
-5. GET /api/account-heads/1102/balance - returns petty cash balance
-6. Frontend Petty Cash page shows balance, advance, expense, settle
-7. **Authorization & Role-Based Access:**
-   - [ ] Only Accountant and Admin can manage petty cash
-   - [ ] Other roles: 403 Forbidden
-   - [ ] Petty cash operations logged in audit trail
-
-8. **Performance & Caching:**
-   - [ ] Cache petty cash balance: 5 minutes
-   - [ ] Cache invalidation: On advance/expense/settlement
-   - [ ] API timeout: 10 seconds maximum
-
-9. **Error Handling:**
-   - [ ] Validate advance amount > 0
-   - [ ] Prevent advance if bank balance insufficient
-   - [ ] Validate expense amount matches receipts total
-   - [ ] Handle missing expense category gracefully
-   - [ ] Display validation errors with specific reason
+1. Petty Cash account (code 1102) exists in Chart of Accounts (seeded in Story 5.1)
+2. `POST /api/v1/petty-cash/advance` — Moves money from bank to petty cash
+   - Creates journal entry: Debit Petty Cash (1102), Credit Bank (1101)
+3. Expense with `paymentMethod: 'CASH'` auto-creates journal entry via Story 5.3:
+   - Debit Expense Account (5XXX), Credit Petty Cash (1102)
+4. `GET /api/v1/petty-cash/balance` — Returns current petty cash balance (from AccountHead 1102)
+5. Frontend: Petty Cash page showing balance, advance form, recent transactions
+6. **Authorization:** Only `ACCOUNTANT` and `ADMIN`
 
 ---
 
 ## Dev Notes
 
-```typescript
-async function recordPettyCashAdvance(data: {
-  amount: number;
-  bankAccountId: string;
-  date: Date;
-}, userId: string): Promise<JournalEntry> {
-  const lines = [
-    // Debit: Petty Cash
-    {
-      accountHeadId: await getAccountByCode('1102'),
-      debitAmount: data.amount,
-      creditAmount: 0,
-      description: 'Petty cash advance'
-    },
-    // Credit: Bank Account
-    {
-      accountHeadId: data.bankAccountId,
-      debitAmount: 0,
-      creditAmount: data.amount,
-      description: 'Bank transfer to petty cash'
-    }
-  ];
+### Implementation Status
 
-  return await createJournalEntry({
-    date: data.date,
-    description: 'Petty cash advance from bank',
-    lines
-  }, userId);
-}
+**Backend:** Not started. Depends on AccountHead + JournalEntry models.
 
-async function recordPettyCashExpense(data: {
-  amount: number;
-  category: ExpenseCategory;
-  description: string;
-  date: Date;
-}, userId: string): Promise<JournalEntry> {
-  const expenseAccountCode = getCategoryAccountCode(data.category);
+### Key Notes
 
-  const lines = [
-    // Debit: Expense Account
-    {
-      accountHeadId: await getAccountByCode(expenseAccountCode),
-      debitAmount: data.amount,
-      creditAmount: 0,
-      description: data.description
-    },
-    // Credit: Petty Cash
-    {
-      accountHeadId: await getAccountByCode('1102'),
-      debitAmount: 0,
-      creditAmount: data.amount,
-      description: 'Paid from petty cash'
-    }
-  ];
+- Petty cash advance is just a journal entry (Debit 1102, Credit bank account)
+- Petty cash expenses are handled by the existing Expense module + auto-journal (Story 5.3)
+- No new models needed — this story is mostly a UI for managing petty cash workflows
 
-  return await createJournalEntry({
-    date: data.date,
-    description: `Petty cash expense: ${data.description}`,
-    lines
-  }, userId);
-}
+### Module Structure
+
+```
+apps/api/src/modules/petty-cash/
+  petty-cash.controller.ts      (NEW — advance, balance endpoints)
+  petty-cash.service.ts         (NEW — creates journal entries)
+  petty-cash.routes.ts          (NEW)
+
+apps/web/src/features/accounting/pages/
+  PettyCashPage.tsx             (NEW)
 ```
 
----
+### POST-MVP DEFERRED
 
-## Change Log
-
-| Date       | Version | Description            | Author |
-|------------|---------|------------------------|--------|
-| 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+- **Petty cash settlement workflow**: For MVP, just track advances and expenses. Formal settlement deferred.
+- **Receipt attachment**: Expense model has `receiptUrl` but upload not required for MVP.

@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Epic 2 (Warehouses)
-**Status:** Draft - Phase 2
+**Status:** Draft — Phase 2 (v2.0 — Revised)
 
 ---
 
@@ -20,17 +20,17 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] Warehouse table expanded: gatePassMode (AUTO/MANUAL), default AUTO
-   - [ ] GatePass table created with fields
+   - [ ] Warehouse table expanded: `gatePassMode` (GatePassMode enum, default AUTO) — NEW field
+   - [ ] GatePass table created (see Dev Notes)
    - [ ] GatePassItem table for line items
-   - [ ] Gate pass number format: GP-{WarehouseCode}-YYYYMMDD-XXX
+   - [ ] Gate pass number format: `GP-{WarehouseName3}-YYYYMMDD-XXX` (e.g., `GP-MAI-20260115-001`)
 
 2. **Gate Pass Modes:**
    - [ ] AUTO: Gate pass created automatically, status = APPROVED, **inventory deducted when APPROVED**
    - [ ] MANUAL: Gate pass created with status = PENDING, requires approval, **inventory deducted when IN_TRANSIT** (dispatched)
 
 3. **Backend API:**
-   - [ ] PUT /api/warehouses/:id/gate-pass-config updates gatePassMode
+   - [ ] `PUT /api/v1/warehouses/:id/gate-pass-config` — updates gatePassMode
    - [ ] Validation: only AUTO or MANUAL allowed
 
 4. **Frontend:**
@@ -39,43 +39,59 @@
 
 5. **Authorization:**
    - [ ] Only Admin and Warehouse Manager can configure
-   - [ ] Configuration changes logged in audit trail
+   - [ ] Configuration changes logged via `AuditService.log()`
 
 ---
 
 ## Dev Notes
 
-### Database Schema
+### Implementation Status
 
+**Backend:** Not started. Depends on Warehouse model (Epic 2).
+
+### Key Corrections
+
+1. **API paths**: All use `/api/v1/` prefix (not `/api/`)
+2. **Warehouse model** currently has: `id`, `name` (unique), `location` (Text), `city`, `status` — NO `code` field. Gate pass number cannot use `warehouse.code`. Use first 3 chars of `warehouse.name` (uppercased) instead, or add `code` field.
+3. **`auditLogger.log()`** → Use `AuditService.log()` with correct fields:
+   ```typescript
+   await AuditService.log({
+     userId,
+     action: 'UPDATE',           // NOT custom action strings
+     entityType: 'Warehouse',    // NOT 'resource'
+     entityId: warehouseId,
+     notes: `Gate pass mode changed to ${gatePassMode} for ${warehouse.name}`,
+   });
+   ```
+4. **AuditService `action`** must be one of: `CREATE | UPDATE | DELETE | VIEW | LOGIN | LOGOUT | PERMISSION_CHECK`
+5. **Warehouse schema** in doc was incomplete — missing existing fields (`city`, `createdBy`, `updatedBy`, existing relations). Only show the NEW additions.
+
+### Schema Changes Required
+
+**Add to existing Warehouse model:**
 ```prisma
-model Warehouse {
-  id           String          @id @default(cuid())
-  code         String          @unique
-  name         String
-  location     String?
-  gatePassMode GatePassMode    @default(AUTO)
-  status       WarehouseStatus @default(ACTIVE)
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+// ADD to Warehouse model:
+gatePassMode GatePassMode @default(AUTO)
+gatePasses   GatePass[]
+```
 
-  inventory    Inventory[]
-  gatePasses   GatePass[]
-
-  @@map("warehouses")
-}
-
+**New enum:**
+```prisma
 enum GatePassMode {
   AUTO
   MANUAL
 }
+```
 
+**New models:**
+```prisma
 model GatePass {
   id             String         @id @default(cuid())
   gatePassNumber String         @unique
   warehouseId    String
   date           DateTime       @default(now())
   purpose        GatePassPurpose
-  referenceType  String?        // INVOICE, TRANSFER, ADJUSTMENT
+  referenceType  String?        // INVOICE, TRANSFER, etc.
   referenceId    String?
   status         GatePassStatus @default(PENDING)
   issuedBy       String
@@ -126,19 +142,35 @@ enum GatePassStatus {
 }
 ```
 
+**User model** needs new relations:
+```prisma
+// ADD to User model:
+issuedGatePasses   GatePass[] @relation("IssuedGatePasses")
+approvedGatePasses GatePass[] @relation("ApprovedGatePasses")
+```
+
+**Product model** needs new relation:
+```prisma
+// ADD to Product model:
+gatePassItems GatePassItem[]
+```
+
 ### Gate Pass Number Generation
 
 ```typescript
+// Warehouse has no 'code' field — derive prefix from name
 async function generateGatePassNumber(
   warehouseId: string,
   date: Date
 ): Promise<string> {
-  const warehouse = await prisma.warehouse.findUnique({
+  const warehouse = await prisma.warehouse.findUniqueOrThrow({
     where: { id: warehouseId }
   });
 
+  // Use first 3 chars of warehouse name (uppercased) as prefix
+  const warehousePrefix = warehouse.name.substring(0, 3).toUpperCase();
   const dateStr = format(date, 'yyyyMMdd');
-  const prefix = `GP-${warehouse!.code}-${dateStr}-`;
+  const prefix = `GP-${warehousePrefix}-${dateStr}-`;
 
   const latest = await prisma.gatePass.findFirst({
     where: { gatePassNumber: { startsWith: prefix } },
@@ -149,39 +181,29 @@ async function generateGatePassNumber(
     return `${prefix}001`;
   }
 
-  const lastNumber = parseInt(latest.gatePassNumber.split('-')[3]);
+  // Gate pass number: GP-MAI-20260115-001 → split by '-' gives ['GP','MAI','20260115','001']
+  const parts = latest.gatePassNumber.split('-');
+  const lastNumber = parseInt(parts[parts.length - 1]);
   const nextNumber = (lastNumber + 1).toString().padStart(3, '0');
   return `${prefix}${nextNumber}`;
 }
 ```
 
-### Configuration Service
+### Module Structure
 
-```typescript
-async function updateGatePassConfig(
-  warehouseId: string,
-  gatePassMode: 'AUTO' | 'MANUAL',
-  userId: string
-): Promise<Warehouse> {
-  const warehouse = await prisma.warehouse.update({
-    where: { id: warehouseId },
-    data: { gatePassMode }
-  });
-
-  await auditLogger.log({
-    action: 'WAREHOUSE_GATE_PASS_CONFIG_UPDATE',
-    userId,
-    resource: 'Warehouse',
-    resourceId: warehouseId,
-    details: {
-      warehouseName: warehouse.name,
-      newMode: gatePassMode
-    }
-  });
-
-  return warehouse;
-}
 ```
+apps/api/src/modules/gate-passes/
+  gate-pass.controller.ts     (NEW)
+  gate-pass.service.ts        (NEW)
+  gate-pass.routes.ts         (NEW)
+
+apps/web/src/features/warehouse/pages/
+  WarehouseSettingsPage.tsx    (EXPAND — add gate pass mode toggle)
+```
+
+### POST-MVP DEFERRED
+
+- **Warehouse `code` field**: Current model has no `code`. If unique warehouse codes are desired, add in a future migration. For now, derive from `name`.
 
 ---
 
@@ -190,3 +212,4 @@ async function updateGatePassConfig(
 | Date       | Version | Description            | Author |
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
+| 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), auditLogger→AuditService with correct action enum, noted Warehouse has no `code` field, fixed gate pass number generation, corrected schema to only show NEW additions | Claude (AI Review) |
