@@ -355,21 +355,6 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
           </div>
         )}
 
-        {/* Expenses (Admin & Accountant) */}
-        {(isAdmin() || hasRole(['ACCOUNTANT'])) && (
-          <Link
-            to="/expenses"
-            className={`mt-2 flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-              isActive('/expenses')
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <DollarSign size={20} />
-            {!isCollapsed && <span className="text-sm font-medium">Expenses</span>}
-          </Link>
-        )}
-
         {/* Reports Menu */}
         <div className="mt-2">
           <button
@@ -422,17 +407,43 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
             {!isCollapsed && <span className="text-sm font-medium">Audit Trail</span>}
           </Link>
         )}
+
+        {/* Settings Menu (Admin only) */}
+        {isAdmin() && (
+          <div className="mt-2">
+            <button
+              onClick={() => toggleMenu('settings')}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <Settings size={20} />
+                {!isCollapsed && <span className="text-sm font-medium">Settings</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    isMenuExpanded('settings') ? 'rotate-180' : ''
+                  }`}
+                />
+              )}
+            </button>
+            {isMenuExpanded('settings') && !isCollapsed && (
+              <div className="ml-6 mt-1 space-y-1">
+                <Link
+                  to="/settings/tax"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Tax Configuration
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </nav>
 
       {/* Footer Actions */}
       <div className="border-t border-gray-200 p-2">
-        <Link
-          to="/settings"
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-        >
-          <Settings size={20} />
-          {!isCollapsed && <span className="text-sm font-medium">Settings</span>}
-        </Link>
         <Link
           to="/help"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"

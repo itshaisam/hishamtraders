@@ -38,6 +38,7 @@ import { InvoiceDetailPage } from './features/invoices/pages/InvoiceDetailPage';
 import { ExpensesPage } from './features/expenses/pages/ExpensesPage';
 import PaymentHistoryPage from './features/payments/pages/PaymentHistoryPage';
 import CashFlowReportPage from './features/reports/pages/CashFlowReportPage';
+import { TaxSettingsPage } from './features/settings/pages/TaxSettingsPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -451,6 +452,17 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <CashFlowReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          {/* Settings routes (Story 3.10) */}
+          <Route
+            path="/settings/tax"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <TaxSettingsPage />
                 </Layout>
               </ProtectedRoute>
             }

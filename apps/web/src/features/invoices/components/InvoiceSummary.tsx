@@ -2,9 +2,10 @@ interface InvoiceSummaryProps {
   subtotal: number;
   taxAmount: number;
   total: number;
+  taxRate?: number;
 }
 
-export function InvoiceSummary({ subtotal, taxAmount, total }: InvoiceSummaryProps) {
+export function InvoiceSummary({ subtotal, taxAmount, total, taxRate }: InvoiceSummaryProps) {
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-lg font-semibold mb-4">Summary</h2>
@@ -16,7 +17,7 @@ export function InvoiceSummary({ subtotal, taxAmount, total }: InvoiceSummaryPro
           </span>
         </div>
         <div className="flex justify-between text-gray-700">
-          <span>Tax (18%):</span>
+          <span>Tax ({taxRate ?? 18}%):</span>
           <span className="font-medium">
             PKR {taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>

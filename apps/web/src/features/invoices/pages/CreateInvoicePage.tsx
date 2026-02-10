@@ -8,6 +8,7 @@ import { Plus, Save, ArrowLeft, Trash2, AlertTriangle } from 'lucide-react';
 import { useCreateInvoice } from '../../../hooks/useInvoices';
 import { useClients } from '../../../hooks/useClients';
 import { useWarehouses } from '../../../hooks/useWarehouses';
+import { useGetTaxRate } from '../../../hooks/useSettings';
 import { useProducts } from '../../products/hooks/useProducts';
 import { CreateInvoiceDto, InvoicePaymentType } from '../../../types/invoice.types';
 import { InvoiceSummary } from '../components/InvoiceSummary';
@@ -41,6 +42,8 @@ export function CreateInvoicePage() {
   const { data: clientsData } = useClients({ page: 1, limit: 1000 });
   const { data: warehousesData } = useWarehouses({ page: 1, limit: 100 });
   const { data: productsData } = useProducts({ page: 1, limit: 1000 });
+  const { data: taxRateData } = useGetTaxRate();
+  const taxRate = taxRateData?.taxRate ?? 18;
 
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showCreditWarning, setShowCreditWarning] = useState(false);
@@ -126,7 +129,7 @@ export function CreateInvoicePage() {
       return sum + (lineSubtotal - discountAmount);
     }, 0);
 
-    const taxAmount = (subtotal * 18) / 100; // TODO: Get from settings
+    const taxAmount = (subtotal * taxRate) / 100;
     const total = subtotal + taxAmount;
 
     return { subtotal, taxAmount, total };
@@ -457,7 +460,7 @@ export function CreateInvoicePage() {
         </div>
 
         {/* Summary Section */}
-        <InvoiceSummary subtotal={subtotal} taxAmount={taxAmount} total={total} />
+        <InvoiceSummary subtotal={subtotal} taxAmount={taxAmount} total={total} taxRate={taxRate} />
 
         {/* Action Buttons */}
         <div className="flex items-center justify-end gap-4">
