@@ -8,13 +8,13 @@ import { AuthRequest } from '../../types/auth.types.js';
 export class ExpenseController {
   async create(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      if (!req.user?.id) {
+      if (!req.user?.userId) {
         res.status(401).json({ status: 'error', message: 'Unauthorized' });
         return;
       }
 
       const validatedData = createExpenseSchema.parse(req.body);
-      const expense = await expenseService.create(validatedData, req.user.id);
+      const expense = await expenseService.create(validatedData, req.user.userId);
 
       res.status(201).json({
         status: 'success',
@@ -61,14 +61,14 @@ export class ExpenseController {
 
   async update(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      if (!req.user?.id) {
+      if (!req.user?.userId) {
         res.status(401).json({ status: 'error', message: 'Unauthorized' });
         return;
       }
 
       const { id } = req.params;
       const validatedData = updateExpenseSchema.parse(req.body);
-      const expense = await expenseService.update(id, validatedData, req.user.id);
+      const expense = await expenseService.update(id, validatedData, req.user.userId);
 
       res.status(200).json({
         status: 'success',
@@ -81,13 +81,13 @@ export class ExpenseController {
 
   async delete(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      if (!req.user?.id) {
+      if (!req.user?.userId) {
         res.status(401).json({ status: 'error', message: 'Unauthorized' });
         return;
       }
 
       const { id } = req.params;
-      await expenseService.delete(id, req.user.id);
+      await expenseService.delete(id, req.user.userId);
 
       res.status(200).json({
         status: 'success',

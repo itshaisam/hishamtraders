@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { format } from 'date-fns';
+import { AuditService } from '../../services/audit.service.js';
 import logger from '../../lib/logger.js';
 
 /**
@@ -134,6 +135,19 @@ export class StockReversalService {
         });
       }
     }
+
+    // Audit log for stock reversal
+    await AuditService.log({
+      userId,
+      action: 'UPDATE',
+      entityType: 'Inventory',
+      entityId: invoiceId,
+      changedFields: {
+        operation: { old: null, new: 'STOCK_REVERSAL' },
+        itemsReversed: { old: null, new: invoice.items.length },
+      },
+      notes: `Stock reversed for voided invoice ${invoice.invoiceNumber}. ${invoice.items.length} item(s) restored to inventory in warehouse ${invoice.warehouse?.name || invoice.warehouseId}.`,
+    });
 
     logger.info('Stock reversal completed successfully', {
       invoiceId,

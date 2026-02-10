@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { SettingsService } from './settings.service.js';
 import { BadRequestError, ForbiddenError } from '../../utils/errors.js';
+import { AuditService } from '../../services/audit.service.js';
 import logger from '../../lib/logger.js';
 
 const prisma = new PrismaClient();
@@ -57,8 +58,25 @@ export class SettingsController {
         throw new BadRequestError('Tax rate must be between 0 and 100');
       }
 
+      // Get old value before update
+      const oldTaxRate = await this.settingsService.getTaxRate();
+
       // Update setting
       await this.settingsService.updateSetting('TAX_RATE', taxRate.toString());
+
+      // Audit log
+      await AuditService.log({
+        userId: req.user?.userId!,
+        action: 'UPDATE',
+        entityType: 'SystemSetting',
+        entityId: 'TAX_RATE',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        changedFields: {
+          taxRate: { old: oldTaxRate, new: taxRate },
+        },
+        notes: `Tax rate changed from ${oldTaxRate}% to ${taxRate}% by ${user.name}`,
+      });
 
       logger.info(`Tax rate updated to ${taxRate}%`, {
         userId: req.user?.userId,

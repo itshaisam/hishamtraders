@@ -344,6 +344,12 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                     </Link>
                   </>
                 )}
+                <Link
+                  to="/payments/history"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Payment History
+                </Link>
               </div>
             )}
           </div>
@@ -364,14 +370,36 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
           </Link>
         )}
 
-        {/* Reports */}
-        <Link
-          to="/reports"
-          className="mt-2 flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-        >
-          <BarChart3 size={20} />
-          {!isCollapsed && <span className="text-sm font-medium">Reports</span>}
-        </Link>
+        {/* Reports Menu */}
+        <div className="mt-2">
+          <button
+            onClick={() => toggleMenu('reports')}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+          >
+            <div className="flex items-center gap-3">
+              <BarChart3 size={20} />
+              {!isCollapsed && <span className="text-sm font-medium">Reports</span>}
+            </div>
+            {!isCollapsed && (
+              <ChevronDown
+                size={16}
+                className={`transition-transform ${
+                  isMenuExpanded('reports') ? 'rotate-180' : ''
+                }`}
+              />
+            )}
+          </button>
+          {isMenuExpanded('reports') && !isCollapsed && (
+            <div className="ml-6 mt-1 space-y-1">
+              <Link
+                to="/reports/cash-flow"
+                className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                Cash Flow
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Users (Admin only) */}
         {isAdmin() && (

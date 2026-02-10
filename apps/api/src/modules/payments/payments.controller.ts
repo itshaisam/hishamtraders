@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PaymentsService } from './payments.service.js';
-import { PaymentMethod, PaymentReferenceType } from '@prisma/client';
+import { PaymentMethod, PaymentReferenceType, PaymentType } from '@prisma/client';
+import { UnifiedPaymentFilters } from './payments.repository.js';
 import { AuthRequest } from '../../types/auth.types.js';
 import { AuditService } from '../../services/audit.service.js';
 
@@ -10,6 +11,64 @@ export class PaymentsController {
   constructor() {
     this.service = new PaymentsService();
   }
+
+  /**
+   * GET /api/payments
+   * Get all payments (unified) with filters (Story 3.8)
+   */
+  getAllPayments = async (req: Request, res: Response) => {
+    try {
+      const { paymentType, method, dateFrom, dateTo, search, page, limit } = req.query;
+
+      const result = await this.service.getAllPayments({
+        paymentType: (paymentType as PaymentType | 'ALL') || 'ALL',
+        method: method as PaymentMethod | undefined,
+        dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
+        dateTo: dateTo ? new Date(dateTo as string) : undefined,
+        search: search as string | undefined,
+        page: page ? parseInt(page as string) : 1,
+        limit: limit ? parseInt(limit as string) : 20,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: result.payments,
+        meta: {
+          total: result.total,
+          page: result.page,
+          limit: result.limit,
+          totalPages: result.totalPages,
+        },
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to fetch payments',
+      });
+    }
+  };
+
+  /**
+   * GET /api/payments/:id
+   * Get payment details with allocations (Story 3.8)
+   */
+  getPaymentDetails = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const payment = await this.service.getPaymentDetails(id);
+
+      res.status(200).json({
+        success: true,
+        data: payment,
+      });
+    } catch (error: any) {
+      const status = error.message === 'Payment not found' ? 404 : 500;
+      res.status(status).json({
+        success: false,
+        message: error.message || 'Failed to fetch payment details',
+      });
+    }
+  };
 
   /**
    * POST /api/payments/supplier

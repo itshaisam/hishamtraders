@@ -26,21 +26,21 @@ export const expensesService = {
         limit: number;
         totalPages: number;
       };
-    }>(`/api/v1/expenses?${params.toString()}`);
+    }>(`/expenses?${params.toString()}`);
 
     return response.data;
   },
 
   async getById(id: string) {
     const response = await apiClient.get<{ status: string; data: Expense }>(
-      `/api/v1/expenses/${id}`
+      `/expenses/${id}`
     );
     return response.data.data;
   },
 
   async create(data: CreateExpenseDto) {
     const response = await apiClient.post<{ status: string; data: Expense }>(
-      '/api/v1/expenses',
+      '/expenses',
       data
     );
     return response.data.data;
@@ -48,7 +48,7 @@ export const expensesService = {
 
   async update(id: string, data: UpdateExpenseDto) {
     const response = await apiClient.put<{ status: string; data: Expense }>(
-      `/api/v1/expenses/${id}`,
+      `/expenses/${id}`,
       data
     );
     return response.data.data;
@@ -56,7 +56,7 @@ export const expensesService = {
 
   async delete(id: string) {
     const response = await apiClient.delete<{ status: string; message: string }>(
-      `/api/v1/expenses/${id}`
+      `/expenses/${id}`
     );
     return response.data;
   },
@@ -67,7 +67,7 @@ export const expensesService = {
     if (dateTo) params.append('dateTo', dateTo.toString());
 
     const response = await apiClient.get<{ success: boolean; data: ExpenseSummary }>(
-      `/api/v1/reports/expense-summary?${params.toString()}`
+      `reports/expense-summary?${params.toString()}`
     );
     return response.data.data;
   },

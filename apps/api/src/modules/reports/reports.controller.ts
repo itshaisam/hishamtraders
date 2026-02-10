@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { CreditLimitReportService } from './credit-limit-report.service.js';
+import { CashFlowService } from './cash-flow.service.js';
 import { expenseService } from '../expenses/expenses.service.js';
 import logger from '../../lib/logger.js';
 
@@ -8,9 +9,11 @@ const prisma = new PrismaClient();
 
 export class ReportsController {
   private creditLimitReportService: CreditLimitReportService;
+  private cashFlowService: CashFlowService;
 
   constructor() {
     this.creditLimitReportService = new CreditLimitReportService(prisma);
+    this.cashFlowService = new CashFlowService(prisma);
   }
 
   /**
@@ -119,6 +122,37 @@ export class ReportsController {
       res.json({
         success: true,
         data: summary,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * GET /api/reports/cash-flow
+   * Get cash flow report for a date range (Story 3.8)
+   */
+  getCashFlow = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dateFrom = req.query.dateFrom
+        ? new Date(req.query.dateFrom as string)
+        : new Date(new Date().getFullYear(), 0, 1);
+      const dateTo = req.query.dateTo
+        ? new Date(req.query.dateTo as string)
+        : new Date();
+
+      const report = await this.cashFlowService.getCashFlowReport(dateFrom, dateTo);
+
+      logger.info('Cash flow report generated', {
+        dateFrom,
+        dateTo,
+        netCashFlow: report.netCashFlow,
+        userId: req.user?.id,
+      });
+
+      res.json({
+        success: true,
+        data: report,
       });
     } catch (error) {
       next(error);

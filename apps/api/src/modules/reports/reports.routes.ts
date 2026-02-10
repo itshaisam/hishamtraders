@@ -18,4 +18,7 @@ router.get('/tax-summary', controller.getTaxSummary);
 // Expense reports (Story 3.7)
 router.get('/expense-summary', controller.getExpenseSummary);
 
+// Cash flow report (Story 3.8)
+router.get('/cash-flow', controller.getCashFlow);
+
 export { router as reportsRoutes };

@@ -10,6 +10,7 @@ import { InvoiceFilterDto } from './dto/invoice-filter.dto.js';
 import { VoidInvoiceDto } from './dto/void-invoice.dto.js';
 import { generateInvoiceNumber } from '../../utils/invoice-number.util.js';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../utils/errors.js';
+import { AuditService } from '../../services/audit.service.js';
 import logger from '../../lib/logger.js';
 
 export class InvoicesService {
@@ -425,6 +426,18 @@ export class InvoicesService {
       });
 
       // 4. Log audit
+      await AuditService.log({
+        userId,
+        action: 'DELETE',
+        entityType: 'Invoice',
+        entityId: invoiceId,
+        changedFields: {
+          status: { old: 'PENDING', new: 'VOIDED' },
+          voidReason: { old: null, new: dto.reason },
+        },
+        notes: `Invoice ${invoice.invoiceNumber} voided. Reason: ${dto.reason}. ${invoice.items.length} item(s) stock reversed. Total: ${invoice.total}`,
+      });
+
       logger.info('Invoice voided successfully', {
         invoiceId,
         invoiceNumber: invoice.invoiceNumber,

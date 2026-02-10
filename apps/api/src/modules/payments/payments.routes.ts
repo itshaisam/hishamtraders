@@ -10,6 +10,13 @@ const controller = new PaymentsController();
 router.use(authenticate);
 
 /**
+ * GET /api/payments
+ * Get all payments (unified) with filters (Story 3.8)
+ * Access: All authenticated users
+ */
+router.get('/', controller.getAllPayments);
+
+/**
  * POST /api/payments/supplier
  * Create a supplier payment
  * Access: ACCOUNTANT, ADMIN
@@ -72,5 +79,13 @@ router.get('/client/:clientId/history', controller.getClientPaymentHistory);
  * Access: All authenticated users
  */
 router.get('/client/:clientId/outstanding-invoices', controller.getClientOutstandingInvoices);
+
+/**
+ * GET /api/payments/:id
+ * Get payment details with allocations (Story 3.8)
+ * Access: All authenticated users
+ * NOTE: Must come AFTER all named routes to avoid matching "supplier"/"client" as :id
+ */
+router.get('/:id', controller.getPaymentDetails);
 
 export { router as paymentsRoutes };

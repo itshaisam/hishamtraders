@@ -13,6 +13,16 @@ export interface PaymentFilters {
   limit?: number;
 }
 
+export interface UnifiedPaymentFilters {
+  paymentType?: PaymentType | 'ALL';
+  method?: PaymentMethod;
+  dateFrom?: Date;
+  dateTo?: Date;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 export interface PaginatedPayments {
   payments: any[];
   total: number;
@@ -211,6 +221,97 @@ export class PaymentsRepository {
             id: true,
             name: true,
             email: true,
+          },
+        },
+      },
+    });
+  }
+
+  /**
+   * Get all payments (unified: both client and supplier) with filters and pagination
+   * Story 3.8: Payment History
+   */
+  async findAllUnified(filters: UnifiedPaymentFilters): Promise<PaginatedPayments> {
+    const {
+      paymentType = 'ALL',
+      method,
+      dateFrom,
+      dateTo,
+      search,
+      page = 1,
+      limit = 20,
+    } = filters;
+
+    const where: Prisma.PaymentWhereInput = {};
+
+    if (paymentType !== 'ALL') {
+      where.paymentType = paymentType as PaymentType;
+    }
+
+    if (method) {
+      where.method = method;
+    }
+
+    if (dateFrom || dateTo) {
+      where.date = {};
+      if (dateFrom) where.date.gte = dateFrom;
+      if (dateTo) where.date.lte = dateTo;
+    }
+
+    // Search by party name - pushed to DB, not client-side
+    // MySQL is case-insensitive by default with utf8 collation, so no mode needed
+    if (search) {
+      where.OR = [
+        { client: { name: { contains: search } } },
+        { supplier: { name: { contains: search } } },
+      ];
+    }
+
+    const [payments, total] = await Promise.all([
+      prisma.payment.findMany({
+        where,
+        include: {
+          supplier: { select: { id: true, name: true } },
+          client: { select: { id: true, name: true } },
+          user: { select: { id: true, name: true } },
+          allocations: {
+            include: {
+              invoice: { select: { id: true, invoiceNumber: true } },
+            },
+          },
+        },
+        orderBy: { date: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.payment.count({ where }),
+    ]);
+
+    return {
+      payments,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  /**
+   * Get payment by ID with full details (allocations, PO reference)
+   * Story 3.8: Payment Details
+   */
+  async findByIdDetailed(id: string) {
+    return prisma.payment.findUnique({
+      where: { id },
+      include: {
+        supplier: { select: { id: true, name: true } },
+        client: { select: { id: true, name: true, balance: true } },
+        user: { select: { id: true, name: true, email: true } },
+        allocations: {
+          include: {
+            invoice: {
+              select: { id: true, invoiceNumber: true, total: true, status: true },
+            },
           },
         },
       },

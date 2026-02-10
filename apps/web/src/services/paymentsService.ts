@@ -6,6 +6,10 @@ import {
   PaginatedPaymentsResponse,
   PaymentsResponse,
   POBalanceResponse,
+  UnifiedPaymentFilters,
+  UnifiedPaymentsResponse,
+  PaymentDetail,
+  CashFlowReport,
 } from '../types/payment.types';
 
 export const paymentsService = {
@@ -102,6 +106,42 @@ export const paymentsService = {
     const response = await apiClient.get('/payments/client', {
       params: clientId ? { clientId } : {},
     });
+    return response.data;
+  },
+
+  /**
+   * Get all payments (unified) with filters (Story 3.8)
+   */
+  getAllPayments: async (filters: UnifiedPaymentFilters): Promise<UnifiedPaymentsResponse> => {
+    const params: Record<string, string> = {};
+    if (filters.paymentType && filters.paymentType !== 'ALL') params.paymentType = filters.paymentType;
+    if (filters.method) params.method = filters.method;
+    if (filters.dateFrom) params.dateFrom = filters.dateFrom;
+    if (filters.dateTo) params.dateTo = filters.dateTo;
+    if (filters.search) params.search = filters.search;
+    if (filters.page) params.page = filters.page.toString();
+    if (filters.limit) params.limit = filters.limit.toString();
+
+    const response = await apiClient.get('/payments', { params });
+    return response.data;
+  },
+
+  /**
+   * Get payment details by ID (Story 3.8)
+   */
+  getPaymentDetails: async (id: string): Promise<{ success: boolean; data: PaymentDetail }> => {
+    const response = await apiClient.get(`/payments/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Get cash flow report (Story 3.8)
+   */
+  getCashFlowReport: async (dateFrom?: string, dateTo?: string): Promise<{ success: boolean; data: CashFlowReport }> => {
+    const params: Record<string, string> = {};
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
+    const response = await apiClient.get('/reports/cash-flow', { params });
     return response.data;
   },
 };

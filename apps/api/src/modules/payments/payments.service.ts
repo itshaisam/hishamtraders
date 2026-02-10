@@ -1,6 +1,7 @@
 import { PaymentType, PaymentMethod, PaymentReferenceType, PrismaClient, Prisma } from '@prisma/client';
-import { PaymentsRepository, PaymentFilters } from './payments.repository.js';
+import { PaymentsRepository, PaymentFilters, UnifiedPaymentFilters } from './payments.repository.js';
 import { PaymentAllocationService, AllocationResult } from './payment-allocation.service.js';
+import { NotFoundError } from '../../utils/errors.js';
 import logger from '../../lib/logger.js';
 
 export interface CreateSupplierPaymentDto {
@@ -266,5 +267,59 @@ export class PaymentsService {
         date: 'desc',
       },
     });
+  }
+
+  /**
+   * Get all payments (unified: both client and supplier) with filters
+   * Story 3.8: Payment History
+   */
+  async getAllPayments(filters: UnifiedPaymentFilters) {
+    const result = await this.repository.findAllUnified(filters);
+
+    return {
+      payments: result.payments.map((p: any) => ({
+        id: p.id,
+        date: p.date,
+        type: p.paymentType,
+        partyName: p.client?.name || p.supplier?.name || 'Unknown',
+        partyId: p.clientId || p.supplierId,
+        amount: parseFloat(p.amount.toString()),
+        method: p.method,
+        referenceNumber: p.referenceNumber || '',
+        notes: p.notes || '',
+        recordedByName: p.user.name,
+        allocations: p.allocations,
+      })),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    };
+  }
+
+  /**
+   * Get payment details with full related data
+   * Story 3.8: Payment Details Modal
+   */
+  async getPaymentDetails(id: string) {
+    const payment = await this.repository.findByIdDetailed(id);
+    if (!payment) {
+      throw new NotFoundError('Payment not found');
+    }
+
+    // For supplier payments with PO reference, look up the PO
+    let purchaseOrder = null;
+    if (payment.paymentType === 'SUPPLIER' && payment.paymentReferenceType === 'PO' && payment.referenceId) {
+      purchaseOrder = await this.prisma.purchaseOrder.findUnique({
+        where: { id: payment.referenceId },
+        select: { id: true, poNumber: true, totalAmount: true, status: true },
+      });
+    }
+
+    return {
+      ...payment,
+      amount: parseFloat(payment.amount.toString()),
+      purchaseOrder,
+    };
   }
 }

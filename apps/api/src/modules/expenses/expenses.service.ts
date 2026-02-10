@@ -3,6 +3,7 @@ import { expenseRepository, ExpenseFilters } from './expenses.repository.js';
 import { CreateExpenseDto } from './dto/create-expense.dto.js';
 import { UpdateExpenseDto } from './dto/update-expense.dto.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
+import { AuditService } from '../../services/audit.service.js';
 
 export class ExpenseService {
   async create(data: CreateExpenseDto, userId: string): Promise<Expense> {
@@ -34,7 +35,13 @@ export class ExpenseService {
       },
     });
 
-    // TODO: Add audit logging in future iteration
+    await AuditService.log({
+      userId,
+      action: 'CREATE',
+      entityType: 'Expense',
+      entityId: expense.id,
+      notes: `Expense created: ${data.category} - ${data.amount} via ${data.paymentMethod}`,
+    });
 
     return expense;
   }
@@ -82,7 +89,17 @@ export class ExpenseService {
     // Update expense
     const expense = await expenseRepository.update(id, updateData);
 
-    // TODO: Add audit logging in future iteration
+    await AuditService.log({
+      userId,
+      action: 'UPDATE',
+      entityType: 'Expense',
+      entityId: id,
+      changedFields: Object.keys(updateData).reduce((acc: Record<string, any>, key) => {
+        acc[key] = { old: (existing as any)[key], new: (updateData as any)[key] };
+        return acc;
+      }, {}),
+      notes: `Expense updated: ${expense.category}`,
+    });
 
     return expense;
   }
@@ -94,7 +111,13 @@ export class ExpenseService {
     // Delete expense
     await expenseRepository.delete(id);
 
-    // TODO: Add audit logging in future iteration
+    await AuditService.log({
+      userId,
+      action: 'DELETE',
+      entityType: 'Expense',
+      entityId: id,
+      notes: `Expense deleted: ${existing.category} - ${existing.amount} - ${existing.description}`,
+    });
   }
 
   async getExpenseSummary(dateFrom: Date, dateTo: Date) {

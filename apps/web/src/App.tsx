@@ -36,6 +36,8 @@ import { InvoicesPage } from './features/invoices/pages/InvoicesPage';
 import { CreateInvoicePage } from './features/invoices/pages/CreateInvoicePage';
 import { InvoiceDetailPage } from './features/invoices/pages/InvoiceDetailPage';
 import { ExpensesPage } from './features/expenses/pages/ExpensesPage';
+import PaymentHistoryPage from './features/payments/pages/PaymentHistoryPage';
+import CashFlowReportPage from './features/reports/pages/CashFlowReportPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -425,6 +427,30 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <ExpensesPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Payment History (Story 3.8) */}
+          <Route
+            path="/payments/history"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PaymentHistoryPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Cash Flow Report (Story 3.8) */}
+          <Route
+            path="/reports/cash-flow"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CashFlowReportPage />
                 </Layout>
               </ProtectedRoute>
             }

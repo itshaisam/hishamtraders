@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { paymentsService } from '../services/paymentsService';
-import { CreateSupplierPaymentDto, CreateClientPaymentDto, PaymentFilters } from '../types/payment.types';
+import { CreateSupplierPaymentDto, CreateClientPaymentDto, PaymentFilters, UnifiedPaymentFilters } from '../types/payment.types';
 import toast from 'react-hot-toast';
 
 /**
@@ -111,6 +111,40 @@ export const useAllClientPayments = (clientId?: string) => {
   return useQuery({
     queryKey: ['allClientPayments', clientId],
     queryFn: () => paymentsService.getAllClientPayments(clientId),
+    staleTime: 30000,
+  });
+};
+
+/**
+ * Hook to get unified payments with filters (Story 3.8)
+ */
+export const useAllPayments = (filters: UnifiedPaymentFilters) => {
+  return useQuery({
+    queryKey: ['allPayments', filters],
+    queryFn: () => paymentsService.getAllPayments(filters),
+    staleTime: 30000,
+  });
+};
+
+/**
+ * Hook to get payment details by ID (Story 3.8)
+ */
+export const usePaymentDetails = (id: string) => {
+  return useQuery({
+    queryKey: ['paymentDetails', id],
+    queryFn: () => paymentsService.getPaymentDetails(id),
+    enabled: !!id,
+    staleTime: 30000,
+  });
+};
+
+/**
+ * Hook to get cash flow report (Story 3.8)
+ */
+export const useCashFlowReport = (dateFrom?: string, dateTo?: string) => {
+  return useQuery({
+    queryKey: ['cashFlowReport', dateFrom, dateTo],
+    queryFn: () => paymentsService.getCashFlowReport(dateFrom, dateTo),
     staleTime: 30000,
   });
 };
