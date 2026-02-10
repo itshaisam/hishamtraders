@@ -1,39 +1,122 @@
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, Users, DollarSign, Calendar, TrendingUp, Phone } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import {
+  AlertCircle,
+  Users,
+  DollarSign,
+  TrendingUp,
+  Clock,
+  FileText,
+} from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
 import { Card, Spinner } from '../ui';
 
+interface OverdueClient {
+  clientId: string;
+  name: string;
+  phone: string | null;
+  contactPerson: string | null;
+  totalOverdue: number;
+  overdueInvoiceCount: number;
+  oldestDueDate: string;
+  daysOverdue: number;
+}
+
+interface AgingBucket {
+  count: number;
+  amount: number;
+}
+
+interface RecentCollection {
+  id: string;
+  clientName: string;
+  amount: number;
+  method: string;
+  date: string;
+}
+
+interface RecoveryStats {
+  totalOutstanding: number;
+  overdueCount: number;
+  collectedThisWeek: number;
+  collectedThisMonth: number;
+  overdueClientsList: OverdueClient[];
+  agingBuckets: {
+    days1to7: AgingBucket;
+    days8to30: AgingBucket;
+    days31to60: AgingBucket;
+    days60plus: AgingBucket;
+  };
+  recentCollections: RecentCollection[];
+}
+
+function formatPKR(value: number): string {
+  if (value >= 1_000_000) return `PKR ${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `PKR ${(value / 1_000).toFixed(1)}K`;
+  return `PKR ${value.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
+function getOverdueSeverity(days: number): { bg: string; text: string; badge: string } {
+  if (days > 60) return { bg: 'bg-red-50', text: 'text-red-700', badge: 'bg-red-100 text-red-700' };
+  if (days > 30) return { bg: 'bg-orange-50', text: 'text-orange-700', badge: 'bg-orange-100 text-orange-700' };
+  if (days > 7) return { bg: 'bg-yellow-50', text: 'text-yellow-700', badge: 'bg-yellow-100 text-yellow-700' };
+  return { bg: 'hover:bg-gray-50', text: 'text-gray-700', badge: 'bg-gray-100 text-gray-700' };
+}
+
+const paymentMethodIcons: Record<string, string> = {
+  CASH: 'text-green-600',
+  BANK_TRANSFER: 'text-blue-600',
+  CHEQUE: 'text-purple-600',
+};
+
 export default function RecoveryDashboard() {
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, dataUpdatedAt } = useQuery<RecoveryStats>({
     queryKey: ['recovery-stats'],
     queryFn: async () => {
       const response = await apiClient.get('/recovery/stats');
       return response.data.data;
     },
+    staleTime: 60000,
+    refetchInterval: 30000,
   });
 
   if (isLoading) {
     return <Spinner size={48} className="h-64" />;
   }
 
+  if (!stats) return null;
+
+  const agingData = [
+    { label: '1-7 Days', ...stats.agingBuckets.days1to7, color: 'bg-yellow-400', borderColor: 'border-yellow-400' },
+    { label: '8-30 Days', ...stats.agingBuckets.days8to30, color: 'bg-orange-400', borderColor: 'border-orange-400' },
+    { label: '31-60 Days', ...stats.agingBuckets.days31to60, color: 'bg-orange-600', borderColor: 'border-orange-600' },
+    { label: '60+ Days', ...stats.agingBuckets.days60plus, color: 'bg-red-600', borderColor: 'border-red-600' },
+  ];
+
+  const totalAgingAmount = agingData.reduce((sum, b) => sum + b.amount, 0);
+
   return (
     <div>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Recovery Dashboard</h1>
-        <p className="text-gray-600">Collection schedule, overdue accounts, and payment tracking</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Recovery Dashboard</h1>
+          <p className="text-gray-600">Overdue accounts, collections tracking, and client follow-ups</p>
+        </div>
+        <div className="flex items-center text-sm text-gray-500">
+          <Clock size={14} className="mr-1" />
+          Last updated: {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : '—'}
+        </div>
       </div>
 
-      {/* Top Metrics - 4 Cards with colored left borders */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* 4 Metric Cards */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         <div className="bg-white rounded-xl p-6 border-l-4 border-red-500 shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm text-gray-600">Total Outstanding</div>
             <AlertCircle className="text-red-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-red-600">
-            PKR {stats?.totalOutstanding?.toFixed(2) || '0.00'}
-          </div>
+          <div className="text-2xl font-bold text-red-600">{formatPKR(stats.totalOutstanding)}</div>
           <div className="text-xs text-gray-500 mt-2">From all clients</div>
         </div>
 
@@ -42,8 +125,8 @@ export default function RecoveryDashboard() {
             <div className="text-sm text-gray-600">Overdue Clients</div>
             <Users className="text-orange-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-orange-600">{stats?.overdueClients || 0}</div>
-          <div className="text-xs text-gray-500 mt-2">Require immediate action</div>
+          <div className="text-2xl font-bold text-orange-600">{stats.overdueCount}</div>
+          <div className="text-xs text-gray-500 mt-2">Require follow-up</div>
         </div>
 
         <div className="bg-white rounded-xl p-6 border-l-4 border-green-500 shadow-sm">
@@ -51,130 +134,176 @@ export default function RecoveryDashboard() {
             <div className="text-sm text-gray-600">Collected This Week</div>
             <DollarSign className="text-green-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-green-600">
-            PKR {stats?.collectedThisWeek?.toFixed(2) || '0.00'}
-          </div>
-          <div className="text-xs text-gray-500 mt-2">Weekly target progress</div>
+          <div className="text-2xl font-bold text-green-600">{formatPKR(stats.collectedThisWeek)}</div>
+          <div className="text-xs text-gray-500 mt-2">Client payments received</div>
         </div>
 
         <div className="bg-white rounded-xl p-6 border-l-4 border-blue-500 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-gray-600">Today's Schedule</div>
-            <Calendar className="text-blue-500" size={20} />
+            <div className="text-sm text-gray-600">Collected This Month</div>
+            <TrendingUp className="text-blue-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-gray-900">0</div>
-          <div className="text-xs text-gray-500 mt-2">Clients to visit</div>
+          <div className="text-2xl font-bold text-blue-600">{formatPKR(stats.collectedThisMonth)}</div>
+          <div className="text-xs text-gray-500 mt-2">Total monthly collections</div>
         </div>
       </div>
 
-      {/* Quick Actions & Weekly Target */}
-      <div className="grid lg:grid-cols-2 gap-8 mb-8">
-        <Card className="rounded-xl">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
-            Quick Actions
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            <button className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-left transition border border-blue-200">
-              <DollarSign className="w-8 h-8 text-blue-600 mb-2" />
-              <div className="text-sm font-semibold text-gray-900">Record Payment</div>
-              <div className="text-xs text-gray-600">Log collection</div>
-            </button>
-            <button className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition border border-green-200">
-              <Calendar className="w-8 h-8 text-green-600 mb-2" />
-              <div className="text-sm font-semibold text-gray-900">View Schedule</div>
-              <div className="text-xs text-gray-600">Today's visits</div>
-            </button>
-            <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition border border-purple-200">
-              <Users className="w-8 h-8 text-purple-600 mb-2" />
-              <div className="text-sm font-semibold text-gray-900">Client List</div>
-              <div className="text-xs text-gray-600">View balances</div>
-            </button>
-            <button className="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg text-left transition border border-orange-200">
-              <Phone className="w-8 h-8 text-orange-600 mb-2" />
-              <div className="text-sm font-semibold text-gray-900">Follow-up Calls</div>
-              <div className="text-xs text-gray-600">Reminders</div>
-            </button>
-          </div>
-        </Card>
-
-        <Card className="rounded-xl">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Weekly Target</h3>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-600">Progress</span>
-                <span className="font-semibold">PKR 0.0K / PKR 4.0M</span>
-              </div>
-              <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+      {/* Aging Breakdown */}
+      <Card className="rounded-xl mb-8">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Overdue Aging Breakdown</h3>
+        <div className="grid md:grid-cols-4 gap-4 mb-4">
+          {agingData.map(bucket => (
+            <div key={bucket.label} className={`p-4 rounded-lg border-l-4 ${bucket.borderColor} bg-gray-50`}>
+              <div className="text-sm text-gray-600 mb-1">{bucket.label}</div>
+              <div className="text-xl font-bold text-gray-900">{formatPKR(bucket.amount)}</div>
+              <div className="text-xs text-gray-500 mt-1">{bucket.count} invoice{bucket.count !== 1 ? 's' : ''}</div>
+            </div>
+          ))}
+        </div>
+        {totalAgingAmount > 0 && (
+          <div className="flex h-3 rounded-full overflow-hidden bg-gray-200">
+            {agingData.map(bucket => {
+              const pct = (bucket.amount / totalAgingAmount) * 100;
+              if (pct === 0) return null;
+              return (
                 <div
-                  className="h-full bg-gradient-to-r from-green-500 to-green-600 transition-all"
-                  style={{ width: '0%' }}
-                ></div>
-              </div>
-              <div className="text-xs text-gray-500 mt-1">0% achieved</div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 mt-6">
-              <div className="text-center p-3 bg-red-50 rounded-lg">
-                <div className="text-xs text-gray-600">Critical</div>
-                <div className="text-lg font-bold text-red-600">0</div>
-              </div>
-              <div className="text-center p-3 bg-orange-50 rounded-lg">
-                <div className="text-xs text-gray-600">Today</div>
-                <div className="text-lg font-bold text-orange-600">0</div>
-              </div>
-              <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <div className="text-xs text-gray-600">This Week</div>
-                <div className="text-lg font-bold text-blue-600">0</div>
-              </div>
-            </div>
+                  key={bucket.label}
+                  className={`${bucket.color} transition-all`}
+                  style={{ width: `${pct}%` }}
+                  title={`${bucket.label}: ${formatPKR(bucket.amount)} (${pct.toFixed(0)}%)`}
+                />
+              );
+            })}
           </div>
+        )}
+      </Card>
+
+      {/* Two Column: Overdue Clients + Recent Collections */}
+      <div className="grid lg:grid-cols-3 gap-8 mb-8">
+        {/* Overdue Clients Table */}
+        <div className="lg:col-span-2">
+          <Card className="rounded-xl" padding="none">
+            <div className="p-6 border-b">
+              <h3 className="text-lg font-bold text-gray-900">
+                Overdue Clients ({stats.overdueClientsList.length})
+              </h3>
+            </div>
+            {stats.overdueClientsList.length > 0 ? (
+              <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Phone</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase">Outstanding</th>
+                      <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Days Overdue</th>
+                      <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Invoices</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {stats.overdueClientsList.map(client => {
+                      const severity = getOverdueSeverity(client.daysOverdue);
+                      return (
+                        <tr key={client.clientId} className={severity.bg}>
+                          <td className="px-6 py-3">
+                            <div className="font-medium text-gray-900">{client.name}</div>
+                            {client.contactPerson && (
+                              <div className="text-xs text-gray-500">{client.contactPerson}</div>
+                            )}
+                          </td>
+                          <td className="px-6 py-3 text-gray-600">{client.phone || '—'}</td>
+                          <td className="px-6 py-3 text-right font-semibold text-red-600">
+                            {formatPKR(client.totalOverdue)}
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${severity.badge}`}>
+                              {client.daysOverdue}d
+                            </span>
+                          </td>
+                          <td className="px-6 py-3 text-center text-gray-600">
+                            {client.overdueInvoiceCount}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-32 text-gray-400">
+                No overdue clients
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Recent Collections */}
+        <Card className="rounded-xl">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Collections</h3>
+          {stats.recentCollections.length > 0 ? (
+            <div className="space-y-3 max-h-[450px] overflow-y-auto">
+              {stats.recentCollections.map(collection => (
+                <div
+                  key={collection.id}
+                  className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100"
+                >
+                  <div className={`mt-0.5 ${paymentMethodIcons[collection.method] || 'text-gray-600'}`}>
+                    <DollarSign size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium text-gray-900 truncate">{collection.clientName}</div>
+                      <div className="font-semibold text-green-600 whitespace-nowrap ml-2">
+                        +{formatPKR(collection.amount)}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-gray-500">
+                        {collection.method.replace('_', ' ')}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(collection.date).toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-32 text-gray-400">
+              No recent collections
+            </div>
+          )}
         </Card>
       </div>
 
-      {/* Overdue Clients List */}
-      {stats?.overdueClientsList && stats.overdueClientsList.length > 0 && (
-        <Card className="rounded-xl" padding="none">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-bold text-gray-900">Overdue Clients</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-                    Client
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-                    Outstanding Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-                    Days Overdue
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">
-                    Contact
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {stats.overdueClientsList.map((client: any) => (
-                  <tr key={client.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{client.name}</td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-semibold text-red-600">
-                        PKR {client.outstandingAmount.toFixed(2)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{client.daysOverdue} days</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{client.phone}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
+      {/* Quick Actions */}
+      <Card className="rounded-xl">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            to="/payments/client"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
+          >
+            <DollarSign size={16} />
+            Record Payment
+          </Link>
+          <Link
+            to="/clients"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium"
+          >
+            <Users size={16} />
+            View Clients
+          </Link>
+          <Link
+            to="/invoices"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+          >
+            <FileText size={16} />
+            View Invoices
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 }

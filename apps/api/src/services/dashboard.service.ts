@@ -520,21 +520,349 @@ export class DashboardService {
   }
 
   async getAccountantStats() {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const [
+      clientPaymentsAgg,
+      supplierPaymentsAgg,
+      expensesAgg,
+      receivablesAgg,
+      pendingInvoiceCount,
+      monthRevenueAgg,
+      monthExpensesAgg,
+      agingInvoices,
+      recentPayments,
+      cashFlowTrendRaw,
+      activePOs,
+    ] = await Promise.all([
+      // 1. Cash inflow: CLIENT payments this month
+      prisma.payment.aggregate({
+        _sum: { amount: true },
+        where: { paymentType: 'CLIENT', date: { gte: monthStart } },
+      }),
+
+      // 2. Cash outflow (supplier payments this month)
+      prisma.payment.aggregate({
+        _sum: { amount: true },
+        where: { paymentType: 'SUPPLIER', date: { gte: monthStart } },
+      }),
+
+      // 3. Cash outflow (expenses this month)
+      prisma.expense.aggregate({
+        _sum: { amount: true },
+        where: { date: { gte: monthStart } },
+      }),
+
+      // 4. Total receivables
+      prisma.client.aggregate({
+        _sum: { balance: true },
+        where: { balance: { gt: 0 } },
+      }),
+
+      // 5. Pending payment count
+      prisma.invoice.count({
+        where: { status: { in: ['PENDING', 'PARTIAL'] } },
+      }),
+
+      // 6. Month revenue
+      prisma.invoice.aggregate({
+        _sum: { total: true },
+        where: { invoiceDate: { gte: monthStart }, status: { not: 'VOIDED' } },
+      }),
+
+      // 7. Month expenses
+      prisma.expense.aggregate({
+        _sum: { amount: true },
+        where: { date: { gte: monthStart } },
+      }),
+
+      // 8. Receivables aging — invoices with outstanding balances
+      prisma.invoice.findMany({
+        where: { status: { in: ['PENDING', 'PARTIAL'] } },
+        select: { total: true, paidAmount: true, dueDate: true },
+      }),
+
+      // 9. Recent 10 payments
+      prisma.payment.findMany({
+        take: 10,
+        orderBy: { date: 'desc' },
+        select: {
+          id: true,
+          paymentType: true,
+          amount: true,
+          method: true,
+          date: true,
+          referenceNumber: true,
+          client: { select: { name: true } },
+          supplier: { select: { name: true } },
+        },
+      }),
+
+      // 10. Cash flow trend (last 7 days) — payments + expenses grouped by day
+      prisma.$queryRaw<Array<{ date: Date | string; inflow: Prisma.Decimal; outflow: Prisma.Decimal }>>`
+        SELECT
+          d.dt as date,
+          COALESCE(pin.total, 0) as inflow,
+          COALESCE(pout.total, 0) + COALESCE(eout.total, 0) as outflow
+        FROM (
+          SELECT DATE(${sevenDaysAgo}) + INTERVAL seq DAY as dt
+          FROM (
+            SELECT 0 as seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3
+            UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
+          ) s
+          WHERE DATE(${sevenDaysAgo}) + INTERVAL seq DAY <= CURDATE()
+        ) d
+        LEFT JOIN (
+          SELECT DATE(date) as dt, SUM(amount) as total
+          FROM payments WHERE paymentType = 'CLIENT' AND date >= ${sevenDaysAgo}
+          GROUP BY DATE(date)
+        ) pin ON d.dt = pin.dt
+        LEFT JOIN (
+          SELECT DATE(date) as dt, SUM(amount) as total
+          FROM payments WHERE paymentType = 'SUPPLIER' AND date >= ${sevenDaysAgo}
+          GROUP BY DATE(date)
+        ) pout ON d.dt = pout.dt
+        LEFT JOIN (
+          SELECT DATE(date) as dt, SUM(amount) as total
+          FROM expenses WHERE date >= ${sevenDaysAgo}
+          GROUP BY DATE(date)
+        ) eout ON d.dt = eout.dt
+        ORDER BY d.dt ASC
+      `,
+
+      // 11. Active POs for payables
+      prisma.purchaseOrder.findMany({
+        where: { status: { not: 'CANCELLED' } },
+        select: { id: true, totalAmount: true },
+      }),
+    ]);
+
+    // Calculate payables
+    let totalPayables = 0;
+    if (activePOs.length > 0) {
+      const poIds = activePOs.map(po => po.id);
+      const poPaidAmounts = await prisma.payment.groupBy({
+        by: ['referenceId'],
+        where: {
+          paymentType: 'SUPPLIER',
+          paymentReferenceType: 'PO',
+          referenceId: { in: poIds },
+        },
+        _sum: { amount: true },
+      });
+      totalPayables = activePOs.reduce((sum, po) => {
+        const paid = poPaidAmounts.find(p => p.referenceId === po.id)?._sum.amount || 0;
+        return sum + parseFloat(po.totalAmount.toString()) - parseFloat(paid.toString());
+      }, 0);
+    }
+
+    const cashInflow = parseFloat((clientPaymentsAgg._sum.amount || 0).toString());
+    const supplierOutflow = parseFloat((supplierPaymentsAgg._sum.amount || 0).toString());
+    const expenseOutflow = parseFloat((expensesAgg._sum.amount || 0).toString());
+    const cashOutflow = supplierOutflow + expenseOutflow;
+
+    // Receivables aging buckets
+    const agingBuckets = { current: 0, days1to7: 0, days8to30: 0, days30plus: 0 };
+    for (const inv of agingInvoices) {
+      const outstanding = parseFloat(inv.total.toString()) - parseFloat(inv.paidAmount.toString());
+      if (outstanding <= 0) continue;
+      const daysOverdue = Math.floor((todayStart.getTime() - new Date(inv.dueDate).getTime()) / (1000 * 60 * 60 * 24));
+      if (daysOverdue <= 0) agingBuckets.current += outstanding;
+      else if (daysOverdue <= 7) agingBuckets.days1to7 += outstanding;
+      else if (daysOverdue <= 30) agingBuckets.days8to30 += outstanding;
+      else agingBuckets.days30plus += outstanding;
+    }
+
+    // Format recent payments
+    const formattedPayments = recentPayments.map(p => ({
+      id: p.id,
+      type: p.paymentType,
+      name: p.paymentType === 'CLIENT' ? (p.client?.name || 'Unknown') : (p.supplier?.name || 'Unknown'),
+      amount: parseFloat(p.amount.toString()),
+      method: p.method,
+      reference: p.referenceNumber,
+      date: p.date,
+    }));
+
+    // Format cash flow trend
+    const cashFlowTrend = (cashFlowTrendRaw as Array<{ date: Date | string; inflow: Prisma.Decimal; outflow: Prisma.Decimal }>).map(row => ({
+      date: row.date instanceof Date ? row.date.toISOString().split('T')[0] : String(row.date).split('T')[0],
+      inflow: parseFloat(row.inflow.toString()),
+      outflow: parseFloat(row.outflow.toString()),
+    }));
+
+    const monthRevenue = parseFloat((monthRevenueAgg._sum.total || 0).toString());
+    const monthExpenses = parseFloat((monthExpensesAgg._sum.amount || 0).toString());
+
     return {
-      cashInflow: 0,
-      cashOutflow: 0,
-      totalReceivables: 0,
-      totalPayables: 0,
-      pendingPayments: 0,
+      cashInflow,
+      cashOutflow,
+      totalReceivables: parseFloat((receivablesAgg._sum.balance || 0).toString()),
+      totalPayables,
+      pendingPayments: pendingInvoiceCount,
+      monthRevenue,
+      monthExpenses,
+      receivablesAging: agingBuckets,
+      recentPayments: formattedPayments,
+      cashFlowTrend,
     };
   }
 
   async getRecoveryStats() {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      outstandingAgg,
+      collectedWeekAgg,
+      collectedMonthAgg,
+      overdueInvoices,
+      recentCollections,
+    ] = await Promise.all([
+      // 1. Total outstanding
+      prisma.client.aggregate({
+        _sum: { balance: true },
+        where: { balance: { gt: 0 } },
+      }),
+
+      // 2. Collected this week
+      prisma.payment.aggregate({
+        _sum: { amount: true },
+        where: { paymentType: 'CLIENT', date: { gte: weekStart } },
+      }),
+
+      // 3. Collected this month
+      prisma.payment.aggregate({
+        _sum: { amount: true },
+        where: { paymentType: 'CLIENT', date: { gte: monthStart } },
+      }),
+
+      // 4. Overdue invoices with client info
+      prisma.invoice.findMany({
+        where: {
+          status: { in: ['PENDING', 'PARTIAL'] },
+          dueDate: { lt: todayStart },
+        },
+        select: {
+          id: true,
+          total: true,
+          paidAmount: true,
+          dueDate: true,
+          clientId: true,
+          client: { select: { name: true, phone: true, contactPerson: true } },
+        },
+        orderBy: { dueDate: 'asc' },
+      }),
+
+      // 5. Recent client collections
+      prisma.payment.findMany({
+        where: { paymentType: 'CLIENT' },
+        take: 10,
+        orderBy: { date: 'desc' },
+        select: {
+          id: true,
+          amount: true,
+          method: true,
+          date: true,
+          client: { select: { name: true } },
+        },
+      }),
+    ]);
+
+    // Build overdue clients map (aggregate by client)
+    const clientMap = new Map<string, {
+      clientId: string;
+      name: string;
+      phone: string | null;
+      contactPerson: string | null;
+      totalOverdue: number;
+      overdueInvoiceCount: number;
+      oldestDueDate: Date;
+      daysOverdue: number;
+    }>();
+
+    for (const inv of overdueInvoices) {
+      const outstanding = parseFloat(inv.total.toString()) - parseFloat(inv.paidAmount.toString());
+      if (outstanding <= 0) continue;
+
+      const existing = clientMap.get(inv.clientId);
+      const dueDate = new Date(inv.dueDate);
+      const daysOverdue = Math.floor((todayStart.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (existing) {
+        existing.totalOverdue += outstanding;
+        existing.overdueInvoiceCount += 1;
+        if (dueDate < existing.oldestDueDate) {
+          existing.oldestDueDate = dueDate;
+          existing.daysOverdue = daysOverdue;
+        }
+      } else {
+        clientMap.set(inv.clientId, {
+          clientId: inv.clientId,
+          name: inv.client.name,
+          phone: inv.client.phone,
+          contactPerson: inv.client.contactPerson,
+          totalOverdue: outstanding,
+          overdueInvoiceCount: 1,
+          oldestDueDate: dueDate,
+          daysOverdue,
+        });
+      }
+    }
+
+    const overdueClientsList = Array.from(clientMap.values())
+      .sort((a, b) => b.totalOverdue - a.totalOverdue)
+      .slice(0, 50);
+
+    // Aging buckets (by overdue invoice count and amount)
+    const agingBuckets = {
+      days1to7: { count: 0, amount: 0 },
+      days8to30: { count: 0, amount: 0 },
+      days31to60: { count: 0, amount: 0 },
+      days60plus: { count: 0, amount: 0 },
+    };
+
+    for (const inv of overdueInvoices) {
+      const outstanding = parseFloat(inv.total.toString()) - parseFloat(inv.paidAmount.toString());
+      if (outstanding <= 0) continue;
+      const daysOverdue = Math.floor((todayStart.getTime() - new Date(inv.dueDate).getTime()) / (1000 * 60 * 60 * 24));
+      if (daysOverdue <= 7) {
+        agingBuckets.days1to7.count++;
+        agingBuckets.days1to7.amount += outstanding;
+      } else if (daysOverdue <= 30) {
+        agingBuckets.days8to30.count++;
+        agingBuckets.days8to30.amount += outstanding;
+      } else if (daysOverdue <= 60) {
+        agingBuckets.days31to60.count++;
+        agingBuckets.days31to60.amount += outstanding;
+      } else {
+        agingBuckets.days60plus.count++;
+        agingBuckets.days60plus.amount += outstanding;
+      }
+    }
+
+    // Format recent collections
+    const formattedCollections = recentCollections.map(p => ({
+      id: p.id,
+      clientName: p.client?.name || 'Unknown',
+      amount: parseFloat(p.amount.toString()),
+      method: p.method,
+      date: p.date,
+    }));
+
     return {
-      totalOutstanding: 0,
-      overdueClients: 0,
-      collectedThisWeek: 0,
-      overdueClientsList: [],
+      totalOutstanding: parseFloat((outstandingAgg._sum.balance || 0).toString()),
+      overdueCount: clientMap.size,
+      collectedThisWeek: parseFloat((collectedWeekAgg._sum.amount || 0).toString()),
+      collectedThisMonth: parseFloat((collectedMonthAgg._sum.amount || 0).toString()),
+      overdueClientsList,
+      agingBuckets,
+      recentCollections: formattedCollections,
     };
   }
 }
