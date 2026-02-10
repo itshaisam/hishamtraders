@@ -5,7 +5,7 @@
 **Priority:** Critical
 **Estimated Effort:** 8-10 hours
 **Dependencies:** Epic 1, Epic 2, Epic 3
-**Status:** Draft
+**Status:** Implemented
 
 ---
 
@@ -20,37 +20,37 @@
 ## Acceptance Criteria
 
 1. **Backend API — Admin Metrics:**
-   - [ ] `GET /api/v1/admin/stats` returns comprehensive metrics (expand existing endpoint)
-   - [ ] Total stock value: `SUM(inventory.quantity * product.costPrice)` joined across products
-   - [ ] Today's revenue: invoices created today, excluding `VOIDED`
-   - [ ] Month's revenue: invoices this month, excluding `VOIDED`
-   - [ ] Total receivables: `SUM(client.balance)` where balance > 0
-   - [ ] Total payables: PO `totalAmount` minus supplier payments (queried via `Payment` where `paymentReferenceType = PO`)
-   - [ ] Low stock product count (total inventory qty <= `product.reorderLevel`)
-   - [ ] Out of stock product count (total inventory qty == 0)
-   - [ ] Pending containers: POs with status `IN_TRANSIT`
-   - [ ] Top 5 products by revenue (this month)
-   - [ ] Recent audit activity (last 10 `AuditLog` entries)
-   - [ ] Revenue trend (last 30 days, daily totals)
+   - [x]`GET /api/v1/admin/stats` returns comprehensive metrics (expand existing endpoint)
+   - [x]Total stock value: `SUM(inventory.quantity * product.costPrice)` joined across products
+   - [x]Today's revenue: invoices created today, excluding `VOIDED`
+   - [x]Month's revenue: invoices this month, excluding `VOIDED`
+   - [x]Total receivables: `SUM(client.balance)` where balance > 0
+   - [x]Total payables: PO `totalAmount` minus supplier payments (queried via `Payment` where `paymentReferenceType = PO`)
+   - [x]Low stock product count (total inventory qty <= `product.reorderLevel`)
+   - [x]Out of stock product count (total inventory qty == 0)
+   - [x]Pending containers: POs with status `IN_TRANSIT`
+   - [x]Top 5 products by revenue (this month)
+   - [x]Recent audit activity (last 10 `AuditLog` entries)
+   - [x]Revenue trend (last 30 days, daily totals)
 
 2. **Frontend Dashboard Display:**
-   - [ ] Metric cards: stock value, today's revenue, month's revenue, receivables, payables
-   - [ ] Revenue line chart (last 30 days) — install `recharts`
-   - [ ] Top products table (name, qty sold, revenue)
-   - [ ] Low/out of stock alerts widget
-   - [ ] Pending containers count
-   - [ ] Recent activity widget (from `AuditLog`)
-   - [ ] Quick action buttons: New PO, New Invoice, New Product
-   - [ ] Empty state handling when no data exists
+   - [x]Metric cards: stock value, today's revenue, month's revenue, receivables, payables
+   - [x]Revenue line chart (last 30 days) — install `recharts`
+   - [x]Top products table (name, qty sold, revenue)
+   - [x]Low/out of stock alerts widget
+   - [x]Pending containers count
+   - [x]Recent activity widget (from `AuditLog`)
+   - [x]Quick action buttons: New PO, New Invoice, New Product
+   - [x]Empty state handling when no data exists
 
 3. **Authorization:**
-   - [ ] Only `ADMIN` role can access (existing `requireRole(['ADMIN'])` on route)
-   - [ ] Return 403 for all other roles
+   - [x]Only `ADMIN` role can access (existing `requireRole(['ADMIN'])` on route)
+   - [x]Return 403 for all other roles
 
 4. **Performance:**
-   - [ ] TanStack Query with `staleTime: 300000` (5 min) and `refetchInterval: 30000` (30s auto-refresh)
-   - [ ] Use `Promise.all()` for parallel DB queries in the service
-   - [ ] "Last updated" timestamp displayed on dashboard
+   - [x]TanStack Query with `staleTime: 300000` (5 min) and `refetchInterval: 30000` (30s auto-refresh)
+   - [x]Use `Promise.all()` for parallel DB queries in the service
+   - [x]"Last updated" timestamp displayed on dashboard
 
 ---
 

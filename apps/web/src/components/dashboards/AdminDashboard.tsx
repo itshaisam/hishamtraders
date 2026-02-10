@@ -1,6 +1,26 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Users, Database, Activity, Shield, TrendingUp, Package } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import {
+  Package,
+  TrendingUp,
+  DollarSign,
+  AlertTriangle,
+  Ship,
+  Clock,
+  Plus,
+  FileText,
+  ShoppingCart,
+} from 'lucide-react';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 import { apiClient } from '../../lib/api-client';
 import { Card, Spinner } from '../ui';
 import WarehouseDashboard from './WarehouseDashboard';
@@ -8,21 +28,103 @@ import SalesDashboard from './SalesDashboard';
 import AccountantDashboard from './AccountantDashboard';
 import RecoveryDashboard from './RecoveryDashboard';
 
+interface TopProduct {
+  productId: string;
+  name: string;
+  sku: string;
+  quantitySold: number;
+  revenue: number;
+}
+
+interface ActivityEntry {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  userName: string;
+  timestamp: string;
+  notes: string | null;
+}
+
+interface RevenueTrendPoint {
+  date: string;
+  revenue: number;
+}
+
+interface AdminStats {
+  stockValue: number;
+  todayRevenue: number;
+  monthRevenue: number;
+  totalReceivables: number;
+  totalPayables: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+  pendingContainers: number;
+  topProducts: TopProduct[];
+  recentActivity: ActivityEntry[];
+  revenueTrend: RevenueTrendPoint[];
+}
+
+function formatPKR(value: number): string {
+  if (value >= 1_000_000) {
+    return `PKR ${(value / 1_000_000).toFixed(2)}M`;
+  }
+  if (value >= 1_000) {
+    return `PKR ${(value / 1_000).toFixed(1)}K`;
+  }
+  return `PKR ${value.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
+function formatChartPKR(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
+  return value.toString();
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+const actionColors: Record<string, string> = {
+  CREATE: 'text-green-600 bg-green-50',
+  UPDATE: 'text-blue-600 bg-blue-50',
+  DELETE: 'text-red-600 bg-red-50',
+  LOGIN: 'text-purple-600 bg-purple-50',
+  LOGOUT: 'text-gray-600 bg-gray-50',
+  VIEW: 'text-indigo-600 bg-indigo-50',
+};
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Fetch admin stats
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading, dataUpdatedAt } = useQuery<AdminStats>({
     queryKey: ['admin-stats'],
     queryFn: async () => {
       const response = await apiClient.get('/admin/stats');
       return response.data.data;
     },
+    staleTime: 300000,
+    refetchInterval: 30000,
   });
 
   if (isLoading) {
     return <Spinner size={48} className="h-64" />;
   }
+
+  const tabs = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'warehouse', label: 'Warehouse View' },
+    { key: 'sales', label: 'Sales View' },
+    { key: 'accountant', label: 'Accountant View' },
+    { key: 'recovery', label: 'Recovery View' },
+  ];
 
   return (
     <div>
@@ -35,193 +137,269 @@ export default function AdminDashboard() {
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`py-4 px-1 border-b-2 font-semibold text-sm transition ${
-              activeTab === 'overview'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('warehouse')}
-            className={`py-4 px-1 border-b-2 font-semibold text-sm transition ${
-              activeTab === 'warehouse'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Warehouse View
-          </button>
-          <button
-            onClick={() => setActiveTab('sales')}
-            className={`py-4 px-1 border-b-2 font-semibold text-sm transition ${
-              activeTab === 'sales'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Sales View
-          </button>
-          <button
-            onClick={() => setActiveTab('accountant')}
-            className={`py-4 px-1 border-b-2 font-semibold text-sm transition ${
-              activeTab === 'accountant'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Accountant View
-          </button>
-          <button
-            onClick={() => setActiveTab('recovery')}
-            className={`py-4 px-1 border-b-2 font-semibold text-sm transition ${
-              activeTab === 'recovery'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Recovery View
-          </button>
+          {tabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`py-4 px-1 border-b-2 font-semibold text-sm transition ${
+                activeTab === tab.key
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </nav>
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'overview' && (
+      {activeTab === 'overview' && stats && (
         <div>
-          {/* Top Metrics - 6 Cards with colored left borders */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {/* Last Updated */}
+          <div className="flex items-center justify-end mb-4 text-sm text-gray-500">
+            <Clock size={14} className="mr-1" />
+            Last updated: {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : '—'}
+          </div>
+
+          {/* Metric Cards */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+            <div className="bg-white rounded-xl p-6 border-l-4 border-emerald-500 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Stock Value</div>
+                <Package className="text-emerald-500" size={20} />
+              </div>
+              <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.stockValue)}</div>
+              <div className="text-xs text-gray-500 mt-2">Total inventory at cost</div>
+            </div>
+
             <div className="bg-white rounded-xl p-6 border-l-4 border-blue-500 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-600">Total Users</div>
-                <Users className="text-blue-500" size={20} />
+                <div className="text-sm text-gray-600">Today's Revenue</div>
+                <TrendingUp className="text-blue-500" size={20} />
               </div>
-              <div className="text-3xl font-bold text-gray-900">{stats?.totalUsers || 0}</div>
-              <div className="text-xs text-gray-500 mt-2">Active system users</div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 border-l-4 border-green-500 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-600">DB Connection</div>
-                <Database className="text-green-500" size={20} />
-              </div>
-              <div className="text-lg font-semibold text-green-600">
-                {stats?.dbConnected ? 'Healthy' : 'Error'}
-              </div>
-              <div className="text-xs text-gray-500 mt-2">System database status</div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 border-l-4 border-purple-500 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-600">Audit Logs</div>
-                <Activity className="text-purple-500" size={20} />
-              </div>
-              <div className="text-3xl font-bold text-gray-900">{stats?.auditLogCount || 0}</div>
-              <div className="text-xs text-gray-500 mt-2">Total logged actions</div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 border-l-4 border-orange-500 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-600">System Status</div>
-                <Shield className="text-green-500" size={20} />
-              </div>
-              <div className="text-lg font-semibold text-green-600">Operational</div>
-              <div className="text-xs text-gray-500 mt-2">All systems running</div>
+              <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.todayRevenue)}</div>
+              <div className="text-xs text-gray-500 mt-2">Invoices today (excl. voided)</div>
             </div>
 
             <div className="bg-white rounded-xl p-6 border-l-4 border-indigo-500 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-600">Monthly Revenue</div>
+                <div className="text-sm text-gray-600">Month's Revenue</div>
                 <TrendingUp className="text-indigo-500" size={20} />
               </div>
-              <div className="text-3xl font-bold text-gray-900">PKR 0.0M</div>
-              <div className="text-xs text-green-600 mt-2">Coming soon</div>
+              <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.monthRevenue)}</div>
+              <div className="text-xs text-gray-500 mt-2">Revenue this month</div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border-l-4 border-orange-500 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Total Receivables</div>
+                <DollarSign className="text-orange-500" size={20} />
+              </div>
+              <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.totalReceivables)}</div>
+              <div className="text-xs text-gray-500 mt-2">Outstanding client balances</div>
             </div>
 
             <div className="bg-white rounded-xl p-6 border-l-4 border-red-500 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-600">Stock Value</div>
-                <Package className="text-red-500" size={20} />
+                <div className="text-sm text-gray-600">Total Payables</div>
+                <DollarSign className="text-red-500" size={20} />
               </div>
-              <div className="text-3xl font-bold text-gray-900">PKR 0.0M</div>
-              <div className="text-xs text-gray-500 mt-2">Coming soon</div>
+              <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.totalPayables)}</div>
+              <div className="text-xs text-gray-500 mt-2">Outstanding to suppliers</div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border-l-4 border-amber-500 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Stock Alerts</div>
+                <AlertTriangle className="text-amber-500" size={20} />
+              </div>
+              <div className="flex items-center gap-4">
+                <div>
+                  <span className="text-2xl font-bold text-amber-600">{stats.lowStockCount}</span>
+                  <span className="text-xs text-gray-500 ml-1">low</span>
+                </div>
+                <div className="h-8 w-px bg-gray-200" />
+                <div>
+                  <span className="text-2xl font-bold text-red-600">{stats.outOfStockCount}</span>
+                  <span className="text-xs text-gray-500 ml-1">out</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <Ship size={14} className="text-gray-400" />
+                <span className="text-xs text-gray-500">{stats.pendingContainers} containers in transit</span>
+              </div>
             </div>
           </div>
 
-          {/* Activity & System Health */}
-          <div className="grid lg:grid-cols-2 gap-8">
-            <Card className="rounded-xl">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Activity className="w-5 h-5 text-blue-600" />
-                Recent Activity Log
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                  <Activity className="w-5 h-5 text-blue-600" />
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900">System initialized</div>
-                    <div className="text-xs text-gray-500">Foundation & Auth complete</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
-                  <Shield className="w-5 h-5 text-green-600" />
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900">Audit logging active</div>
-                    <div className="text-xs text-gray-500">All actions being tracked</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg border border-purple-100">
-                  <Users className="w-5 h-5 text-purple-600" />
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900">RBAC configured</div>
-                    <div className="text-xs text-gray-500">Role-based access control ready</div>
-                  </div>
-                </div>
+          {/* Revenue Trend Chart */}
+          <Card className="rounded-xl mb-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Revenue Trend (Last 30 Days)</h3>
+            {stats.revenueTrend.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={stats.revenueTrend}>
+                  <defs>
+                    <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(val: string) => {
+                      const d = new Date(val + 'T00:00:00');
+                      return `${d.getDate()}/${d.getMonth() + 1}`;
+                    }}
+                    tick={{ fontSize: 12 }}
+                    stroke="#9ca3af"
+                  />
+                  <YAxis
+                    tickFormatter={formatChartPKR}
+                    tick={{ fontSize: 12 }}
+                    stroke="#9ca3af"
+                  />
+                  <Tooltip
+                    formatter={(value) => [`PKR ${Number(value).toLocaleString()}`, 'Revenue']}
+                    labelFormatter={(label) => {
+                      const d = new Date(String(label) + 'T00:00:00');
+                      return d.toLocaleDateString('en-PK', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                      });
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    fill="url(#revenueGradient)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-48 text-gray-400">
+                No revenue data for the last 30 days
               </div>
+            )}
+          </Card>
+
+          {/* Two Column: Top Products + Recent Activity */}
+          <div className="grid lg:grid-cols-2 gap-8 mb-8">
+            {/* Top Products */}
+            <Card className="rounded-xl">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Top 5 Products (This Month)</h3>
+              {stats.topProducts.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-gray-500 border-b">
+                        <th className="pb-3 font-medium">Product</th>
+                        <th className="pb-3 font-medium text-right">Qty Sold</th>
+                        <th className="pb-3 font-medium text-right">Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.topProducts.map((product, idx) => (
+                        <tr key={product.productId} className="border-b last:border-0">
+                          <td className="py-3">
+                            <div className="flex items-center gap-2">
+                              <span className="w-6 h-6 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full text-xs font-bold">
+                                {idx + 1}
+                              </span>
+                              <div>
+                                <div className="font-medium text-gray-900">{product.name}</div>
+                                <div className="text-xs text-gray-400">{product.sku}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 text-right text-gray-700">{product.quantitySold}</td>
+                          <td className="py-3 text-right font-medium text-gray-900">
+                            {formatPKR(product.revenue)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-32 text-gray-400">
+                  No sales data this month
+                </div>
+              )}
             </Card>
 
+            {/* Recent Activity */}
             <Card className="rounded-xl">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Shield className="w-5 h-5 text-indigo-600" />
-                System Health & Performance
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">Database Storage</span>
-                    <span className="font-semibold text-gray-900">15%</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Activity</h3>
+              {stats.recentActivity.length > 0 ? (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {stats.recentActivity.map(entry => (
                     <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all"
-                      style={{ width: '15%' }}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">0.8 GB / 5.0 GB</div>
+                      key={entry.id}
+                      className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100"
+                    >
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          actionColors[entry.action] || 'text-gray-600 bg-gray-100'
+                        }`}
+                      >
+                        {entry.action}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm text-gray-900">
+                          <span className="font-medium">{entry.userName}</span>{' '}
+                          <span className="text-gray-500">
+                            {entry.action.toLowerCase()}d {entry.entityType}
+                          </span>
+                        </div>
+                        {entry.notes && (
+                          <div className="text-xs text-gray-500 mt-0.5 truncate">{entry.notes}</div>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-400 whitespace-nowrap">
+                        {timeAgo(entry.timestamp)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">API Response Time</span>
-                    <span className="font-semibold text-green-600">Excellent</span>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">~50ms</div>
-                  <div className="text-xs text-gray-500 mt-1">Average response time</div>
+              ) : (
+                <div className="flex items-center justify-center h-32 text-gray-400">
+                  No recent activity
                 </div>
-
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">Active Sessions</span>
-                    <span className="font-semibold text-blue-600">1</span>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">{stats?.totalUsers || 0}</div>
-                  <div className="text-xs text-gray-500 mt-1">Total registered users</div>
-                </div>
-              </div>
+              )}
             </Card>
           </div>
+
+          {/* Quick Actions */}
+          <Card className="rounded-xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/purchase-orders/new"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+              >
+                <ShoppingCart size={16} />
+                New Purchase Order
+              </Link>
+              <Link
+                to="/invoices/create"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium"
+              >
+                <FileText size={16} />
+                New Invoice
+              </Link>
+              <Link
+                to="/products/new"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium"
+              >
+                <Plus size={16} />
+                New Product
+              </Link>
+            </div>
+          </Card>
         </div>
       )}
 
