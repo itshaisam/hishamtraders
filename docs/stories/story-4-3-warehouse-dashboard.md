@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Epic 2 (Inventory)
-**Status:** Draft
+**Status:** Implemented
 
 ---
 
@@ -20,33 +20,33 @@
 ## Acceptance Criteria
 
 1. **Backend API:**
-   - [ ] `GET /api/v1/warehouse/stats` returns warehouse metrics (expand existing endpoint)
-   - [ ] Total items in stock: distinct product count where total inventory qty > 0
-   - [ ] Stock value by category: grouped by `product.category.name` (FK join), value = `SUM(inventory.quantity * product.costPrice)`
-   - [ ] Recent stock movements: last 10 `StockMovement` records with product name, type, qty, user
-   - [ ] Low stock alerts: products where total inventory qty > 0 AND <= `product.reorderLevel`
-   - [ ] Out of stock: products where total inventory qty == 0
-   - [ ] Pending receipts: PO count with status `IN_TRANSIT`
+   - [x]`GET /api/v1/warehouse/stats` returns warehouse metrics (expand existing endpoint)
+   - [x]Total items in stock: distinct product count where total inventory qty > 0
+   - [x]Stock value by category: grouped by `product.category.name` (FK join), value = `SUM(inventory.quantity * product.costPrice)`
+   - [x]Recent stock movements: last 10 `StockMovement` records with product name, type, qty, user
+   - [x]Low stock alerts: products where total inventory qty > 0 AND <= `product.reorderLevel`
+   - [x]Out of stock: products where total inventory qty == 0
+   - [x]Pending receipts: PO count with status `IN_TRANSIT`
 
 2. **Frontend Dashboard:**
-   - [ ] Stock summary cards (total items, stock value, low stock count, out of stock count)
-   - [ ] Stock value by category chart (bar or pie)
-   - [ ] Recent movements table
-   - [ ] Low stock alerts list with reorder level comparison
-   - [ ] Pending receipts count widget
-   - [ ] Quick actions: Record Receipt, Adjust Stock
-   - [ ] Empty state handling
+   - [x]Stock summary cards (total items, stock value, low stock count, out of stock count)
+   - [x]Stock value by category chart (bar or pie)
+   - [x]Recent movements table
+   - [x]Low stock alerts list with reorder level comparison
+   - [x]Pending receipts count widget
+   - [x]Quick actions: Record Receipt, Adjust Stock
+   - [x]Empty state handling
 
 3. **Authorization:**
-   - [ ] `WAREHOUSE_MANAGER`: All warehouse data (see note on filtering)
-   - [ ] `ADMIN`: Full access (also available via Admin Dashboard tab)
-   - [ ] Other roles: 403 Forbidden
+   - [x]`WAREHOUSE_MANAGER`: All warehouse data (see note on filtering)
+   - [x]`ADMIN`: Full access (also available via Admin Dashboard tab)
+   - [x]Other roles: 403 Forbidden
 
 4. **Performance:**
-   - [ ] TanStack Query with `staleTime: 120000` (2 min), `refetchInterval: 30000` (30s)
-   - [ ] `Promise.all()` for parallel metric queries
-   - [ ] Low stock / out of stock: max 100 products returned
-   - [ ] Recent movements: 10 records default
+   - [x]TanStack Query with `staleTime: 120000` (2 min), `refetchInterval: 30000` (30s)
+   - [x]`Promise.all()` for parallel metric queries
+   - [x]Low stock / out of stock: max 100 products returned
+   - [x]Recent movements: 10 records default
 
 ---
 

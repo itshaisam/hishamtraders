@@ -220,11 +220,144 @@ export class DashboardService {
   }
 
   async getWarehouseStats() {
+    const [
+      inventoryWithProduct,
+      allActiveProducts,
+      pendingReceipts,
+      recentMovements,
+    ] = await Promise.all([
+      // Inventory with product + category for stock value & category breakdown
+      prisma.inventory.findMany({
+        where: { quantity: { gt: 0 } },
+        select: {
+          quantity: true,
+          product: {
+            select: {
+              id: true,
+              costPrice: true,
+              categoryId: true,
+              category: { select: { name: true } },
+            },
+          },
+          productVariant: { select: { costPrice: true } },
+        },
+      }),
+
+      // All active products with inventory for low/out of stock
+      prisma.product.findMany({
+        where: { status: 'ACTIVE' },
+        select: {
+          id: true,
+          name: true,
+          sku: true,
+          reorderLevel: true,
+          category: { select: { name: true } },
+          inventory: { select: { quantity: true } },
+        },
+      }),
+
+      // Pending receipts (POs in transit)
+      prisma.purchaseOrder.count({ where: { status: 'IN_TRANSIT' } }),
+
+      // Recent stock movements
+      prisma.stockMovement.findMany({
+        take: 10,
+        orderBy: { movementDate: 'desc' },
+        select: {
+          id: true,
+          movementType: true,
+          quantity: true,
+          movementDate: true,
+          notes: true,
+          product: { select: { name: true, sku: true } },
+          user: { select: { name: true } },
+        },
+      }),
+    ]);
+
+    // Stock value total & by category
+    let stockValue = 0;
+    const categoryValues: Record<string, number> = {};
+
+    inventoryWithProduct.forEach(inv => {
+      const cost = inv.productVariant
+        ? parseFloat(inv.productVariant.costPrice.toString())
+        : parseFloat(inv.product.costPrice.toString());
+      const value = inv.quantity * cost;
+      stockValue += value;
+
+      const categoryName = inv.product.category?.name || 'Uncategorized';
+      categoryValues[categoryName] = (categoryValues[categoryName] || 0) + value;
+    });
+
+    const stockByCategory = Object.entries(categoryValues)
+      .map(([category, value]) => ({ category, value }))
+      .sort((a, b) => b.value - a.value);
+
+    // Low stock & out of stock
+    const lowStockProducts: Array<{
+      productId: string;
+      name: string;
+      sku: string;
+      category: string;
+      currentQty: number;
+      reorderLevel: number;
+    }> = [];
+    const outOfStockProducts: Array<{
+      productId: string;
+      name: string;
+      sku: string;
+      category: string;
+    }> = [];
+
+    // Count distinct products in stock
+    const productsInStock = new Set<string>();
+
+    allActiveProducts.forEach(p => {
+      const totalQty = p.inventory.reduce((sum, inv) => sum + inv.quantity, 0);
+      if (totalQty > 0) productsInStock.add(p.id);
+
+      if (totalQty === 0) {
+        outOfStockProducts.push({
+          productId: p.id,
+          name: p.name,
+          sku: p.sku,
+          category: p.category?.name || 'Uncategorized',
+        });
+      } else if (totalQty <= p.reorderLevel) {
+        lowStockProducts.push({
+          productId: p.id,
+          name: p.name,
+          sku: p.sku,
+          category: p.category?.name || 'Uncategorized',
+          currentQty: totalQty,
+          reorderLevel: p.reorderLevel,
+        });
+      }
+    });
+
+    // Format recent movements
+    const formattedMovements = recentMovements.map(m => ({
+      id: m.id,
+      type: m.movementType,
+      productName: m.product.name,
+      productSku: m.product.sku,
+      quantity: m.quantity,
+      userName: m.user.name,
+      date: m.movementDate,
+      notes: m.notes,
+    }));
+
     return {
-      pendingReceipts: 0,
-      lowStockCount: 0,
-      outOfStockCount: 0,
-      lowStockProducts: [],
+      totalItemsInStock: productsInStock.size,
+      stockValue,
+      stockByCategory,
+      lowStockCount: lowStockProducts.length,
+      lowStockProducts: lowStockProducts.slice(0, 100),
+      outOfStockCount: outOfStockProducts.length,
+      outOfStockProducts: outOfStockProducts.slice(0, 100),
+      pendingReceipts,
+      recentMovements: formattedMovements,
     };
   }
 
