@@ -44,6 +44,7 @@ export interface Invoice {
   paymentType: InvoicePaymentType;
   subtotal: number;
   taxAmount: number;
+  taxRate: number;
   total: number;
   paidAmount: number;
   status: InvoiceStatus;
