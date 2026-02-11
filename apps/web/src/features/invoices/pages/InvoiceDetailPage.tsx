@@ -113,10 +113,17 @@ export function InvoiceDetailPage() {
           .no-print { display: none !important; }
           .print-only { display: block !important; }
           body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          nav, aside, [data-sidebar], .sidebar { display: none !important; }
-          main { margin: 0 !important; padding: 0 !important; }
+          /* Hide fixed sidebar (targets Tailwind fixed+left-0+h-screen sidebar div) */
+          [class*="h-screen"][class*="fixed"][class*="left-0"] { display: none !important; }
+          /* Hide mobile header */
+          [class*="sm:hidden"] { display: none !important; }
+          /* Reset main content left margin */
+          [class*="sm:ml-60"] { margin-left: 0 !important; }
+          main { margin: 0 !important; padding: 8px !important; }
           .shadow { box-shadow: none !important; }
-          .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+          .bg-gray-50 { background: white !important; }
+          .container { max-width: 100% !important; padding: 0 8px !important; margin: 0 !important; }
+          * { overflow: visible !important; }
         }
         .print-only { display: none; }
       `}</style>
