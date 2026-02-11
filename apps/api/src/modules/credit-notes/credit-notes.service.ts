@@ -2,6 +2,7 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import { format } from 'date-fns';
 import { CreditNotesRepository, CreditNoteFilters } from './credit-notes.repository.js';
 import { CreateCreditNoteDto } from './dto/create-credit-note.dto.js';
+import { VoidCreditNoteDto } from './dto/void-credit-note.dto.js';
 import { generateCreditNoteNumber } from '../../utils/credit-note-number.util.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
@@ -234,5 +235,141 @@ export class CreditNotesService {
       throw new NotFoundError('Credit note not found');
     }
     return cn;
+  }
+
+  /**
+   * Void a credit note: reverse stock and client balance, mark VOIDED
+   */
+  async voidCreditNote(id: string, userId: string, dto: VoidCreditNoteDto) {
+    const creditNote = await this.repository.findById(id);
+    if (!creditNote) {
+      throw new NotFoundError('Credit note not found');
+    }
+
+    if (creditNote.status !== 'OPEN') {
+      throw new BadRequestError(
+        `Cannot void credit note with status ${creditNote.status}. Only OPEN credit notes can be voided.`
+      );
+    }
+
+    const warehouseId = creditNote.invoice.warehouse?.id;
+    if (!warehouseId) {
+      throw new BadRequestError('Credit note invoice has no associated warehouse');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      // Reverse inventory for each item
+      for (const item of creditNote.items) {
+        // Find the inventory batch to decrement
+        const batch = await tx.inventory.findFirst({
+          where: {
+            productId: item.productId,
+            productVariantId: item.productVariantId,
+            warehouseId,
+            batchNo: item.batchNo,
+          },
+        });
+
+        if (!batch) {
+          throw new BadRequestError(
+            `Cannot void: inventory batch not found for product "${item.product.name}" (batch: ${item.batchNo || 'N/A'})`
+          );
+        }
+
+        if (batch.quantity < item.quantityReturned) {
+          throw new BadRequestError(
+            `Cannot void: insufficient stock for product "${item.product.name}" (available: ${batch.quantity}, need: ${item.quantityReturned})`
+          );
+        }
+
+        await tx.inventory.update({
+          where: { id: batch.id },
+          data: { quantity: { decrement: item.quantityReturned } },
+        });
+
+        // Create stock movement for the reversal
+        await tx.stockMovement.create({
+          data: {
+            productId: item.productId,
+            productVariantId: item.productVariantId,
+            warehouseId,
+            movementType: 'ADJUSTMENT',
+            quantity: -item.quantityReturned,
+            referenceType: 'CREDIT_NOTE',
+            referenceId: creditNote.id,
+            userId,
+            notes: `Void credit note ${creditNote.creditNoteNumber} - reversing return. Reason: ${dto.reason}`,
+          },
+        });
+      }
+
+      // Increment client balance (reverse the original decrement)
+      await tx.client.update({
+        where: { id: creditNote.clientId },
+        data: {
+          balance: { increment: new Prisma.Decimal(Number(creditNote.totalAmount).toFixed(2)) },
+        },
+      });
+
+      // Mark credit note as VOIDED
+      await tx.creditNote.update({
+        where: { id },
+        data: { status: 'VOIDED' },
+      });
+    });
+
+    logger.info('Credit note voided', {
+      creditNoteId: id,
+      creditNoteNumber: creditNote.creditNoteNumber,
+      reason: dto.reason,
+    });
+
+    // Audit log (outside transaction)
+    await AuditService.log({
+      userId,
+      action: 'DELETE',
+      entityType: 'CreditNote',
+      entityId: id,
+      notes: `Credit note ${creditNote.creditNoteNumber} voided. Reason: ${dto.reason}`,
+    });
+
+    return this.repository.findById(id);
+  }
+
+  /**
+   * Apply a credit note: mark as APPLIED (bookkeeping status change only)
+   */
+  async applyCreditNote(id: string, userId: string) {
+    const creditNote = await this.repository.findById(id);
+    if (!creditNote) {
+      throw new NotFoundError('Credit note not found');
+    }
+
+    if (creditNote.status !== 'OPEN') {
+      throw new BadRequestError(
+        `Cannot apply credit note with status ${creditNote.status}. Only OPEN credit notes can be applied.`
+      );
+    }
+
+    await this.prisma.creditNote.update({
+      where: { id },
+      data: { status: 'APPLIED' },
+    });
+
+    logger.info('Credit note applied', {
+      creditNoteId: id,
+      creditNoteNumber: creditNote.creditNoteNumber,
+    });
+
+    // Audit log
+    await AuditService.log({
+      userId,
+      action: 'UPDATE',
+      entityType: 'CreditNote',
+      entityId: id,
+      notes: `Credit note ${creditNote.creditNoteNumber} marked as APPLIED`,
+    });
+
+    return this.repository.findById(id);
   }
 }

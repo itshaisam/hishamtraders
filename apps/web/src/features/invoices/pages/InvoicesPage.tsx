@@ -4,10 +4,14 @@ import { Plus, Search, Filter, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { useInvoices } from '../../../hooks/useInvoices';
 import { useClients } from '../../../hooks/useClients';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
+import { formatCurrency } from '../../../lib/formatCurrency';
 import { InvoiceStatus, InvoicePaymentType } from '../../../types/invoice.types';
 
 export function InvoicesPage() {
   const navigate = useNavigate();
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const [filters, setFilters] = useState<{
     search: string;
     clientId: string;
@@ -231,11 +235,11 @@ export function InvoicesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="text-sm font-medium text-gray-900">
-                          PKR {Number(invoice.total).toLocaleString()}
+                          {formatCurrency(Number(invoice.total), cs)}
                         </div>
                         {invoice.paymentType === 'CREDIT' && (
                           <div className="text-xs text-gray-500">
-                            Paid: PKR {Number(invoice.paidAmount).toLocaleString()}
+                            Paid: {formatCurrency(Number(invoice.paidAmount), cs)}
                           </div>
                         )}
                       </td>

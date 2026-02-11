@@ -3,6 +3,7 @@ import { PurchaseOrder, POCost } from '../types/purchase-order.types';
 import { useAuthStore } from '@/stores/auth.store';
 import { format } from 'date-fns';
 import { AddCostModal } from './AddCostModal';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 interface POAdditionalCostsTableProps {
   po: PurchaseOrder;
@@ -18,6 +19,8 @@ const costTypeLabels: Record<string, string> = {
 export const POAdditionalCostsTable: React.FC<POAdditionalCostsTableProps> = ({ po }) => {
   const user = useAuthStore((state: any) => state.user);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
 
   // Only ADMIN and ACCOUNTANT can add costs
   const canAddCost = user?.role?.name === 'ADMIN' || user?.role?.name === 'ACCOUNTANT';
@@ -77,7 +80,7 @@ export const POAdditionalCostsTable: React.FC<POAdditionalCostsTableProps> = ({ 
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      Rs. {Number(cost.amount).toLocaleString()}
+                      {cs} {Number(cost.amount).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {cost.description || <span className="text-gray-400 italic">No description</span>}
@@ -97,7 +100,7 @@ export const POAdditionalCostsTable: React.FC<POAdditionalCostsTableProps> = ({ 
               <div className="text-right">
                 <p className="text-sm text-gray-600">Total Additional Costs</p>
                 <p className="text-xl font-bold text-gray-900">
-                  Rs. {totalAdditionalCosts.toLocaleString()}
+                  {cs} {totalAdditionalCosts.toLocaleString()}
                 </p>
               </div>
             </div>

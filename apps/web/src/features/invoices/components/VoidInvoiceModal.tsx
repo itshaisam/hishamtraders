@@ -2,6 +2,8 @@ import { FC, useState } from 'react';
 import { format } from 'date-fns';
 import { AlertTriangle, XCircle } from 'lucide-react';
 import { Invoice } from '../../../types/invoice.types';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
+import { formatCurrency } from '../../../lib/formatCurrency';
 
 interface VoidInvoiceModalProps {
   invoice: Invoice;
@@ -25,6 +27,8 @@ export const VoidInvoiceModal: FC<VoidInvoiceModalProps> = ({
   const [reason, setReason] = useState('');
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState('');
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
 
   const handleSubmit = () => {
     if (!reason.trim() || reason.length < 10) {
@@ -79,7 +83,7 @@ export const VoidInvoiceModal: FC<VoidInvoiceModalProps> = ({
               <li>Reverse all inventory deductions (stock will be restored)</li>
               <li>
                 {invoice.paymentType === 'CREDIT' && (
-                  <>Reduce client balance by PKR {Number(invoice.total).toLocaleString()}</>
+                  <>Reduce client balance by {formatCurrency(Number(invoice.total), cs)}</>
                 )}
                 {invoice.paymentType === 'CASH' && <>No balance change (CASH invoice)</>}
               </li>
@@ -98,7 +102,7 @@ export const VoidInvoiceModal: FC<VoidInvoiceModalProps> = ({
               <div>
                 <span className="text-gray-600">Amount:</span>
                 <span className="ml-2 font-medium text-gray-900">
-                  PKR {Number(invoice.total).toLocaleString()}
+                  {formatCurrency(Number(invoice.total), cs)}
                 </span>
               </div>
               <div>

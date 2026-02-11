@@ -377,6 +377,42 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
           {isMenuExpanded('reports') && !isCollapsed && (
             <div className="ml-6 mt-1 space-y-1">
               <Link
+                to="/reports"
+                className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                All Reports
+              </Link>
+              <Link
+                to="/reports/stock"
+                className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                Stock Report
+              </Link>
+              <Link
+                to="/reports/sales"
+                className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                Sales Report
+              </Link>
+              <Link
+                to="/reports/payments"
+                className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                Payment Report
+              </Link>
+              <Link
+                to="/reports/imports"
+                className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                Import Report
+              </Link>
+              <Link
+                to="/reports/expenses"
+                className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                Expense Report
+              </Link>
+              <Link
                 to="/reports/cash-flow"
                 className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
               >
@@ -434,7 +470,7 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                   to="/settings/tax"
                   className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                 >
-                  Tax Configuration
+                  System Settings
                 </Link>
               </div>
             )}

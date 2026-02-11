@@ -20,6 +20,8 @@ import {
 } from 'recharts';
 import { apiClient } from '../../lib/api-client';
 import { Card, Spinner } from '../ui';
+import { useCurrencySymbol } from '../../hooks/useSettings';
+import { formatCurrencyCompact, formatChartValue } from '../../lib/formatCurrency';
 
 interface TopClient {
   clientId: string;
@@ -68,18 +70,6 @@ interface SalesStats {
   weeklyTrend: WeeklyTrendPoint[];
 }
 
-function formatPKR(value: number): string {
-  if (value >= 1_000_000) return `PKR ${(value / 1_000_000).toFixed(2)}M`;
-  if (value >= 1_000) return `PKR ${(value / 1_000).toFixed(1)}K`;
-  return `PKR ${value.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
-
-function formatChartPKR(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
-  return value.toString();
-}
-
 function getOverdueColor(days: number): string {
   if (days > 30) return 'text-red-700 bg-red-50 border-red-200';
   if (days > 14) return 'text-orange-700 bg-orange-50 border-orange-200';
@@ -93,6 +83,8 @@ function getUtilizationColor(pct: number): string {
 }
 
 export default function SalesDashboard() {
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const { data: stats, isLoading, dataUpdatedAt } = useQuery<SalesStats>({
     queryKey: ['sales-stats'],
     queryFn: async () => {
@@ -130,7 +122,7 @@ export default function SalesDashboard() {
             <div className="text-sm text-gray-600">Today's Sales</div>
             <TrendingUp className="text-green-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.todaySalesTotal)}</div>
+          <div className="text-2xl font-bold text-gray-900">{formatCurrencyCompact(stats.todaySalesTotal, cs)}</div>
           <div className="text-xs text-gray-500 mt-2">{stats.todaySalesCount} invoices</div>
         </div>
 
@@ -139,7 +131,7 @@ export default function SalesDashboard() {
             <div className="text-sm text-gray-600">This Week</div>
             <TrendingUp className="text-blue-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.weekSalesTotal)}</div>
+          <div className="text-2xl font-bold text-gray-900">{formatCurrencyCompact(stats.weekSalesTotal, cs)}</div>
           <div className="text-xs text-gray-500 mt-2">{stats.weekSalesCount} invoices</div>
         </div>
 
@@ -148,7 +140,7 @@ export default function SalesDashboard() {
             <div className="text-sm text-gray-600">This Month</div>
             <DollarSign className="text-indigo-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.monthSalesTotal)}</div>
+          <div className="text-2xl font-bold text-gray-900">{formatCurrencyCompact(stats.monthSalesTotal, cs)}</div>
           <div className="text-xs text-gray-500 mt-2">{stats.monthSalesCount} invoices</div>
         </div>
 
@@ -158,7 +150,7 @@ export default function SalesDashboard() {
             <AlertTriangle className="text-red-500" size={20} />
           </div>
           <div className="text-2xl font-bold text-red-600">{stats.overdueCount}</div>
-          <div className="text-xs text-gray-500 mt-2">{formatPKR(stats.overdueTotal)} outstanding</div>
+          <div className="text-xs text-gray-500 mt-2">{formatCurrencyCompact(stats.overdueTotal, cs)} outstanding</div>
         </div>
 
         <div className="bg-white rounded-xl p-6 border-l-4 border-orange-500 shadow-sm">
@@ -177,8 +169,8 @@ export default function SalesDashboard() {
           </div>
           <div className="text-2xl font-bold text-gray-900">
             {stats.monthSalesCount > 0
-              ? formatPKR(stats.monthSalesTotal / stats.monthSalesCount)
-              : 'PKR 0'}
+              ? formatCurrencyCompact(stats.monthSalesTotal / stats.monthSalesCount, cs)
+              : `${cs} 0`}
           </div>
           <div className="text-xs text-gray-500 mt-2">This month average</div>
         </div>
@@ -201,12 +193,12 @@ export default function SalesDashboard() {
                 stroke="#9ca3af"
               />
               <YAxis
-                tickFormatter={formatChartPKR}
+                tickFormatter={formatChartValue}
                 tick={{ fontSize: 12 }}
                 stroke="#9ca3af"
               />
               <Tooltip
-                formatter={(value) => [`PKR ${Number(value).toLocaleString()}`, 'Revenue']}
+                formatter={(value) => [`${cs} ${Number(value).toLocaleString()}`, 'Revenue']}
                 labelFormatter={(label) => {
                   const d = new Date(String(label) + 'T00:00:00');
                   return d.toLocaleDateString('en-PK', { weekday: 'long', day: 'numeric', month: 'short' });
@@ -238,7 +230,7 @@ export default function SalesDashboard() {
                     <div className="font-medium text-gray-900 truncate">{client.name}</div>
                     <div className="text-xs text-gray-500">{client.invoiceCount} invoices</div>
                   </div>
-                  <div className="text-sm font-semibold text-gray-900">{formatPKR(client.revenue)}</div>
+                  <div className="text-sm font-semibold text-gray-900">{formatCurrencyCompact(client.revenue, cs)}</div>
                 </div>
               ))}
             </div>
@@ -269,7 +261,7 @@ export default function SalesDashboard() {
                     <div className="text-xs opacity-75">{inv.clientName}</div>
                   </div>
                   <div className="text-right ml-3">
-                    <div className="text-sm font-semibold">{formatPKR(inv.outstanding)}</div>
+                    <div className="text-sm font-semibold">{formatCurrencyCompact(inv.outstanding, cs)}</div>
                     <div className="text-xs opacity-75">{inv.daysOverdue}d overdue</div>
                   </div>
                 </div>
@@ -312,8 +304,8 @@ export default function SalesDashboard() {
                     />
                   </div>
                   <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>Balance: {formatPKR(alert.balance)}</span>
-                    <span>Limit: {formatPKR(alert.creditLimit)}</span>
+                    <span>Balance: {formatCurrencyCompact(alert.balance, cs)}</span>
+                    <span>Limit: {formatCurrencyCompact(alert.creditLimit, cs)}</span>
                   </div>
                 </div>
               ))}

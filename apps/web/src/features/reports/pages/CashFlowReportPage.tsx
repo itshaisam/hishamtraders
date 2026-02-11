@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { BarChart3, TrendingUp, TrendingDown, ArrowDownLeft, ArrowUpRight, Minus } from 'lucide-react';
 import { useCashFlowReport } from '../../../hooks/usePayments';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
+import { formatCurrency } from '../../../lib/formatCurrency';
 import { format, startOfMonth } from 'date-fns';
+import { exportPDF, exportExcel } from '../../../utils/exportReport';
+import ExportButtons from '../components/ExportButtons';
 
 const PAYMENT_METHOD_DISPLAY: Record<string, string> = {
   CASH: 'Cash',
@@ -16,17 +20,42 @@ export default function CashFlowReportPage() {
   const { data, isLoading, error } = useCashFlowReport(dateFrom, dateTo);
   const report = data?.data;
 
-  const formatRs = (amount: number) =>
-    `Rs ${Math.abs(amount).toLocaleString('en-PK', { minimumFractionDigits: 2 })}`;
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
+
+  const handleExport = (fmt: 'pdf' | 'excel') => {
+    if (!report) return;
+    const dateLabel = `${format(new Date(dateFrom), 'dd MMM yyyy')} — ${format(new Date(dateTo), 'dd MMM yyyy')}`;
+    const opts = {
+      title: 'Cash Flow Report',
+      filename: `cash-flow-${dateFrom}-to-${dateTo}`,
+      filters: [{ label: 'Period', value: dateLabel }],
+      summary: [
+        { label: 'Cash In', value: formatCurrency(report.totalCashIn, cs) },
+        { label: 'Cash Out', value: formatCurrency(report.totalCashOut, cs) },
+        { label: 'Net Cash Flow', value: `${report.netCashFlow >= 0 ? '+' : '-'}${formatCurrency(report.netCashFlow, cs)}` },
+        { label: 'Expenses', value: formatCurrency(report.totalExpenses, cs) },
+      ],
+      columns: [
+        { header: 'Method', key: 'method', format: (v: string) => PAYMENT_METHOD_DISPLAY[v] || v },
+        { header: 'Cash In', key: 'cashIn', align: 'right' as const, format: (v: number) => v > 0 ? `+${formatCurrency(v, cs)}` : '-' },
+        { header: 'Cash Out', key: 'cashOut', align: 'right' as const, format: (v: number) => v > 0 ? `-${formatCurrency(v, cs)}` : '-' },
+        { header: 'Net', key: 'net', align: 'right' as const, format: (v: number) => `${v >= 0 ? '+' : '-'}${formatCurrency(v, cs)}` },
+      ],
+      data: report.byPaymentMethod,
+    };
+    fmt === 'pdf' ? exportPDF(opts) : exportExcel(opts);
+  };
 
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-start justify-between">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <BarChart3 className="h-6 w-6" />
           Cash Flow Report
         </h1>
+        <ExportButtons onExportPDF={() => handleExport('pdf')} onExportExcel={() => handleExport('excel')} disabled={!report} />
       </div>
 
       {/* Date Range Filter */}
@@ -80,7 +109,7 @@ export default function CashFlowReportPage() {
                 </div>
                 <p className="text-xs font-medium text-gray-500 uppercase">Cash In</p>
               </div>
-              <p className="text-xl font-bold text-green-700">{formatRs(report.totalCashIn)}</p>
+              <p className="text-xl font-bold text-green-700">{formatCurrency(report.totalCashIn, cs)}</p>
               <p className="text-xs text-gray-500 mt-1">From client payments</p>
             </div>
 
@@ -92,9 +121,9 @@ export default function CashFlowReportPage() {
                 </div>
                 <p className="text-xs font-medium text-gray-500 uppercase">Cash Out</p>
               </div>
-              <p className="text-xl font-bold text-red-700">{formatRs(report.totalCashOut)}</p>
+              <p className="text-xl font-bold text-red-700">{formatCurrency(report.totalCashOut, cs)}</p>
               <p className="text-xs text-gray-500 mt-1">
-                Suppliers: {formatRs(report.totalSupplierPayments)} | Expenses: {formatRs(report.totalExpenses)}
+                Suppliers: {formatCurrency(report.totalSupplierPayments, cs)} | Expenses: {formatCurrency(report.totalExpenses, cs)}
               </p>
             </div>
 
@@ -111,7 +140,7 @@ export default function CashFlowReportPage() {
                 <p className="text-xs font-medium text-gray-500 uppercase">Net Cash Flow</p>
               </div>
               <p className={`text-xl font-bold ${report.netCashFlow >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
-                {report.netCashFlow >= 0 ? '+' : '-'}{formatRs(report.netCashFlow)}
+                {report.netCashFlow >= 0 ? '+' : '-'}{formatCurrency(report.netCashFlow, cs)}
               </p>
               <p className="text-xs text-gray-500 mt-1">IN - OUT</p>
             </div>
@@ -124,7 +153,7 @@ export default function CashFlowReportPage() {
                 </div>
                 <p className="text-xs font-medium text-gray-500 uppercase">Expenses</p>
               </div>
-              <p className="text-xl font-bold text-purple-700">{formatRs(report.totalExpenses)}</p>
+              <p className="text-xl font-bold text-purple-700">{formatCurrency(report.totalExpenses, cs)}</p>
               <p className="text-xs text-gray-500 mt-1">Operating expenses</p>
             </div>
           </div>
@@ -151,15 +180,15 @@ export default function CashFlowReportPage() {
                         {PAYMENT_METHOD_DISPLAY[row.method] || row.method}
                       </td>
                       <td className="px-4 py-3 text-sm text-right text-green-700 font-medium">
-                        {row.cashIn > 0 ? `+${formatRs(row.cashIn)}` : '-'}
+                        {row.cashIn > 0 ? `+${formatCurrency(row.cashIn, cs)}` : '-'}
                       </td>
                       <td className="px-4 py-3 text-sm text-right text-red-700 font-medium">
-                        {row.cashOut > 0 ? `-${formatRs(row.cashOut)}` : '-'}
+                        {row.cashOut > 0 ? `-${formatCurrency(row.cashOut, cs)}` : '-'}
                       </td>
                       <td className={`px-4 py-3 text-sm text-right font-bold ${
                         row.net >= 0 ? 'text-blue-700' : 'text-orange-700'
                       }`}>
-                        {row.net >= 0 ? '+' : '-'}{formatRs(row.net)}
+                        {row.net >= 0 ? '+' : '-'}{formatCurrency(row.net, cs)}
                       </td>
                     </tr>
                   ))}
@@ -168,15 +197,15 @@ export default function CashFlowReportPage() {
                   <tr className="bg-gray-50 border-t border-gray-200 font-bold">
                     <td className="px-4 py-3 text-sm text-gray-900">Total</td>
                     <td className="px-4 py-3 text-sm text-right text-green-700">
-                      +{formatRs(report.totalCashIn)}
+                      +{formatCurrency(report.totalCashIn, cs)}
                     </td>
                     <td className="px-4 py-3 text-sm text-right text-red-700">
-                      -{formatRs(report.totalCashOut)}
+                      -{formatCurrency(report.totalCashOut, cs)}
                     </td>
                     <td className={`px-4 py-3 text-sm text-right ${
                       report.netCashFlow >= 0 ? 'text-blue-700' : 'text-orange-700'
                     }`}>
-                      {report.netCashFlow >= 0 ? '+' : '-'}{formatRs(report.netCashFlow)}
+                      {report.netCashFlow >= 0 ? '+' : '-'}{formatCurrency(report.netCashFlow, cs)}
                     </td>
                   </tr>
                 </tfoot>

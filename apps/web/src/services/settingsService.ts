@@ -17,4 +17,21 @@ export const settingsService = {
     }>('/settings/tax-rate', { taxRate });
     return response.data;
   },
+
+  async getCurrencySymbol() {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: { currencySymbol: string };
+    }>('/settings/currency-symbol');
+    return response.data.data;
+  },
+
+  async updateCurrencySymbol(currencySymbol: string) {
+    const response = await apiClient.put<{
+      success: boolean;
+      message: string;
+      data: { currencySymbol: string };
+    }>('/settings/currency-symbol', { currencySymbol });
+    return response.data;
+  },
 };

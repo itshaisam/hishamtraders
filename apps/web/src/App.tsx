@@ -38,6 +38,12 @@ import { InvoiceDetailPage } from './features/invoices/pages/InvoiceDetailPage';
 import { ExpensesPage } from './features/expenses/pages/ExpensesPage';
 import PaymentHistoryPage from './features/payments/pages/PaymentHistoryPage';
 import CashFlowReportPage from './features/reports/pages/CashFlowReportPage';
+import ReportsCenterPage from './features/reports/pages/ReportsCenterPage';
+import StockReportPage from './features/reports/pages/StockReportPage';
+import SalesReportPage from './features/reports/pages/SalesReportPage';
+import PaymentReportPage from './features/reports/pages/PaymentReportPage';
+import ImportReportPage from './features/reports/pages/ImportReportPage';
+import ExpenseReportPage from './features/reports/pages/ExpenseReportPage';
 import { TaxSettingsPage } from './features/settings/pages/TaxSettingsPage';
 import { ReturnsPage } from './features/returns/pages/ReturnsPage';
 import { CreateReturnPage } from './features/returns/pages/CreateReturnPage';
@@ -448,6 +454,18 @@ function App() {
             }
           />
 
+          {/* Reports Center (Story 4.10) */}
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ReportsCenterPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Cash Flow Report (Story 3.8) */}
           <Route
             path="/reports/cash-flow"
@@ -455,6 +473,66 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <CashFlowReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Stock Report (Story 4.4) */}
+          <Route
+            path="/reports/stock"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <StockReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Sales Report (Story 4.5) */}
+          <Route
+            path="/reports/sales"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <SalesReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Payment Report (Story 4.6) */}
+          <Route
+            path="/reports/payments"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PaymentReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Import Report (Story 4.7) */}
+          <Route
+            path="/reports/imports"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ImportReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Expense Report (Story 4.8) */}
+          <Route
+            path="/reports/expenses"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ExpenseReportPage />
                 </Layout>
               </ProtectedRoute>
             }

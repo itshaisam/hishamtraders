@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { Edit, Trash, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { useExpenses, useDeleteExpense } from '../../../hooks/useExpenses';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import {
   Expense,
   ExpenseCategory,
@@ -25,6 +26,8 @@ const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
 
 export function ExpensesPage() {
   const { user } = useAuthStore();
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -109,7 +112,7 @@ export function ExpensesPage() {
         <div className="text-right">
           <div className="text-xs text-gray-500 uppercase tracking-wide">Period Total</div>
           <div className="text-xl font-bold text-red-600">
-            Rs {totalExpenses.toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+            {cs} {totalExpenses.toLocaleString('en-PK', { minimumFractionDigits: 2 })}
           </div>
         </div>
       </div>
@@ -236,7 +239,7 @@ export function ExpensesPage() {
                   {format(new Date(dateKey + 'T00:00:00'), 'EEEE, MMM dd, yyyy')}
                 </span>
                 <span className="text-sm font-bold text-gray-900">
-                  Rs {dayTotals[dateKey].toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+                  {cs} {dayTotals[dateKey].toLocaleString('en-PK', { minimumFractionDigits: 2 })}
                 </span>
               </div>
 
@@ -276,7 +279,7 @@ export function ExpensesPage() {
 
                     {/* Amount */}
                     <span className="text-sm font-semibold text-gray-900 tabular-nums w-28 text-right">
-                      Rs {parseFloat(expense.amount.toString()).toLocaleString('en-PK', {
+                      {cs} {parseFloat(expense.amount.toString()).toLocaleString('en-PK', {
                         minimumFractionDigits: 2,
                       })}
                     </span>

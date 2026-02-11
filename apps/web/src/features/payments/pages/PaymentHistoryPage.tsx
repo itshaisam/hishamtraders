@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { History, Filter, Search, Eye, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { useAllPayments } from '../../../hooks/usePayments';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import PaymentDetailsModal from '../components/PaymentDetailsModal';
 import {
   PaymentMethod,
@@ -19,6 +20,8 @@ export default function PaymentHistoryPage() {
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useAllPayments(filters);
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
 
   const activeFilterCount = [
     filters.paymentType && filters.paymentType !== 'ALL',
@@ -198,7 +201,7 @@ export default function PaymentHistoryPage() {
                       <td className={`px-4 py-3 text-sm text-right font-semibold whitespace-nowrap ${
                         payment.type === 'CLIENT' ? 'text-green-700' : 'text-red-700'
                       }`}>
-                        {payment.type === 'CLIENT' ? '+' : '-'}Rs {payment.amount.toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+                        {payment.type === 'CLIENT' ? '+' : '-'}{cs} {payment.amount.toLocaleString('en-PK', { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
                         {PAYMENT_METHOD_LABELS[payment.method as PaymentMethod] || payment.method}

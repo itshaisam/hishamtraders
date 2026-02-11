@@ -24,6 +24,8 @@ import {
 } from 'recharts';
 import { apiClient } from '../../lib/api-client';
 import { Card, Spinner } from '../ui';
+import { useCurrencySymbol } from '../../hooks/useSettings';
+import { formatCurrencyCompact, formatChartValue } from '../../lib/formatCurrency';
 
 interface RecentPayment {
   id: string;
@@ -61,19 +63,9 @@ interface AccountantStats {
   cashFlowTrend: CashFlowPoint[];
 }
 
-function formatPKR(value: number): string {
-  if (value >= 1_000_000) return `PKR ${(value / 1_000_000).toFixed(2)}M`;
-  if (value >= 1_000) return `PKR ${(value / 1_000).toFixed(1)}K`;
-  return `PKR ${value.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
-
-function formatChartPKR(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
-  return value.toString();
-}
-
 export default function AccountantDashboard() {
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const { data: stats, isLoading, dataUpdatedAt } = useQuery<AccountantStats>({
     queryKey: ['accountant-stats'],
     queryFn: async () => {
@@ -123,7 +115,7 @@ export default function AccountantDashboard() {
             <div className="text-sm text-gray-600">Cash Inflow</div>
             <TrendingUp className="text-green-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-green-600">{formatPKR(stats.cashInflow)}</div>
+          <div className="text-2xl font-bold text-green-600">{formatCurrencyCompact(stats.cashInflow, cs)}</div>
           <div className="text-xs text-gray-500 mt-2">Monthly collections</div>
         </div>
 
@@ -132,7 +124,7 @@ export default function AccountantDashboard() {
             <div className="text-sm text-gray-600">Cash Outflow</div>
             <TrendingDown className="text-red-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-red-600">{formatPKR(stats.cashOutflow)}</div>
+          <div className="text-2xl font-bold text-red-600">{formatCurrencyCompact(stats.cashOutflow, cs)}</div>
           <div className="text-xs text-gray-500 mt-2">Payments + expenses</div>
         </div>
 
@@ -142,7 +134,7 @@ export default function AccountantDashboard() {
             <DollarSign className="text-blue-500" size={20} />
           </div>
           <div className={`text-2xl font-bold ${netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {netCashFlow >= 0 ? '+' : ''}{formatPKR(Math.abs(netCashFlow))}
+            {netCashFlow >= 0 ? '+' : ''}{formatCurrencyCompact(Math.abs(netCashFlow), cs)}
           </div>
           <div className="text-xs text-gray-500 mt-2">This month</div>
         </div>
@@ -152,7 +144,7 @@ export default function AccountantDashboard() {
             <div className="text-sm text-gray-600">Receivables</div>
             <ArrowUpRight className="text-orange-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-orange-600">{formatPKR(stats.totalReceivables)}</div>
+          <div className="text-2xl font-bold text-orange-600">{formatCurrencyCompact(stats.totalReceivables, cs)}</div>
           <div className="text-xs text-gray-500 mt-2">Outstanding from clients</div>
         </div>
 
@@ -161,7 +153,7 @@ export default function AccountantDashboard() {
             <div className="text-sm text-gray-600">Payables</div>
             <ArrowDownRight className="text-purple-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-purple-600">{formatPKR(stats.totalPayables)}</div>
+          <div className="text-2xl font-bold text-purple-600">{formatCurrencyCompact(stats.totalPayables, cs)}</div>
           <div className="text-xs text-gray-500 mt-2">Outstanding to suppliers</div>
         </div>
 
@@ -194,10 +186,10 @@ export default function AccountantDashboard() {
                 tick={{ fontSize: 12 }}
                 stroke="#9ca3af"
               />
-              <YAxis tickFormatter={formatChartPKR} tick={{ fontSize: 12 }} stroke="#9ca3af" />
+              <YAxis tickFormatter={formatChartValue} tick={{ fontSize: 12 }} stroke="#9ca3af" />
               <Tooltip
                 formatter={(value, name) => [
-                  `PKR ${Number(value).toLocaleString()}`,
+                  `${cs} ${Number(value).toLocaleString()}`,
                   name === 'inflow' ? 'Cash In' : 'Cash Out',
                 ]}
                 labelFormatter={(label) => {
@@ -233,7 +225,7 @@ export default function AccountantDashboard() {
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">{bucket.label}</span>
                     <span className={`font-semibold ${bucket.textColor}`}>
-                      {formatPKR(bucket.amount)} ({pct.toFixed(0)}%)
+                      {formatCurrencyCompact(bucket.amount, cs)} ({pct.toFixed(0)}%)
                     </span>
                   </div>
                   <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
@@ -248,7 +240,7 @@ export default function AccountantDashboard() {
             {agingTotal > 0 && (
               <div className="pt-3 border-t text-sm text-gray-600 flex justify-between">
                 <span>Total Outstanding</span>
-                <span className="font-bold text-gray-900">{formatPKR(agingTotal)}</span>
+                <span className="font-bold text-gray-900">{formatCurrencyCompact(agingTotal, cs)}</span>
               </div>
             )}
           </div>
@@ -264,14 +256,14 @@ export default function AccountantDashboard() {
             <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
               <div>
                 <div className="text-sm text-gray-600">Revenue</div>
-                <div className="text-2xl font-bold text-blue-600">{formatPKR(stats.monthRevenue)}</div>
+                <div className="text-2xl font-bold text-blue-600">{formatCurrencyCompact(stats.monthRevenue, cs)}</div>
               </div>
               <TrendingUp className="text-blue-400" size={24} />
             </div>
             <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
               <div>
                 <div className="text-sm text-gray-600">Expenses</div>
-                <div className="text-2xl font-bold text-red-600">{formatPKR(stats.monthExpenses)}</div>
+                <div className="text-2xl font-bold text-red-600">{formatCurrencyCompact(stats.monthExpenses, cs)}</div>
               </div>
               <TrendingDown className="text-red-400" size={24} />
             </div>
@@ -279,7 +271,7 @@ export default function AccountantDashboard() {
               <div>
                 <div className="text-sm text-gray-600">Net Profit</div>
                 <div className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {netProfit >= 0 ? '+' : ''}{formatPKR(Math.abs(netProfit))}
+                  {netProfit >= 0 ? '+' : ''}{formatCurrencyCompact(Math.abs(netProfit), cs)}
                 </div>
               </div>
               <div className={`font-semibold ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -323,7 +315,7 @@ export default function AccountantDashboard() {
                     </td>
                     <td className="px-6 py-3 font-medium text-gray-900">{payment.name}</td>
                     <td className="px-6 py-3 text-right font-semibold text-gray-900">
-                      {formatPKR(payment.amount)}
+                      {formatCurrencyCompact(payment.amount, cs)}
                     </td>
                     <td className="px-6 py-3 text-gray-600">{payment.method.replace('_', ' ')}</td>
                     <td className="px-6 py-3 text-gray-500">{payment.reference || '—'}</td>

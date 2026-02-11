@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { apiClient } from '../../lib/api-client';
 import { Card, Spinner } from '../ui';
+import { useCurrencySymbol } from '../../hooks/useSettings';
+import { formatCurrencyCompact } from '../../lib/formatCurrency';
 
 interface OverdueClient {
   clientId: string;
@@ -50,12 +52,6 @@ interface RecoveryStats {
   recentCollections: RecentCollection[];
 }
 
-function formatPKR(value: number): string {
-  if (value >= 1_000_000) return `PKR ${(value / 1_000_000).toFixed(2)}M`;
-  if (value >= 1_000) return `PKR ${(value / 1_000).toFixed(1)}K`;
-  return `PKR ${value.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
-
 function getOverdueSeverity(days: number): { bg: string; text: string; badge: string } {
   if (days > 60) return { bg: 'bg-red-50', text: 'text-red-700', badge: 'bg-red-100 text-red-700' };
   if (days > 30) return { bg: 'bg-orange-50', text: 'text-orange-700', badge: 'bg-orange-100 text-orange-700' };
@@ -70,6 +66,8 @@ const paymentMethodIcons: Record<string, string> = {
 };
 
 export default function RecoveryDashboard() {
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const { data: stats, isLoading, dataUpdatedAt } = useQuery<RecoveryStats>({
     queryKey: ['recovery-stats'],
     queryFn: async () => {
@@ -116,7 +114,7 @@ export default function RecoveryDashboard() {
             <div className="text-sm text-gray-600">Total Outstanding</div>
             <AlertCircle className="text-red-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-red-600">{formatPKR(stats.totalOutstanding)}</div>
+          <div className="text-2xl font-bold text-red-600">{formatCurrencyCompact(stats.totalOutstanding, cs)}</div>
           <div className="text-xs text-gray-500 mt-2">From all clients</div>
         </div>
 
@@ -134,7 +132,7 @@ export default function RecoveryDashboard() {
             <div className="text-sm text-gray-600">Collected This Week</div>
             <DollarSign className="text-green-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-green-600">{formatPKR(stats.collectedThisWeek)}</div>
+          <div className="text-2xl font-bold text-green-600">{formatCurrencyCompact(stats.collectedThisWeek, cs)}</div>
           <div className="text-xs text-gray-500 mt-2">Client payments received</div>
         </div>
 
@@ -143,7 +141,7 @@ export default function RecoveryDashboard() {
             <div className="text-sm text-gray-600">Collected This Month</div>
             <TrendingUp className="text-blue-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-blue-600">{formatPKR(stats.collectedThisMonth)}</div>
+          <div className="text-2xl font-bold text-blue-600">{formatCurrencyCompact(stats.collectedThisMonth, cs)}</div>
           <div className="text-xs text-gray-500 mt-2">Total monthly collections</div>
         </div>
       </div>
@@ -155,7 +153,7 @@ export default function RecoveryDashboard() {
           {agingData.map(bucket => (
             <div key={bucket.label} className={`p-4 rounded-lg border-l-4 ${bucket.borderColor} bg-gray-50`}>
               <div className="text-sm text-gray-600 mb-1">{bucket.label}</div>
-              <div className="text-xl font-bold text-gray-900">{formatPKR(bucket.amount)}</div>
+              <div className="text-xl font-bold text-gray-900">{formatCurrencyCompact(bucket.amount, cs)}</div>
               <div className="text-xs text-gray-500 mt-1">{bucket.count} invoice{bucket.count !== 1 ? 's' : ''}</div>
             </div>
           ))}
@@ -170,7 +168,7 @@ export default function RecoveryDashboard() {
                   key={bucket.label}
                   className={`${bucket.color} transition-all`}
                   style={{ width: `${pct}%` }}
-                  title={`${bucket.label}: ${formatPKR(bucket.amount)} (${pct.toFixed(0)}%)`}
+                  title={`${bucket.label}: ${formatCurrencyCompact(bucket.amount, cs)} (${pct.toFixed(0)}%)`}
                 />
               );
             })}
@@ -213,7 +211,7 @@ export default function RecoveryDashboard() {
                           </td>
                           <td className="px-6 py-3 text-gray-600">{client.phone || '—'}</td>
                           <td className="px-6 py-3 text-right font-semibold text-red-600">
-                            {formatPKR(client.totalOverdue)}
+                            {formatCurrencyCompact(client.totalOverdue, cs)}
                           </td>
                           <td className="px-6 py-3 text-center">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${severity.badge}`}>
@@ -254,7 +252,7 @@ export default function RecoveryDashboard() {
                     <div className="flex items-center justify-between">
                       <div className="font-medium text-gray-900 truncate">{collection.clientName}</div>
                       <div className="font-semibold text-green-600 whitespace-nowrap ml-2">
-                        +{formatPKR(collection.amount)}
+                        +{formatCurrencyCompact(collection.amount, cs)}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1">

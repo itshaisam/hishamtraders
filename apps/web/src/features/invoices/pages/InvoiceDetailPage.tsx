@@ -3,6 +3,8 @@ import { useState, useMemo } from 'react';
 import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { useInvoiceById, useVoidInvoice, useInvoices } from '../../../hooks/useInvoices';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
+import { formatCurrency } from '../../../lib/formatCurrency';
 import { VoidInvoiceModal } from '../components/VoidInvoiceModal';
 import { useAuthStore } from '../../../stores/auth.store';
 
@@ -11,6 +13,8 @@ export function InvoiceDetailPage() {
   const navigate = useNavigate();
   const { data: invoice, isLoading, error } = useInvoiceById(id!);
   const { user } = useAuthStore();
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const voidMutation = useVoidInvoice();
   const [showVoidModal, setShowVoidModal] = useState(false);
 
@@ -250,11 +254,11 @@ export function InvoiceDetailPage() {
                   <td className="py-3 px-4 text-sm text-gray-600">{item.batchNo || 'N/A'}</td>
                   <td className="py-3 px-4 text-right text-sm text-gray-900">{item.quantity}</td>
                   <td className="py-3 px-4 text-right text-sm text-gray-900">
-                    PKR {Number(item.unitPrice).toLocaleString()}
+                    {formatCurrency(Number(item.unitPrice), cs)}
                   </td>
                   <td className="py-3 px-4 text-right text-sm text-gray-900">{item.discount}%</td>
                   <td className="py-3 px-4 text-right text-sm font-medium text-gray-900">
-                    PKR {Number(item.total).toLocaleString()}
+                    {formatCurrency(Number(item.total), cs)}
                   </td>
                 </tr>
               ))}
@@ -268,26 +272,26 @@ export function InvoiceDetailPage() {
         <div className="max-w-sm ml-auto space-y-3">
           <div className="flex justify-between text-gray-700">
             <span>Subtotal:</span>
-            <span className="font-medium">PKR {Number(invoice.subtotal).toLocaleString()}</span>
+            <span className="font-medium">{formatCurrency(Number(invoice.subtotal), cs)}</span>
           </div>
           <div className="flex justify-between text-gray-700">
             <span>Tax:</span>
-            <span className="font-medium">PKR {Number(invoice.taxAmount).toLocaleString()}</span>
+            <span className="font-medium">{formatCurrency(Number(invoice.taxAmount), cs)}</span>
           </div>
           <div className="flex justify-between text-xl font-bold text-gray-900 pt-3 border-t">
             <span>Total:</span>
-            <span>PKR {Number(invoice.total).toLocaleString()}</span>
+            <span>{formatCurrency(Number(invoice.total), cs)}</span>
           </div>
           {invoice.paymentType === 'CREDIT' && (
             <>
               <div className="flex justify-between text-gray-700 pt-2 border-t">
                 <span>Paid Amount:</span>
-                <span className="font-medium text-green-600">PKR {Number(invoice.paidAmount).toLocaleString()}</span>
+                <span className="font-medium text-green-600">{formatCurrency(Number(invoice.paidAmount), cs)}</span>
               </div>
               <div className="flex justify-between text-gray-700">
                 <span>Balance Due:</span>
                 <span className="font-medium text-red-600">
-                  PKR {(Number(invoice.total) - Number(invoice.paidAmount)).toLocaleString()}
+                  {formatCurrency(Number(invoice.total) - Number(invoice.paidAmount), cs)}
                 </span>
               </div>
             </>
@@ -307,19 +311,19 @@ export function InvoiceDetailPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-600 mb-1">Total Credit</p>
               <p className="text-2xl font-bold text-blue-900">
-                PKR {creditHistory.totalCredit.toLocaleString()}
+                {formatCurrency(creditHistory.totalCredit, cs)}
               </p>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-sm text-green-600 mb-1">Total Paid</p>
               <p className="text-2xl font-bold text-green-900">
-                PKR {creditHistory.totalPaid.toLocaleString()}
+                {formatCurrency(creditHistory.totalPaid, cs)}
               </p>
             </div>
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-sm text-red-600 mb-1">Outstanding Balance</p>
               <p className="text-2xl font-bold text-red-900">
-                PKR {creditHistory.outstandingBalance.toLocaleString()}
+                {formatCurrency(creditHistory.outstandingBalance, cs)}
               </p>
             </div>
           </div>
@@ -352,13 +356,13 @@ export function InvoiceDetailPage() {
                       {format(new Date(inv.invoiceDate), 'dd MMM yyyy')}
                     </td>
                     <td className="py-2 px-3 text-right">
-                      PKR {Number(inv.total).toLocaleString()}
+                      {formatCurrency(Number(inv.total), cs)}
                     </td>
                     <td className="py-2 px-3 text-right text-green-600">
-                      PKR {Number(inv.paidAmount).toLocaleString()}
+                      {formatCurrency(Number(inv.paidAmount), cs)}
                     </td>
                     <td className="py-2 px-3 text-right text-red-600">
-                      PKR {(Number(inv.total) - Number(inv.paidAmount)).toLocaleString()}
+                      {formatCurrency(Number(inv.total) - Number(inv.paidAmount), cs)}
                     </td>
                     <td className="py-2 px-3">
                       <span
@@ -376,13 +380,13 @@ export function InvoiceDetailPage() {
                     TOTALS (excluding voided)
                   </td>
                   <td className="py-2 px-3 text-right">
-                    PKR {creditHistory.totalCredit.toLocaleString()}
+                    {formatCurrency(creditHistory.totalCredit, cs)}
                   </td>
                   <td className="py-2 px-3 text-right text-green-600">
-                    PKR {creditHistory.totalPaid.toLocaleString()}
+                    {formatCurrency(creditHistory.totalPaid, cs)}
                   </td>
                   <td className="py-2 px-3 text-right text-red-600">
-                    PKR {creditHistory.outstandingBalance.toLocaleString()}
+                    {formatCurrency(creditHistory.outstandingBalance, cs)}
                   </td>
                   <td></td>
                 </tr>

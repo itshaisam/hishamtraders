@@ -1,5 +1,7 @@
 import { AlertTriangle } from 'lucide-react';
 import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
+import { formatCurrency } from '../../../lib/formatCurrency';
 
 interface CreditLimitWarningProps {
   client: any;
@@ -16,6 +18,8 @@ export function CreditLimitWarning({
   register,
   errors,
 }: CreditLimitWarningProps) {
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const currentBalance = Number(client.balance);
   const creditLimit = Number(client.creditLimit);
   const newBalance = currentBalance + invoiceTotal;
@@ -38,16 +42,16 @@ export function CreditLimitWarning({
           </h3>
           <div className="text-sm space-y-1 mb-3">
             <p className="text-gray-700">
-              <span className="font-medium">Current Balance:</span> PKR {currentBalance.toLocaleString()}
+              <span className="font-medium">Current Balance:</span> {formatCurrency(currentBalance, cs)}
             </p>
             <p className="text-gray-700">
-              <span className="font-medium">Invoice Total:</span> PKR {invoiceTotal.toLocaleString()}
+              <span className="font-medium">Invoice Total:</span> {formatCurrency(invoiceTotal, cs)}
             </p>
             <p className="text-gray-700">
-              <span className="font-medium">New Balance:</span> PKR {newBalance.toLocaleString()}
+              <span className="font-medium">New Balance:</span> {formatCurrency(newBalance, cs)}
             </p>
             <p className="text-gray-700">
-              <span className="font-medium">Credit Limit:</span> PKR {creditLimit.toLocaleString()}
+              <span className="font-medium">Credit Limit:</span> {formatCurrency(creditLimit, cs)}
             </p>
             <p className={`font-semibold ${isOverLimit ? 'text-red-600' : 'text-yellow-600'}`}>
               Utilization: {utilization.toFixed(1)}%

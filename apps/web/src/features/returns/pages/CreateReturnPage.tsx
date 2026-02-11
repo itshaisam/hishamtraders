@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { useInvoiceById } from '../../../hooks/useInvoices';
 import { useCreateCreditNote } from '../../../hooks/useCreditNotes';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { CreateCreditNoteDto } from '../../../types/credit-note.types';
 
 interface ReturnItem {
@@ -24,10 +25,21 @@ export function CreateReturnPage() {
   const navigate = useNavigate();
   const { data: invoice, isLoading } = useInvoiceById(invoiceId!);
   const createMutation = useCreateCreditNote();
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
 
+  const [reasonCategory, setReasonCategory] = useState('');
   const [reason, setReason] = useState('');
   const [returnItems, setReturnItems] = useState<ReturnItem[]>([]);
   const [initialized, setInitialized] = useState(false);
+
+  const REASON_CATEGORIES = [
+    'Defective/Damaged',
+    'Wrong Item Delivered',
+    'Quality Issue',
+    'Overstock/Not Needed',
+    'Other',
+  ];
 
   // Initialize return items once invoice loads
   if (invoice && !initialized) {
@@ -148,7 +160,30 @@ export function CreateReturnPage() {
       {/* Reason */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Return Reason <span className="text-red-500">*</span>
+          Return Reason Category
+        </label>
+        <select
+          value={reasonCategory}
+          onChange={(e) => {
+            const cat = e.target.value;
+            setReasonCategory(cat);
+            if (cat) {
+              // Prepend category if reason doesn't already start with it
+              if (!reason.startsWith(`[${cat}] `)) {
+                setReason(`[${cat}] ${reason.replace(/^\[.*?\]\s*/, '')}`);
+              }
+            }
+          }}
+          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm mb-4"
+        >
+          <option value="">Select a category...</option>
+          {REASON_CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Return Reason Details <span className="text-red-500">*</span>
         </label>
         <textarea
           value={reason}
@@ -192,7 +227,7 @@ export function CreateReturnPage() {
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-600">{item.sku}</td>
                   <td className="py-3 px-4 text-sm text-right">
-                    PKR {item.unitPrice.toLocaleString()}
+                    {cs} {item.unitPrice.toLocaleString()}
                   </td>
                   <td className="py-3 px-4 text-sm text-right">{item.discount}%</td>
                   <td className="py-3 px-4 text-sm text-right">{item.originalQty}</td>
@@ -227,7 +262,7 @@ export function CreateReturnPage() {
                   </td>
                   <td className="py-3 px-4 text-sm text-right font-medium">
                     {item.quantityReturned > 0
-                      ? `PKR ${calculateLineTotal(item).toLocaleString()}`
+                      ? `${cs} ${calculateLineTotal(item).toLocaleString()}`
                       : '-'}
                   </td>
                 </tr>
@@ -243,15 +278,15 @@ export function CreateReturnPage() {
         <div className="max-w-sm ml-auto space-y-3">
           <div className="flex justify-between text-gray-700">
             <span>Subtotal:</span>
-            <span className="font-medium">PKR {subtotal.toLocaleString()}</span>
+            <span className="font-medium">{cs} {subtotal.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-gray-700">
             <span>Tax ({taxRate.toFixed(1)}%):</span>
-            <span className="font-medium">PKR {taxAmount.toLocaleString()}</span>
+            <span className="font-medium">{cs} {taxAmount.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-xl font-bold text-gray-900 pt-3 border-t">
             <span>Total Credit:</span>
-            <span className="text-green-700">PKR {totalCredit.toLocaleString()}</span>
+            <span className="text-green-700">{cs} {totalCredit.toLocaleString()}</span>
           </div>
         </div>
       </div>

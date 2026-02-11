@@ -24,3 +24,26 @@ export const useUpdateTaxRate = () => {
     },
   });
 };
+
+export const useCurrencySymbol = () => {
+  return useQuery({
+    queryKey: ['settings', 'currency-symbol'],
+    queryFn: () => settingsService.getCurrencySymbol(),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useUpdateCurrencySymbol = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (currencySymbol: string) => settingsService.updateCurrencySymbol(currencySymbol),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['settings', 'currency-symbol'] });
+      toast.success(data.message || 'Currency symbol updated successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to update currency symbol');
+    },
+  });
+};

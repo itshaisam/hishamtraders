@@ -31,4 +31,24 @@ router.post(
   controller.createCreditNote
 );
 
+/**
+ * Void a credit note (reverse stock + balance)
+ * Accessible by: ADMIN, ACCOUNTANT only
+ */
+router.patch(
+  '/:id/void',
+  requireRole(['ADMIN', 'ACCOUNTANT']),
+  controller.voidCreditNote
+);
+
+/**
+ * Apply a credit note (bookkeeping status change)
+ * Accessible by: ADMIN, ACCOUNTANT only
+ */
+router.patch(
+  '/:id/apply',
+  requireRole(['ADMIN', 'ACCOUNTANT']),
+  controller.applyCreditNote
+);
+
 export { router as creditNoteRoutes };

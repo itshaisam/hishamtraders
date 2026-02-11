@@ -23,6 +23,8 @@ import {
 } from 'recharts';
 import { apiClient } from '../../lib/api-client';
 import { Card, Spinner } from '../ui';
+import { useCurrencySymbol } from '../../hooks/useSettings';
+import { formatCurrencyCompact, formatChartValue } from '../../lib/formatCurrency';
 
 interface CategoryValue {
   category: string;
@@ -68,18 +70,6 @@ interface WarehouseStats {
   recentMovements: StockMovement[];
 }
 
-function formatPKR(value: number): string {
-  if (value >= 1_000_000) return `PKR ${(value / 1_000_000).toFixed(2)}M`;
-  if (value >= 1_000) return `PKR ${(value / 1_000).toFixed(1)}K`;
-  return `PKR ${value.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
-
-function formatChartPKR(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
-  return value.toString();
-}
-
 const CATEGORY_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
 const movementIcons: Record<string, React.ReactNode> = {
@@ -99,6 +89,8 @@ const movementColors: Record<string, string> = {
 };
 
 export default function WarehouseDashboard() {
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const { data: stats, isLoading, dataUpdatedAt } = useQuery<WarehouseStats>({
     queryKey: ['warehouse-stats'],
     queryFn: async () => {
@@ -145,7 +137,7 @@ export default function WarehouseDashboard() {
             <div className="text-sm text-gray-600">Total Stock Value</div>
             <Warehouse className="text-emerald-500" size={20} />
           </div>
-          <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.stockValue)}</div>
+          <div className="text-2xl font-bold text-gray-900">{formatCurrencyCompact(stats.stockValue, cs)}</div>
           <div className="text-xs text-gray-500 mt-2">At cost price</div>
         </div>
 
@@ -185,9 +177,9 @@ export default function WarehouseDashboard() {
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={stats.stockByCategory} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis type="number" tickFormatter={formatChartPKR} tick={{ fontSize: 12 }} stroke="#9ca3af" />
+              <XAxis type="number" tickFormatter={formatChartValue} tick={{ fontSize: 12 }} stroke="#9ca3af" />
               <YAxis type="category" dataKey="category" tick={{ fontSize: 12 }} stroke="#9ca3af" width={120} />
-              <Tooltip formatter={(value) => [`PKR ${Number(value).toLocaleString()}`, 'Value']} />
+              <Tooltip formatter={(value) => [`${cs} ${Number(value).toLocaleString()}`, 'Value']} />
               <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                 {stats.stockByCategory.map((_entry, idx) => (
                   <Cell key={idx} fill={CATEGORY_COLORS[idx % CATEGORY_COLORS.length]} />

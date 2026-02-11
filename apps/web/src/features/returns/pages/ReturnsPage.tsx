@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Eye, RotateCcw } from 'lucide-react';
 import { useCreditNotes } from '../../../hooks/useCreditNotes';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { CreditNoteFilters, CreditNoteStatus } from '../../../types/credit-note.types';
 
 export function ReturnsPage() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<CreditNoteFilters>({ page: 1, limit: 20 });
   const { data, isLoading } = useCreditNotes(filters);
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -110,7 +113,7 @@ export function ReturnsPage() {
                         {format(new Date(cn.createdAt), 'dd MMM yyyy')}
                       </td>
                       <td className="py-3 px-4 text-sm text-right font-medium text-gray-900">
-                        PKR {Number(cn.totalAmount).toLocaleString()}
+                        {cs} {Number(cn.totalAmount).toLocaleString()}
                       </td>
                       <td className="py-3 px-4">
                         <span

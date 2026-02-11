@@ -67,6 +67,14 @@ export class SettingsService {
   }
 
   /**
+   * Get currency symbol
+   */
+  async getCurrencySymbol(): Promise<string> {
+    const value = await this.getSetting('CURRENCY_SYMBOL');
+    return value || 'PKR';
+  }
+
+  /**
    * Get all settings
    */
   async getAllSettings(category?: string) {
@@ -113,6 +121,7 @@ export class SettingsService {
   async initializeDefaults() {
     const defaults = [
       { key: 'TAX_RATE', value: '18', label: 'Sales Tax Rate (%)', dataType: 'number', category: 'tax' },
+      { key: 'CURRENCY_SYMBOL', value: 'PKR', label: 'Currency', dataType: 'string', category: 'general' },
     ];
 
     for (const setting of defaults) {

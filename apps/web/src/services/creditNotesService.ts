@@ -34,4 +34,14 @@ export const creditNotesService = {
     const response = await apiClient.post<{ data: CreditNote }>(BASE_URL, data);
     return response.data.data;
   },
+
+  voidCreditNote: async (id: string, reason: string): Promise<CreditNote> => {
+    const response = await apiClient.patch<{ data: CreditNote }>(`${BASE_URL}/${id}/void`, { reason });
+    return response.data.data;
+  },
+
+  applyCreditNote: async (id: string): Promise<CreditNote> => {
+    const response = await apiClient.patch<{ data: CreditNote }>(`${BASE_URL}/${id}/apply`, {});
+    return response.data.data;
+  },
 };

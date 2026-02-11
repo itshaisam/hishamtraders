@@ -5,10 +5,13 @@ import { useClients, useCities, useDeleteClient } from '../../../hooks/useClient
 import { ClientStatus, Client } from '../../../types/client.types';
 import { Button, Breadcrumbs } from '../../../components/ui';
 import { useAuthStore } from '../../../stores/auth.store';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 export function ClientsPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state: any) => state.user);
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const canEdit = user?.role?.name && ['ADMIN', 'SALES_OFFICER', 'ACCOUNTANT'].includes(user.role.name);
 
   const [page, setPage] = useState(1);
@@ -220,10 +223,10 @@ export function ClientsPage() {
                       {client.city || '-'}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                      Rs. {client.creditLimit.toLocaleString()}
+                      {cs} {client.creditLimit.toLocaleString()}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                      Rs. {client.balance.toLocaleString()}
+                      {cs} {client.balance.toLocaleString()}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
                       {client.creditUtilization !== undefined && (

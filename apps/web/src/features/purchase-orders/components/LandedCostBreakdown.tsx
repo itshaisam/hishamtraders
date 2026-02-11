@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLandedCost } from '../hooks/usePurchaseOrders';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 interface LandedCostBreakdownProps {
   poId: string;
@@ -7,6 +8,8 @@ interface LandedCostBreakdownProps {
 
 export const LandedCostBreakdown: React.FC<LandedCostBreakdownProps> = ({ poId }) => {
   const { data, isLoading, error } = useLandedCost(poId);
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
 
   if (isLoading) {
     return (
@@ -45,21 +48,21 @@ export const LandedCostBreakdown: React.FC<LandedCostBreakdownProps> = ({ poId }
         <div className="bg-blue-50 rounded-lg p-4">
           <p className="text-sm text-blue-600 font-medium mb-1">Total Product Cost</p>
           <p className="text-2xl font-bold text-blue-900">
-            Rs. {landedCost.totalProductCost.toLocaleString()}
+            {cs} {landedCost.totalProductCost.toLocaleString()}
           </p>
         </div>
 
         <div className="bg-orange-50 rounded-lg p-4">
           <p className="text-sm text-orange-600 font-medium mb-1">Additional Costs</p>
           <p className="text-2xl font-bold text-orange-900">
-            Rs. {landedCost.totalAdditionalCosts.toLocaleString()}
+            {cs} {landedCost.totalAdditionalCosts.toLocaleString()}
           </p>
         </div>
 
         <div className="bg-green-50 rounded-lg p-4">
           <p className="text-sm text-green-600 font-medium mb-1">Grand Total (Landed)</p>
           <p className="text-2xl font-bold text-green-900">
-            Rs. {landedCost.grandTotal.toLocaleString()}
+            {cs} {landedCost.grandTotal.toLocaleString()}
           </p>
         </div>
       </div>
@@ -111,19 +114,19 @@ export const LandedCostBreakdown: React.FC<LandedCostBreakdownProps> = ({ poId }
                       {item.quantity}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-right text-gray-900">
-                      Rs. {item.productCost.toLocaleString()}
+                      {cs} {item.productCost.toLocaleString()}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-right text-gray-600">
                       {(item.productRatio * 100).toFixed(2)}%
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-right text-orange-600 font-medium">
-                      Rs. {item.allocatedAdditionalCost.toLocaleString()}
+                      {cs} {item.allocatedAdditionalCost.toLocaleString()}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-medium">
-                      Rs. {item.totalLandedCost.toLocaleString()}
+                      {cs} {item.totalLandedCost.toLocaleString()}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-right bg-yellow-50 font-bold text-gray-900">
-                      Rs. {item.landedCostPerUnit.toFixed(2)}
+                      {cs} {item.landedCostPerUnit.toFixed(2)}
                     </td>
                   </tr>
                 ))}
@@ -134,14 +137,14 @@ export const LandedCostBreakdown: React.FC<LandedCostBreakdownProps> = ({ poId }
                     Total
                   </td>
                   <td className="px-4 py-3 text-sm text-right text-gray-900">
-                    Rs. {landedCost.totalProductCost.toLocaleString()}
+                    {cs} {landedCost.totalProductCost.toLocaleString()}
                   </td>
                   <td className="px-4 py-3"></td>
                   <td className="px-4 py-3 text-sm text-right text-orange-600">
-                    Rs. {landedCost.totalAdditionalCosts.toLocaleString()}
+                    {cs} {landedCost.totalAdditionalCosts.toLocaleString()}
                   </td>
                   <td className="px-4 py-3 text-sm text-right text-green-700">
-                    Rs. {landedCost.grandTotal.toLocaleString()}
+                    {cs} {landedCost.grandTotal.toLocaleString()}
                   </td>
                   <td className="px-4 py-3 bg-yellow-50"></td>
                 </tr>

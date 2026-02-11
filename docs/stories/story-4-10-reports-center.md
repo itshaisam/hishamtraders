@@ -5,7 +5,7 @@
 **Priority:** Low
 **Estimated Effort:** 3-4 hours
 **Dependencies:** At least some report stories (4.4-4.8) implemented
-**Status:** Draft
+**Status:** Implemented
 
 ---
 

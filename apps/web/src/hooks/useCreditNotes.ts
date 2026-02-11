@@ -47,3 +47,41 @@ export const useCreateCreditNote = () => {
     },
   });
 };
+
+export const useVoidCreditNote = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      creditNotesService.voidCreditNote(id, reason),
+    onSuccess: (creditNote) => {
+      queryClient.invalidateQueries({ queryKey: ['credit-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['credit-note'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      toast.success(`Credit note ${creditNote.creditNoteNumber} has been voided`);
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to void credit note';
+      toast.error(message);
+    },
+  });
+};
+
+export const useApplyCreditNote = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => creditNotesService.applyCreditNote(id),
+    onSuccess: (creditNote) => {
+      queryClient.invalidateQueries({ queryKey: ['credit-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['credit-note'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      toast.success(`Credit note ${creditNote.creditNoteNumber} marked as applied`);
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to apply credit note';
+      toast.error(message);
+    },
+  });
+};

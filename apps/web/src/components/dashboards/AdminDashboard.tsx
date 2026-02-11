@@ -23,6 +23,8 @@ import {
 } from 'recharts';
 import { apiClient } from '../../lib/api-client';
 import { Card, Spinner } from '../ui';
+import { useCurrencySymbol } from '../../hooks/useSettings';
+import { formatCurrencyCompact, formatChartValue } from '../../lib/formatCurrency';
 import WarehouseDashboard from './WarehouseDashboard';
 import SalesDashboard from './SalesDashboard';
 import AccountantDashboard from './AccountantDashboard';
@@ -65,22 +67,6 @@ interface AdminStats {
   revenueTrend: RevenueTrendPoint[];
 }
 
-function formatPKR(value: number): string {
-  if (value >= 1_000_000) {
-    return `PKR ${(value / 1_000_000).toFixed(2)}M`;
-  }
-  if (value >= 1_000) {
-    return `PKR ${(value / 1_000).toFixed(1)}K`;
-  }
-  return `PKR ${value.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
-
-function formatChartPKR(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
-  return value.toString();
-}
-
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const minutes = Math.floor(diff / 60000);
@@ -103,6 +89,8 @@ const actionColors: Record<string, string> = {
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
 
   const { data: stats, isLoading, dataUpdatedAt } = useQuery<AdminStats>({
     queryKey: ['admin-stats'],
@@ -169,7 +157,7 @@ export default function AdminDashboard() {
                 <div className="text-sm text-gray-600">Stock Value</div>
                 <Package className="text-emerald-500" size={20} />
               </div>
-              <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.stockValue)}</div>
+              <div className="text-2xl font-bold text-gray-900">{formatCurrencyCompact(stats.stockValue, cs)}</div>
               <div className="text-xs text-gray-500 mt-2">Total inventory at cost</div>
             </div>
 
@@ -178,7 +166,7 @@ export default function AdminDashboard() {
                 <div className="text-sm text-gray-600">Today's Revenue</div>
                 <TrendingUp className="text-blue-500" size={20} />
               </div>
-              <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.todayRevenue)}</div>
+              <div className="text-2xl font-bold text-gray-900">{formatCurrencyCompact(stats.todayRevenue, cs)}</div>
               <div className="text-xs text-gray-500 mt-2">Invoices today (excl. voided)</div>
             </div>
 
@@ -187,7 +175,7 @@ export default function AdminDashboard() {
                 <div className="text-sm text-gray-600">Month's Revenue</div>
                 <TrendingUp className="text-indigo-500" size={20} />
               </div>
-              <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.monthRevenue)}</div>
+              <div className="text-2xl font-bold text-gray-900">{formatCurrencyCompact(stats.monthRevenue, cs)}</div>
               <div className="text-xs text-gray-500 mt-2">Revenue this month</div>
             </div>
 
@@ -196,7 +184,7 @@ export default function AdminDashboard() {
                 <div className="text-sm text-gray-600">Total Receivables</div>
                 <DollarSign className="text-orange-500" size={20} />
               </div>
-              <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.totalReceivables)}</div>
+              <div className="text-2xl font-bold text-gray-900">{formatCurrencyCompact(stats.totalReceivables, cs)}</div>
               <div className="text-xs text-gray-500 mt-2">Outstanding client balances</div>
             </div>
 
@@ -205,7 +193,7 @@ export default function AdminDashboard() {
                 <div className="text-sm text-gray-600">Total Payables</div>
                 <DollarSign className="text-red-500" size={20} />
               </div>
-              <div className="text-2xl font-bold text-gray-900">{formatPKR(stats.totalPayables)}</div>
+              <div className="text-2xl font-bold text-gray-900">{formatCurrencyCompact(stats.totalPayables, cs)}</div>
               <div className="text-xs text-gray-500 mt-2">Outstanding to suppliers</div>
             </div>
 
@@ -255,12 +243,12 @@ export default function AdminDashboard() {
                     stroke="#9ca3af"
                   />
                   <YAxis
-                    tickFormatter={formatChartPKR}
+                    tickFormatter={formatChartValue}
                     tick={{ fontSize: 12 }}
                     stroke="#9ca3af"
                   />
                   <Tooltip
-                    formatter={(value) => [`PKR ${Number(value).toLocaleString()}`, 'Revenue']}
+                    formatter={(value) => [`${cs} ${Number(value).toLocaleString()}`, 'Revenue']}
                     labelFormatter={(label) => {
                       const d = new Date(String(label) + 'T00:00:00');
                       return d.toLocaleDateString('en-PK', {
@@ -317,7 +305,7 @@ export default function AdminDashboard() {
                           </td>
                           <td className="py-3 text-right text-gray-700">{product.quantitySold}</td>
                           <td className="py-3 text-right font-medium text-gray-900">
-                            {formatPKR(product.revenue)}
+                            {formatCurrencyCompact(product.revenue, cs)}
                           </td>
                         </tr>
                       ))}

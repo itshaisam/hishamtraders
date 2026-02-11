@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { usePaymentDetails } from '../../../hooks/usePayments';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { PAYMENT_METHOD_LABELS, PAYMENT_TYPE_LABELS } from '../../../types/payment.types';
 import { format } from 'date-fns';
 
@@ -10,6 +11,8 @@ interface PaymentDetailsModalProps {
 
 export default function PaymentDetailsModal({ paymentId, onClose }: PaymentDetailsModalProps) {
   const { data, isLoading, error } = usePaymentDetails(paymentId);
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const payment = data?.data;
 
   return (
@@ -65,7 +68,7 @@ export default function PaymentDetailsModal({ paymentId, onClose }: PaymentDetai
                   <p className={`mt-1 text-lg font-bold ${
                     payment.paymentType === 'CLIENT' ? 'text-green-700' : 'text-red-700'
                   }`}>
-                    Rs {parseFloat(payment.amount.toString()).toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+                    {cs} {parseFloat(payment.amount.toString()).toLocaleString('en-PK', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div>
@@ -86,7 +89,7 @@ export default function PaymentDetailsModal({ paymentId, onClose }: PaymentDetai
                 </p>
                 {payment.client?.balance !== undefined && payment.client?.balance !== null && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Current Balance: Rs {parseFloat(payment.client.balance.toString()).toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+                    Current Balance: {cs} {parseFloat(payment.client.balance.toString()).toLocaleString('en-PK', { minimumFractionDigits: 2 })}
                   </p>
                 )}
               </div>
@@ -139,10 +142,10 @@ export default function PaymentDetailsModal({ paymentId, onClose }: PaymentDetai
                               {alloc.invoice.invoiceNumber}
                             </td>
                             <td className="px-3 py-2 text-right text-gray-700">
-                              Rs {parseFloat(alloc.invoice.total.toString()).toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+                              {cs} {parseFloat(alloc.invoice.total.toString()).toLocaleString('en-PK', { minimumFractionDigits: 2 })}
                             </td>
                             <td className="px-3 py-2 text-right font-medium text-green-700">
-                              Rs {parseFloat(alloc.amount.toString()).toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+                              {cs} {parseFloat(alloc.amount.toString()).toLocaleString('en-PK', { minimumFractionDigits: 2 })}
                             </td>
                             <td className="px-3 py-2">
                               <span className={`px-2 py-0.5 text-xs rounded-full ${
@@ -170,7 +173,7 @@ export default function PaymentDetailsModal({ paymentId, onClose }: PaymentDetai
                       <div>
                         <p className="text-sm font-medium text-gray-900">{payment.purchaseOrder.poNumber}</p>
                         <p className="text-xs text-gray-500">
-                          Total: Rs {parseFloat(payment.purchaseOrder.totalAmount.toString()).toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+                          Total: {cs} {parseFloat(payment.purchaseOrder.totalAmount.toString()).toLocaleString('en-PK', { minimumFractionDigits: 2 })}
                         </p>
                       </div>
                       <span className={`px-2 py-0.5 text-xs rounded-full ${

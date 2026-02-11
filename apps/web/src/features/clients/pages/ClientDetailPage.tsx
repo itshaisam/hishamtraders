@@ -8,6 +8,7 @@ import { useClient, useUpdateClient } from '../../../hooks/useClients';
 import { useCreditNotes } from '../../../hooks/useCreditNotes';
 import { Button, Breadcrumbs } from '../../../components/ui';
 import { format } from 'date-fns';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 /**
  * ClientDetailPage - Full page for editing an existing client
@@ -15,6 +16,8 @@ import { format } from 'date-fns';
 export const ClientDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const { data: response, isLoading, isError } = useClient(id || '');
   const { mutate: updateClient, isPending: isUpdating } = useUpdateClient();
 
@@ -165,7 +168,7 @@ export const ClientDetailPage: React.FC = () => {
                           {format(new Date(cn.createdAt), 'dd MMM yyyy')}
                         </td>
                         <td className="py-2 px-3 text-right font-medium">
-                          PKR {Number(cn.totalAmount).toLocaleString()}
+                          {cs} {Number(cn.totalAmount).toLocaleString()}
                         </td>
                         <td className="py-2 px-3">
                           <span className={`px-2 py-1 text-xs rounded-full ${

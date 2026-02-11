@@ -8,7 +8,8 @@ import { Plus, Save, ArrowLeft, Trash2, AlertTriangle } from 'lucide-react';
 import { useCreateInvoice } from '../../../hooks/useInvoices';
 import { useClients } from '../../../hooks/useClients';
 import { useWarehouses } from '../../../hooks/useWarehouses';
-import { useGetTaxRate } from '../../../hooks/useSettings';
+import { useGetTaxRate, useCurrencySymbol } from '../../../hooks/useSettings';
+import { formatCurrency, formatCurrencyDecimal } from '../../../lib/formatCurrency';
 import { useProducts } from '../../products/hooks/useProducts';
 import { CreateInvoiceDto, InvoicePaymentType } from '../../../types/invoice.types';
 import { InvoiceSummary } from '../components/InvoiceSummary';
@@ -44,6 +45,8 @@ export function CreateInvoicePage() {
   const { data: productsData } = useProducts({ page: 1, limit: 1000 });
   const { data: taxRateData } = useGetTaxRate();
   const taxRate = taxRateData?.taxRate ?? 18;
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
 
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showCreditWarning, setShowCreditWarning] = useState(false);
@@ -265,11 +268,11 @@ export function CreateInvoicePage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Balance:</span>
-                  <span className="ml-2 font-semibold">PKR {Number(selectedClient.balance).toLocaleString()}</span>
+                  <span className="ml-2 font-semibold">{formatCurrency(Number(selectedClient.balance), cs)}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Credit Limit:</span>
-                  <span className="ml-2 font-semibold">PKR {Number(selectedClient.creditLimit).toLocaleString()}</span>
+                  <span className="ml-2 font-semibold">{formatCurrency(Number(selectedClient.creditLimit), cs)}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Payment Terms:</span>
@@ -359,7 +362,7 @@ export function CreateInvoicePage() {
                           <option value="">Select Product</option>
                           {productsData?.data.map((product: any) => (
                             <option key={product.id} value={product.id}>
-                              {product.name} ({product.sku}) - PKR {Number(product.sellingPrice).toLocaleString()}
+                              {product.name} ({product.sku}) - {formatCurrency(Number(product.sellingPrice), cs)}
                             </option>
                           ))}
                         </select>
@@ -424,7 +427,7 @@ export function CreateInvoicePage() {
                         )}
                       </td>
                       <td className="py-2 px-2 text-right font-medium">
-                        PKR {lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {formatCurrencyDecimal(lineTotal, cs)}
                       </td>
                       <td className="py-2 px-2">
                         {fields.length > 1 && (

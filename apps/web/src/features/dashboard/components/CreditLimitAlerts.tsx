@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, TrendingUp, ArrowRight } from 'lucide-react';
 import { apiClient } from '../../../lib/api-client';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 interface ClientWithUtilization {
   id: string;
@@ -15,6 +16,8 @@ interface ClientWithUtilization {
 }
 
 export function CreditLimitAlerts() {
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const [clients, setClients] = useState<ClientWithUtilization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -114,13 +117,13 @@ export function CreditLimitAlerts() {
                       <div>
                         <span className="text-gray-500">Balance:</span>{' '}
                         <span className="font-medium text-gray-900">
-                          PKR {client.balance.toLocaleString()}
+                          {cs} {client.balance.toLocaleString()}
                         </span>
                       </div>
                       <div>
                         <span className="text-gray-500">Limit:</span>{' '}
                         <span className="font-medium text-gray-900">
-                          PKR {client.creditLimit.toLocaleString()}
+                          {cs} {client.creditLimit.toLocaleString()}
                         </span>
                       </div>
                     </div>

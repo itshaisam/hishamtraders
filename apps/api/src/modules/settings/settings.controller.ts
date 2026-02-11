@@ -92,4 +92,79 @@ export class SettingsController {
       next(error);
     }
   };
+
+  /**
+   * GET /api/settings/currency-symbol
+   * Get current currency symbol
+   */
+  getCurrencySymbol = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const currencySymbol = await this.settingsService.getCurrencySymbol();
+
+      res.json({
+        success: true,
+        data: { currencySymbol },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * PUT /api/settings/currency-symbol
+   * Update currency symbol (Admin only)
+   */
+  updateCurrencySymbol = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user?.userId! },
+        include: { role: true },
+      });
+
+      if (!user || user.role.name !== 'ADMIN') {
+        throw new ForbiddenError('Only Admin users can update currency symbol');
+      }
+
+      const { currencySymbol } = req.body;
+
+      if (typeof currencySymbol !== 'string' || currencySymbol.trim().length === 0) {
+        throw new BadRequestError('Currency symbol must be a non-empty string');
+      }
+
+      if (currencySymbol.trim().length > 10) {
+        throw new BadRequestError('Currency symbol must be at most 10 characters');
+      }
+
+      const trimmed = currencySymbol.trim();
+      const oldSymbol = await this.settingsService.getCurrencySymbol();
+
+      await this.settingsService.upsertSetting('CURRENCY_SYMBOL', trimmed, 'Currency Symbol', 'string', 'general');
+
+      await AuditService.log({
+        userId: req.user?.userId!,
+        action: 'UPDATE',
+        entityType: 'SystemSetting',
+        entityId: 'CURRENCY_SYMBOL',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        changedFields: {
+          currencySymbol: { old: oldSymbol, new: trimmed },
+        },
+        notes: `Currency symbol changed from "${oldSymbol}" to "${trimmed}" by ${user.name}`,
+      });
+
+      logger.info(`Currency symbol updated to "${trimmed}"`, {
+        userId: req.user?.userId,
+        userName: user.name,
+      });
+
+      res.json({
+        success: true,
+        message: `Currency symbol updated to "${trimmed}"`,
+        data: { currencySymbol: trimmed },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

@@ -12,4 +12,8 @@ router.use(authenticate);
 router.get('/tax-rate', controller.getTaxRate);
 router.put('/tax-rate', controller.updateTaxRate); // Admin only
 
+// Currency symbol settings
+router.get('/currency-symbol', controller.getCurrencySymbol);
+router.put('/currency-symbol', controller.updateCurrencySymbol); // Admin only
+
 export { router as settingsRoutes };
