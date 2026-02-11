@@ -4,12 +4,15 @@ import { format } from 'date-fns';
 import { DollarSign, Plus, Eye } from 'lucide-react';
 import { useAllClientPayments } from '../../../hooks/usePayments';
 import { useClients } from '../../../hooks/useClients';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { PaymentMethod } from '../../../types/payment.types';
 
 function ClientPaymentsPage() {
   const [selectedClientId, setSelectedClientId] = useState<string>('');
 
   const { data: clientsData, isLoading: clientsLoading } = useClients({ page: 1, limit: 1000 });
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const { data, isLoading, error } = useAllClientPayments(selectedClientId || undefined);
 
   const payments = data?.data || [];
@@ -124,7 +127,7 @@ function ClientPaymentsPage() {
                       {payment.client?.name || '-'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold text-green-700">
-                      ${parseFloat(payment.amount).toFixed(2)}
+                      {cs} {parseFloat(payment.amount).toFixed(2)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <span
@@ -147,7 +150,7 @@ function ClientPaymentsPage() {
                                 {allocation.invoice.invoiceNumber}
                               </span>
                               <span className="text-gray-500 text-xs">
-                                (${parseFloat(allocation.amount).toFixed(2)})
+                                ({cs} {parseFloat(allocation.amount).toFixed(2)})
                               </span>
                             </div>
                           ))}

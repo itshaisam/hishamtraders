@@ -7,6 +7,7 @@ import { ArrowLeft, Plus, Edit, Trash2, X } from 'lucide-react';
 import { ProductForm } from '../components/ProductForm';
 import { AttributeBuilder } from '../components/AttributeBuilder';
 import { useProduct, useUpdateProduct } from '../hooks/useProducts';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { useVariantsByProduct, useDeleteVariant, useCreateVariant, useUpdateVariant } from '../hooks/useVariants';
 import { Button, Breadcrumbs, Input, FormField } from '../../../components/ui';
 import { ProductVariant, CreateVariantDto } from '../types/variant.types';
@@ -34,6 +35,8 @@ type VariantFormData = z.infer<typeof variantSchema>;
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const { data: response, isLoading, isError } = useProduct(id || '');
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
   const { data: variantsResponse, isLoading: variantsLoading } = useVariantsByProduct(id || '', 'ACTIVE');
@@ -447,10 +450,10 @@ export const ProductDetailPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        ${variant.costPrice.toFixed(2)}
+                        {cs} {variant.costPrice.toFixed(2)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        ${variant.sellingPrice.toFixed(2)}
+                        {cs} {variant.sellingPrice.toFixed(2)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span

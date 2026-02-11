@@ -8,7 +8,11 @@ import { PaymentReportService } from './payment-report.service.js';
 import { ImportReportService } from './import-report.service.js';
 import { ExpenseReportService } from './expense-report.service.js';
 import { expenseService } from '../expenses/expenses.service.js';
+import { generateExcel } from '../../utils/excel-export.util.js';
+import { BadRequestError } from '../../utils/errors.js';
 import logger from '../../lib/logger.js';
+
+const MAX_EXPORT_ROWS = 10000;
 
 const prisma = new PrismaClient();
 
@@ -218,6 +222,415 @@ export class ReportsController {
       const data = await this.expenseReportService.getExpensesTrend();
       logger.info('Expenses trend report generated', { userId: req.user?.id });
       res.json({ success: true, data });
+    } catch (error) { next(error); }
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // Story 4.9: Excel Export Handlers
+  // ════════════════════════════════════════════════════════════════════
+
+  private sendExcel(res: Response, buffer: Buffer, filename: string) {
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}-${new Date().toISOString().slice(0, 10)}.xlsx"`);
+    res.send(buffer);
+  }
+
+  exportStockReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filters = {
+        warehouseId: req.query.warehouseId as string | undefined,
+        categoryId: req.query.categoryId as string | undefined,
+        status: req.query.status as 'in-stock' | 'low-stock' | 'out-of-stock' | undefined,
+        page: 1,
+        limit: MAX_EXPORT_ROWS,
+      };
+      const result = await this.stockReportService.getStockReport(filters);
+
+      if (result.meta.total > MAX_EXPORT_ROWS) {
+        throw new BadRequestError(`Export limited to ${MAX_EXPORT_ROWS} rows. Please narrow your filters.`);
+      }
+
+      const buffer = await generateExcel({
+        title: 'Stock Report',
+        filters: {
+          Warehouse: filters.warehouseId || 'All',
+          Category: filters.categoryId || 'All',
+          Status: filters.status || 'All',
+        },
+        generatedBy: req.user?.email || 'System',
+        columns: [
+          { header: 'SKU', key: 'sku', width: 14 },
+          { header: 'Product', key: 'productName', width: 28 },
+          { header: 'Category', key: 'categoryName', width: 16 },
+          { header: 'Warehouse', key: 'warehouseName', width: 16 },
+          { header: 'Quantity', key: 'quantity', width: 10 },
+          { header: 'Reorder Level', key: 'reorderLevel', width: 13 },
+          { header: 'Cost Price', key: 'costPrice', width: 14, numFmt: '"Rs."#,##0.00' },
+          { header: 'Stock Value', key: 'value', width: 16, numFmt: '"Rs."#,##0.00' },
+          { header: 'Status', key: 'status', width: 12 },
+        ],
+        data: result.data,
+        summaryRow: { sku: 'TOTAL', value: result.summary.totalValue, quantity: result.summary.totalItems },
+      });
+
+      logger.info('Stock report exported', { userId: req.user?.id, rows: result.data.length });
+      this.sendExcel(res, buffer, 'stock-report');
+    } catch (error) { next(error); }
+  };
+
+  exportStockValuation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.stockReportService.getStockValuation();
+
+      const totalValue = data.reduce((s, d) => s + d.totalValue, 0);
+      const totalQty = data.reduce((s, d) => s + d.totalQuantity, 0);
+
+      const buffer = await generateExcel({
+        title: 'Stock Valuation Report',
+        filters: {},
+        generatedBy: req.user?.email || 'System',
+        columns: [
+          { header: 'Category', key: 'categoryName', width: 22 },
+          { header: 'Total Quantity', key: 'totalQuantity', width: 15 },
+          { header: 'Total Value', key: 'totalValue', width: 18, numFmt: '"Rs."#,##0.00' },
+          { header: '% of Total', key: 'percentage', width: 12, numFmt: '0.00"%"' },
+        ],
+        data,
+        summaryRow: { categoryName: 'TOTAL', totalQuantity: totalQty, totalValue: Math.round(totalValue * 100) / 100 },
+      });
+
+      logger.info('Stock valuation exported', { userId: req.user?.id });
+      this.sendExcel(res, buffer, 'stock-valuation');
+    } catch (error) { next(error); }
+  };
+
+  exportSalesReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : new Date(new Date().getFullYear(), 0, 1);
+      const dateTo = req.query.dateTo ? new Date(req.query.dateTo as string) : new Date();
+      const filters = {
+        dateFrom,
+        dateTo,
+        clientId: req.query.clientId as string | undefined,
+        status: req.query.status as string | undefined,
+        page: 1,
+        limit: MAX_EXPORT_ROWS,
+      };
+      const result = await this.salesReportService.getSalesReport(filters);
+
+      if (result.meta.total > MAX_EXPORT_ROWS) {
+        throw new BadRequestError(`Export limited to ${MAX_EXPORT_ROWS} rows. Please narrow your filters.`);
+      }
+
+      const buffer = await generateExcel({
+        title: 'Sales Report',
+        filters: {
+          'Date From': dateFrom.toISOString().slice(0, 10),
+          'Date To': dateTo.toISOString().slice(0, 10),
+          Status: filters.status || 'All',
+        },
+        generatedBy: req.user?.email || 'System',
+        columns: [
+          { header: 'Invoice #', key: 'invoiceNumber', width: 14 },
+          { header: 'Date', key: 'invoiceDate', width: 12 },
+          { header: 'Client', key: 'clientName', width: 22 },
+          { header: 'Subtotal', key: 'subtotal', width: 14, numFmt: '"Rs."#,##0.00' },
+          { header: 'Tax', key: 'taxAmount', width: 12, numFmt: '"Rs."#,##0.00' },
+          { header: 'Total', key: 'total', width: 14, numFmt: '"Rs."#,##0.00' },
+          { header: 'Paid', key: 'paidAmount', width: 14, numFmt: '"Rs."#,##0.00' },
+          { header: 'Outstanding', key: 'outstanding', width: 14, numFmt: '"Rs."#,##0.00' },
+          { header: 'Status', key: 'status', width: 12 },
+        ],
+        data: result.data,
+        summaryRow: {
+          invoiceNumber: 'TOTAL',
+          total: result.summary.totalAmount,
+          paidAmount: result.summary.totalPaid,
+          outstanding: result.summary.totalOutstanding,
+        },
+      });
+
+      logger.info('Sales report exported', { userId: req.user?.id, rows: result.data.length });
+      this.sendExcel(res, buffer, 'sales-report');
+    } catch (error) { next(error); }
+  };
+
+  exportSalesByClient = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : new Date(new Date().getFullYear(), 0, 1);
+      const dateTo = req.query.dateTo ? new Date(req.query.dateTo as string) : new Date();
+      const data = await this.salesReportService.getSalesByClient(dateFrom, dateTo);
+
+      if (data.length > MAX_EXPORT_ROWS) {
+        throw new BadRequestError(`Export limited to ${MAX_EXPORT_ROWS} rows. Please narrow your filters.`);
+      }
+
+      const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
+      const totalInvoices = data.reduce((s, d) => s + d.invoiceCount, 0);
+
+      const buffer = await generateExcel({
+        title: 'Sales by Client',
+        filters: {
+          'Date From': dateFrom.toISOString().slice(0, 10),
+          'Date To': dateTo.toISOString().slice(0, 10),
+        },
+        generatedBy: req.user?.email || 'System',
+        columns: [
+          { header: 'Client', key: 'clientName', width: 28 },
+          { header: 'Invoices', key: 'invoiceCount', width: 12 },
+          { header: 'Revenue', key: 'revenue', width: 18, numFmt: '"Rs."#,##0.00' },
+        ],
+        data,
+        summaryRow: { clientName: 'TOTAL', invoiceCount: totalInvoices, revenue: Math.round(totalRevenue * 100) / 100 },
+      });
+
+      logger.info('Sales by client exported', { userId: req.user?.id });
+      this.sendExcel(res, buffer, 'sales-by-client');
+    } catch (error) { next(error); }
+  };
+
+  exportSalesByProduct = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : new Date(new Date().getFullYear(), 0, 1);
+      const dateTo = req.query.dateTo ? new Date(req.query.dateTo as string) : new Date();
+      const data = await this.salesReportService.getSalesByProduct(dateFrom, dateTo);
+
+      if (data.length > MAX_EXPORT_ROWS) {
+        throw new BadRequestError(`Export limited to ${MAX_EXPORT_ROWS} rows. Please narrow your filters.`);
+      }
+
+      const totalQty = data.reduce((s, d) => s + d.qtySold, 0);
+      const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
+
+      const buffer = await generateExcel({
+        title: 'Sales by Product',
+        filters: {
+          'Date From': dateFrom.toISOString().slice(0, 10),
+          'Date To': dateTo.toISOString().slice(0, 10),
+        },
+        generatedBy: req.user?.email || 'System',
+        columns: [
+          { header: 'Product', key: 'productName', width: 28 },
+          { header: 'SKU', key: 'sku', width: 14 },
+          { header: 'Qty Sold', key: 'qtySold', width: 12 },
+          { header: 'Revenue', key: 'revenue', width: 18, numFmt: '"Rs."#,##0.00' },
+        ],
+        data,
+        summaryRow: { productName: 'TOTAL', qtySold: totalQty, revenue: Math.round(totalRevenue * 100) / 100 },
+      });
+
+      logger.info('Sales by product exported', { userId: req.user?.id });
+      this.sendExcel(res, buffer, 'sales-by-product');
+    } catch (error) { next(error); }
+  };
+
+  exportPaymentCollections = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : new Date(new Date().getFullYear(), 0, 1);
+      const dateTo = req.query.dateTo ? new Date(req.query.dateTo as string) : new Date();
+      const filters = {
+        dateFrom,
+        dateTo,
+        clientId: req.query.clientId as string | undefined,
+        method: req.query.method as string | undefined,
+        page: 1,
+        limit: MAX_EXPORT_ROWS,
+      };
+      const result = await this.paymentReportService.getPaymentCollectionReport(filters);
+
+      if (result.meta.total > MAX_EXPORT_ROWS) {
+        throw new BadRequestError(`Export limited to ${MAX_EXPORT_ROWS} rows. Please narrow your filters.`);
+      }
+
+      const buffer = await generateExcel({
+        title: 'Payment Collection Report',
+        filters: {
+          'Date From': dateFrom.toISOString().slice(0, 10),
+          'Date To': dateTo.toISOString().slice(0, 10),
+          Method: filters.method || 'All',
+        },
+        generatedBy: req.user?.email || 'System',
+        columns: [
+          { header: 'Date', key: 'date', width: 12 },
+          { header: 'Client', key: 'clientName', width: 24 },
+          { header: 'Amount', key: 'amount', width: 16, numFmt: '"Rs."#,##0.00' },
+          { header: 'Method', key: 'method', width: 16 },
+          { header: 'Reference #', key: 'referenceNumber', width: 16 },
+          { header: 'Notes', key: 'notes', width: 24 },
+        ],
+        data: result.data,
+        summaryRow: { date: 'TOTAL', amount: result.summary.totalCollected },
+      });
+
+      logger.info('Payment collections exported', { userId: req.user?.id, rows: result.data.length });
+      this.sendExcel(res, buffer, 'payment-collections');
+    } catch (error) { next(error); }
+  };
+
+  exportReceivables = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.paymentReportService.getReceivablesReport();
+
+      const totalBalance = data.reduce((s, d) => s + d.balance, 0);
+      const totalOverdue = data.reduce((s, d) => s + d.overdueAmount, 0);
+
+      const buffer = await generateExcel({
+        title: 'Outstanding Receivables',
+        filters: {},
+        generatedBy: req.user?.email || 'System',
+        columns: [
+          { header: 'Client', key: 'clientName', width: 24 },
+          { header: 'Balance', key: 'balance', width: 16, numFmt: '"Rs."#,##0.00' },
+          { header: 'Credit Limit', key: 'creditLimit', width: 16, numFmt: '"Rs."#,##0.00' },
+          { header: 'Overdue Amount', key: 'overdueAmount', width: 16, numFmt: '"Rs."#,##0.00' },
+          { header: 'Days Past Due', key: 'daysPastDue', width: 14 },
+        ],
+        data,
+        summaryRow: {
+          clientName: 'TOTAL',
+          balance: Math.round(totalBalance * 100) / 100,
+          overdueAmount: Math.round(totalOverdue * 100) / 100,
+        },
+      });
+
+      logger.info('Receivables exported', { userId: req.user?.id });
+      this.sendExcel(res, buffer, 'outstanding-receivables');
+    } catch (error) { next(error); }
+  };
+
+  exportImportCostReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filters = {
+        dateFrom: req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined,
+        dateTo: req.query.dateTo ? new Date(req.query.dateTo as string) : undefined,
+        supplierId: req.query.supplierId as string | undefined,
+        status: req.query.status as string | undefined,
+        page: 1,
+        limit: MAX_EXPORT_ROWS,
+      };
+      const result = await this.importReportService.getImportCostReport(filters);
+
+      if (result.meta.total > MAX_EXPORT_ROWS) {
+        throw new BadRequestError(`Export limited to ${MAX_EXPORT_ROWS} rows. Please narrow your filters.`);
+      }
+
+      const buffer = await generateExcel({
+        title: 'Import Cost Report',
+        filters: {
+          'Date From': filters.dateFrom?.toISOString().slice(0, 10) || 'All',
+          'Date To': filters.dateTo?.toISOString().slice(0, 10) || 'All',
+          Status: filters.status || 'All',
+        },
+        generatedBy: req.user?.email || 'System',
+        columns: [
+          { header: 'PO #', key: 'poNumber', width: 14 },
+          { header: 'Date', key: 'orderDate', width: 12 },
+          { header: 'Supplier', key: 'supplierName', width: 22 },
+          { header: 'Product Cost', key: 'productCost', width: 16, numFmt: '"Rs."#,##0.00' },
+          { header: 'Shipping', key: 'shipping', width: 14, numFmt: '"Rs."#,##0.00' },
+          { header: 'Customs', key: 'customs', width: 14, numFmt: '"Rs."#,##0.00' },
+          { header: 'Tax', key: 'tax', width: 12, numFmt: '"Rs."#,##0.00' },
+          { header: 'Other', key: 'other', width: 12, numFmt: '"Rs."#,##0.00' },
+          { header: 'Total Landed', key: 'totalLanded', width: 16, numFmt: '"Rs."#,##0.00' },
+          { header: 'Status', key: 'status', width: 12 },
+        ],
+        data: result.data,
+        summaryRow: {
+          poNumber: 'TOTAL',
+          productCost: result.summary.totalProductCost,
+          shipping: result.summary.totalShipping,
+          customs: result.summary.totalCustoms,
+          tax: result.summary.totalTax,
+          other: result.summary.totalOther,
+          totalLanded: result.summary.totalLanded,
+        },
+      });
+
+      logger.info('Import cost report exported', { userId: req.user?.id, rows: result.data.length });
+      this.sendExcel(res, buffer, 'import-cost-report');
+    } catch (error) { next(error); }
+  };
+
+  exportExpenseReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : new Date(new Date().getFullYear(), 0, 1);
+      const dateTo = req.query.dateTo ? new Date(req.query.dateTo as string) : new Date();
+      const filters = {
+        dateFrom,
+        dateTo,
+        category: req.query.category as string | undefined,
+        page: 1,
+        limit: MAX_EXPORT_ROWS,
+      };
+      const result = await this.expenseReportService.getExpenseReport(filters);
+
+      if (result.meta.total > MAX_EXPORT_ROWS) {
+        throw new BadRequestError(`Export limited to ${MAX_EXPORT_ROWS} rows. Please narrow your filters.`);
+      }
+
+      const buffer = await generateExcel({
+        title: 'Expense Report',
+        filters: {
+          'Date From': dateFrom.toISOString().slice(0, 10),
+          'Date To': dateTo.toISOString().slice(0, 10),
+          Category: filters.category || 'All',
+        },
+        generatedBy: req.user?.email || 'System',
+        columns: [
+          { header: 'Date', key: 'date', width: 12 },
+          { header: 'Category', key: 'category', width: 16 },
+          { header: 'Description', key: 'description', width: 30 },
+          { header: 'Amount', key: 'amount', width: 16, numFmt: '"Rs."#,##0.00' },
+          { header: 'Payment Method', key: 'paymentMethod', width: 16 },
+          { header: 'Recorded By', key: 'recordedBy', width: 16 },
+        ],
+        data: result.data,
+        summaryRow: { date: 'TOTAL', amount: result.summary.totalExpenses },
+      });
+
+      logger.info('Expense report exported', { userId: req.user?.id, rows: result.data.length });
+      this.sendExcel(res, buffer, 'expense-report');
+    } catch (error) { next(error); }
+  };
+
+  exportExpensesByCategory = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : new Date(new Date().getFullYear(), 0, 1);
+      const dateTo = req.query.dateTo ? new Date(req.query.dateTo as string) : new Date();
+      const summary = await expenseService.getExpenseSummary(dateFrom, dateTo);
+
+      const data = summary.byCategory.map((c: any) => ({
+        category: c.category,
+        total: c.total,
+        count: c.count,
+        percentage: summary.totalExpenses > 0
+          ? Math.round((c.total / summary.totalExpenses) * 10000) / 100
+          : 0,
+      }));
+
+      const buffer = await generateExcel({
+        title: 'Expenses by Category',
+        filters: {
+          'Date From': dateFrom.toISOString().slice(0, 10),
+          'Date To': dateTo.toISOString().slice(0, 10),
+        },
+        generatedBy: req.user?.email || 'System',
+        columns: [
+          { header: 'Category', key: 'category', width: 20 },
+          { header: 'Total', key: 'total', width: 16, numFmt: '"Rs."#,##0.00' },
+          { header: 'Count', key: 'count', width: 10 },
+          { header: '% of Total', key: 'percentage', width: 12, numFmt: '0.00"%"' },
+        ],
+        data,
+        summaryRow: {
+          category: 'TOTAL',
+          total: summary.totalExpenses,
+          count: data.reduce((s: number, d: any) => s + d.count, 0),
+        },
+      });
+
+      logger.info('Expenses by category exported', { userId: req.user?.id });
+      this.sendExcel(res, buffer, 'expenses-by-category');
     } catch (error) { next(error); }
   };
 }

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { DollarSign } from 'lucide-react';
 import { format, startOfMonth } from 'date-fns';
 import { usePaymentCollections, useReceivables } from '../../../hooks/useReports';
-import { exportPDF, exportExcel, ExportOptions } from '../../../utils/exportReport';
+import { exportPDF, ExportOptions } from '../../../utils/exportReport';
+import { useExportExcel } from '../../../hooks/useExportExcel';
 import ExportButtons from '../components/ExportButtons';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { formatCurrencyDecimal } from '../../../lib/formatCurrency';
@@ -19,6 +20,7 @@ export default function PaymentReportPage() {
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
   const formatRs = (n: number) => formatCurrencyDecimal(n, cs);
+  const { exportExcel, isExporting } = useExportExcel();
   const [tab, setTab] = useState<Tab>('collections');
   const [dateFrom, setDateFrom] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
   const [dateTo, setDateTo] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -28,7 +30,7 @@ export default function PaymentReportPage() {
   const collectionsQuery = usePaymentCollections({ dateFrom, dateTo, method: method || undefined, page, limit: 50 });
   const receivablesQuery = useReceivables();
 
-  const handleExport = (fmt: 'pdf' | 'excel') => {
+  const handleExportPDF = () => {
     let opts: ExportOptions | null = null;
 
     if (tab === 'collections' && collectionsQuery.data) {
@@ -75,8 +77,19 @@ export default function PaymentReportPage() {
         data: receivablesQuery.data.data,
       };
     }
-    if (!opts) return;
-    fmt === 'pdf' ? exportPDF(opts) : exportExcel(opts);
+    if (opts) exportPDF(opts);
+  };
+
+  const handleExportExcel = () => {
+    if (tab === 'collections') {
+      const params = new URLSearchParams();
+      params.set('dateFrom', dateFrom);
+      params.set('dateTo', dateTo);
+      if (method) params.set('method', method);
+      exportExcel(`/reports/payments/export?${params.toString()}`, 'payment-collections');
+    } else {
+      exportExcel('/reports/receivables/export', 'outstanding-receivables');
+    }
   };
 
   const hasData =
@@ -100,7 +113,7 @@ export default function PaymentReportPage() {
           </h1>
           <p className="text-xs text-gray-400 mt-1">Report generated at {new Date().toLocaleString()}</p>
         </div>
-        <ExportButtons onExportPDF={() => handleExport('pdf')} onExportExcel={() => handleExport('excel')} disabled={!hasData} />
+        <ExportButtons onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} disabled={!hasData} isExporting={isExporting} />
       </div>
 
       {/* Tab buttons */}

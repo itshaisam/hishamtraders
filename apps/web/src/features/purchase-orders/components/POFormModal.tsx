@@ -7,6 +7,7 @@ import { PurchaseOrder, CreatePurchaseOrderRequest, CreatePOItemRequest } from '
 import { POItemsTable } from './POItemsTable';
 import { useSuppliers } from '@/features/suppliers/hooks/useSuppliers';
 import { useProducts } from '@/features/products/hooks/useProducts';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 const poFormSchema = z.object({
   supplierId: z.string().min(1, 'Supplier is required'),
@@ -33,6 +34,8 @@ export const POFormModal: React.FC<POFormModalProps> = ({
   isLoading = false,
 }) => {
   const [items, setItems] = useState<CreatePOItemRequest[]>([]);
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
   const [unitCost, setUnitCost] = useState<number>(0);
@@ -314,7 +317,7 @@ export const POFormModal: React.FC<POFormModalProps> = ({
                 {selectedProductData && (
                   <div className="text-sm text-gray-600">
                     <p>Selected: <span className="font-semibold">{selectedProductData.name}</span></p>
-                    <p>Line Total: <span className="font-semibold">${(quantity * unitCost).toFixed(2)}</span></p>
+                    <p>Line Total: <span className="font-semibold">{cs} {(quantity * unitCost).toFixed(2)}</span></p>
                   </div>
                 )}
               </div>

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AddPOCostRequest, POCostType } from '../types/purchase-order.types';
 import { useAddPOCost } from '../hooks/usePurchaseOrders';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 interface AddCostModalProps {
   poId: string;
@@ -32,6 +33,8 @@ const costTypeOptions: { value: POCostType; label: string }[] = [
 
 export const AddCostModal: React.FC<AddCostModalProps> = ({ poId, isOpen, onClose }) => {
   const addCost = useAddPOCost(poId);
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
 
   const {
     register,
@@ -119,7 +122,7 @@ export const AddCostModal: React.FC<AddCostModalProps> = ({ poId, isOpen, onClos
             {/* Amount */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Amount (Rs.) <span className="text-red-500">*</span>
+                Amount ({cs}) <span className="text-red-500">*</span>
               </label>
               <input
                 {...register('amount', { valueAsNumber: true })}

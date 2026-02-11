@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { format, startOfMonth } from 'date-fns';
 import { useImportCostReport } from '../../../hooks/useReports';
-import { exportPDF, exportExcel, ExportOptions } from '../../../utils/exportReport';
+import { exportPDF, ExportOptions } from '../../../utils/exportReport';
+import { useExportExcel } from '../../../hooks/useExportExcel';
 import ExportButtons from '../components/ExportButtons';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { formatCurrencyDecimal } from '../../../lib/formatCurrency';
@@ -18,6 +19,7 @@ export default function ImportReportPage() {
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
   const formatRs = (n: number) => formatCurrencyDecimal(n, cs);
+  const { exportExcel, isExporting } = useExportExcel();
   const [dateFrom, setDateFrom] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
   const [dateTo, setDateTo] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [status, setStatus] = useState('');
@@ -31,7 +33,7 @@ export default function ImportReportPage() {
     limit: 50,
   });
 
-  const handleExport = (fmt: 'pdf' | 'excel') => {
+  const handleExportPDF = () => {
     if (!query.data || query.data.data.length === 0) return;
     const dateLabel = `${format(new Date(dateFrom), 'dd MMM yyyy')} — ${format(new Date(dateTo), 'dd MMM yyyy')}`;
     const filters = [{ label: 'Period', value: dateLabel }];
@@ -62,7 +64,15 @@ export default function ImportReportPage() {
       ],
       data: query.data.data,
     };
-    fmt === 'pdf' ? exportPDF(opts) : exportExcel(opts);
+    exportPDF(opts);
+  };
+
+  const handleExportExcel = () => {
+    const params = new URLSearchParams();
+    params.set('dateFrom', dateFrom);
+    params.set('dateTo', dateTo);
+    if (status) params.set('status', status);
+    exportExcel(`/reports/imports/export?${params.toString()}`, 'import-cost-report');
   };
 
   const hasData = query.data && query.data.data.length > 0;
@@ -77,7 +87,7 @@ export default function ImportReportPage() {
           </h1>
           <p className="text-xs text-gray-400 mt-1">Report generated at {new Date().toLocaleString()}</p>
         </div>
-        <ExportButtons onExportPDF={() => handleExport('pdf')} onExportExcel={() => handleExport('excel')} disabled={!hasData} />
+        <ExportButtons onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} disabled={!hasData} isExporting={isExporting} />
       </div>
 
       {/* Filters */}

@@ -9,6 +9,7 @@ import { useSuppliers } from '@/features/suppliers/hooks/useSuppliers';
 import { useProducts } from '@/features/products/hooks/useProducts';
 import { useVariantsByProduct } from '@/features/products/hooks/useVariants';
 import { useUomsForSelect } from '@/hooks/useUoms';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 const poFormSchema = z.object({
   supplierId: z.string().min(1, 'Supplier is required'),
@@ -36,6 +37,8 @@ export const POForm: React.FC<POFormProps> = ({
   purchaseOrder,
   isLoading = false,
 }) => {
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const [items, setItems] = useState<CreatePOItemRequest[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [selectedVariant, setSelectedVariant] = useState<string>('');
@@ -528,10 +531,10 @@ export const POForm: React.FC<POFormProps> = ({
                       <td className="px-4 py-2 text-gray-900">{displayName}</td>
                       <td className="px-4 py-2 text-right text-gray-900">{item.quantity}</td>
                       <td className="px-4 py-2 text-right text-gray-900">
-                        ${item.unitCost.toFixed(2)}
+                        {cs} {item.unitCost.toFixed(2)}
                       </td>
                       <td className="px-4 py-2 text-right font-semibold text-gray-900">
-                        ${calculateLineTotal(item.quantity, item.unitCost)}
+                        {cs} {calculateLineTotal(item.quantity, item.unitCost)}
                       </td>
                       <td className="px-4 py-2 text-center">
                         <button
@@ -552,7 +555,7 @@ export const POForm: React.FC<POFormProps> = ({
             {/* Grand Total */}
             <div className="mt-4 p-4 bg-white border border-gray-300 rounded-md flex justify-end">
               <div className="text-lg font-semibold text-gray-900">
-                Grand Total: <span className="text-blue-600">${calculateGrandTotal()}</span>
+                Grand Total: <span className="text-blue-600">{cs} {calculateGrandTotal()}</span>
               </div>
             </div>
           </div>

@@ -2,6 +2,7 @@ import React from 'react';
 import { Eye, Edit2, Trash2, FileText } from 'lucide-react';
 import { PurchaseOrder } from '../types/purchase-order.types';
 import { POStatusBadge } from './POStatusBadge';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 interface POListProps {
   pos: PurchaseOrder[];
@@ -20,6 +21,8 @@ export const POList: React.FC<POListProps> = ({
   onDelete,
   canEdit,
 }) => {
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   if (isLoading) {
     return (
       <div className="text-center py-12">
@@ -90,7 +93,7 @@ export const POList: React.FC<POListProps> = ({
               </td>
               <td className="px-3 sm:px-6 py-2 sm:py-3 text-right">
                 <span className="font-medium text-gray-900 text-xs sm:text-sm">
-                  ${po.totalAmount.toFixed(2)}
+                  {cs} {po.totalAmount.toFixed(2)}
                 </span>
               </td>
               <td className="hidden sm:table-cell px-3 sm:px-6 py-2 sm:py-3 text-center">

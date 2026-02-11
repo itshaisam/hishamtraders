@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ArrowRight } from 'lucide-react';
 import { useAllClientPayments } from '../../../hooks/usePayments';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { PaymentMethod } from '../../../types/payment.types';
 
 interface ClientPaymentHistoryProps {
@@ -10,6 +11,8 @@ interface ClientPaymentHistoryProps {
 
 export const ClientPaymentHistory: React.FC<ClientPaymentHistoryProps> = ({ clientId }) => {
   const { data, isLoading, error } = useAllClientPayments(clientId);
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const payments = data?.data?.slice(0, 5) || [];
 
   const getMethodBadge = (method: PaymentMethod) => {
@@ -83,7 +86,7 @@ export const ClientPaymentHistory: React.FC<ClientPaymentHistoryProps> = ({ clie
                   {format(new Date(payment.date), 'yyyy-MM-dd')}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold text-green-700">
-                  ${parseFloat(payment.amount).toFixed(2)}
+                  {cs} {parseFloat(payment.amount).toFixed(2)}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm">
                   <span
@@ -106,7 +109,7 @@ export const ClientPaymentHistory: React.FC<ClientPaymentHistoryProps> = ({ clie
                             {allocation.invoice.invoiceNumber}
                           </span>
                           <span className="text-gray-500 text-xs">
-                            (${parseFloat(allocation.amount).toFixed(2)})
+                            ({cs} {parseFloat(allocation.amount).toFixed(2)})
                           </span>
                         </div>
                       ))}

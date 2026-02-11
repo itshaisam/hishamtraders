@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trash2, Package } from 'lucide-react';
 import { POItem } from '../types/purchase-order.types';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 interface POItemsTableProps {
   items: POItem[];
@@ -13,6 +14,8 @@ export const POItemsTable: React.FC<POItemsTableProps> = ({
   onRemoveItem,
   readonly = false,
 }) => {
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   if (items.length === 0) {
     return (
       <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
@@ -69,12 +72,12 @@ export const POItemsTable: React.FC<POItemsTableProps> = ({
               </td>
               <td className="px-4 py-3 text-right">
                 <span className="text-gray-900">
-                  ${item.unitCost.toFixed(2)}
+                  {cs} {item.unitCost.toFixed(2)}
                 </span>
               </td>
               <td className="px-4 py-3 text-right">
                 <span className="font-medium text-gray-900">
-                  ${item.totalCost.toFixed(2)}
+                  {cs} {item.totalCost.toFixed(2)}
                 </span>
               </td>
               {!readonly && (
@@ -96,7 +99,7 @@ export const POItemsTable: React.FC<POItemsTableProps> = ({
             </td>
             <td className="px-4 py-3 text-right">
               <span className="text-lg font-bold text-blue-600">
-                ${totalAmount.toFixed(2)}
+                {cs} {totalAmount.toFixed(2)}
               </span>
             </td>
             {!readonly && <td className="px-4 py-3"></td>}

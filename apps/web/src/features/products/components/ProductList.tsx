@@ -1,6 +1,7 @@
 import React from 'react';
-import { Edit2, Trash2, Package, DollarSign, Layers } from 'lucide-react';
+import { Edit2, Trash2, Package, Layers } from 'lucide-react';
 import { Product } from '../types/product.types';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 interface ProductListProps {
   products: Product[];
@@ -17,6 +18,9 @@ export const ProductList: React.FC<ProductListProps> = ({
   onDelete,
   canEdit,
 }) => {
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
+
   if (isLoading) {
     return (
       <div className="text-center py-12">
@@ -67,13 +71,13 @@ export const ProductList: React.FC<ProductListProps> = ({
               </td>
               <td className="px-6 py-3 text-right">
                 <div className="flex items-center justify-end gap-1">
-                  <DollarSign size={14} className="text-gray-400" />
+                  <span className="text-xs text-gray-400">{cs}</span>
                   <span className="text-gray-900 font-medium">{product.costPrice.toFixed(2)}</span>
                 </div>
               </td>
               <td className="px-6 py-3 text-right">
                 <div className="flex items-center justify-end gap-1">
-                  <DollarSign size={14} className="text-gray-400" />
+                  <span className="text-xs text-gray-400">{cs}</span>
                   <span className="text-gray-900 font-medium">{product.sellingPrice.toFixed(2)}</span>
                 </div>
               </td>

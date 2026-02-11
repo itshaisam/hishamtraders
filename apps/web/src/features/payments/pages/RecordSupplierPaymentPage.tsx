@@ -6,6 +6,7 @@ import { DollarSign, ArrowLeft } from 'lucide-react';
 import { useCreateSupplierPayment, usePOBalance } from '../../../hooks/usePayments';
 import { useSuppliers } from '../../suppliers/hooks/useSuppliers';
 import { usePurchaseOrders } from '../../purchase-orders/hooks/usePurchaseOrders';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { PaymentMethod, PaymentReferenceType } from '../../../types/payment.types';
 
 interface PaymentFormData {
@@ -28,6 +29,8 @@ function RecordSupplierPaymentPage() {
   });
 
   const createPayment = useCreateSupplierPayment();
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const { data: suppliersData, isLoading: suppliersLoading } = useSuppliers({ page: 1, limit: 1000 });
   const { data: posData, isLoading: posLoading } = usePurchaseOrders({ page: 1, limit: 1000 });
 
@@ -142,7 +145,7 @@ function RecordSupplierPaymentPage() {
                 <option value="">Select Purchase Order</option>
                 {filteredPOs?.map((po: any) => (
                   <option key={po.id} value={po.id}>
-                    {po.poNumber} - ${parseFloat(po.totalAmount).toFixed(2)}
+                    {po.poNumber} - {cs} {parseFloat(po.totalAmount).toFixed(2)}
                   </option>
                 ))}
               </select>
@@ -159,15 +162,15 @@ function RecordSupplierPaymentPage() {
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
                   <p className="text-blue-600">Total Amount</p>
-                  <p className="font-semibold text-blue-900">${poBalance.total.toFixed(2)}</p>
+                  <p className="font-semibold text-blue-900">{cs} {poBalance.total.toFixed(2)}</p>
                 </div>
                 <div>
                   <p className="text-blue-600">Paid</p>
-                  <p className="font-semibold text-green-700">${poBalance.paid.toFixed(2)}</p>
+                  <p className="font-semibold text-green-700">{cs} {poBalance.paid.toFixed(2)}</p>
                 </div>
                 <div>
                   <p className="text-blue-600">Outstanding</p>
-                  <p className="font-semibold text-red-700">${poBalance.outstanding.toFixed(2)}</p>
+                  <p className="font-semibold text-red-700">{cs} {poBalance.outstanding.toFixed(2)}</p>
                 </div>
               </div>
             </div>

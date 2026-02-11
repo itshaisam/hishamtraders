@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { FileText } from 'lucide-react';
 import { format, startOfMonth } from 'date-fns';
 import { useSalesReport, useSalesByClient, useSalesByProduct } from '../../../hooks/useReports';
-import { exportPDF, exportExcel, ExportOptions } from '../../../utils/exportReport';
+import { exportPDF, ExportOptions } from '../../../utils/exportReport';
+import { useExportExcel } from '../../../hooks/useExportExcel';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { formatCurrencyDecimal } from '../../../lib/formatCurrency';
 import ExportButtons from '../components/ExportButtons';
@@ -27,11 +28,12 @@ export default function SalesReportPage() {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
 
+  const { exportExcel, isExporting } = useExportExcel();
   const salesQuery = useSalesReport({ dateFrom, dateTo, status: status || undefined, page, limit: 50 });
   const byClientQuery = useSalesByClient({ dateFrom, dateTo });
   const byProductQuery = useSalesByProduct({ dateFrom, dateTo });
 
-  const handleExport = (fmt: 'pdf' | 'excel') => {
+  const handleExportPDF = () => {
     const dateLabel = `${format(new Date(dateFrom), 'dd MMM yyyy')} — ${format(new Date(dateTo), 'dd MMM yyyy')}`;
     const filters = [{ label: 'Period', value: dateLabel }];
     if (status) filters.push({ label: 'Status', value: status });
@@ -86,8 +88,22 @@ export default function SalesReportPage() {
         data: byProductQuery.data.data,
       };
     }
-    if (!opts) return;
-    fmt === 'pdf' ? exportPDF(opts) : exportExcel(opts);
+    if (opts) exportPDF(opts);
+  };
+
+  const handleExportExcel = () => {
+    const params = new URLSearchParams();
+    params.set('dateFrom', dateFrom);
+    params.set('dateTo', dateTo);
+    if (status) params.set('status', status);
+
+    const endpointMap: Record<Tab, string> = {
+      'detail': 'sales',
+      'by-client': 'sales-by-client',
+      'by-product': 'sales-by-product',
+    };
+    const endpoint = endpointMap[tab];
+    exportExcel(`/reports/${endpoint}/export?${params.toString()}`, `${endpoint}-report`);
   };
 
   const hasData =
@@ -105,7 +121,7 @@ export default function SalesReportPage() {
           </h1>
           <p className="text-xs text-gray-400 mt-1">Report generated at {new Date().toLocaleString()}</p>
         </div>
-        <ExportButtons onExportPDF={() => handleExport('pdf')} onExportExcel={() => handleExport('excel')} disabled={!hasData} />
+        <ExportButtons onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} disabled={!hasData} isExporting={isExporting} />
       </div>
 
       {/* Tab buttons */}

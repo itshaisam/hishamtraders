@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Input, FormField, RadioBadgeGroup } from '../../../components/ui';
 import { Client, CreateClientDto } from '../../../types/client.types';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 export const clientFormSchema = z.object({
   name: z.string().min(1, 'Client name is required').min(2, 'Name must be at least 2 characters'),
@@ -35,6 +36,8 @@ export const ClientForm: React.FC<ClientFormProps> = ({
   isLoading = false,
 }) => {
   const [status, setStatus] = useState(client?.status || 'ACTIVE');
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
 
   const {
     register,
@@ -169,7 +172,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
-            label="Credit Limit (Rs.)"
+            label={`Credit Limit (${cs})`}
             error={errors.creditLimit?.message}
             required
             helperText="Set to 0 for cash-only clients"

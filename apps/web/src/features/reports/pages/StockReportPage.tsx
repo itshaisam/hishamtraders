@@ -3,7 +3,8 @@ import { Package } from 'lucide-react';
 import { useStockReport, useStockValuation } from '../../../hooks/useReports';
 import { useWarehousesForSelect } from '../../../hooks/useWarehouses';
 import { useCategoriesForSelect } from '../../../hooks/useCategories';
-import { exportPDF, exportExcel, ExportOptions } from '../../../utils/exportReport';
+import { exportPDF, ExportOptions } from '../../../utils/exportReport';
+import { useExportExcel } from '../../../hooks/useExportExcel';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { formatCurrencyDecimal } from '../../../lib/formatCurrency';
 import ExportButtons from '../components/ExportButtons';
@@ -17,6 +18,7 @@ export default function StockReportPage() {
   const [status, setStatus] = useState<string>('all');
   const [page, setPage] = useState(1);
 
+  const { exportExcel, isExporting } = useExportExcel();
   const { options: warehouses } = useWarehousesForSelect();
   const { options: categories } = useCategoriesForSelect();
 
@@ -79,10 +81,19 @@ export default function StockReportPage() {
     return null;
   };
 
-  const handleExport = (format: 'pdf' | 'excel') => {
-    const opts = buildExportOptions(format);
-    if (!opts) return;
-    format === 'pdf' ? exportPDF(opts) : exportExcel(opts);
+  const handleExportPDF = () => {
+    const opts = buildExportOptions('pdf');
+    if (opts) exportPDF(opts);
+  };
+
+  const handleExportExcel = () => {
+    const params = new URLSearchParams();
+    if (warehouseId) params.set('warehouseId', warehouseId);
+    if (categoryId) params.set('categoryId', categoryId);
+    if (status !== 'all') params.set('status', status);
+    const endpoint = tab === 'valuation' ? 'stock-valuation' : 'stock';
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    exportExcel(`/reports/${endpoint}/export${qs}`, `${endpoint}-report`);
   };
 
   const hasData = (tab === 'report' && stockQuery.data && stockQuery.data.data.length > 0) ||
@@ -98,7 +109,7 @@ export default function StockReportPage() {
           </h1>
           <p className="text-xs text-gray-400 mt-1">Report generated at {new Date().toLocaleString()}</p>
         </div>
-        <ExportButtons onExportPDF={() => handleExport('pdf')} onExportExcel={() => handleExport('excel')} disabled={!hasData} />
+        <ExportButtons onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} disabled={!hasData} isExporting={isExporting} />
       </div>
 
       {/* Tab buttons */}

@@ -41,4 +41,16 @@ router.get('/imports', controller.getImportCostReport);
 router.get('/expenses', controller.getExpenseReport);
 router.get('/expenses-trend', controller.getExpensesTrend);
 
+// Excel export routes (Story 4.9)
+router.get('/stock/export', controller.exportStockReport);
+router.get('/stock-valuation/export', controller.exportStockValuation);
+router.get('/sales/export', controller.exportSalesReport);
+router.get('/sales-by-client/export', controller.exportSalesByClient);
+router.get('/sales-by-product/export', controller.exportSalesByProduct);
+router.get('/payments/export', controller.exportPaymentCollections);
+router.get('/receivables/export', controller.exportReceivables);
+router.get('/imports/export', controller.exportImportCostReport);
+router.get('/expenses/export', controller.exportExpenseReport);
+router.get('/expenses-by-category/export', controller.exportExpensesByCategory);
+
 export { router as reportsRoutes };

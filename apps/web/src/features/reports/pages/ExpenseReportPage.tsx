@@ -4,7 +4,8 @@ import { format, startOfMonth } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useExpenseReport, useExpensesTrend } from '../../../hooks/useReports';
 import { useExpenseSummary } from '../../../hooks/useExpenses';
-import { exportPDF, exportExcel, ExportOptions } from '../../../utils/exportReport';
+import { exportPDF, exportExcel as exportExcelClient, ExportOptions } from '../../../utils/exportReport';
+import { useExportExcel } from '../../../hooks/useExportExcel';
 import ExportButtons from '../components/ExportButtons';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { formatCurrencyDecimal } from '../../../lib/formatCurrency';
@@ -32,6 +33,7 @@ export default function ExpenseReportPage() {
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
   const formatRs = (n: number) => formatCurrencyDecimal(n, cs);
+  const { exportExcel, isExporting } = useExportExcel();
   const [tab, setTab] = useState<Tab>('detail');
   const [dateFrom, setDateFrom] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
   const [dateTo, setDateTo] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -42,7 +44,7 @@ export default function ExpenseReportPage() {
   const summaryQuery = useExpenseSummary(dateFrom, dateTo);
   const trendQuery = useExpensesTrend();
 
-  const handleExport = (fmt: 'pdf' | 'excel') => {
+  const handleExportPDF = () => {
     const dateLabel = `${format(new Date(dateFrom), 'dd MMM yyyy')} — ${format(new Date(dateTo), 'dd MMM yyyy')}`;
     let opts: ExportOptions | null = null;
 
@@ -93,8 +95,31 @@ export default function ExpenseReportPage() {
         data: trendQuery.data.data,
       };
     }
-    if (!opts) return;
-    fmt === 'pdf' ? exportPDF(opts) : exportExcel(opts);
+    if (opts) exportPDF(opts);
+  };
+
+  const handleExportExcel = () => {
+    const params = new URLSearchParams();
+    params.set('dateFrom', dateFrom);
+    params.set('dateTo', dateTo);
+
+    if (tab === 'detail') {
+      if (category) params.set('category', category);
+      exportExcel(`/reports/expenses/export?${params.toString()}`, 'expense-report');
+    } else if (tab === 'by-category') {
+      exportExcel(`/reports/expenses-by-category/export?${params.toString()}`, 'expenses-by-category');
+    } else if (tab === 'trend' && trendQuery.data) {
+      // Trend has no backend export — use client-side
+      exportExcelClient({
+        title: 'Expense Trend — Last 12 Months',
+        filename: `expense-trend-${new Date().toISOString().slice(0, 10)}`,
+        columns: [
+          { header: 'Month', key: 'month' },
+          { header: 'Total', key: 'total', align: 'right', format: (v: number) => formatRs(v) },
+        ],
+        data: trendQuery.data.data,
+      });
+    }
   };
 
   const hasData =
@@ -112,7 +137,7 @@ export default function ExpenseReportPage() {
           </h1>
           <p className="text-xs text-gray-400 mt-1">Report generated at {new Date().toLocaleString()}</p>
         </div>
-        <ExportButtons onExportPDF={() => handleExport('pdf')} onExportExcel={() => handleExport('excel')} disabled={!hasData} />
+        <ExportButtons onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} disabled={!hasData} isExporting={isExporting} />
       </div>
 
       {/* Tab buttons */}

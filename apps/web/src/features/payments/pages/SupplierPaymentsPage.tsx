@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { DollarSign, Plus, X } from 'lucide-react';
 import { useSupplierPayments } from '../../../hooks/usePayments';
 import { useSuppliers } from '../../suppliers/hooks/useSuppliers';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { PaymentFilters, PaymentMethod } from '../../../types/payment.types';
 
 function SupplierPaymentsPage() {
@@ -13,6 +14,8 @@ function SupplierPaymentsPage() {
   });
 
   const { data: suppliersData, isLoading: suppliersLoading } = useSuppliers({ page: 1, limit: 1000 });
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const { data, isLoading, error } = useSupplierPayments(filters);
 
   const payments = data?.data || [];
@@ -190,7 +193,7 @@ function SupplierPaymentsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold text-green-700">
-                        ${parseFloat(payment.amount).toFixed(2)}
+                        {cs} {parseFloat(payment.amount).toFixed(2)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
                         <span

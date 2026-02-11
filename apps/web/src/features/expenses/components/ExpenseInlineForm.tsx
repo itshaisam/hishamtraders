@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Plus, Save, X } from 'lucide-react';
 import { useExpense, useCreateExpense, useUpdateExpense } from '../../../hooks/useExpenses';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import {
   ExpenseCategory,
   PaymentMethod,
@@ -18,6 +19,8 @@ interface ExpenseInlineFormProps {
 
 export function ExpenseInlineForm({ editingExpenseId, onCancelEdit }: ExpenseInlineFormProps) {
   const isEdit = !!editingExpenseId;
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const { data: expense } = useExpense(editingExpenseId || '');
   const createMutation = useCreateExpense();
   const updateMutation = useUpdateExpense();
@@ -146,7 +149,7 @@ export function ExpenseInlineForm({ editingExpenseId, onCancelEdit }: ExpenseInl
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Amount (Rs)</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Amount ({cs})</label>
             <input
               type="number"
               step="0.01"

@@ -9,6 +9,7 @@ import { ImportDocumentationSection } from '../components/ImportDocumentationSec
 import { POAdditionalCostsTable } from '../components/POAdditionalCostsTable';
 import { LandedCostBreakdown } from '../components/LandedCostBreakdown';
 import { useAuthStore } from '@/stores/auth.store';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 
 /**
  * POViewPage - Read-only display of a purchase order
@@ -21,6 +22,9 @@ export const POViewPage: React.FC = () => {
   const user = useAuthStore((state: any) => state.user);
   const { data: response, isLoading, isError } = usePurchaseOrder(id || '');
   const { data: canReceiveResponse } = useCanReceivePO(id || '');
+
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
 
   // Extract PO data from API response
   const purchaseOrder = response?.data;
@@ -241,10 +245,10 @@ export const POViewPage: React.FC = () => {
                         </td>
                         <td className="px-4 py-3 text-right text-gray-900">{item.quantity}</td>
                         <td className="px-4 py-3 text-right text-gray-900">
-                          ${typeof item.unitCost === 'number' ? item.unitCost.toFixed(2) : Number(item.unitCost).toFixed(2)}
+                          {cs} {typeof item.unitCost === 'number' ? item.unitCost.toFixed(2) : Number(item.unitCost).toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-right text-gray-900 font-medium">
-                          ${typeof item.totalCost === 'number' ? item.totalCost.toFixed(2) : Number(item.totalCost).toFixed(2)}
+                          {cs} {typeof item.totalCost === 'number' ? item.totalCost.toFixed(2) : Number(item.totalCost).toFixed(2)}
                         </td>
                       </tr>
                     ))}
@@ -265,7 +269,7 @@ export const POViewPage: React.FC = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-medium">Subtotal:</span>
                   <span className="text-gray-900">
-                    $
+                    {cs}{' '}
                     {purchaseOrder.items
                       .reduce((sum, item) => sum + (typeof item.totalCost === 'number' ? item.totalCost : Number(item.totalCost)), 0)
                       .toFixed(2)}
@@ -274,7 +278,7 @@ export const POViewPage: React.FC = () => {
                 <div className="border-t border-gray-200 pt-3 flex justify-between">
                   <span className="text-lg font-semibold text-gray-900">Total:</span>
                   <span className="text-lg font-semibold text-blue-600">
-                    ${typeof purchaseOrder.totalAmount === 'number'
+                    {cs} {typeof purchaseOrder.totalAmount === 'number'
                       ? purchaseOrder.totalAmount.toFixed(2)
                       : Number(purchaseOrder.totalAmount).toFixed(2)}
                   </span>

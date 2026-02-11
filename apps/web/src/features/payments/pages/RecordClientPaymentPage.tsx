@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { DollarSign, ArrowLeft, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { useCreateClientPayment, useClientOutstandingInvoices } from '../../../hooks/usePayments';
 import { useClients } from '../../../hooks/useClients';
+import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { PaymentMethod } from '../../../types/payment.types';
 
 interface PaymentFormData {
@@ -30,6 +31,8 @@ function RecordClientPaymentPage() {
   });
 
   const createPayment = useCreateClientPayment();
+  const { data: currencyData } = useCurrencySymbol();
+  const cs = currencyData?.currencySymbol || 'PKR';
   const { data: clientsData, isLoading: clientsLoading } = useClients({ page: 1, limit: 1000 });
 
   const selectedClientId = watch('clientId');
@@ -92,14 +95,14 @@ function RecordClientPaymentPage() {
                 <div>
                   <p className="text-green-600">Total Allocated</p>
                   <p className="font-semibold text-green-900 text-lg">
-                    ${allocationResult.totalAllocated.toFixed(2)}
+                    {cs} {allocationResult.totalAllocated.toFixed(2)}
                   </p>
                 </div>
                 {allocationResult.overpayment > 0 && (
                   <div>
                     <p className="text-orange-600">Overpayment (Credit Balance)</p>
                     <p className="font-semibold text-orange-900 text-lg">
-                      ${allocationResult.overpayment.toFixed(2)}
+                      {cs} {allocationResult.overpayment.toFixed(2)}
                     </p>
                   </div>
                 )}
@@ -123,7 +126,7 @@ function RecordClientPaymentPage() {
                         <p className="text-sm text-gray-600">Invoice #{index + 1}</p>
                       </div>
                       <p className="font-semibold text-green-700">
-                        ${allocation.allocatedAmount.toFixed(2)}
+                        {cs} {allocation.allocatedAmount.toFixed(2)}
                       </p>
                     </div>
                   ))}
@@ -210,7 +213,7 @@ function RecordClientPaymentPage() {
                     Outstanding Invoices ({outstandingInvoices.length})
                   </h3>
                   <p className="text-sm text-blue-700 mb-3">
-                    Total Outstanding: <span className="font-bold">${totalOutstanding.toFixed(2)}</span>
+                    Total Outstanding: <span className="font-bold">{cs} {totalOutstanding.toFixed(2)}</span>
                   </p>
                   <div className="space-y-1 max-h-40 overflow-y-auto">
                     {outstandingInvoices.slice(0, 5).map((invoice: any) => {
@@ -223,7 +226,7 @@ function RecordClientPaymentPage() {
                           className="flex justify-between items-center text-xs bg-white p-2 rounded"
                         >
                           <span className="text-blue-900 font-medium">{invoice.invoiceNumber}</span>
-                          <span className="text-blue-700">${outstanding.toFixed(2)}</span>
+                          <span className="text-blue-700">{cs} {outstanding.toFixed(2)}</span>
                         </div>
                       );
                     })}
