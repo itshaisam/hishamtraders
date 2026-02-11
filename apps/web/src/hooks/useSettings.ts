@@ -47,3 +47,49 @@ export const useUpdateCurrencySymbol = () => {
     },
   });
 };
+
+export const useCompanyName = () => {
+  return useQuery({
+    queryKey: ['settings', 'company-name'],
+    queryFn: () => settingsService.getCompanyName(),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useUpdateCompanyName = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (companyName: string) => settingsService.updateCompanyName(companyName),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['settings', 'company-name'] });
+      toast.success(data.message || 'Company name updated!');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to update company name');
+    },
+  });
+};
+
+export const useCompanyLogo = () => {
+  return useQuery({
+    queryKey: ['settings', 'company-logo'],
+    queryFn: () => settingsService.getCompanyLogo(),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useUpdateCompanyLogo = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (companyLogo: string) => settingsService.updateCompanyLogo(companyLogo),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['settings', 'company-logo'] });
+      toast.success(data.message || 'Company logo updated!');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to update company logo');
+    },
+  });
+};

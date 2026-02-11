@@ -111,6 +111,110 @@ export class SettingsController {
   };
 
   /**
+   * GET /api/settings/company-name
+   */
+  getCompanyName = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const companyName = await this.settingsService.getCompanyName();
+      res.json({ success: true, data: { companyName } });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * PUT /api/settings/company-name (Admin only)
+   */
+  updateCompanyName = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user?.userId! },
+        include: { role: true },
+      });
+
+      if (!user || user.role.name !== 'ADMIN') {
+        throw new ForbiddenError('Only Admin users can update company name');
+      }
+
+      const { companyName } = req.body;
+      if (typeof companyName !== 'string' || companyName.trim().length === 0) {
+        throw new BadRequestError('Company name must be a non-empty string');
+      }
+
+      const trimmed = companyName.trim();
+      const oldName = await this.settingsService.getCompanyName();
+      await this.settingsService.upsertSetting('COMPANY_NAME', trimmed, 'Company Name', 'string', 'company');
+
+      await AuditService.log({
+        userId: req.user?.userId!,
+        action: 'UPDATE',
+        entityType: 'SystemSetting',
+        entityId: 'COMPANY_NAME',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        changedFields: { companyName: { old: oldName, new: trimmed } },
+        notes: `Company name changed from "${oldName}" to "${trimmed}" by ${user.name}`,
+      });
+
+      res.json({ success: true, message: 'Company name updated', data: { companyName: trimmed } });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * GET /api/settings/company-logo
+   */
+  getCompanyLogo = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const companyLogo = await this.settingsService.getCompanyLogo();
+      res.json({ success: true, data: { companyLogo } });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * PUT /api/settings/company-logo (Admin only)
+   */
+  updateCompanyLogo = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user?.userId! },
+        include: { role: true },
+      });
+
+      if (!user || user.role.name !== 'ADMIN') {
+        throw new ForbiddenError('Only Admin users can update company logo');
+      }
+
+      const { companyLogo } = req.body;
+      if (typeof companyLogo !== 'string') {
+        throw new BadRequestError('Company logo must be a string (URL or empty)');
+      }
+
+      const trimmed = companyLogo.trim();
+      const oldLogo = await this.settingsService.getCompanyLogo();
+      await this.settingsService.upsertSetting('COMPANY_LOGO', trimmed, 'Company Logo URL', 'string', 'company');
+
+      await AuditService.log({
+        userId: req.user?.userId!,
+        action: 'UPDATE',
+        entityType: 'SystemSetting',
+        entityId: 'COMPANY_LOGO',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        changedFields: { companyLogo: { old: oldLogo, new: trimmed } },
+        notes: `Company logo URL updated by ${user.name}`,
+      });
+
+      res.json({ success: true, message: 'Company logo updated', data: { companyLogo: trimmed } });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
    * PUT /api/settings/currency-symbol
    * Update currency symbol (Admin only)
    */

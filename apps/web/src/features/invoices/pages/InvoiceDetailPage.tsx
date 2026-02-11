@@ -1,9 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle, RotateCcw, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { useInvoiceById, useVoidInvoice, useInvoices } from '../../../hooks/useInvoices';
-import { useCurrencySymbol } from '../../../hooks/useSettings';
+import { useCurrencySymbol, useCompanyName, useCompanyLogo } from '../../../hooks/useSettings';
 import { formatCurrency } from '../../../lib/formatCurrency';
 import { VoidInvoiceModal } from '../components/VoidInvoiceModal';
 import { useAuthStore } from '../../../stores/auth.store';
@@ -15,6 +15,10 @@ export function InvoiceDetailPage() {
   const { user } = useAuthStore();
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
+  const { data: companyNameData } = useCompanyName();
+  const { data: companyLogoData } = useCompanyLogo();
+  const companyName = companyNameData?.companyName || 'Hisham Traders';
+  const companyLogo = companyLogoData?.companyLogo || '';
   const voidMutation = useVoidInvoice();
   const [showVoidModal, setShowVoidModal] = useState(false);
 
@@ -39,6 +43,8 @@ export function InvoiceDetailPage() {
       }
     );
   };
+
+  const handlePrint = () => window.print();
 
   // Fetch all invoices for this client (for credit history)
   const { data: clientInvoicesData } = useInvoices(
@@ -101,7 +107,41 @@ export function InvoiceDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <div className="mb-6">
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          .no-print { display: none !important; }
+          .print-only { display: block !important; }
+          body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          nav, aside, [data-sidebar], .sidebar { display: none !important; }
+          main { margin: 0 !important; padding: 0 !important; }
+          .shadow { box-shadow: none !important; }
+          .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+        }
+        .print-only { display: none; }
+      `}</style>
+
+      {/* Print-only company header */}
+      <div className="print-only mb-6 border-b-2 border-gray-800 pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {companyLogo && (
+              <img src={companyLogo} alt="Company Logo" className="h-16 object-contain" />
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{companyName}</h1>
+              <p className="text-sm text-gray-600">Tax Invoice</p>
+            </div>
+          </div>
+          <div className="text-right text-sm text-gray-600">
+            <p>Invoice: <span className="font-bold text-gray-900">{invoice.invoiceNumber}</span></p>
+            <p>Date: {format(new Date(invoice.invoiceDate), 'dd MMM yyyy')}</p>
+            <p>Due: {format(new Date(invoice.dueDate), 'dd MMM yyyy')}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6 no-print">
         <button
           onClick={() => navigate('/invoices')}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
@@ -137,10 +177,17 @@ export function InvoiceDetailPage() {
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={handlePrint}
+              className="no-print px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 flex items-center gap-2"
+            >
+              <Printer className="h-4 w-4" />
+              Print Invoice
+            </button>
             {canReturn && (
               <button
                 onClick={() => navigate(`/returns/create/${invoice.id}`)}
-                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 flex items-center gap-2"
+                className="no-print px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 flex items-center gap-2"
               >
                 <RotateCcw className="h-4 w-4" />
                 Create Return
@@ -149,7 +196,7 @@ export function InvoiceDetailPage() {
             {canVoid && (
               <button
                 onClick={() => setShowVoidModal(true)}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
+                className="no-print px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
               >
                 <XCircle className="h-4 w-4" />
                 Void Invoice
@@ -299,7 +346,7 @@ export function InvoiceDetailPage() {
         </div>
       </div>
 
-      {/* Client Credit History Section - For PDF/Print */}
+      {/* Client Credit History Section */}
       {creditHistory && (
         <div className="bg-white rounded-lg shadow p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4 border-b pb-2">
@@ -397,15 +444,17 @@ export function InvoiceDetailPage() {
       )}
 
       {/* Void Invoice Modal */}
-      {showVoidModal && invoice && (
-        <VoidInvoiceModal
-          invoice={invoice}
-          isOpen={showVoidModal}
-          onClose={() => setShowVoidModal(false)}
-          onConfirm={handleVoidConfirm}
-          isLoading={voidMutation.isPending}
-        />
-      )}
+      <div className="no-print">
+        {showVoidModal && invoice && (
+          <VoidInvoiceModal
+            invoice={invoice}
+            isOpen={showVoidModal}
+            onClose={() => setShowVoidModal(false)}
+            onConfirm={handleVoidConfirm}
+            isLoading={voidMutation.isPending}
+          />
+        )}
+      </div>
     </div>
   );
 }

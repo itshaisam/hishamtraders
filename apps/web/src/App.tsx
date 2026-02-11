@@ -48,6 +48,7 @@ import { TaxSettingsPage } from './features/settings/pages/TaxSettingsPage';
 import { ReturnsPage } from './features/returns/pages/ReturnsPage';
 import { CreateReturnPage } from './features/returns/pages/CreateReturnPage';
 import { CreditNoteDetailPage } from './features/returns/pages/CreditNoteDetailPage';
+import { AuditTrailPage } from './features/audit/pages/AuditTrailPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -578,6 +579,18 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <TaxSettingsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Audit Trail */}
+          <Route
+            path="/audit-trail"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AuditTrailPage />
                 </Layout>
               </ProtectedRoute>
             }

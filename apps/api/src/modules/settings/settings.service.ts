@@ -75,6 +75,22 @@ export class SettingsService {
   }
 
   /**
+   * Get company name
+   */
+  async getCompanyName(): Promise<string> {
+    const value = await this.getSetting('COMPANY_NAME');
+    return value || 'Hisham Traders';
+  }
+
+  /**
+   * Get company logo URL
+   */
+  async getCompanyLogo(): Promise<string> {
+    const value = await this.getSetting('COMPANY_LOGO');
+    return value || '';
+  }
+
+  /**
    * Get all settings
    */
   async getAllSettings(category?: string) {
@@ -122,6 +138,8 @@ export class SettingsService {
     const defaults = [
       { key: 'TAX_RATE', value: '18', label: 'Sales Tax Rate (%)', dataType: 'number', category: 'tax' },
       { key: 'CURRENCY_SYMBOL', value: 'PKR', label: 'Currency', dataType: 'string', category: 'general' },
+      { key: 'COMPANY_NAME', value: 'Hisham Traders', label: 'Company Name', dataType: 'string', category: 'company' },
+      { key: 'COMPANY_LOGO', value: '', label: 'Company Logo URL', dataType: 'string', category: 'company' },
     ];
 
     for (const setting of defaults) {

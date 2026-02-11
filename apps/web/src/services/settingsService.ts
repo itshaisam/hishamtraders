@@ -34,4 +34,38 @@ export const settingsService = {
     }>('/settings/currency-symbol', { currencySymbol });
     return response.data;
   },
+
+  async getCompanyName() {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: { companyName: string };
+    }>('/settings/company-name');
+    return response.data.data;
+  },
+
+  async updateCompanyName(companyName: string) {
+    const response = await apiClient.put<{
+      success: boolean;
+      message: string;
+      data: { companyName: string };
+    }>('/settings/company-name', { companyName });
+    return response.data;
+  },
+
+  async getCompanyLogo() {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: { companyLogo: string };
+    }>('/settings/company-logo');
+    return response.data.data;
+  },
+
+  async updateCompanyLogo(companyLogo: string) {
+    const response = await apiClient.put<{
+      success: boolean;
+      message: string;
+      data: { companyLogo: string };
+    }>('/settings/company-logo', { companyLogo });
+    return response.data;
+  },
 };

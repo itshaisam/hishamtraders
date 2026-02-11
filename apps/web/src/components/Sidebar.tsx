@@ -176,7 +176,7 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                   New Stock Adjustment
                 </Link>
                 <Link
-                  to="/inventory/adjustments/approval"
+                  to="/inventory/adjustments/approvals"
                   className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                 >
                   Adjustment Approvals

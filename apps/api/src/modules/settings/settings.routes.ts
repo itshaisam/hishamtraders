@@ -16,4 +16,10 @@ router.put('/tax-rate', controller.updateTaxRate); // Admin only
 router.get('/currency-symbol', controller.getCurrencySymbol);
 router.put('/currency-symbol', controller.updateCurrencySymbol); // Admin only
 
+// Company settings
+router.get('/company-name', controller.getCompanyName);
+router.put('/company-name', controller.updateCompanyName); // Admin only
+router.get('/company-logo', controller.getCompanyLogo);
+router.put('/company-logo', controller.updateCompanyLogo); // Admin only
+
 export { router as settingsRoutes };
