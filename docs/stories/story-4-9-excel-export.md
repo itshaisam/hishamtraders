@@ -20,33 +20,33 @@
 ## Acceptance Criteria
 
 1. **Excel Export:**
-   - [ ] All report endpoints support `?format=xlsx` query parameter
-   - [ ] Use `exceljs` library (Node.js backend) for Excel generation
-   - [ ] Excel file includes: report title row, filter summary row, timestamp, generated-by user
-   - [ ] Styled headers (bold, colored background)
-   - [ ] Column auto-sizing
-   - [ ] Number formatting (currency as `"Rs."#,##0.00`)
-   - [ ] Summary row at bottom with totals
+   - [x] All report endpoints support `?format=xlsx` query parameter
+   - [x] Use `exceljs` library (Node.js backend) for Excel generation
+   - [x] Excel file includes: report title row, filter summary row, timestamp, generated-by user
+   - [x] Styled headers (bold, colored background)
+   - [x] Column auto-sizing
+   - [x] Number formatting (currency as `"Rs."#,##0.00`)
+   - [x] Summary row at bottom with totals
 
 2. **Download Mechanism:**
-   - [ ] Response `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
-   - [ ] `Content-Disposition: attachment; filename="{report-type}-{date}.xlsx"`
-   - [ ] Frontend triggers download via blob URL
+   - [x] Response `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+   - [x] `Content-Disposition: attachment; filename="{report-type}-{date}.xlsx"`
+   - [x] Frontend triggers download via blob URL
 
 3. **Limits:**
-   - [ ] Max 10,000 rows per export (server-side validation)
-   - [ ] Export returns all matching rows (ignores pagination), up to the 10K limit
-   - [ ] Return 400 if result set exceeds limit, with message to narrow filters
+   - [x] Max 10,000 rows per export (server-side validation)
+   - [x] Export returns all matching rows (ignores pagination), up to the 10K limit
+   - [x] Return 400 if result set exceeds limit, with message to narrow filters
 
 4. **Frontend:**
-   - [ ] "Export to Excel" button on every report page
-   - [ ] Button disabled during active export (shows spinner)
-   - [ ] Success: browser downloads file, toast notification
-   - [ ] Error: toast with reason (too many rows, timeout, server error)
+   - [x] "Export to Excel" button on every report page
+   - [x] Button disabled during active export (shows spinner)
+   - [x] Success: browser downloads file, toast notification
+   - [x] Error: toast with reason (too many rows, timeout, server error)
 
 5. **Authorization:**
-   - [ ] Same authorization as the underlying report endpoint
-   - [ ] No additional export-specific permissions for MVP
+   - [x] Same authorization as the underlying report endpoint
+   - [x] No additional export-specific permissions for MVP
 
 ---
 
@@ -54,9 +54,9 @@
 
 ### Implementation Status
 
-**Backend:** No export functionality exists. Need to install `exceljs` and add export handlers.
+**Backend:** Implemented. `exceljs` installed. Shared `generateExcel()` utility at `apps/api/src/utils/excel-export.util.ts`. 10 export handlers in `reports.controller.ts` with `/export` suffix routes.
 
-**Frontend:** No export buttons exist on report pages.
+**Frontend:** Implemented. `useExportExcel` hook at `apps/web/src/hooks/useExportExcel.ts`. All report pages have PDF (client-side jsPDF) and Excel (server-side exceljs) export buttons with loading spinner.
 
 ### Approach: Shared Export Utility
 

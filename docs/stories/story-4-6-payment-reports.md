@@ -20,35 +20,35 @@
 ## Acceptance Criteria
 
 1. **Payment Collection Report:**
-   - [ ] `GET /api/v1/reports/payments` — client payment collection report
-   - [ ] Filters: `dateFrom` (required), `dateTo` (required), `clientId`, `method`
-   - [ ] Shows: Date, Client, Amount, Method, Reference #, Recorded By
-   - [ ] Summary: Total collected, Payment count, Breakdown by method
+   - [x] `GET /api/v1/reports/payments` — client payment collection report
+   - [x] Filters: `dateFrom` (required), `dateTo` (required), `clientId`, `method`
+   - [x] Shows: Date, Client, Amount, Method, Reference #, Recorded By
+   - [x] Summary: Total collected, Payment count, Breakdown by method
 
 2. **Receivables Report:**
-   - [ ] `GET /api/v1/reports/receivables` — outstanding client balances
-   - [ ] Shows: Client Name, Total Outstanding, Overdue Amount, Max Days Overdue
-   - [ ] Sorted by overdue amount desc
-   - [ ] Color-coding: green (current), yellow (1-14 days overdue), red (15+ days)
+   - [x] `GET /api/v1/reports/receivables` — outstanding client balances
+   - [x] Shows: Client Name, Total Outstanding, Overdue Amount, Max Days Overdue
+   - [x] Sorted by overdue amount desc
+   - [x] Color-coding: green (current), yellow (1-14 days overdue), red (15+ days)
 
 3. **Frontend:**
-   - [ ] Payment Reports page with tab selector (Collection / Receivables)
-   - [ ] Payment list with filters and summary
-   - [ ] Receivables table with aging color indicators
-   - [ ] Export to Excel (Story 4.9)
-   - [ ] Empty state when no results
+   - [x] Payment Reports page with tab selector (Collection / Receivables)
+   - [x] Payment list with filters and summary
+   - [x] Receivables table with aging color indicators
+   - [x] Export to Excel (Story 4.9)
+   - [x] Empty state when no results
 
 4. **Authorization:**
-   - [ ] `ACCOUNTANT`: Full access to all payment data
-   - [ ] `RECOVERY_AGENT`: Full access (no per-client filtering — see note)
-   - [ ] `ADMIN`: Full access
-   - [ ] Other roles: 403 Forbidden
+   - [x] `ACCOUNTANT`: Full access to all payment data
+   - [x] `RECOVERY_AGENT`: Full access (no per-client filtering — see note)
+   - [x] `ADMIN`: Full access
+   - [x] Other roles: 403 Forbidden
 
 5. **Performance:**
-   - [ ] Offset-based pagination: default `limit=50`, max `limit=100`
-   - [ ] TanStack Query with `staleTime: 300000` (5 min)
-   - [ ] Date range validation: `dateFrom <= dateTo`, max 1 year span
-   - [ ] "Report generated at" timestamp shown on page
+   - [x] Offset-based pagination: default `limit=50`, max `limit=100`
+   - [x] TanStack Query with `staleTime: 300000` (5 min)
+   - [x] Date range validation: `dateFrom <= dateTo`, max 1 year span
+   - [x] "Report generated at" timestamp shown on page
 
 ---
 

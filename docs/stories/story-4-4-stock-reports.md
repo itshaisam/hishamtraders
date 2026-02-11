@@ -20,34 +20,34 @@
 ## Acceptance Criteria
 
 1. **Current Stock Report:**
-   - [ ] `GET /api/v1/reports/stock` generates current stock report
-   - [ ] Filters: `warehouseId`, `categoryId`, `status` (all|in-stock|low-stock|out-of-stock), `productId`
-   - [ ] Shows: Product, SKU, Category, Warehouse, Batch, Quantity, Cost Price, Stock Value
-   - [ ] Summary: Total line items, Total stock value
-   - [ ] Sort options: name, quantity, value (default: name)
+   - [x] `GET /api/v1/reports/stock` generates current stock report
+   - [x] Filters: `warehouseId`, `categoryId`, `status` (all|in-stock|low-stock|out-of-stock), `productId`
+   - [x] Shows: Product, SKU, Category, Warehouse, Batch, Quantity, Cost Price, Stock Value
+   - [x] Summary: Total line items, Total stock value
+   - [x] Sort options: name, quantity, value (default: name)
 
 2. **Stock Valuation Report:**
-   - [ ] `GET /api/v1/reports/stock-valuation` by category
-   - [ ] Shows: Category Name, Total Quantity, Total Value, % of Total
+   - [x] `GET /api/v1/reports/stock-valuation` by category
+   - [x] Shows: Category Name, Total Quantity, Total Value, % of Total
 
 3. **Frontend:**
-   - [ ] Stock Report page with filter sidebar
-   - [ ] Responsive table with summary row
-   - [ ] Export to Excel button (Story 4.9)
-   - [ ] Empty state when no results
+   - [x] Stock Report page with filter sidebar
+   - [x] Responsive table with summary row
+   - [x] Export to Excel button (Story 4.9)
+   - [x] Empty state when no results
 
 4. **Authorization:**
-   - [ ] `ADMIN`: Full access
-   - [ ] `ACCOUNTANT`: Full access
-   - [ ] `WAREHOUSE_MANAGER`: Full access (no per-warehouse filtering — see note)
-   - [ ] `SALES_OFFICER`: Read-only access (stock levels only, no valuation)
-   - [ ] `RECOVERY_AGENT`: 403 Forbidden
+   - [x] `ADMIN`: Full access
+   - [x] `ACCOUNTANT`: Full access
+   - [x] `WAREHOUSE_MANAGER`: Full access (no per-warehouse filtering — see note)
+   - [x] `SALES_OFFICER`: Read-only access (stock levels only, no valuation)
+   - [x] `RECOVERY_AGENT`: 403 Forbidden
 
 5. **Performance:**
-   - [ ] Offset-based pagination: default `limit=50`, max `limit=100`
-   - [ ] TanStack Query with `staleTime: 300000` (5 min)
-   - [ ] "Report generated at" timestamp shown on page
-   - [ ] Refresh button to regenerate on-demand
+   - [x] Offset-based pagination: default `limit=50`, max `limit=100`
+   - [x] TanStack Query with `staleTime: 300000` (5 min)
+   - [x] "Report generated at" timestamp shown on page
+   - [x] Refresh button to regenerate on-demand
 
 ---
 

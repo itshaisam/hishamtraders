@@ -20,37 +20,37 @@
 ## Acceptance Criteria
 
 1. **Expense Report:**
-   - [ ] `GET /api/v1/reports/expenses` — detailed expense list
-   - [ ] Filters: `dateFrom` (required), `dateTo` (required), `category`
-   - [ ] Shows: Date, Category, Amount, Description, Payment Method, Recorded By
-   - [ ] Summary: Total expenses, Count, Average per expense
+   - [x] `GET /api/v1/reports/expenses` — detailed expense list
+   - [x] Filters: `dateFrom` (required), `dateTo` (required), `category`
+   - [x] Shows: Date, Category, Amount, Description, Payment Method, Recorded By
+   - [x] Summary: Total expenses, Count, Average per expense
 
 2. **Expense by Category:**
-   - [ ] Expand existing `GET /api/v1/reports/expense-summary` endpoint
-   - [ ] Shows: Category, Total Amount, Count, % of Total
-   - [ ] Already partially implemented (see note)
+   - [x] Expand existing `GET /api/v1/reports/expense-summary` endpoint
+   - [x] Shows: Category, Total Amount, Count, % of Total
+   - [x] Already partially implemented (see note)
 
 3. **Expense Trend:**
-   - [ ] `GET /api/v1/reports/expenses-trend` — monthly trend
-   - [ ] Shows: Month, Total Expenses (last 12 months)
-   - [ ] Optional: line chart on frontend
+   - [x] `GET /api/v1/reports/expenses-trend` — monthly trend
+   - [x] Shows: Month, Total Expenses (last 12 months)
+   - [x] Optional: line chart on frontend
 
 4. **Frontend:**
-   - [ ] Expense Reports page with tabs (Detail / By Category / Trend)
-   - [ ] Date range picker for detail and category views
-   - [ ] Responsive table with summary row
-   - [ ] Export to Excel (Story 4.9)
-   - [ ] Empty state when no results
+   - [x] Expense Reports page with tabs (Detail / By Category / Trend)
+   - [x] Date range picker for detail and category views
+   - [x] Responsive table with summary row
+   - [x] Export to Excel (Story 4.9)
+   - [x] Empty state when no results
 
 5. **Authorization:**
-   - [ ] `ACCOUNTANT`: Full expense data access
-   - [ ] `ADMIN`: Full access
-   - [ ] Other roles: 403 Forbidden
+   - [x] `ACCOUNTANT`: Full expense data access
+   - [x] `ADMIN`: Full access
+   - [x] Other roles: 403 Forbidden
 
 6. **Performance:**
-   - [ ] Offset-based pagination: default `limit=50`, max `limit=100` (detail view)
-   - [ ] TanStack Query with `staleTime: 300000` (5 min)
-   - [ ] Date range validation: `dateFrom <= dateTo`, max 1 year span
+   - [x] Offset-based pagination: default `limit=50`, max `limit=100` (detail view)
+   - [x] TanStack Query with `staleTime: 300000` (5 min)
+   - [x] Date range validation: `dateFrom <= dateTo`, max 1 year span
 
 ---
 

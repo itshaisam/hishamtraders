@@ -20,21 +20,21 @@
 ## Acceptance Criteria
 
 1. **Reports Center Page:**
-   - [ ] Route: `/reports` — lists all reports grouped by category
-   - [ ] Categories: Inventory, Sales, Payments, Purchases, Financial
-   - [ ] Each report: Name, Description, Icon, Link to report page
-   - [ ] Reports filtered by user role (only show reports user can access)
+   - [x] Route: `/reports` — lists all reports grouped by category
+   - [x] Categories: Inventory, Sales, Payments, Purchases, Financial
+   - [x] Each report: Name, Description, Icon, Link to report page
+   - [x] Reports filtered by user role (only show reports user can access)
 
 2. **Design:**
-   - [ ] Card/tile layout with responsive grid (1 col mobile, 2 col tablet, 3 col desktop)
-   - [ ] Category headers grouping related reports
-   - [ ] Hover effects on cards
-   - [ ] Dashboard includes "View All Reports" link
+   - [x] Card/tile layout with responsive grid (1 col mobile, 2 col tablet, 3 col desktop)
+   - [x] Category headers grouping related reports
+   - [x] Hover effects on cards
+   - [x] Dashboard includes "View All Reports" link
 
 3. **Authorization:**
-   - [ ] Reports center page accessible by all authenticated roles
-   - [ ] Individual report cards filtered by role — user only sees reports they can access
-   - [ ] No API calls — this is a static page with client-side role filtering
+   - [x] Reports center page accessible by all authenticated roles
+   - [x] Individual report cards filtered by role — user only sees reports they can access
+   - [x] No API calls — this is a static page with client-side role filtering
 
 ---
 

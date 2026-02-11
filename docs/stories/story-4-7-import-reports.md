@@ -20,31 +20,31 @@
 ## Acceptance Criteria
 
 1. **Import Cost Report:**
-   - [ ] `GET /api/v1/reports/imports` — import cost analysis
-   - [ ] Filters: `dateFrom` (required), `dateTo` (required), `supplierId`, `status`
-   - [ ] Shows: PO #, Supplier, Container #, Ship Date, Expected Arrival, Product Cost, Shipping, Customs, Tax, Other Costs, Total Landed Cost, Status
-   - [ ] Summary: Total POs, Total product cost, Total additional costs, Total landed cost
+   - [x] `GET /api/v1/reports/imports` — import cost analysis
+   - [x] Filters: `dateFrom` (required), `dateTo` (required), `supplierId`, `status`
+   - [x] Shows: PO #, Supplier, Container #, Ship Date, Expected Arrival, Product Cost, Shipping, Customs, Tax, Other Costs, Total Landed Cost, Status
+   - [x] Summary: Total POs, Total product cost, Total additional costs, Total landed cost
 
 2. **Supplier PO Summary:**
-   - [ ] `GET /api/v1/reports/supplier-summary/:supplierId`
-   - [ ] Shows: Total POs, Total Ordered Value, Total Paid, Outstanding
+   - [x] `GET /api/v1/reports/supplier-summary/:supplierId`
+   - [x] Shows: Total POs, Total Ordered Value, Total Paid, Outstanding
 
 3. **Frontend:**
-   - [ ] Import Reports page with filters
-   - [ ] PO list with landed cost breakdown columns
-   - [ ] Export to Excel (Story 4.9)
-   - [ ] Empty state when no results
+   - [x] Import Reports page with filters
+   - [x] PO list with landed cost breakdown columns
+   - [x] Export to Excel (Story 4.9)
+   - [x] Empty state when no results
 
 4. **Authorization:**
-   - [ ] `ACCOUNTANT`: Full import cost data access
-   - [ ] `ADMIN`: Full access
-   - [ ] `WAREHOUSE_MANAGER`: Read-only (PO status and dates, no cost data)
-   - [ ] Other roles: 403 Forbidden
+   - [x] `ACCOUNTANT`: Full import cost data access
+   - [x] `ADMIN`: Full access
+   - [x] `WAREHOUSE_MANAGER`: Read-only (PO status and dates, no cost data)
+   - [x] Other roles: 403 Forbidden
 
 5. **Performance:**
-   - [ ] Offset-based pagination: default `limit=50`, max `limit=100`
-   - [ ] TanStack Query with `staleTime: 600000` (10 min — import data changes infrequently)
-   - [ ] Date range validation: `dateFrom <= dateTo`, max 1 year span
+   - [x] Offset-based pagination: default `limit=50`, max `limit=100`
+   - [x] TanStack Query with `staleTime: 600000` (10 min — import data changes infrequently)
+   - [x] Date range validation: `dateFrom <= dateTo`, max 1 year span
 
 ---
 

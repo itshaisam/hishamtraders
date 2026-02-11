@@ -20,41 +20,41 @@
 ## Acceptance Criteria
 
 1. **Sales Report API:**
-   - [ ] `GET /api/v1/reports/sales` — detailed sales report
-   - [ ] Filters: `dateFrom` (required), `dateTo` (required), `clientId`, `productId`, `status`
-   - [ ] Shows: Invoice #, Date, Client, Items (product, qty, unit price, total), Invoice Total, Status
-   - [ ] Summary: Total invoices, Total amount, Total paid, Total outstanding
+   - [x] `GET /api/v1/reports/sales` — detailed sales report
+   - [x] Filters: `dateFrom` (required), `dateTo` (required), `clientId`, `productId`, `status`
+   - [x] Shows: Invoice #, Date, Client, Items (product, qty, unit price, total), Invoice Total, Status
+   - [x] Summary: Total invoices, Total amount, Total paid, Total outstanding
 
 2. **Sales by Client:**
-   - [ ] `GET /api/v1/reports/sales-by-client`
-   - [ ] Filters: `dateFrom` (required), `dateTo` (required)
-   - [ ] Shows: Client Name, Total Invoices, Total Revenue
-   - [ ] Sorted by revenue desc
+   - [x] `GET /api/v1/reports/sales-by-client`
+   - [x] Filters: `dateFrom` (required), `dateTo` (required)
+   - [x] Shows: Client Name, Total Invoices, Total Revenue
+   - [x] Sorted by revenue desc
 
 3. **Sales by Product:**
-   - [ ] `GET /api/v1/reports/sales-by-product`
-   - [ ] Filters: `dateFrom` (required), `dateTo` (required)
-   - [ ] Shows: Product Name, Quantity Sold, Revenue
-   - [ ] Sorted by revenue desc
+   - [x] `GET /api/v1/reports/sales-by-product`
+   - [x] Filters: `dateFrom` (required), `dateTo` (required)
+   - [x] Shows: Product Name, Quantity Sold, Revenue
+   - [x] Sorted by revenue desc
 
 4. **Frontend:**
-   - [ ] Sales Reports page with report type selector (tabs or dropdown)
-   - [ ] Date range picker (from/to) — required
-   - [ ] Results table with summary row
-   - [ ] Export to Excel button (Story 4.9)
-   - [ ] Empty state when no results
+   - [x] Sales Reports page with report type selector (tabs or dropdown)
+   - [x] Date range picker (from/to) — required
+   - [x] Results table with summary row
+   - [x] Export to Excel button (Story 4.9)
+   - [x] Empty state when no results
 
 5. **Authorization:**
-   - [ ] `SALES_OFFICER`: All sales data (no territory filtering — see note)
-   - [ ] `ACCOUNTANT`: All sales data
-   - [ ] `ADMIN`: Full access
-   - [ ] Other roles: 403 Forbidden
+   - [x] `SALES_OFFICER`: All sales data (no territory filtering — see note)
+   - [x] `ACCOUNTANT`: All sales data
+   - [x] `ADMIN`: Full access
+   - [x] Other roles: 403 Forbidden
 
 6. **Performance:**
-   - [ ] Offset-based pagination: default `limit=50`, max `limit=100`
-   - [ ] TanStack Query with `staleTime: 300000` (5 min)
-   - [ ] Date range validation: `dateFrom <= dateTo`, max 1 year span
-   - [ ] "Report generated at" timestamp shown on page
+   - [x] Offset-based pagination: default `limit=50`, max `limit=100`
+   - [x] TanStack Query with `staleTime: 300000` (5 min)
+   - [x] Date range validation: `dateFrom <= dateTo`, max 1 year span
+   - [x] "Report generated at" timestamp shown on page
 
 ---
 
