@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format } from 'date-fns';
+import { format, addDays, parseISO } from 'date-fns';
 import { Plus, Save, ArrowLeft, Trash2, AlertTriangle } from 'lucide-react';
 import { useCreateInvoice } from '../../../hooks/useInvoices';
 import { useClients } from '../../../hooks/useClients';
@@ -79,6 +79,12 @@ export function CreateInvoicePage() {
   const watchPaymentType = watch('paymentType');
   const watchItems = watch('items');
   const watchWarehouseId = watch('warehouseId');
+  const watchInvoiceDate = watch('invoiceDate');
+
+  // Compute due date from invoice date + client payment terms
+  const computedDueDate = selectedClient && watchInvoiceDate
+    ? format(addDays(parseISO(watchInvoiceDate), selectedClient.paymentTermsDays || 30), 'dd MMM yyyy')
+    : null;
 
   // Fetch stock levels when warehouse or products change
   useEffect(() => {
@@ -261,6 +267,15 @@ export function CreateInvoicePage() {
               )}
             </div>
           </div>
+
+          {/* Computed Due Date */}
+          {computedDueDate && (
+            <div className="mt-4 flex items-center gap-2 text-sm bg-blue-50 border border-blue-200 rounded-md px-4 py-2">
+              <span className="text-blue-700 font-medium">Due Date:</span>
+              <span className="text-blue-900 font-semibold">{computedDueDate}</span>
+              <span className="text-blue-600">({selectedClient.paymentTermsDays} days from invoice date)</span>
+            </div>
+          )}
 
           {/* Client Info */}
           {selectedClient && (
