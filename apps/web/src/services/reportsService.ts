@@ -181,6 +181,82 @@ export interface ExpenseTrendRow {
   total: number;
 }
 
+// ---- Trial Balance ----
+export interface TrialBalanceRow {
+  accountId: string;
+  code: string;
+  name: string;
+  accountType: string;
+  openingBalance: number;
+  totalDebits: number;
+  totalCredits: number;
+  closingBalance: number;
+  debitBalance: number;
+  creditBalance: number;
+}
+
+export interface TrialBalanceReport {
+  asOfDate: string;
+  rows: TrialBalanceRow[];
+  totals: {
+    totalDebits: number;
+    totalCredits: number;
+    debitBalanceTotal: number;
+    creditBalanceTotal: number;
+  };
+  isBalanced: boolean;
+}
+
+// ---- Balance Sheet ----
+export interface BalanceSheetRow {
+  accountId: string;
+  code: string;
+  name: string;
+  accountType: string;
+  balance: number;
+}
+
+export interface BalanceSheetSection {
+  type: string;
+  label: string;
+  accounts: BalanceSheetRow[];
+  total: number;
+}
+
+export interface BalanceSheetReport {
+  asOfDate: string;
+  assets: BalanceSheetSection;
+  liabilities: BalanceSheetSection;
+  equity: BalanceSheetSection;
+  retainedEarnings: number;
+  totalLiabilitiesAndEquity: number;
+  isBalanced: boolean;
+}
+
+// ---- General Ledger ----
+export interface GeneralLedgerEntry {
+  date: string;
+  entryNumber: string;
+  journalEntryId: string;
+  description: string;
+  referenceType: string | null;
+  referenceId: string | null;
+  debitAmount: number;
+  creditAmount: number;
+  runningBalance: number;
+}
+
+export interface GeneralLedgerReport {
+  account: { id: string; code: string; name: string; accountType: string };
+  dateFrom: string;
+  dateTo: string;
+  openingBalance: number;
+  entries: GeneralLedgerEntry[];
+  closingBalance: number;
+  totalDebits: number;
+  totalCredits: number;
+}
+
 // ---- Service ----
 export const reportsService = {
   // Stock
@@ -275,5 +351,29 @@ export const reportsService = {
   async getExpensesTrend() {
     const res = await apiClient.get<{ success: boolean; data: ExpenseTrendRow[] }>('/reports/expenses-trend');
     return res.data;
+  },
+
+  // Accounting reports (Epic 5)
+  async getTrialBalance(asOfDate?: string) {
+    const params = new URLSearchParams();
+    if (asOfDate) params.append('asOfDate', asOfDate);
+    const res = await apiClient.get<{ success: boolean; data: TrialBalanceReport }>(`/reports/trial-balance?${params}`);
+    return res.data.data;
+  },
+
+  async getBalanceSheet(asOfDate?: string) {
+    const params = new URLSearchParams();
+    if (asOfDate) params.append('asOfDate', asOfDate);
+    const res = await apiClient.get<{ success: boolean; data: BalanceSheetReport }>(`/reports/balance-sheet?${params}`);
+    return res.data.data;
+  },
+
+  async getGeneralLedger(accountHeadId: string, dateFrom?: string, dateTo?: string) {
+    const params = new URLSearchParams();
+    params.append('accountHeadId', accountHeadId);
+    if (dateFrom) params.append('dateFrom', dateFrom);
+    if (dateTo) params.append('dateTo', dateTo);
+    const res = await apiClient.get<{ success: boolean; data: GeneralLedgerReport }>(`/reports/general-ledger?${params}`);
+    return res.data.data;
   },
 };

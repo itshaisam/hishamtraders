@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 8-10 hours
 **Dependencies:** Story 5.4 (Trial Balance)
-**Status:** Draft — Phase 2
+**Status:** Done
 
 ---
 

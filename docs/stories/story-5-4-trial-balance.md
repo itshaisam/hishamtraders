@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Story 5.3 (Auto Journal Entries)
-**Status:** Draft — Phase 2
+**Status:** Done
 
 ---
 

@@ -41,6 +41,11 @@ router.get('/imports', controller.getImportCostReport);
 router.get('/expenses', controller.getExpenseReport);
 router.get('/expenses-trend', controller.getExpensesTrend);
 
+// Accounting reports (Epic 5)
+router.get('/trial-balance', controller.getTrialBalance);
+router.get('/balance-sheet', controller.getBalanceSheet);
+router.get('/general-ledger', controller.getGeneralLedger);
+
 // Excel export routes (Story 4.9)
 router.get('/stock/export', controller.exportStockReport);
 router.get('/stock-valuation/export', controller.exportStockValuation);

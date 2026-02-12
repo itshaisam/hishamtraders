@@ -451,6 +451,24 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                 >
                   Journal Entries
                 </Link>
+                <Link
+                  to="/accounting/trial-balance"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Trial Balance
+                </Link>
+                <Link
+                  to="/accounting/balance-sheet"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Balance Sheet
+                </Link>
+                <Link
+                  to="/accounting/general-ledger"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  General Ledger
+                </Link>
               </div>
             )}
           </div>

@@ -7,6 +7,9 @@ import { SalesReportService } from './sales-report.service.js';
 import { PaymentReportService } from './payment-report.service.js';
 import { ImportReportService } from './import-report.service.js';
 import { ExpenseReportService } from './expense-report.service.js';
+import { TrialBalanceService } from './trial-balance.service.js';
+import { BalanceSheetService } from './balance-sheet.service.js';
+import { GeneralLedgerService } from './general-ledger.service.js';
 import { expenseService } from '../expenses/expenses.service.js';
 import { generateExcel } from '../../utils/excel-export.util.js';
 import { BadRequestError } from '../../utils/errors.js';
@@ -24,6 +27,9 @@ export class ReportsController {
   private paymentReportService: PaymentReportService;
   private importReportService: ImportReportService;
   private expenseReportService: ExpenseReportService;
+  private trialBalanceService: TrialBalanceService;
+  private balanceSheetService: BalanceSheetService;
+  private generalLedgerService: GeneralLedgerService;
 
   constructor() {
     this.creditLimitReportService = new CreditLimitReportService(prisma);
@@ -33,6 +39,9 @@ export class ReportsController {
     this.paymentReportService = new PaymentReportService(prisma);
     this.importReportService = new ImportReportService(prisma);
     this.expenseReportService = new ExpenseReportService(prisma);
+    this.trialBalanceService = new TrialBalanceService();
+    this.balanceSheetService = new BalanceSheetService();
+    this.generalLedgerService = new GeneralLedgerService();
   }
 
   // ---- Existing endpoints ----
@@ -222,6 +231,58 @@ export class ReportsController {
       const data = await this.expenseReportService.getExpensesTrend();
       logger.info('Expenses trend report generated', { userId: req.user?.id });
       res.json({ success: true, data });
+    } catch (error) { next(error); }
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // Story 5.4: Trial Balance
+  // ════════════════════════════════════════════════════════════════════
+
+  getTrialBalance = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const asOfDate = req.query.asOfDate
+        ? new Date(req.query.asOfDate as string)
+        : new Date();
+      const report = await this.trialBalanceService.getTrialBalance(asOfDate);
+      logger.info('Trial balance generated', { asOfDate: report.asOfDate, userId: req.user?.id });
+      res.json({ success: true, data: report });
+    } catch (error) { next(error); }
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // Story 5.5: Balance Sheet
+  // ════════════════════════════════════════════════════════════════════
+
+  getBalanceSheet = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const asOfDate = req.query.asOfDate
+        ? new Date(req.query.asOfDate as string)
+        : new Date();
+      const report = await this.balanceSheetService.getBalanceSheet(asOfDate);
+      logger.info('Balance sheet generated', { asOfDate: report.asOfDate, userId: req.user?.id });
+      res.json({ success: true, data: report });
+    } catch (error) { next(error); }
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // Story 5.6: General Ledger
+  // ════════════════════════════════════════════════════════════════════
+
+  getGeneralLedger = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const accountHeadId = req.query.accountHeadId as string;
+      if (!accountHeadId) {
+        throw new BadRequestError('accountHeadId is required');
+      }
+      const dateFrom = req.query.dateFrom
+        ? new Date(req.query.dateFrom as string)
+        : new Date(new Date().getFullYear(), 0, 1);
+      const dateTo = req.query.dateTo
+        ? new Date(req.query.dateTo as string)
+        : new Date();
+      const report = await this.generalLedgerService.getGeneralLedger(accountHeadId, dateFrom, dateTo);
+      logger.info('General ledger generated', { accountHeadId, userId: req.user?.id });
+      res.json({ success: true, data: report });
     } catch (error) { next(error); }
   };
 

@@ -54,6 +54,9 @@ import { ChartOfAccountsPage } from './features/accounting/pages/ChartOfAccounts
 import { JournalEntriesPage } from './features/accounting/pages/JournalEntriesPage';
 import { CreateJournalEntryPage } from './features/accounting/pages/CreateJournalEntryPage';
 import { JournalEntryDetailPage } from './features/accounting/pages/JournalEntryDetailPage';
+import { TrialBalancePage } from './features/accounting/pages/TrialBalancePage';
+import { BalanceSheetPage } from './features/accounting/pages/BalanceSheetPage';
+import { GeneralLedgerPage } from './features/accounting/pages/GeneralLedgerPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -651,6 +654,39 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <JournalEntryDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/accounting/trial-balance"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <TrialBalancePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/accounting/balance-sheet"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <BalanceSheetPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/accounting/general-ledger"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <GeneralLedgerPage />
                 </Layout>
               </ProtectedRoute>
             }
