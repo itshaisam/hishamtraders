@@ -81,6 +81,27 @@ export class ClientRepository {
     });
   }
 
+  async findByIdWithInvoices(id: string) {
+    return this.prisma.client.findUnique({
+      where: { id },
+      include: {
+        invoices: {
+          select: {
+            id: true,
+            invoiceNumber: true,
+            invoiceDate: true,
+            dueDate: true,
+            total: true,
+            paidAmount: true,
+            status: true,
+            paymentType: true,
+          },
+          orderBy: { invoiceDate: 'desc' },
+        },
+      },
+    });
+  }
+
   async update(id: string, data: Prisma.ClientUpdateInput): Promise<Client> {
     return this.prisma.client.update({
       where: { id },

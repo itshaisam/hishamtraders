@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Printer, PackageCheck } from 'lucide-react';
+import { ArrowLeft, FileDown, PackageCheck } from 'lucide-react';
 import { POFormSkeleton } from '../components/POFormSkeleton';
 import { usePurchaseOrder, useCanReceivePO } from '../hooks/usePurchaseOrders';
 import { POStatusBadge } from '../components/POStatusBadge';
@@ -9,7 +9,8 @@ import { ImportDocumentationSection } from '../components/ImportDocumentationSec
 import { POAdditionalCostsTable } from '../components/POAdditionalCostsTable';
 import { LandedCostBreakdown } from '../components/LandedCostBreakdown';
 import { useAuthStore } from '@/stores/auth.store';
-import { useCurrencySymbol } from '../../../hooks/useSettings';
+import { useCurrencySymbol, useCompanyName } from '../../../hooks/useSettings';
+import { generatePoPdf } from '../../../utils/poPdf';
 
 /**
  * POViewPage - Read-only display of a purchase order
@@ -25,6 +26,8 @@ export const POViewPage: React.FC = () => {
 
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
+  const { data: companyNameData } = useCompanyName();
+  const companyName = companyNameData?.companyName || 'Hisham Traders';
 
   // Extract PO data from API response
   const purchaseOrder = response?.data;
@@ -33,8 +36,10 @@ export const POViewPage: React.FC = () => {
   // Check if user can receive goods (ADMIN or WAREHOUSE_MANAGER)
   const canUserReceive = user?.role?.name === 'ADMIN' || user?.role?.name === 'WAREHOUSE_MANAGER';
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownloadPdf = () => {
+    if (!purchaseOrder) return;
+    const doc = generatePoPdf(purchaseOrder, companyName, cs);
+    doc.save(`${purchaseOrder.poNumber}.pdf`);
   };
 
   if (isLoading) {
@@ -96,12 +101,12 @@ export const POViewPage: React.FC = () => {
               </button>
             )}
             <button
-              onClick={handlePrint}
+              onClick={handleDownloadPdf}
               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 text-sm"
-              title="Print purchase order"
+              title="Download PDF"
             >
-              <Printer size={16} />
-              Print
+              <FileDown size={16} />
+              Download PDF
             </button>
           </div>
         </div>
@@ -352,20 +357,6 @@ export const POViewPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Print Styles */}
-      <style>{`
-        @media print {
-          .no-print {
-            display: none !important;
-          }
-          body {
-            background: white;
-          }
-          .bg-gray-50 {
-            background: white;
-          }
-        }
-      `}</style>
     </div>
   );
 };

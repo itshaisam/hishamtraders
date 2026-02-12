@@ -261,7 +261,9 @@ export class CreditNotesService {
       // Reverse inventory for each item
       for (const item of creditNote.items) {
         // Find the inventory batch to decrement
-        const batch = await tx.inventory.findFirst({
+        // First try exact batch match, then fall back to RETURN-* batches
+        // (the create flow generates RETURN-* batches when original batch isn't found)
+        let batch = await tx.inventory.findFirst({
           where: {
             productId: item.productId,
             productVariantId: item.productVariantId,
@@ -269,6 +271,19 @@ export class CreditNotesService {
             batchNo: item.batchNo,
           },
         });
+
+        if (!batch) {
+          // Fall back: look for a RETURN batch created during restocking
+          batch = await tx.inventory.findFirst({
+            where: {
+              productId: item.productId,
+              productVariantId: item.productVariantId,
+              warehouseId,
+              batchNo: { startsWith: 'RETURN-' },
+              quantity: { gte: item.quantityReturned },
+            },
+          });
+        }
 
         if (!batch) {
           throw new BadRequestError(

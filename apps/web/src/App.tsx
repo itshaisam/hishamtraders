@@ -32,6 +32,7 @@ import ClientPaymentsPage from './features/payments/pages/ClientPaymentsPage';
 import { ClientsPage } from './features/clients/pages/ClientsPage';
 import { ClientFormPage } from './features/clients/pages/ClientFormPage';
 import { ClientDetailPage } from './features/clients/pages/ClientDetailPage';
+import { ClientViewPage } from './features/clients/pages/ClientViewPage';
 import { InvoicesPage } from './features/invoices/pages/InvoicesPage';
 import { CreateInvoicePage } from './features/invoices/pages/CreateInvoicePage';
 import { InvoiceDetailPage } from './features/invoices/pages/InvoiceDetailPage';
@@ -381,6 +382,17 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <ClientFormPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/clients/:id/view"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ClientViewPage />
                 </Layout>
               </ProtectedRoute>
             }

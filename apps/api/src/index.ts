@@ -54,9 +54,13 @@ app.get('/api/v1', (_req, res) => {
   res.json({ message: 'Hisham Traders ERP API v1' });
 });
 
-// Auth middleware (applies to all routes except /auth/login)
+// Auth middleware (applies to all routes except public paths)
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/v1/auth/login') || req.path.startsWith('/health')) {
+  if (
+    req.path.startsWith('/api/v1/auth/login') ||
+    req.path.startsWith('/health') ||
+    req.path.startsWith('/api/v1/invoices/public/')
+  ) {
     return next();
   }
   return authenticate(req, res, next);

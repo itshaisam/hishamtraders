@@ -1,12 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle, RotateCcw, Printer } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle, RotateCcw, Printer, FileDown, Link2, Check, PackageX } from 'lucide-react';
 import { format } from 'date-fns';
 import { useInvoiceById, useVoidInvoice, useInvoices } from '../../../hooks/useInvoices';
 import { useCurrencySymbol, useCompanyName, useCompanyLogo } from '../../../hooks/useSettings';
 import { formatCurrency } from '../../../lib/formatCurrency';
 import { VoidInvoiceModal } from '../components/VoidInvoiceModal';
 import { useAuthStore } from '../../../stores/auth.store';
+import { generateInvoicePdf } from '../../../utils/invoicePdf';
+import { invoicesService } from '../../../services/invoicesService';
+import toast from 'react-hot-toast';
 
 export function InvoiceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +43,31 @@ export function InvoiceDetailPage() {
 
   const handlePrint = () => window.print();
 
+  const handleDownloadPdf = () => {
+    if (!invoice) return;
+    const doc = generateInvoicePdf(invoice, companyName, cs, creditHistory);
+    doc.save(`${invoice.invoiceNumber}.pdf`);
+  };
+
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [generatingLink, setGeneratingLink] = useState(false);
+
+  const handleShareLink = async () => {
+    if (!id) return;
+    setGeneratingLink(true);
+    try {
+      const response = await invoicesService.generateShareToken(id);
+      await navigator.clipboard.writeText(response.url);
+      setLinkCopied(true);
+      toast.success('PDF link copied to clipboard!');
+      setTimeout(() => setLinkCopied(false), 3000);
+    } catch {
+      toast.error('Failed to generate share link');
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
+
   const { data: clientInvoicesData } = useInvoices(
     invoice?.clientId ? { clientId: invoice.clientId, limit: 1000 } : undefined
   );
@@ -56,6 +84,34 @@ export function InvoiceDetailPage() {
       outstandingBalance: totalCredit - totalPaid,
     };
   }, [clientInvoicesData]);
+
+  // Compute per-item returned quantities from active (non-voided) credit notes
+  const returnsSummary = useMemo(() => {
+    if (!invoice?.creditNotes?.length) return null;
+    const activeCNs = invoice.creditNotes.filter(cn => cn.status !== 'VOIDED');
+    if (!activeCNs.length) return null;
+
+    // Map invoiceItemId → total returned qty
+    const returnedByItem: Record<string, number> = {};
+    for (const cn of activeCNs) {
+      for (const item of cn.items) {
+        returnedByItem[item.invoiceItemId] = (returnedByItem[item.invoiceItemId] || 0) + item.quantityReturned;
+      }
+    }
+
+    const totalReturned = Object.values(returnedByItem).reduce((a, b) => a + b, 0);
+    const totalSold = invoice.items.reduce((sum, i) => sum + i.quantity, 0);
+    const totalCreditAmount = activeCNs.reduce((sum, cn) => sum + Number(cn.totalAmount), 0);
+
+    return {
+      creditNotes: activeCNs,
+      returnedByItem,
+      totalReturned,
+      totalSold,
+      totalCreditAmount,
+      isFullReturn: totalReturned === totalSold,
+    };
+  }, [invoice]);
 
   if (isLoading) {
     return (
@@ -376,47 +432,96 @@ export function InvoiceDetailPage() {
           </div>
         )}
 
+        {/* Returns / Credit Notes Banner */}
+        {returnsSummary && (
+          <div className={`border rounded-lg p-4 mb-6 ${returnsSummary.isFullReturn ? 'bg-orange-50 border-orange-300' : 'bg-amber-50 border-amber-300'}`}>
+            <div className="flex items-start gap-3">
+              <PackageX className={`mt-0.5 flex-shrink-0 ${returnsSummary.isFullReturn ? 'text-orange-600' : 'text-amber-600'}`} size={20} />
+              <div className="flex-1">
+                <h4 className={`font-semibold ${returnsSummary.isFullReturn ? 'text-orange-900' : 'text-amber-900'}`}>
+                  {returnsSummary.isFullReturn ? 'Fully Returned' : 'Partial Return'}
+                  <span className="ml-2 text-sm font-normal opacity-75">
+                    ({returnsSummary.totalReturned} of {returnsSummary.totalSold} items returned — {formatCurrency(returnsSummary.totalCreditAmount, cs)} credited)
+                  </span>
+                </h4>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {returnsSummary.creditNotes.map(cn => (
+                    <button
+                      key={cn.id}
+                      onClick={() => navigate(`/returns/${cn.id}`)}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full cursor-pointer transition-colors ${
+                        cn.status === 'APPLIED'
+                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                          : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                      }`}
+                    >
+                      {cn.creditNoteNumber}
+                      <span className="opacity-60">({cn.status})</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
             <div>
-              <h1 className={`text-3xl font-bold mb-2 ${invoice.status === 'VOIDED' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+              <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${invoice.status === 'VOIDED' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
                 {invoice.invoiceNumber}
               </h1>
-              <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusBadgeColor(invoice.status)}`}>
-                {invoice.status}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusBadgeColor(invoice.status)}`}>
+                  {invoice.status}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {format(new Date(invoice.createdAt), 'dd MMM yyyy, HH:mm')}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleDownloadPdf}
+                className="px-3 py-2 text-sm bg-gray-700 text-white rounded-lg hover:bg-gray-800 flex items-center gap-1.5 transition-colors"
+              >
+                <FileDown className="h-4 w-4" />
+                <span className="hidden sm:inline">Download</span> PDF
+              </button>
+              <button
+                onClick={handleShareLink}
+                disabled={generatingLink}
+                className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+              >
+                {linkCopied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                {generatingLink ? 'Generating...' : linkCopied ? 'Copied!' : 'Share Link'}
+              </button>
               <button
                 onClick={handlePrint}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 flex items-center gap-2"
+                className="px-3 py-2 text-sm bg-gray-700 text-white rounded-lg hover:bg-gray-800 flex items-center gap-1.5 transition-colors"
               >
                 <Printer className="h-4 w-4" />
-                Print Invoice
+                Print
               </button>
               {canReturn && (
                 <button
                   onClick={() => navigate(`/returns/create/${invoice.id}`)}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 flex items-center gap-2"
+                  className="px-3 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-1.5 transition-colors"
                 >
                   <RotateCcw className="h-4 w-4" />
-                  Create Return
+                  Return
                 </button>
               )}
               {canVoid && (
                 <button
                   onClick={() => setShowVoidModal(true)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
+                  className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-1.5 transition-colors"
                 >
                   <XCircle className="h-4 w-4" />
-                  Void Invoice
+                  Void
                 </button>
               )}
-              <div className="text-right">
-                <p className="text-sm text-gray-600">Created</p>
-                <p className="text-sm font-medium">{format(new Date(invoice.createdAt), 'dd MMM yyyy, HH:mm')}</p>
-              </div>
             </div>
           </div>
 
@@ -480,6 +585,7 @@ export function InvoiceDetailPage() {
                   <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">SKU</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Batch</th>
                   <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Quantity</th>
+                  {returnsSummary && <th className="text-right py-3 px-4 text-sm font-medium text-orange-700">Returned</th>}
                   <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Unit Price</th>
                   <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Discount</th>
                   <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Total</th>
@@ -495,6 +601,17 @@ export function InvoiceDetailPage() {
                     <td className="py-3 px-4 text-sm text-gray-600">{item.productVariant?.sku || item.product.sku}</td>
                     <td className="py-3 px-4 text-sm text-gray-600">{item.batchNo || 'N/A'}</td>
                     <td className="py-3 px-4 text-right text-sm text-gray-900">{item.quantity}</td>
+                    {returnsSummary && (
+                      <td className="py-3 px-4 text-right text-sm">
+                        {returnsSummary.returnedByItem[item.id] ? (
+                          <span className={`font-medium ${returnsSummary.returnedByItem[item.id] === item.quantity ? 'text-orange-600' : 'text-amber-600'}`}>
+                            {returnsSummary.returnedByItem[item.id]}
+                          </span>
+                        ) : (
+                          <span className="text-gray-300">-</span>
+                        )}
+                      </td>
+                    )}
                     <td className="py-3 px-4 text-right text-sm text-gray-900">{formatCurrency(Number(item.unitPrice), cs)}</td>
                     <td className="py-3 px-4 text-right text-sm text-gray-900">{item.discount}%</td>
                     <td className="py-3 px-4 text-right text-sm font-medium text-gray-900">{formatCurrency(Number(item.total), cs)}</td>

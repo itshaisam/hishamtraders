@@ -329,6 +329,40 @@ export class InvoicesService {
   }
 
   /**
+   * Get returnable quantities for each item in an invoice.
+   * Subtracts already-returned quantities (from non-voided credit notes).
+   */
+  async getReturnableQuantities(invoiceId: string) {
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      include: { items: { select: { id: true, quantity: true } } },
+    });
+    if (!invoice) {
+      throw new NotFoundError('Invoice not found');
+    }
+
+    const result: Record<string, { originalQty: number; alreadyReturned: number; maxReturnable: number }> = {};
+
+    for (const item of invoice.items) {
+      const agg = await this.prisma.creditNoteItem.aggregate({
+        _sum: { quantityReturned: true },
+        where: {
+          invoiceItemId: item.id,
+          creditNote: { status: { not: 'VOIDED' } },
+        },
+      });
+      const returned = agg._sum.quantityReturned || 0;
+      result[item.id] = {
+        originalQty: item.quantity,
+        alreadyReturned: returned,
+        maxReturnable: item.quantity - returned,
+      };
+    }
+
+    return result;
+  }
+
+  /**
    * Get invoice by invoice number
    */
   async getInvoiceByNumber(invoiceNumber: string) {

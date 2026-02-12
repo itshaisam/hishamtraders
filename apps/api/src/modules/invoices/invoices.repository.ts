@@ -120,6 +120,18 @@ export class InvoicesRepository {
             },
           },
         },
+        creditNotes: {
+          include: {
+            items: {
+              select: {
+                invoiceItemId: true,
+                quantityReturned: true,
+                total: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     }) as any;
   }

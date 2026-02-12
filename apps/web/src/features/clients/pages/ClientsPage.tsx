@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Eye } from 'lucide-react';
 import { useClients, useCities, useDeleteClient } from '../../../hooks/useClients';
 import { ClientStatus, Client } from '../../../types/client.types';
 import { Button, Breadcrumbs } from '../../../components/ui';
@@ -253,6 +253,13 @@ export function ClientsPage() {
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm">
+                      <button
+                        onClick={() => navigate(`/clients/${client.id}/view`)}
+                        className="mr-2 text-gray-600 hover:text-gray-900"
+                        title="View"
+                      >
+                        <Eye size={16} className="inline" />
+                      </button>
                       {canEdit && (
                         <>
                           <button
@@ -270,7 +277,6 @@ export function ClientsPage() {
                           </button>
                         </>
                       )}
-                      {!canEdit && <span className="text-gray-400">-</span>}
                     </td>
                   </tr>
                 ))}

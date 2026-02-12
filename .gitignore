@@ -4,7 +4,7 @@ docs/archive/
 node_modules/
 yarn.lock
 package-lock.json
-
+.playwright-mcp
 # Build outputs
 dist/
 build/

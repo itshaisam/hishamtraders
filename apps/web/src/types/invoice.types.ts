@@ -59,6 +59,8 @@ export interface Invoice {
     id: string;
     name: string;
     city?: string | null;
+    phone?: string | null;
+    whatsapp?: string | null;
   };
   warehouse: {
     id: string;
@@ -70,6 +72,23 @@ export interface Invoice {
     name: string;
     email: string;
   } | null;
+  creditNotes?: InvoiceCreditNote[];
+}
+
+export interface InvoiceCreditNoteItem {
+  invoiceItemId: string;
+  quantityReturned: number;
+  total: number;
+}
+
+export interface InvoiceCreditNote {
+  id: string;
+  creditNoteNumber: string;
+  reason: string;
+  totalAmount: number;
+  status: 'OPEN' | 'APPLIED' | 'VOIDED';
+  createdAt: string;
+  items: InvoiceCreditNoteItem[];
 }
 
 export interface CreateInvoiceItemDto {

@@ -620,6 +620,7 @@ model Client {
   name            String
   contactPerson   String?
   phone           String?
+  whatsapp        String?
   email           String?
   city            String?
   area            String?

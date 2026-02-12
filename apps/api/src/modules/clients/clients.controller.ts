@@ -64,7 +64,7 @@ export class ClientController {
   getClientById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
-      const client = await this.service.getClientById(id);
+      const client = await this.service.getClientByIdWithInvoices(id);
 
       const balance = parseFloat(client.balance.toString());
       const creditLimit = parseFloat(client.creditLimit.toString());

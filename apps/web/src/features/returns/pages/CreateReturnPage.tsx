@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
@@ -6,6 +6,7 @@ import { useInvoiceById } from '../../../hooks/useInvoices';
 import { useCreateCreditNote } from '../../../hooks/useCreditNotes';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { CreateCreditNoteDto } from '../../../types/credit-note.types';
+import { invoicesService } from '../../../services/invoicesService';
 
 interface ReturnItem {
   invoiceItemId: string;
@@ -41,23 +42,48 @@ export function CreateReturnPage() {
     'Other',
   ];
 
-  // Initialize return items once invoice loads
-  if (invoice && !initialized) {
-    const items: ReturnItem[] = invoice.items.map((item) => ({
-      invoiceItemId: item.id,
-      productName: item.product.name,
-      variantName: item.productVariant?.variantName,
-      sku: item.productVariant?.sku || item.product.sku,
-      originalQty: item.quantity,
-      alreadyReturned: 0, // Will be calculated server-side for validation
-      maxReturnable: item.quantity, // Server validates the actual max
-      quantityReturned: 0,
-      unitPrice: Number(item.unitPrice),
-      discount: Number(item.discount),
-    }));
-    setReturnItems(items);
-    setInitialized(true);
-  }
+  // Initialize return items once invoice loads — fetch actual returnable quantities from backend
+  useEffect(() => {
+    if (!invoice || initialized || !invoiceId) return;
+
+    invoicesService.getReturnableQuantities(invoiceId).then((returnableData) => {
+      const items: ReturnItem[] = invoice.items.map((item) => {
+        const info = returnableData[item.id];
+        const alreadyReturned = info?.alreadyReturned ?? 0;
+        const maxReturnable = info?.maxReturnable ?? item.quantity;
+        return {
+          invoiceItemId: item.id,
+          productName: item.product.name,
+          variantName: item.productVariant?.variantName,
+          sku: item.productVariant?.sku || item.product.sku,
+          originalQty: item.quantity,
+          alreadyReturned,
+          maxReturnable,
+          quantityReturned: 0,
+          unitPrice: Number(item.unitPrice),
+          discount: Number(item.discount),
+        };
+      });
+      setReturnItems(items);
+      setInitialized(true);
+    }).catch(() => {
+      // Fallback: use original quantities if endpoint fails
+      const items: ReturnItem[] = invoice.items.map((item) => ({
+        invoiceItemId: item.id,
+        productName: item.product.name,
+        variantName: item.productVariant?.variantName,
+        sku: item.productVariant?.sku || item.product.sku,
+        originalQty: item.quantity,
+        alreadyReturned: 0,
+        maxReturnable: item.quantity,
+        quantityReturned: 0,
+        unitPrice: Number(item.unitPrice),
+        discount: Number(item.discount),
+      }));
+      setReturnItems(items);
+      setInitialized(true);
+    });
+  }, [invoice, initialized, invoiceId]);
 
   const updateQuantity = (index: number, qty: number) => {
     setReturnItems((prev) => {
@@ -258,6 +284,9 @@ export function CreateReturnPage() {
                     </div>
                     <div className="text-xs text-gray-400 text-center mt-1">
                       max: {item.maxReturnable}
+                      {item.alreadyReturned > 0 && (
+                        <span className="text-orange-500"> ({item.alreadyReturned} returned)</span>
+                      )}
                     </div>
                   </td>
                   <td className="py-3 px-4 text-sm text-right font-medium">

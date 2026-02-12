@@ -4,7 +4,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, addDays, parseISO } from 'date-fns';
-import { Plus, Save, ArrowLeft, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Save, ArrowLeft, Trash2, AlertTriangle, Link2 } from 'lucide-react';
 import { useCreateInvoice } from '../../../hooks/useInvoices';
 import { useClients } from '../../../hooks/useClients';
 import { useWarehouses } from '../../../hooks/useWarehouses';
@@ -15,6 +15,8 @@ import { CreateInvoiceDto, InvoicePaymentType } from '../../../types/invoice.typ
 import { InvoiceSummary } from '../components/InvoiceSummary';
 import { CreditLimitWarning } from '../components/CreditLimitWarning';
 import { inventoryService } from '../../../services/inventoryService';
+import { invoicesService } from '../../../services/invoicesService';
+import toast from 'react-hot-toast';
 
 const invoiceItemSchema = z.object({
   productId: z.string().min(1, 'Product is required'),
@@ -168,7 +170,32 @@ export function CreateInvoicePage() {
         overrideReason: creditOverrideEnabled && data.adminOverride ? data.overrideReason : undefined,
       };
 
-      await createInvoice.mutateAsync(payload);
+      const result = await createInvoice.mutateAsync(payload);
+
+      // Offer to copy shareable PDF link
+      if (result?.id) {
+        toast((t) => (
+          <div className="flex items-center gap-3">
+            <span>Invoice created!</span>
+            <button
+              className="px-3 py-1 bg-blue-600 text-white rounded text-sm flex items-center gap-1 hover:bg-blue-700"
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  const shareData = await invoicesService.generateShareToken(result.id);
+                  await navigator.clipboard.writeText(shareData.url);
+                  toast.success('PDF link copied to clipboard!');
+                } catch {
+                  toast.error('Failed to generate share link');
+                }
+              }}
+            >
+              <Link2 size={14} /> Copy Share Link
+            </button>
+          </div>
+        ), { duration: 8000 });
+      }
+
       navigate('/invoices');
     } catch (error) {
       // Error handled by mutation

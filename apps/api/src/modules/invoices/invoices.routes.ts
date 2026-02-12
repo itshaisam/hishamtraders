@@ -6,7 +6,13 @@ import { requireRole } from '../../middleware/authorization.middleware.js';
 const router = Router();
 const controller = new InvoicesController();
 
-// All routes require authentication
+/**
+ * Public route: Get invoice PDF via share token (no auth required)
+ * This MUST be defined before the authenticate middleware
+ */
+router.get('/public/:token', controller.getPublicPdf);
+
+// All remaining routes require authentication
 router.use(authenticate);
 
 /**
@@ -14,6 +20,12 @@ router.use(authenticate);
  * Accessible by: All authenticated users
  */
 router.get('/', controller.getInvoices);
+
+/**
+ * Get returnable quantities for invoice items (accounts for previous returns)
+ * Accessible by: All authenticated users
+ */
+router.get('/:id/returnable', controller.getReturnableQuantities);
 
 /**
  * Get invoice by ID
@@ -40,5 +52,11 @@ router.post(
   requireRole(['ADMIN', 'SALES_OFFICER', 'ACCOUNTANT']),
   controller.createInvoice
 );
+
+/**
+ * Generate a shareable PDF link for an invoice
+ * Accessible by: All authenticated users
+ */
+router.post('/:id/share-token', controller.generateShareToken);
 
 export { router as invoiceRoutes };

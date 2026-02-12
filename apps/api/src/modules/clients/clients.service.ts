@@ -5,6 +5,7 @@ export interface CreateClientDto {
   name: string;
   contactPerson?: string;
   phone?: string;
+  whatsapp?: string;
   email?: string;
   city?: string;
   area?: string;
@@ -17,6 +18,7 @@ export interface UpdateClientDto {
   name?: string;
   contactPerson?: string;
   phone?: string;
+  whatsapp?: string;
   email?: string;
   city?: string;
   area?: string;
@@ -47,6 +49,7 @@ export class ClientService {
       name: data.name,
       contactPerson: data.contactPerson,
       phone: data.phone,
+      whatsapp: data.whatsapp,
       email: data.email,
       city: data.city,
       area: data.area,
@@ -69,6 +72,16 @@ export class ClientService {
 
   async getClientById(id: string): Promise<Client> {
     const client = await this.repository.findById(id);
+
+    if (!client) {
+      throw new Error('Client not found');
+    }
+
+    return client;
+  }
+
+  async getClientByIdWithInvoices(id: string) {
+    const client = await this.repository.findByIdWithInvoices(id);
 
     if (!client) {
       throw new Error('Client not found');

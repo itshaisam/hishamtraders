@@ -56,4 +56,24 @@ export const invoicesService = {
     );
     return response.data.data;
   },
+
+  /**
+   * Get returnable quantities for each invoice item (accounts for previous returns)
+   */
+  getReturnableQuantities: async (invoiceId: string): Promise<Record<string, { originalQty: number; alreadyReturned: number; maxReturnable: number }>> => {
+    const response = await apiClient.get<{ data: Record<string, { originalQty: number; alreadyReturned: number; maxReturnable: number }> }>(
+      `${BASE_URL}/${invoiceId}/returnable`
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Generate a shareable token for invoice PDF
+   */
+  generateShareToken: async (invoiceId: string): Promise<{ token: string; url: string }> => {
+    const response = await apiClient.post<{ data: { token: string; url: string } }>(
+      `${BASE_URL}/${invoiceId}/share-token`
+    );
+    return response.data.data;
+  },
 };
