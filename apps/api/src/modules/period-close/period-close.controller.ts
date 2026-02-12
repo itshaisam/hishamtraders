@@ -19,7 +19,7 @@ export class PeriodCloseController {
       if (!year || !month) {
         return res.status(400).json({ status: 'error', message: 'year and month are required' });
       }
-      const userId = (req as any).user?.id;
+      const userId = req.user?.userId;
       const data = await periodCloseService.closeMonth(Number(year), Number(month), userId);
       res.json({ status: 'success', data, message: 'Period closed successfully' });
     } catch (error) {
@@ -31,7 +31,7 @@ export class PeriodCloseController {
     try {
       const { id } = req.params;
       const { reason } = req.body;
-      const userId = (req as any).user?.id;
+      const userId = req.user?.userId;
       const data = await periodCloseService.reopen(id, reason, userId);
       res.json({ status: 'success', data, message: 'Period reopened successfully' });
     } catch (error) {
