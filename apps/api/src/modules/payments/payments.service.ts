@@ -3,6 +3,7 @@ import { PaymentsRepository, PaymentFilters, UnifiedPaymentFilters } from './pay
 import { PaymentAllocationService, AllocationResult } from './payment-allocation.service.js';
 import { NotFoundError } from '../../utils/errors.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
+import { validatePeriodNotClosed } from '../../utils/period-lock.js';
 import logger from '../../lib/logger.js';
 
 export interface CreateSupplierPaymentDto {
@@ -43,6 +44,9 @@ export class PaymentsService {
    * Create a supplier payment with validation
    */
   async createSupplierPayment(dto: CreateSupplierPaymentDto) {
+    // Period lock check
+    await validatePeriodNotClosed(dto.date);
+
     // Validation: Amount must be greater than 0
     if (dto.amount <= 0) {
       throw new Error('Payment amount must be greater than 0');
@@ -131,6 +135,9 @@ export class PaymentsService {
    * Create a client payment with FIFO allocation (Story 3.6)
    */
   async createClientPayment(dto: CreateClientPaymentDto): Promise<{ payment: any; allocation: AllocationResult }> {
+    // Period lock check
+    await validatePeriodNotClosed(dto.date);
+
     // Validation: Amount must be greater than 0
     if (dto.amount <= 0) {
       throw new Error('Payment amount must be greater than 0');

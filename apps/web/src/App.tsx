@@ -61,6 +61,7 @@ import { BankAccountsPage } from './features/accounting/pages/BankAccountsPage';
 import { PettyCashPage } from './features/accounting/pages/PettyCashPage';
 import { BankReconciliationPage } from './features/accounting/pages/BankReconciliationPage';
 import { ReconciliationDetailPage } from './features/accounting/pages/ReconciliationDetailPage';
+import { MonthEndClosingPage } from './features/accounting/pages/MonthEndClosingPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -738,6 +739,18 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <ReconciliationDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Month-End Closing (Story 5.10) */}
+          <Route
+            path="/accounting/month-end"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <MonthEndClosingPage />
                 </Layout>
               </ProtectedRoute>
             }

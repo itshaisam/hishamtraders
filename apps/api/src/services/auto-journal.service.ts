@@ -370,8 +370,9 @@ export const AutoJournalService = {
     },
     userId: string
   ) {
-    // Only create JE for DECREASE (loss/damage)
-    if (adjustment.adjustmentType !== 'DECREASE') return null;
+    // Only create JE for loss types (WASTAGE, DAMAGE, THEFT)
+    const lossTypes = ['WASTAGE', 'DAMAGE', 'THEFT'];
+    if (!lossTypes.includes(adjustment.adjustmentType)) return null;
 
     const amount = Math.round(adjustment.quantity * adjustment.costPrice * 100) / 100;
     if (amount <= 0) return null;

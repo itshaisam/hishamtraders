@@ -15,6 +15,8 @@ import {
   BankReconciliationDetail,
   UnmatchedTransaction,
   ReconciliationItem,
+  PeriodClose,
+  MonthPnL,
 } from '../types/accounting.types';
 
 export const accountingService = {
@@ -271,6 +273,45 @@ export const accountingService = {
       status: string;
       data: BankReconciliationSession;
     }>(`/bank-reconciliation/${reconciliationId}/complete`);
+
+    return response.data.data;
+  },
+
+  // Period Close (Story 5.10)
+  async getPeriodCloses() {
+    const response = await apiClient.get<{
+      status: string;
+      data: PeriodClose[];
+    }>('/period-close');
+
+    return response.data.data;
+  },
+
+  async getMonthPnL(year: number, month: number) {
+    const response = await apiClient.get<{
+      status: string;
+      data: MonthPnL;
+    }>(`/period-close/pnl?year=${year}&month=${month}`);
+
+    return response.data.data;
+  },
+
+  async closeMonth(year: number, month: number) {
+    const response = await apiClient.post<{
+      status: string;
+      data: PeriodClose;
+      message: string;
+    }>('/period-close/month', { year, month });
+
+    return response.data.data;
+  },
+
+  async reopenPeriod(id: string, reason: string) {
+    const response = await apiClient.post<{
+      status: string;
+      data: PeriodClose;
+      message: string;
+    }>(`/period-close/${id}/reopen`, { reason });
 
     return response.data.data;
   },

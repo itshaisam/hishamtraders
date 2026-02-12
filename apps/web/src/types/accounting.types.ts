@@ -196,3 +196,29 @@ export interface UnmatchedTransaction {
 export interface BankReconciliationDetail extends BankReconciliationSession {
   items: ReconciliationItem[];
 }
+
+// Period Close types (Story 5.10)
+export type PeriodCloseStatus = 'CLOSED' | 'REOPENED';
+
+export interface PeriodClose {
+  id: string;
+  periodType: 'MONTH' | 'YEAR';
+  periodDate: string;
+  netProfit: number;
+  status: PeriodCloseStatus;
+  closedBy: string;
+  reopenReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+  closer: { id: string; name: string };
+  closingJournalEntry: { id: string; entryNumber: string } | null;
+}
+
+export interface MonthPnL {
+  period: string;
+  revenues: { code: string; name: string; amount: number }[];
+  expenses: { code: string; name: string; amount: number }[];
+  totalRevenue: number;
+  totalExpenses: number;
+  netProfit: number;
+}

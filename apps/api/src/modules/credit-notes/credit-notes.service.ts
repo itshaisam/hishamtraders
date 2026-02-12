@@ -7,6 +7,7 @@ import { generateCreditNoteNumber } from '../../utils/credit-note-number.util.js
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
+import { validatePeriodNotClosed } from '../../utils/period-lock.js';
 import logger from '../../lib/logger.js';
 
 export class CreditNotesService {
@@ -20,6 +21,9 @@ export class CreditNotesService {
    * Create a credit note (sales return) in a transaction
    */
   async createCreditNote(dto: CreateCreditNoteDto, userId: string) {
+    // Period lock check
+    await validatePeriodNotClosed(new Date());
+
     // 1. Fetch invoice with items, client, warehouse
     const invoice = await this.prisma.invoice.findUnique({
       where: { id: dto.invoiceId },

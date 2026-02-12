@@ -5,7 +5,7 @@
 **Priority:** Critical (for Phase 2)
 **Estimated Effort:** 8-12 hours
 **Dependencies:** All MVP Stories (Epics 1-4), Story 5.1 (Chart of Accounts)
-**Status:** New — Phase 2
+**Status:** Done
 
 ---
 

@@ -5,6 +5,7 @@ import { UpdateExpenseDto } from './dto/update-expense.dto.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
+import { validatePeriodNotClosed } from '../../utils/period-lock.js';
 
 export class ExpenseService {
   async create(data: CreateExpenseDto, userId: string): Promise<Expense> {
@@ -16,6 +17,9 @@ export class ExpenseService {
     if (data.date > new Date()) {
       throw new BadRequestError('Date cannot be in the future');
     }
+
+    // Period lock check
+    await validatePeriodNotClosed(data.date);
 
     if (!data.description || data.description.trim().length < 3) {
       throw new BadRequestError('Description must be at least 3 characters');

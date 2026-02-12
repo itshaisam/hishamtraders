@@ -12,6 +12,7 @@ import { generateInvoiceNumber } from '../../utils/invoice-number.util.js';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
+import { validatePeriodNotClosed } from '../../utils/period-lock.js';
 import logger from '../../lib/logger.js';
 
 export class InvoicesService {
@@ -35,6 +36,9 @@ export class InvoicesService {
   async createInvoice(data: CreateInvoiceDto, userId: string) {
     // Validate override reason
     validateCreateInvoice(data);
+
+    // Period lock check
+    await validatePeriodNotClosed(data.invoiceDate);
 
     logger.info('Creating invoice', { clientId: data.clientId, itemCount: data.items.length });
 

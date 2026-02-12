@@ -487,6 +487,12 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                 >
                   Bank Reconciliation
                 </Link>
+                <Link
+                  to="/accounting/month-end"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Month-End Closing
+                </Link>
               </div>
             )}
           </div>
