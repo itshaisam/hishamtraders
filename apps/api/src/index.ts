@@ -30,6 +30,7 @@ import { accountHeadRoutes } from './modules/account-heads/account-heads.routes.
 import { journalEntryRoutes } from './modules/journal-entries/journal-entries.routes.js';
 import { bankAccountRoutes } from './modules/bank-accounts/bank-accounts.routes.js';
 import { pettyCashRoutes } from './modules/petty-cash/petty-cash.routes.js';
+import { bankReconciliationRoutes } from './modules/bank-reconciliation/bank-reconciliation.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
@@ -101,6 +102,7 @@ app.use('/api/v1/account-heads', accountHeadRoutes);
 app.use('/api/v1/journal-entries', journalEntryRoutes);
 app.use('/api/v1/bank-accounts', bankAccountRoutes);
 app.use('/api/v1/petty-cash', pettyCashRoutes);
+app.use('/api/v1/bank-reconciliation', bankReconciliationRoutes);
 app.use('/api/v1', dashboardRoutes);
 
 // 404 handler (must be after all routes)

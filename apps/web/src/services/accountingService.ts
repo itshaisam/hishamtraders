@@ -11,6 +11,10 @@ import {
   BankAccount,
   PettyCashBalance,
   PettyCashTransaction,
+  BankReconciliationSession,
+  BankReconciliationDetail,
+  UnmatchedTransaction,
+  ReconciliationItem,
 } from '../types/accounting.types';
 
 export const accountingService = {
@@ -185,5 +189,89 @@ export const accountingService = {
     }>('/petty-cash/advance', { amount, bankAccountId });
 
     return response.data;
+  },
+
+  // Bank Reconciliation (Story 5.8)
+  async getReconciliations(filters: { bankAccountId?: string; status?: string; page?: number; limit?: number } = {}) {
+    const params = new URLSearchParams();
+    if (filters.bankAccountId) params.append('bankAccountId', filters.bankAccountId);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+
+    const response = await apiClient.get<{
+      status: string;
+      data: BankReconciliationSession[];
+      meta: { total: number; page: number; limit: number; totalPages: number };
+    }>(`/bank-reconciliation?${params.toString()}`);
+
+    return response.data;
+  },
+
+  async getReconciliationById(id: string) {
+    const response = await apiClient.get<{
+      status: string;
+      data: BankReconciliationDetail;
+    }>(`/bank-reconciliation/${id}`);
+
+    return response.data.data;
+  },
+
+  async createReconciliation(data: { bankAccountId: string; statementDate: string; statementBalance: number }) {
+    const response = await apiClient.post<{
+      status: string;
+      data: BankReconciliationSession;
+    }>('/bank-reconciliation', data);
+
+    return response.data.data;
+  },
+
+  async addReconciliationItem(reconciliationId: string, data: { description: string; statementAmount: number; statementDate: string }) {
+    const response = await apiClient.post<{
+      status: string;
+      data: ReconciliationItem;
+    }>(`/bank-reconciliation/${reconciliationId}/items`, data);
+
+    return response.data.data;
+  },
+
+  async deleteReconciliationItem(reconciliationId: string, itemId: string) {
+    await apiClient.delete(`/bank-reconciliation/${reconciliationId}/items/${itemId}`);
+  },
+
+  async getUnmatchedTransactions(reconciliationId: string) {
+    const response = await apiClient.get<{
+      status: string;
+      data: UnmatchedTransaction[];
+    }>(`/bank-reconciliation/${reconciliationId}/unmatched`);
+
+    return response.data.data;
+  },
+
+  async matchReconciliationItem(reconciliationId: string, itemId: string, journalEntryLineId: string) {
+    const response = await apiClient.post<{
+      status: string;
+      data: ReconciliationItem;
+    }>(`/bank-reconciliation/${reconciliationId}/match`, { itemId, journalEntryLineId });
+
+    return response.data.data;
+  },
+
+  async unmatchReconciliationItem(reconciliationId: string, itemId: string) {
+    const response = await apiClient.post<{
+      status: string;
+      data: ReconciliationItem;
+    }>(`/bank-reconciliation/${reconciliationId}/unmatch`, { itemId });
+
+    return response.data.data;
+  },
+
+  async completeReconciliation(reconciliationId: string) {
+    const response = await apiClient.post<{
+      status: string;
+      data: BankReconciliationSession;
+    }>(`/bank-reconciliation/${reconciliationId}/complete`);
+
+    return response.data.data;
   },
 };

@@ -139,3 +139,60 @@ export interface PettyCashTransaction {
   debit: number;
   credit: number;
 }
+
+// Bank Reconciliation types (Story 5.8)
+export type ReconciliationStatus = 'IN_PROGRESS' | 'COMPLETED';
+
+export interface BankReconciliationSession {
+  id: string;
+  bankAccountId: string;
+  statementDate: string;
+  statementBalance: number;
+  systemBalance: number;
+  status: ReconciliationStatus;
+  reconciledBy: string;
+  createdAt: string;
+  updatedAt: string;
+  bankAccount: { id: string; code: string; name: string };
+  reconciler: { id: string; name: string };
+  _count?: { items: number };
+}
+
+export interface ReconciliationItem {
+  id: string;
+  reconciliationId: string;
+  journalEntryLineId: string | null;
+  description: string;
+  statementAmount: number;
+  statementDate: string;
+  matched: boolean;
+  notes: string | null;
+  createdAt: string;
+  journalEntryLine?: {
+    id: string;
+    debitAmount: number;
+    creditAmount: number;
+    journalEntry: {
+      id: string;
+      entryNumber: string;
+      date: string;
+      description: string;
+    };
+    accountHead: { id: string; code: string; name: string };
+  } | null;
+}
+
+export interface UnmatchedTransaction {
+  id: string;
+  entryNumber: string;
+  date: string;
+  description: string;
+  referenceType: string | null;
+  debit: number;
+  credit: number;
+  netAmount: number;
+}
+
+export interface BankReconciliationDetail extends BankReconciliationSession {
+  items: ReconciliationItem[];
+}

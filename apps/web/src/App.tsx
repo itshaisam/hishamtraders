@@ -59,6 +59,8 @@ import { BalanceSheetPage } from './features/accounting/pages/BalanceSheetPage';
 import { GeneralLedgerPage } from './features/accounting/pages/GeneralLedgerPage';
 import { BankAccountsPage } from './features/accounting/pages/BankAccountsPage';
 import { PettyCashPage } from './features/accounting/pages/PettyCashPage';
+import { BankReconciliationPage } from './features/accounting/pages/BankReconciliationPage';
+import { ReconciliationDetailPage } from './features/accounting/pages/ReconciliationDetailPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -713,6 +715,29 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <PettyCashPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Bank Reconciliation (Story 5.8) */}
+          <Route
+            path="/accounting/bank-reconciliation"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <BankReconciliationPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/accounting/bank-reconciliation/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ReconciliationDetailPage />
                 </Layout>
               </ProtectedRoute>
             }

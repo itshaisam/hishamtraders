@@ -481,6 +481,12 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                 >
                   Petty Cash
                 </Link>
+                <Link
+                  to="/accounting/bank-reconciliation"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Bank Reconciliation
+                </Link>
               </div>
             )}
           </div>
