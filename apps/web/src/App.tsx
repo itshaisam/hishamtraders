@@ -51,6 +51,9 @@ import { CreateReturnPage } from './features/returns/pages/CreateReturnPage';
 import { CreditNoteDetailPage } from './features/returns/pages/CreditNoteDetailPage';
 import { AuditTrailPage } from './features/audit/pages/AuditTrailPage';
 import { ChartOfAccountsPage } from './features/accounting/pages/ChartOfAccountsPage';
+import { JournalEntriesPage } from './features/accounting/pages/JournalEntriesPage';
+import { CreateJournalEntryPage } from './features/accounting/pages/CreateJournalEntryPage';
+import { JournalEntryDetailPage } from './features/accounting/pages/JournalEntryDetailPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -604,6 +607,50 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <ChartOfAccountsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/accounting/journal-entries"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <JournalEntriesPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/accounting/journal-entries/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateJournalEntryPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/accounting/journal-entries/:id/edit"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateJournalEntryPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/accounting/journal-entries/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <JournalEntryDetailPage />
                 </Layout>
               </ProtectedRoute>
             }

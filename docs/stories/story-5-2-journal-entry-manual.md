@@ -5,7 +5,7 @@
 **Priority:** Critical
 **Estimated Effort:** 10-12 hours
 **Dependencies:** Story 5.1 (Chart of Accounts)
-**Status:** Draft — Phase 2
+**Status:** Done
 
 ---
 
@@ -20,31 +20,31 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] `JournalEntry`: id, entryNumber (unique), date, description, status (DRAFT/POSTED), referenceType, referenceId, createdBy, approvedBy
-   - [ ] `JournalEntryLine`: id, journalEntryId, accountHeadId, debitAmount, creditAmount, description
-   - [ ] **Validation: Sum(debits) MUST equal Sum(credits)** (double-entry rule)
+   - [x] `JournalEntry`: id, entryNumber (unique), date, description, status (DRAFT/POSTED), referenceType, referenceId, createdBy, approvedBy
+   - [x] `JournalEntryLine`: id, journalEntryId, accountHeadId, debitAmount, creditAmount, description
+   - [x] **Validation: Sum(debits) MUST equal Sum(credits)** (double-entry rule)
 
 2. **Entry Status Workflow:**
-   - [ ] DRAFT (editable) → POSTED (posted to GL, immutable)
-   - [ ] When POSTED, account balances updated atomically in `$transaction`
-   - [ ] Entry number auto-generated: `JE-YYYYMMDD-XXX`
+   - [x] DRAFT (editable) → POSTED (posted to GL, immutable)
+   - [x] When POSTED, account balances updated atomically in `$transaction`
+   - [x] Entry number auto-generated: `JE-YYYYMMDD-XXX`
 
 3. **Backend API:**
-   - [ ] `POST /api/v1/journal-entries` — Create entry with lines (status=DRAFT)
-   - [ ] `GET /api/v1/journal-entries` — List entries with filters (status, date range)
-   - [ ] `GET /api/v1/journal-entries/:id` — Entry details with lines
-   - [ ] `PUT /api/v1/journal-entries/:id` — Update entry (only if DRAFT)
-   - [ ] `POST /api/v1/journal-entries/:id/post` — Post entry to GL
-   - [ ] `DELETE /api/v1/journal-entries/:id` — Delete draft entry only
+   - [x] `POST /api/v1/journal-entries` — Create entry with lines (status=DRAFT)
+   - [x] `GET /api/v1/journal-entries` — List entries with filters (status, date range)
+   - [x] `GET /api/v1/journal-entries/:id` — Entry details with lines
+   - [x] `PUT /api/v1/journal-entries/:id` — Update entry (only if DRAFT)
+   - [x] `POST /api/v1/journal-entries/:id/post` — Post entry to GL
+   - [x] `DELETE /api/v1/journal-entries/:id` — Delete draft entry only
 
 4. **Frontend:**
-   - [ ] Journal Entry form: date, description, line item rows (account, debit, credit)
-   - [ ] Running debit/credit totals and difference (must be 0 to save)
-   - [ ] "Post to GL" button with confirmation dialog
+   - [x] Journal Entry form: date, description, line item rows (account, debit, credit)
+   - [x] Running debit/credit totals and difference (must be 0 to save)
+   - [x] "Post to GL" button with confirmation dialog
 
 5. **Authorization:**
-   - [ ] Only `ACCOUNTANT` and `ADMIN` can create/post journal entries
-   - [ ] Other roles: 403 Forbidden
+   - [x] Only `ACCOUNTANT` and `ADMIN` can create/post journal entries
+   - [x] Other roles: 403 Forbidden
 
 ---
 

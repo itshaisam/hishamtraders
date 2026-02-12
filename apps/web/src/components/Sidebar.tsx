@@ -445,6 +445,12 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                 >
                   Chart of Accounts
                 </Link>
+                <Link
+                  to="/accounting/journal-entries"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Journal Entries
+                </Link>
               </div>
             )}
           </div>
