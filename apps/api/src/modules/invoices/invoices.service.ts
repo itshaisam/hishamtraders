@@ -11,6 +11,7 @@ import { VoidInvoiceDto } from './dto/void-invoice.dto.js';
 import { generateInvoiceNumber } from '../../utils/invoice-number.util.js';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
+import { AutoJournalService } from '../../services/auto-journal.service.js';
 import logger from '../../lib/logger.js';
 
 export class InvoicesService {
@@ -176,6 +177,16 @@ export class InvoicesService {
           },
         });
       }
+
+      // Auto journal entry: DR A/R, CR Sales Revenue + Tax Payable
+      await AutoJournalService.onInvoiceCreated(tx, {
+        id: createdInvoice.id,
+        invoiceNumber,
+        total,
+        subtotal,
+        taxAmount,
+        date: data.invoiceDate,
+      }, userId);
 
       return createdInvoice;
     });
@@ -459,7 +470,16 @@ export class InvoicesService {
         },
       });
 
-      // 4. Log audit
+      // 4. Auto journal entry: reverse the original
+      await AutoJournalService.onInvoiceVoided(tx, {
+        id: invoiceId,
+        invoiceNumber: invoice.invoiceNumber,
+        total: parseFloat(invoice.total.toString()),
+        subtotal: parseFloat(invoice.subtotal.toString()),
+        taxAmount: parseFloat(invoice.taxAmount.toString()),
+      }, userId);
+
+      // 5. Log audit
       await AuditService.log({
         userId,
         action: 'DELETE',

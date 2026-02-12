@@ -2,6 +2,7 @@ import { PaymentType, PaymentMethod, PaymentReferenceType, PrismaClient, Prisma 
 import { PaymentsRepository, PaymentFilters, UnifiedPaymentFilters } from './payments.repository.js';
 import { PaymentAllocationService, AllocationResult } from './payment-allocation.service.js';
 import { NotFoundError } from '../../utils/errors.js';
+import { AutoJournalService } from '../../services/auto-journal.service.js';
 import logger from '../../lib/logger.js';
 
 export interface CreateSupplierPaymentDto {
@@ -76,6 +77,12 @@ export class PaymentsService {
           }
         : undefined,
     });
+
+    // Auto journal entry: DR A/P, CR Main Bank
+    await AutoJournalService.onSupplierPayment(
+      { id: payment.id, amount: dto.amount, date: dto.date, referenceNumber: dto.notes },
+      dto.recordedBy
+    );
 
     return payment;
   }
@@ -189,6 +196,12 @@ export class PaymentsService {
       overpayment: allocation.overpayment,
       invoicesAllocated: allocation.allocations.length,
     });
+
+    // Auto journal entry: DR Main Bank, CR A/R
+    await AutoJournalService.onClientPayment(
+      { id: payment.id, amount: dto.amount, date: dto.date, referenceNumber: dto.referenceNumber },
+      dto.recordedBy
+    );
 
     return { payment, allocation };
   }

@@ -6,6 +6,7 @@ import { VoidCreditNoteDto } from './dto/void-credit-note.dto.js';
 import { generateCreditNoteNumber } from '../../utils/credit-note-number.util.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
+import { AutoJournalService } from '../../services/auto-journal.service.js';
 import logger from '../../lib/logger.js';
 
 export class CreditNotesService {
@@ -197,6 +198,14 @@ export class CreditNotesService {
         },
       });
 
+      // Auto journal entry: DR Returns (4200), CR A/R (1200)
+      await AutoJournalService.onCreditNoteCreated(tx, {
+        id: cn.id,
+        creditNoteNumber,
+        totalAmount,
+        date: cn.createdAt,
+      }, userId);
+
       logger.info('Credit note created', {
         creditNoteId: cn.id,
         creditNoteNumber,
@@ -331,6 +340,13 @@ export class CreditNotesService {
         where: { id },
         data: { status: 'VOIDED' },
       });
+
+      // Auto journal entry: reverse the credit note
+      await AutoJournalService.onCreditNoteVoided(tx, {
+        id,
+        creditNoteNumber: creditNote.creditNoteNumber,
+        totalAmount: parseFloat(creditNote.totalAmount.toString()),
+      }, userId);
     });
 
     logger.info('Credit note voided', {

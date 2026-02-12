@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { InventoryRepository } from './inventory.repository.js';
 import { NotFoundError, BadRequestError } from '../../utils/errors.js';
+import { AutoJournalService } from '../../services/auto-journal.service.js';
 import logger from '../../lib/logger.js';
 import { format } from 'date-fns';
 
@@ -182,6 +183,14 @@ export class StockReceiptService {
           updatedBy: userId,
         },
       });
+
+      // Auto journal entry: DR Inventory, CR A/P
+      await AutoJournalService.onGoodsReceived(tx, {
+        poId,
+        poNumber: po.poNumber,
+        totalAmount: parseFloat(po.totalAmount.toString()),
+        date: data.receivedDate || new Date(),
+      }, userId);
 
       logger.info('Updated PO status to RECEIVED', { poId });
     });

@@ -2,6 +2,7 @@ import { PrismaClient, AdjustmentType, AdjustmentStatus } from '@prisma/client';
 import { StockAdjustmentRepository } from './stock-adjustment.repository.js';
 import { InventoryRepository } from './inventory.repository.js';
 import { AuditService } from '../../services/audit.service.js';
+import { AutoJournalService } from '../../services/auto-journal.service.js';
 
 const prisma = new PrismaClient();
 
@@ -194,7 +195,28 @@ export class StockAdjustmentService {
         },
       });
 
-      // 3. Update adjustment status to APPROVED
+      // 3. Auto journal entry for stock adjustments (DECREASE only)
+      const variantCost = adjustment.productVariantId
+        ? (await tx.productVariant.findUnique({
+            where: { id: adjustment.productVariantId },
+            select: { costPrice: true },
+          }))?.costPrice
+        : null;
+      const productCost = variantCost
+        ?? (await tx.product.findUnique({
+            where: { id: adjustment.productId },
+            select: { costPrice: true },
+          }))?.costPrice;
+
+      await AutoJournalService.onStockAdjustmentApproved(tx, {
+        id,
+        adjustmentType: adjustment.adjustmentType,
+        quantity: Math.abs(adjustment.quantity),
+        costPrice: parseFloat((productCost || 0).toString()),
+        reason: adjustment.reason,
+      }, adminId);
+
+      // 4. Update adjustment status to APPROVED
       const approvedAdjustment = await tx.stockAdjustment.update({
         where: { id },
         data: {

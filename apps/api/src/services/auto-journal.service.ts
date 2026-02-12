@@ -1,0 +1,420 @@
+import { Prisma, ExpenseCategory } from '@prisma/client';
+import { prisma } from '../lib/prisma.js';
+import { calculateBalanceChange } from '../utils/balance-helper.js';
+import logger from '../lib/logger.js';
+
+/**
+ * Auto Journal Entry Service
+ *
+ * Creates POSTED journal entries automatically when business transactions occur.
+ * All entries are looked up by account CODE (stable) rather than CUID IDs.
+ *
+ * Account mapping:
+ * 1101 Main Bank Account     1102 Petty Cash
+ * 1200 Accounts Receivable   1300 Inventory
+ * 2100 Accounts Payable      2200 Tax Payable
+ * 4100 Sales Revenue          4200 Other Income (used for returns contra)
+ * 5100 COGS                   5150 Inventory Loss
+ * 5200-5900 Expense accounts
+ */
+
+// Use Prisma transaction client OR regular PrismaClient
+type PrismaLike = Prisma.TransactionClient;
+
+const EXPENSE_ACCOUNT_MAP: Record<string, string> = {
+  RENT: '5200',
+  UTILITIES: '5300',
+  SALARIES: '5400',
+  TRANSPORT: '5500',
+  SUPPLIES: '5900',
+  MAINTENANCE: '5900',
+  MARKETING: '5900',
+  MISC: '5900',
+};
+
+async function getAccountByCode(tx: PrismaLike, code: string) {
+  const account = await tx.accountHead.findFirst({
+    where: { code },
+    select: { id: true, accountType: true },
+  });
+  if (!account) {
+    logger.warn(`Auto-journal: Account ${code} not found, skipping journal entry`);
+    return null;
+  }
+  return account;
+}
+
+async function generateEntryNumber(tx: PrismaLike, date: Date): Promise<string> {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const prefix = `JE-${year}${month}${day}-`;
+
+  const latestEntry = await tx.journalEntry.findFirst({
+    where: { entryNumber: { startsWith: prefix } },
+    orderBy: { entryNumber: 'desc' },
+    select: { entryNumber: true },
+  });
+
+  let nextSeq = 1;
+  if (latestEntry) {
+    const parts = latestEntry.entryNumber.split('-');
+    nextSeq = parseInt(parts[parts.length - 1], 10) + 1;
+  }
+
+  return `${prefix}${String(nextSeq).padStart(3, '0')}`;
+}
+
+interface JournalLine {
+  accountCode: string;
+  debit: number;
+  credit: number;
+  description?: string;
+}
+
+async function createAutoJournalEntry(
+  tx: PrismaLike,
+  opts: {
+    date: Date;
+    description: string;
+    referenceType: string;
+    referenceId: string;
+    userId: string;
+    lines: JournalLine[];
+  }
+): Promise<string | null> {
+  // Resolve account codes to IDs
+  const resolvedLines: { accountHeadId: string; accountType: string; debitAmount: number; creditAmount: number; description: string | null }[] = [];
+
+  for (const line of opts.lines) {
+    const account = await getAccountByCode(tx, line.accountCode);
+    if (!account) return null; // Skip if any account missing
+    resolvedLines.push({
+      accountHeadId: account.id,
+      accountType: account.accountType,
+      debitAmount: Math.round(line.debit * 100) / 100,
+      creditAmount: Math.round(line.credit * 100) / 100,
+      description: line.description || null,
+    });
+  }
+
+  // Validate balance
+  const totalDebits = resolvedLines.reduce((s, l) => s + l.debitAmount, 0);
+  const totalCredits = resolvedLines.reduce((s, l) => s + l.creditAmount, 0);
+  if (Math.abs(totalDebits - totalCredits) > 0.01) {
+    logger.error('Auto-journal: Entry not balanced', { totalDebits, totalCredits, description: opts.description });
+    return null;
+  }
+
+  const entryNumber = await generateEntryNumber(tx, opts.date);
+
+  // Create POSTED entry directly
+  const entry = await tx.journalEntry.create({
+    data: {
+      entryNumber,
+      date: opts.date,
+      description: opts.description,
+      status: 'POSTED',
+      referenceType: opts.referenceType,
+      referenceId: opts.referenceId,
+      createdBy: opts.userId,
+      approvedBy: opts.userId,
+      lines: {
+        create: resolvedLines.map((l) => ({
+          accountHeadId: l.accountHeadId,
+          debitAmount: l.debitAmount,
+          creditAmount: l.creditAmount,
+          description: l.description,
+        })),
+      },
+    },
+  });
+
+  // Update account balances
+  for (const line of resolvedLines) {
+    const balanceChange = calculateBalanceChange(
+      line.accountType as any,
+      line.debitAmount,
+      line.creditAmount
+    );
+    await tx.accountHead.update({
+      where: { id: line.accountHeadId },
+      data: { currentBalance: { increment: balanceChange } },
+    });
+  }
+
+  logger.info(`Auto-journal created: ${entryNumber}`, {
+    referenceType: opts.referenceType,
+    referenceId: opts.referenceId,
+    amount: totalDebits,
+  });
+
+  return entry.id;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Public methods — one per transaction type
+// ═══════════════════════════════════════════════════════════════
+
+export const AutoJournalService = {
+  /**
+   * Invoice created: DR A/R (1200)  CR Sales Revenue (4100) + Tax Payable (2200)
+   */
+  async onInvoiceCreated(
+    tx: PrismaLike,
+    invoice: { id: string; invoiceNumber: string; total: number; subtotal: number; taxAmount: number; date: Date },
+    userId: string
+  ) {
+    const lines: JournalLine[] = [
+      { accountCode: '1200', debit: invoice.total, credit: 0, description: `A/R for ${invoice.invoiceNumber}` },
+      { accountCode: '4100', debit: 0, credit: invoice.subtotal, description: `Sales revenue ${invoice.invoiceNumber}` },
+    ];
+
+    if (invoice.taxAmount > 0) {
+      lines.push({ accountCode: '2200', debit: 0, credit: invoice.taxAmount, description: `Tax payable ${invoice.invoiceNumber}` });
+    }
+
+    return createAutoJournalEntry(tx, {
+      date: invoice.date,
+      description: `Invoice ${invoice.invoiceNumber}`,
+      referenceType: 'INVOICE',
+      referenceId: invoice.id,
+      userId,
+      lines,
+    });
+  },
+
+  /**
+   * Invoice voided: reverse the original entry
+   * DR Sales Revenue (4100) + Tax Payable (2200)  CR A/R (1200)
+   */
+  async onInvoiceVoided(
+    tx: PrismaLike,
+    invoice: { id: string; invoiceNumber: string; total: number; subtotal: number; taxAmount: number },
+    userId: string
+  ) {
+    const lines: JournalLine[] = [
+      { accountCode: '4100', debit: invoice.subtotal, credit: 0, description: `Void ${invoice.invoiceNumber}` },
+      { accountCode: '1200', debit: 0, credit: invoice.total, description: `Void A/R ${invoice.invoiceNumber}` },
+    ];
+
+    if (invoice.taxAmount > 0) {
+      lines.push({ accountCode: '2200', debit: invoice.taxAmount, credit: 0, description: `Void tax ${invoice.invoiceNumber}` });
+    }
+
+    return createAutoJournalEntry(tx, {
+      date: new Date(),
+      description: `Void Invoice ${invoice.invoiceNumber}`,
+      referenceType: 'INVOICE',
+      referenceId: invoice.id,
+      userId,
+      lines,
+    });
+  },
+
+  /**
+   * Client payment: DR Main Bank (1101)  CR A/R (1200)
+   */
+  async onClientPayment(
+    paymentData: { id: string; amount: number; date: Date; referenceNumber?: string | null },
+    userId: string
+  ) {
+    return prisma.$transaction(async (tx) => {
+      return createAutoJournalEntry(tx, {
+        date: paymentData.date,
+        description: `Client payment received${paymentData.referenceNumber ? ` (${paymentData.referenceNumber})` : ''}`,
+        referenceType: 'PAYMENT',
+        referenceId: paymentData.id,
+        userId,
+        lines: [
+          { accountCode: '1101', debit: paymentData.amount, credit: 0, description: 'Bank deposit' },
+          { accountCode: '1200', debit: 0, credit: paymentData.amount, description: 'A/R reduction' },
+        ],
+      });
+    });
+  },
+
+  /**
+   * Supplier payment: DR A/P (2100)  CR Main Bank (1101)
+   */
+  async onSupplierPayment(
+    paymentData: { id: string; amount: number; date: Date; referenceNumber?: string | null },
+    userId: string
+  ) {
+    return prisma.$transaction(async (tx) => {
+      return createAutoJournalEntry(tx, {
+        date: paymentData.date,
+        description: `Supplier payment${paymentData.referenceNumber ? ` (${paymentData.referenceNumber})` : ''}`,
+        referenceType: 'PAYMENT',
+        referenceId: paymentData.id,
+        userId,
+        lines: [
+          { accountCode: '2100', debit: paymentData.amount, credit: 0, description: 'A/P reduction' },
+          { accountCode: '1101', debit: 0, credit: paymentData.amount, description: 'Bank payment' },
+        ],
+      });
+    });
+  },
+
+  /**
+   * PO receipt: DR Inventory (1300)  CR A/P (2100)
+   */
+  async onGoodsReceived(
+    tx: PrismaLike,
+    receipt: { poId: string; poNumber: string; totalAmount: number; date: Date },
+    userId: string
+  ) {
+    return createAutoJournalEntry(tx, {
+      date: receipt.date,
+      description: `Goods received: ${receipt.poNumber}`,
+      referenceType: 'PO',
+      referenceId: receipt.poId,
+      userId,
+      lines: [
+        { accountCode: '1300', debit: receipt.totalAmount, credit: 0, description: `Inventory from ${receipt.poNumber}` },
+        { accountCode: '2100', debit: 0, credit: receipt.totalAmount, description: `A/P for ${receipt.poNumber}` },
+      ],
+    });
+  },
+
+  /**
+   * Expense: DR Expense account (5xxx)  CR Cash/Bank
+   * Cash → 1102 Petty Cash, Bank → 1101 Main Bank
+   */
+  async onExpenseCreated(
+    expenseData: {
+      id: string;
+      amount: number;
+      category: string;
+      description: string;
+      date: Date;
+      paymentMethod: string;
+    },
+    userId: string
+  ) {
+    const expenseCode = EXPENSE_ACCOUNT_MAP[expenseData.category] || '5900';
+    const creditCode = expenseData.paymentMethod === 'CASH' ? '1102' : '1101';
+
+    return prisma.$transaction(async (tx) => {
+      return createAutoJournalEntry(tx, {
+        date: expenseData.date,
+        description: `Expense: ${expenseData.description}`,
+        referenceType: 'EXPENSE',
+        referenceId: expenseData.id,
+        userId,
+        lines: [
+          { accountCode: expenseCode, debit: expenseData.amount, credit: 0, description: expenseData.category },
+          { accountCode: creditCode, debit: 0, credit: expenseData.amount, description: expenseData.paymentMethod === 'CASH' ? 'Petty cash' : 'Bank payment' },
+        ],
+      });
+    });
+  },
+
+  /**
+   * Expense deleted: reverse the entry
+   */
+  async onExpenseDeleted(
+    expenseData: {
+      id: string;
+      amount: number;
+      category: string;
+      description: string;
+      date: Date;
+      paymentMethod: string;
+    },
+    userId: string
+  ) {
+    const expenseCode = EXPENSE_ACCOUNT_MAP[expenseData.category] || '5900';
+    const creditCode = expenseData.paymentMethod === 'CASH' ? '1102' : '1101';
+
+    return prisma.$transaction(async (tx) => {
+      return createAutoJournalEntry(tx, {
+        date: new Date(),
+        description: `Reverse expense: ${expenseData.description}`,
+        referenceType: 'EXPENSE',
+        referenceId: expenseData.id,
+        userId,
+        lines: [
+          { accountCode: creditCode, debit: expenseData.amount, credit: 0, description: 'Reversal' },
+          { accountCode: expenseCode, debit: 0, credit: expenseData.amount, description: 'Expense reversal' },
+        ],
+      });
+    });
+  },
+
+  /**
+   * Stock adjustment approved (DECREASE only): DR Inventory Loss (5150)  CR Inventory (1300)
+   * INCREASE adjustments don't create JEs (typically corrections, not purchases)
+   */
+  async onStockAdjustmentApproved(
+    tx: PrismaLike,
+    adjustment: {
+      id: string;
+      adjustmentType: string;
+      quantity: number;
+      costPrice: number;
+      reason: string;
+    },
+    userId: string
+  ) {
+    // Only create JE for DECREASE (loss/damage)
+    if (adjustment.adjustmentType !== 'DECREASE') return null;
+
+    const amount = Math.round(adjustment.quantity * adjustment.costPrice * 100) / 100;
+    if (amount <= 0) return null;
+
+    return createAutoJournalEntry(tx, {
+      date: new Date(),
+      description: `Stock adjustment: ${adjustment.reason}`,
+      referenceType: 'ADJUSTMENT',
+      referenceId: adjustment.id,
+      userId,
+      lines: [
+        { accountCode: '5150', debit: amount, credit: 0, description: 'Inventory loss' },
+        { accountCode: '1300', debit: 0, credit: amount, description: 'Inventory reduction' },
+      ],
+    });
+  },
+
+  /**
+   * Credit note: DR Other Income/Returns (4200)  CR A/R (1200)
+   */
+  async onCreditNoteCreated(
+    tx: PrismaLike,
+    creditNote: { id: string; creditNoteNumber: string; totalAmount: number; date: Date },
+    userId: string
+  ) {
+    return createAutoJournalEntry(tx, {
+      date: creditNote.date,
+      description: `Credit note ${creditNote.creditNoteNumber}`,
+      referenceType: 'CREDIT_NOTE',
+      referenceId: creditNote.id,
+      userId,
+      lines: [
+        { accountCode: '4200', debit: creditNote.totalAmount, credit: 0, description: `Returns ${creditNote.creditNoteNumber}` },
+        { accountCode: '1200', debit: 0, credit: creditNote.totalAmount, description: `A/R reduction ${creditNote.creditNoteNumber}` },
+      ],
+    });
+  },
+
+  /**
+   * Credit note voided: reverse the entry
+   */
+  async onCreditNoteVoided(
+    tx: PrismaLike,
+    creditNote: { id: string; creditNoteNumber: string; totalAmount: number },
+    userId: string
+  ) {
+    return createAutoJournalEntry(tx, {
+      date: new Date(),
+      description: `Void credit note ${creditNote.creditNoteNumber}`,
+      referenceType: 'CREDIT_NOTE',
+      referenceId: creditNote.id,
+      userId,
+      lines: [
+        { accountCode: '1200', debit: creditNote.totalAmount, credit: 0, description: `Restore A/R ${creditNote.creditNoteNumber}` },
+        { accountCode: '4200', debit: 0, credit: creditNote.totalAmount, description: `Reverse returns ${creditNote.creditNoteNumber}` },
+      ],
+    });
+  },
+};

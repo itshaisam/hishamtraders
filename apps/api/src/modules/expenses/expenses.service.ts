@@ -4,6 +4,7 @@ import { CreateExpenseDto } from './dto/create-expense.dto.js';
 import { UpdateExpenseDto } from './dto/update-expense.dto.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
+import { AutoJournalService } from '../../services/auto-journal.service.js';
 
 export class ExpenseService {
   async create(data: CreateExpenseDto, userId: string): Promise<Expense> {
@@ -42,6 +43,16 @@ export class ExpenseService {
       entityId: expense.id,
       notes: `Expense created: ${data.category} - ${data.amount} via ${data.paymentMethod}`,
     });
+
+    // Auto journal entry: DR Expense account, CR Cash/Bank
+    await AutoJournalService.onExpenseCreated({
+      id: expense.id,
+      amount: data.amount,
+      category: data.category,
+      description: data.description.trim(),
+      date: data.date,
+      paymentMethod: data.paymentMethod,
+    }, userId);
 
     return expense;
   }
@@ -110,6 +121,16 @@ export class ExpenseService {
 
     // Delete expense
     await expenseRepository.delete(id);
+
+    // Auto journal entry: reverse the expense
+    await AutoJournalService.onExpenseDeleted({
+      id,
+      amount: parseFloat(existing.amount.toString()),
+      category: existing.category,
+      description: existing.description,
+      date: existing.date,
+      paymentMethod: existing.paymentMethod,
+    }, userId);
 
     await AuditService.log({
       userId,
