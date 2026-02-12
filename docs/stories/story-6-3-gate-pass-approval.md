@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 8-10 hours
 **Dependencies:** Story 6.2
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v2.1)
 
 ---
 
@@ -20,24 +20,24 @@
 ## Acceptance Criteria
 
 1. **Status Workflow:**
-   - [ ] PENDING → APPROVED → IN_TRANSIT → COMPLETED
-   - [ ] Cannot skip statuses
+   - [x] PENDING → APPROVED → IN_TRANSIT → COMPLETED
+   - [x] Cannot skip statuses
 
 2. **Status Transitions:**
-   - [ ] `PUT /api/v1/gate-passes/:id/approve` (PENDING → APPROVED, no inventory change)
-   - [ ] `PUT /api/v1/gate-passes/:id/dispatch` (APPROVED → IN_TRANSIT, **inventory deducted only in MANUAL mode**)
-   - [ ] `PUT /api/v1/gate-passes/:id/complete` (IN_TRANSIT → COMPLETED)
-   - [ ] `PUT /api/v1/gate-passes/:id/cancel` (cancels if PENDING/APPROVED/IN_TRANSIT, restores inventory if deducted)
+   - [x] `PUT /api/v1/gate-passes/:id/approve` (PENDING → APPROVED, no inventory change)
+   - [x] `PUT /api/v1/gate-passes/:id/dispatch` (APPROVED → IN_TRANSIT, **inventory deducted only in MANUAL mode**)
+   - [x] `PUT /api/v1/gate-passes/:id/complete` (IN_TRANSIT → COMPLETED)
+   - [x] `PUT /api/v1/gate-passes/:id/cancel` (cancels if PENDING/APPROVED/IN_TRANSIT, restores inventory if deducted)
 
 3. **Inventory Deduction:**
-   - [ ] In MANUAL mode: Deducted when status → IN_TRANSIT
-   - [ ] In AUTO mode: Already deducted when created (Story 6.2)
-   - [ ] StockMovement records created (use existing `movementType: 'SALE'` or `'TRANSFER'`)
+   - [x] In MANUAL mode: Deducted when status → IN_TRANSIT
+   - [x] In AUTO mode: Already deducted when created (Story 6.2)
+   - [x] StockMovement records created (use existing `movementType: 'SALE'` or `'TRANSFER'`)
 
 4. **Frontend:**
-   - [ ] Status workflow indicator (use step indicators with `div` + Tailwind CSS — no Stepper component exists)
-   - [ ] Action buttons conditional on status
-   - [ ] Display timestamps and users for each status
+   - [x] Status workflow indicator (use step indicators with `div` + Tailwind CSS — no Stepper component exists)
+   - [x] Action buttons conditional on status
+   - [x] Display timestamps and users for each status
    - [x] Print Gate Pass button (`window.print()` with `@media print` CSS)
 
 5. **Print Layout:**
@@ -57,8 +57,8 @@
    - [ ] Alert for Warehouse Manager when passes await approval (defer alert system, use dashboard indicator for MVP)
 
 8. **Authorization:**
-   - [ ] Only Warehouse Manager and Admin
-   - [ ] All status changes logged via `AuditService.log()`
+   - [x] Only Warehouse Manager and Admin
+   - [x] All status changes logged via `AuditService.log()`
 
 ---
 

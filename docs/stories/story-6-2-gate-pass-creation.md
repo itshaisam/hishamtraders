@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 8-10 hours
 **Dependencies:** Story 6.1, Epic 3.2 (Invoices)
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v2.1)
 
 ---
 
@@ -20,29 +20,29 @@
 ## Acceptance Criteria
 
 1. **Automatic creation from invoice:**
-   - [ ] When invoice saved, gate pass auto-created
-   - [ ] Linked to invoice (`referenceType='INVOICE'`, `referenceId=invoice.id`)
-   - [ ] Items match invoice items (product, quantity, batch)
-   - [ ] Status = APPROVED if AUTO mode, PENDING if MANUAL
+   - [x] When invoice saved, gate pass auto-created
+   - [x] Linked to invoice (`referenceType='INVOICE'`, `referenceId=invoice.id`)
+   - [x] Items match invoice items (product, quantity, batch)
+   - [x] Status = APPROVED if AUTO mode, PENDING if MANUAL
 
 2. **Manual gate pass creation:**
-   - [ ] `POST /api/v1/gate-passes` — creates gate pass
-   - [ ] Purpose: SALE, TRANSFER, RETURN, OTHER
-   - [ ] Can create standalone (not linked)
+   - [x] `POST /api/v1/gate-passes` — creates gate pass
+   - [x] Purpose: SALE, TRANSFER, RETURN, OTHER
+   - [x] Can create standalone (not linked)
 
 3. **Backend API:**
-   - [ ] `GET /api/v1/gate-passes` — list with filters
-   - [ ] `GET /api/v1/gate-passes/:id` — details with items
+   - [x] `GET /api/v1/gate-passes` — list with filters
+   - [x] `GET /api/v1/gate-passes/:id` — details with items
 
 4. **Inventory deduction:**
-   - [ ] When gate pass status becomes APPROVED in AUTO mode → deduct inventory
-   - [ ] Create StockMovement record with `movementType: 'SALE'` (for invoice-linked) or `'TRANSFER'` (for transfers)
-   - [ ] Create StockMovement with `referenceType: 'INVOICE'` or `'TRANSFER'` (use existing enum values)
+   - [x] When gate pass status becomes APPROVED in AUTO mode → deduct inventory
+   - [x] Create StockMovement record with `movementType: 'SALE'` (for invoice-linked) or `'TRANSFER'` (for transfers)
+   - [x] Create StockMovement with `referenceType: 'INVOICE'` or `'TRANSFER'` (use existing enum values)
 
 5. **Frontend:**
-   - [ ] Gate Pass Management page
-   - [ ] Create Gate Pass form
-   - [ ] Display linked invoice/transfer
+   - [x] Gate Pass Management page
+   - [x] Create Gate Pass form
+   - [x] Display linked invoice/transfer
 
 6. **Invoice ↔ Gate Pass Visibility:**
    - [x] `getInvoiceById` returns `gatePass: { id, gatePassNumber, status }` when a gate pass is linked
@@ -50,8 +50,8 @@
    - [x] Invoice detail page shows clickable gate pass badge/pill linking to `/gate-passes/:id`
 
 7. **Authorization:**
-   - [ ] Warehouse Manager and Admin can create
-   - [ ] Creation logged via `AuditService.log()`
+   - [x] Warehouse Manager and Admin can create
+   - [x] Creation logged via `AuditService.log()`
 
 ---
 

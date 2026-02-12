@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Epic 2 (Warehouses)
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v2.1)
 
 ---
 
@@ -20,26 +20,26 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] Warehouse table expanded: `gatePassMode` (GatePassMode enum, default AUTO) — NEW field
-   - [ ] GatePass table created (see Dev Notes)
-   - [ ] GatePassItem table for line items
-   - [ ] Gate pass number format: `GP-{WarehouseName3}-YYYYMMDD-XXX` (e.g., `GP-MAI-20260115-001`)
+   - [x] Warehouse table expanded: `gatePassMode` (GatePassMode enum, default AUTO) — NEW field
+   - [x] GatePass table created (see Dev Notes)
+   - [x] GatePassItem table for line items
+   - [x] Gate pass number format: `GP-{WarehouseName3}-YYYYMMDD-XXX` (e.g., `GP-MAI-20260115-001`)
 
 2. **Gate Pass Modes:**
-   - [ ] AUTO: Gate pass created automatically, status = APPROVED, **inventory deducted when APPROVED**
-   - [ ] MANUAL: Gate pass created with status = PENDING, requires approval, **inventory deducted when IN_TRANSIT** (dispatched)
+   - [x] AUTO: Gate pass created automatically, status = APPROVED, **inventory deducted when APPROVED**
+   - [x] MANUAL: Gate pass created with status = PENDING, requires approval, **inventory deducted when IN_TRANSIT** (dispatched)
 
 3. **Backend API:**
-   - [ ] `PUT /api/v1/warehouses/:id/gate-pass-config` — updates gatePassMode
-   - [ ] Validation: only AUTO or MANUAL allowed
+   - [x] `PUT /api/v1/warehouses/:id/gate-pass-config` — updates gatePassMode
+   - [x] Validation: only AUTO or MANUAL allowed
 
 4. **Frontend:**
-   - [ ] Warehouse Settings page includes gate pass mode toggle
-   - [ ] Clear explanation of AUTO vs MANUAL modes
+   - [x] Warehouse Settings page includes gate pass mode toggle
+   - [x] Clear explanation of AUTO vs MANUAL modes
 
 5. **Authorization:**
-   - [ ] Only Admin and Warehouse Manager can configure
-   - [ ] Configuration changes logged via `AuditService.log()`
+   - [x] Only Admin and Warehouse Manager can configure
+   - [x] Configuration changes logged via `AuditService.log()`
 
 ---
 
