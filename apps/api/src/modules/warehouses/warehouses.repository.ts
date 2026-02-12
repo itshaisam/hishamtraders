@@ -1,4 +1,4 @@
-import { PrismaClient, Warehouse, WarehouseStatus } from '@prisma/client';
+import { PrismaClient, Warehouse, WarehouseStatus, GatePassMode } from '@prisma/client';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto.js';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto.js';
 
@@ -84,5 +84,12 @@ export class WarehousesRepository {
     // This will be implemented in later stories
     // For now, always return false (no stock)
     return false;
+  }
+
+  async updateGatePassMode(id: string, gatePassMode: GatePassMode, userId: string): Promise<Warehouse> {
+    return prisma.warehouse.update({
+      where: { id },
+      data: { gatePassMode, updatedBy: userId },
+    });
   }
 }

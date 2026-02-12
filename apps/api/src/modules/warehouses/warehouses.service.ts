@@ -1,8 +1,9 @@
-import { Warehouse, WarehouseStatus } from '@prisma/client';
+import { Warehouse, WarehouseStatus, GatePassMode } from '@prisma/client';
 import { WarehousesRepository } from './warehouses.repository.js';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto.js';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto.js';
 import { NotFoundError, BadRequestError } from '../../utils/errors.js';
+import { AuditService } from '../../services/audit.service.js';
 import logger from '../../lib/logger.js';
 
 export class WarehousesService {
@@ -95,5 +96,28 @@ export class WarehousesService {
       logger.error('Error deleting warehouse', { id, error: error.message });
       throw error;
     }
+  }
+
+  async updateGatePassConfig(id: string, gatePassMode: string, userId: string): Promise<Warehouse> {
+    if (gatePassMode !== 'AUTO' && gatePassMode !== 'MANUAL') {
+      throw new BadRequestError('Gate pass mode must be AUTO or MANUAL');
+    }
+
+    const warehouse = await this.findById(id);
+    const oldMode = warehouse.gatePassMode;
+
+    const updated = await this.repository.updateGatePassMode(id, gatePassMode as GatePassMode, userId);
+
+    await AuditService.log({
+      userId,
+      action: 'UPDATE',
+      entityType: 'Warehouse',
+      entityId: id,
+      changedFields: { gatePassMode: { old: oldMode, new: gatePassMode } },
+      notes: `Warehouse ${warehouse.name} gate pass mode changed from ${oldMode} to ${gatePassMode}`,
+    });
+
+    logger.info('Warehouse gate pass config updated', { id, oldMode, newMode: gatePassMode });
+    return updated;
   }
 }

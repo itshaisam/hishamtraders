@@ -62,6 +62,9 @@ import { PettyCashPage } from './features/accounting/pages/PettyCashPage';
 import { BankReconciliationPage } from './features/accounting/pages/BankReconciliationPage';
 import { ReconciliationDetailPage } from './features/accounting/pages/ReconciliationDetailPage';
 import { MonthEndClosingPage } from './features/accounting/pages/MonthEndClosingPage';
+import GatePassListPage from './features/gate-passes/pages/GatePassListPage';
+import CreateGatePassPage from './features/gate-passes/pages/CreateGatePassPage';
+import GatePassDetailPage from './features/gate-passes/pages/GatePassDetailPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -751,6 +754,38 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <MonthEndClosingPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Gate Passes (Epic 6) */}
+          <Route
+            path="/gate-passes"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <GatePassListPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/gate-passes/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateGatePassPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/gate-passes/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <GatePassDetailPage />
                 </Layout>
               </ProtectedRoute>
             }

@@ -105,4 +105,22 @@ export class WarehousesController {
       next(error);
     }
   };
+
+  updateGatePassConfig = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { gatePassMode } = req.body;
+      const userId = (req as any).user.userId;
+
+      const warehouse = await this.service.updateGatePassConfig(id, gatePassMode, userId);
+
+      res.json({
+        success: true,
+        message: 'Warehouse gate pass configuration updated successfully',
+        data: warehouse,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

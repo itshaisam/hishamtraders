@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle, RotateCcw, Printer, FileDown, Link2, Check, PackageX } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle, RotateCcw, Printer, FileDown, Link2, Check, PackageX, ClipboardList } from 'lucide-react';
 import { format } from 'date-fns';
 import { useInvoiceById, useVoidInvoice, useInvoices } from '../../../hooks/useInvoices';
 import { useCurrencySymbol, useCompanyName, useCompanyLogo } from '../../../hooks/useSettings';
@@ -472,10 +472,20 @@ export function InvoiceDetailPage() {
               <h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${invoice.status === 'VOIDED' ? 'line-through text-gray-400' : 'text-gray-900'}`}>
                 {invoice.invoiceNumber}
               </h1>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusBadgeColor(invoice.status)}`}>
                   {invoice.status}
                 </span>
+                {invoice.gatePass && (
+                  <button
+                    onClick={() => navigate(`/gate-passes/${invoice.gatePass!.id}`)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800 hover:bg-indigo-200 transition-colors cursor-pointer"
+                  >
+                    <ClipboardList className="h-3.5 w-3.5" />
+                    {invoice.gatePass.gatePassNumber}
+                    <span className="opacity-60">({invoice.gatePass.status.replace('_', ' ')})</span>
+                  </button>
+                )}
                 <span className="text-xs text-gray-500">
                   {format(new Date(invoice.createdAt), 'dd MMM yyyy, HH:mm')}
                 </span>

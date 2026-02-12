@@ -47,7 +47,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Depends on Warehouse model (Epic 2).
+**Backend:** Implemented. Schema migration applied, gatePassMode on Warehouse, GatePass/GatePassItem models created, gate pass config API working.
 
 ### Key Corrections
 
@@ -98,6 +98,7 @@ model GatePass {
   approvedBy     String?
   dispatchedBy   String?
   completedBy    String?
+  cancelReason   String?        @db.Text
   notes          String?        @db.Text
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -213,3 +214,4 @@ apps/web/src/features/warehouse/pages/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), auditLogger→AuditService with correct action enum, noted Warehouse has no `code` field, fixed gate pass number generation, corrected schema to only show NEW additions | Claude (AI Review) |
+| 2026-02-12 | 2.1     | Updated implementation status to done, added `cancelReason` field to GatePass schema | Claude (Implementation) |

@@ -38,12 +38,25 @@
    - [ ] Status workflow indicator (use step indicators with `div` + Tailwind CSS — no Stepper component exists)
    - [ ] Action buttons conditional on status
    - [ ] Display timestamps and users for each status
-   - [ ] Print Gate Pass button (PDF/print)
+   - [x] Print Gate Pass button (`window.print()` with `@media print` CSS)
 
-5. **Alerts:**
+5. **Print Layout:**
+   - [x] Professional print layout with company header/logo, GP number, status
+   - [x] Details section: warehouse, date, purpose, reference (invoice number if linked)
+   - [x] Items table with #, Product, SKU, Batch No, Bin Location, Quantity + total
+   - [x] Timeline section: Issued By, Approved By, Dispatched By, Completed By
+   - [x] Footer: company name + generation timestamp
+   - [x] Screen UI wrapped in `no-print`, print layout in `print-only`
+
+6. **Reference Number Resolution:**
+   - [x] `getGatePassById` resolves `referenceNumber` (invoice number) when `referenceType=INVOICE`
+   - [x] Detail page shows human-readable "Invoice INV-XXXX" instead of raw CUID
+   - [x] Linked invoice banner with "View Invoice" navigation link
+
+7. **Alerts:**
    - [ ] Alert for Warehouse Manager when passes await approval (defer alert system, use dashboard indicator for MVP)
 
-6. **Authorization:**
+8. **Authorization:**
    - [ ] Only Warehouse Manager and Admin
    - [ ] All status changes logged via `AuditService.log()`
 
@@ -53,7 +66,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Depends on Story 6.2 (GatePass creation).
+**Backend:** Implemented. Status transitions, print layout, and reference number resolution all working.
 
 ### Key Corrections
 
@@ -306,7 +319,7 @@ apps/web/src/features/gate-passes/pages/
 ### POST-MVP DEFERRED
 
 - **Alert model**: No `Alert` model exists in schema. For MVP, use dashboard indicators (count of pending gate passes) instead of a formal alert system.
-- **PDF/Print**: Defer to browser print (`window.print()`).
+- ~~**PDF/Print**: Defer to browser print (`window.print()`).~~ **DONE** — Print layout implemented with `@media print` CSS, `window.print()`, company header/logo, items table, timeline, and footer.
 
 ---
 
@@ -316,3 +329,4 @@ apps/web/src/features/gate-passes/pages/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), auditLogger→AuditService with action:'UPDATE', use existing enum values for cancel restore (ADJUSTMENT), replaced Stepper/Step/StepLabel with plain Tailwind divs, noted missing dispatcher/completer relations, deferred alert system | Claude (AI Review) |
+| 2026-02-12 | 2.1     | Added AC 5-6: Print layout implemented (company header, items table, timeline, footer), reference number resolution for invoice-linked gate passes, "View Invoice" link | Claude (Implementation) |

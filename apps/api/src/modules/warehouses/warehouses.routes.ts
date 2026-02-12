@@ -40,6 +40,14 @@ router.put(
   controller.update
 );
 
+// PUT /api/v1/warehouses/:id/gate-pass-config - Update gate pass configuration
+router.put(
+  '/:id/gate-pass-config',
+  requirePermission('warehouses', 'update'),
+  auditLog('UPDATE_WAREHOUSE_GP_CONFIG'),
+  controller.updateGatePassConfig
+);
+
 // DELETE /api/v1/warehouses/:id - Delete warehouse (ADMIN only)
 router.delete(
   '/:id',

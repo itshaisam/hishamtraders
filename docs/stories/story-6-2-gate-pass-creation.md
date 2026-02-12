@@ -44,7 +44,12 @@
    - [ ] Create Gate Pass form
    - [ ] Display linked invoice/transfer
 
-6. **Authorization:**
+6. **Invoice ↔ Gate Pass Visibility:**
+   - [x] `getInvoiceById` returns `gatePass: { id, gatePassNumber, status }` when a gate pass is linked
+   - [x] `createInvoice` returns gate pass info alongside the created invoice
+   - [x] Invoice detail page shows clickable gate pass badge/pill linking to `/gate-passes/:id`
+
+7. **Authorization:**
    - [ ] Warehouse Manager and Admin can create
    - [ ] Creation logged via `AuditService.log()`
 
@@ -54,7 +59,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Depends on Story 6.1 (GatePass model) and Invoice model.
+**Backend:** Implemented. Gate pass auto-creation from invoices, manual creation, and invoice↔gate pass visibility all working.
 
 ### Key Corrections
 
@@ -239,3 +244,4 @@ apps/web/src/features/gate-passes/pages/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), auditLogger→AuditService, use existing MovementType/ReferenceType enums (no GATE_PASS_OUT/GATE_PASS), fixed Invoice has no createdBy, include product in deduct query | Claude (AI Review) |
+| 2026-02-12 | 2.1     | Added AC 6: Invoice↔Gate Pass visibility — invoice API returns gate pass info, invoice detail page shows clickable gate pass link | Claude (Implementation) |

@@ -12,6 +12,7 @@ import { generateInvoiceNumber } from '../../utils/invoice-number.util.js';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
+import { GatePassService } from '../gate-passes/gate-pass.service.js';
 import { validatePeriodNotClosed } from '../../utils/period-lock.js';
 import logger from '../../lib/logger.js';
 
@@ -21,6 +22,7 @@ export class InvoicesService {
   private fifoService: FifoDeductionService;
   private creditLimitService: CreditLimitService;
   private stockReversalService: StockReversalService;
+  private gatePassService: GatePassService;
 
   constructor(private prisma: PrismaClient) {
     this.repository = new InvoicesRepository(prisma);
@@ -28,6 +30,7 @@ export class InvoicesService {
     this.fifoService = new FifoDeductionService(prisma);
     this.creditLimitService = new CreditLimitService(prisma);
     this.stockReversalService = new StockReversalService(prisma);
+    this.gatePassService = new GatePassService(prisma);
   }
 
   /**
@@ -201,8 +204,22 @@ export class InvoicesService {
       paymentType: data.paymentType,
     });
 
-    // Return full invoice with relations
-    return this.repository.findById(invoice.id);
+    // Auto-create gate pass from invoice (Epic 6)
+    let gatePassInfo: { id: string; gatePassNumber: string; status: string } | null = null;
+    try {
+      const gp = await this.gatePassService.createGatePassFromInvoice(invoice.id, userId);
+      gatePassInfo = { id: gp.id, gatePassNumber: gp.gatePassNumber, status: gp.status };
+    } catch (gpError: any) {
+      // Log but don't fail the invoice creation
+      logger.warn('Failed to auto-create gate pass for invoice', {
+        invoiceId: invoice.id,
+        error: gpError.message,
+      });
+    }
+
+    // Return full invoice with relations + gate pass info
+    const fullInvoice = await this.repository.findById(invoice.id);
+    return { ...fullInvoice, gatePass: gatePassInfo };
   }
 
   /**
@@ -340,7 +357,14 @@ export class InvoicesService {
     if (!invoice) {
       throw new NotFoundError('Invoice not found');
     }
-    return invoice;
+
+    // Attach associated gate pass info if exists
+    const gatePass = await this.prisma.gatePass.findFirst({
+      where: { referenceType: 'INVOICE', referenceId: id },
+      select: { id: true, gatePassNumber: true, status: true },
+    });
+
+    return { ...invoice, gatePass: gatePass || null };
   }
 
   /**

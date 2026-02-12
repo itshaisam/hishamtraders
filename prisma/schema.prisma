@@ -162,13 +162,90 @@ model Warehouse {
   createdBy String?
   updatedBy String?
 
+  gatePassMode     GatePassMode    @default(AUTO)
+
   inventory        Inventory[]
   stockMovements   StockMovement[]
   stockAdjustments StockAdjustment[]
   invoices         Invoice[]
+  gatePasses       GatePass[]
 
   @@index([status])
   @@map("warehouses")
+}
+
+// ============================================================================
+// GATE PASS SYSTEM (Epic 6.1-6.3)
+// ============================================================================
+
+enum GatePassMode {
+  AUTO
+  MANUAL
+}
+
+enum GatePassPurpose {
+  SALE
+  TRANSFER
+  RETURN
+  OTHER
+}
+
+enum GatePassStatus {
+  PENDING
+  APPROVED
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+}
+
+model GatePass {
+  id              String          @id @default(cuid())
+  gatePassNumber  String          @unique
+  warehouseId     String
+  date            DateTime
+  purpose         GatePassPurpose
+  referenceType   ReferenceType?
+  referenceId     String?
+  status          GatePassStatus  @default(PENDING)
+  issuedBy        String
+  approvedBy      String?
+  dispatchedBy    String?
+  completedBy     String?
+  cancelReason    String?         @db.Text
+  notes           String?         @db.Text
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  warehouse       Warehouse       @relation(fields: [warehouseId], references: [id])
+  issuer          User            @relation("IssuedGatePasses", fields: [issuedBy], references: [id])
+  approver        User?           @relation("ApprovedGatePasses", fields: [approvedBy], references: [id])
+  items           GatePassItem[]
+
+  @@index([warehouseId])
+  @@index([status])
+  @@index([date])
+  @@index([referenceType, referenceId])
+  @@map("gate_passes")
+}
+
+model GatePassItem {
+  id          String   @id @default(cuid())
+  gatePassId  String
+  productId   String
+  batchNo     String?
+  binLocation String?
+  quantity    Int
+  description String?  @db.Text
+
+  createdAt   DateTime @default(now())
+
+  gatePass    GatePass @relation(fields: [gatePassId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+
+  @@index([gatePassId])
+  @@index([productId])
+  @@map("gate_pass_items")
 }
 
 // ============================================================================
@@ -343,6 +420,7 @@ model Product {
   stockAdjustments StockAdjustment[]
   invoiceItems     InvoiceItem[]
   creditNoteItems  CreditNoteItem[]   // Story 3.9
+  gatePassItems    GatePassItem[]     // Epic 6
 
   @@index([status])
   @@index([sku])
@@ -516,6 +594,8 @@ model User {
   journalEntriesApproved JournalEntry[]  @relation("JournalEntryApprover")  // Epic 5
   bankReconciliations    BankReconciliation[] @relation("BankReconciler")    // Epic 5
   periodCloses           PeriodClose[]   @relation("PeriodCloser")          // Epic 5
+  issuedGatePasses       GatePass[]      @relation("IssuedGatePasses")      // Epic 6
+  approvedGatePasses     GatePass[]      @relation("ApprovedGatePasses")    // Epic 6
 
   @@index([email])
   @@index([roleId])

@@ -32,6 +32,7 @@ import { bankAccountRoutes } from './modules/bank-accounts/bank-accounts.routes.
 import { pettyCashRoutes } from './modules/petty-cash/petty-cash.routes.js';
 import { bankReconciliationRoutes } from './modules/bank-reconciliation/bank-reconciliation.routes.js';
 import { periodCloseRoutes } from './modules/period-close/period-close.routes.js';
+import { gatePassRoutes } from './modules/gate-passes/gate-pass.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
@@ -105,6 +106,7 @@ app.use('/api/v1/bank-accounts', bankAccountRoutes);
 app.use('/api/v1/petty-cash', pettyCashRoutes);
 app.use('/api/v1/bank-reconciliation', bankReconciliationRoutes);
 app.use('/api/v1/period-close', periodCloseRoutes);
+app.use('/api/v1/gate-passes', gatePassRoutes);
 app.use('/api/v1', dashboardRoutes);
 
 // 404 handler (must be after all routes)

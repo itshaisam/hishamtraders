@@ -73,6 +73,11 @@ export interface Invoice {
     email: string;
   } | null;
   creditNotes?: InvoiceCreditNote[];
+  gatePass?: {
+    id: string;
+    gatePassNumber: string;
+    status: string;
+  } | null;
 }
 
 export interface InvoiceCreditNoteItem {
