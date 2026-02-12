@@ -17,6 +17,7 @@ import {
   ChevronRight,
   ChevronDown,
   ClipboardList,
+  BookOpen,
   X,
 } from 'lucide-react';
 
@@ -415,6 +416,39 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
             </div>
           )}
         </div>
+
+        {/* Accounting Menu (Admin & Accountant) */}
+        {hasRole(['ADMIN', 'ACCOUNTANT']) && (
+          <div className="mt-2">
+            <button
+              onClick={() => toggleMenu('accounting')}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <BookOpen size={20} />
+                {!isCollapsed && <span className="text-sm font-medium">Accounting</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    isMenuExpanded('accounting') ? 'rotate-180' : ''
+                  }`}
+                />
+              )}
+            </button>
+            {isMenuExpanded('accounting') && !isCollapsed && (
+              <div className="ml-6 mt-1 space-y-1">
+                <Link
+                  to="/accounting/chart-of-accounts"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Chart of Accounts
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Users (Admin only) */}
         {isAdmin() && (

@@ -512,6 +512,10 @@ model User {
   voidedInvoices      Invoice[]         @relation("VoidedInvoices")  // Story 3.4
   expenses            Expense[]         // Story 3.7
   creditNotesCreated  CreditNote[]      @relation("CreditNoteCreator") // Story 3.9
+  journalEntriesCreated  JournalEntry[]  @relation("JournalEntryCreator")   // Epic 5
+  journalEntriesApproved JournalEntry[]  @relation("JournalEntryApprover")  // Epic 5
+  bankReconciliations    BankReconciliation[] @relation("BankReconciler")    // Epic 5
+  periodCloses           PeriodClose[]   @relation("PeriodCloser")          // Epic 5
 
   @@index([email])
   @@index([roleId])
@@ -575,18 +579,21 @@ model Payment {
   date                 DateTime
   notes                String?                @db.Text
   recordedBy           String
+  bankAccountId        String?                // Epic 5: Link to bank account head
 
   createdAt            DateTime               @default(now())
 
   supplier             Supplier?              @relation(fields: [supplierId], references: [id])
   client               Client?                @relation(fields: [clientId], references: [id])
   user                 User                   @relation("PaymentRecorder", fields: [recordedBy], references: [id])
+  bankAccount          AccountHead?           @relation("PaymentBankAccount", fields: [bankAccountId], references: [id])
   allocations          PaymentAllocation[]    // Story 3.6: Payment allocation to invoices
 
   @@index([paymentType, paymentReferenceType, referenceId])
   @@index([supplierId])
   @@index([clientId])
   @@index([date])
+  @@index([bankAccountId])
   @@map("payments")
 }
 
@@ -837,4 +844,175 @@ model CreditNoteItem {
   @@index([productId])
   @@index([productVariantId])
   @@map("credit_note_items")
+}
+
+// ============================================================================
+// ACCOUNTING - GENERAL LEDGER (Epic 5)
+// ============================================================================
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum JournalEntryStatus {
+  DRAFT
+  POSTED
+}
+
+enum ReconciliationStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum PeriodType {
+  MONTH
+  YEAR
+}
+
+enum PeriodCloseStatus {
+  CLOSED
+  REOPENED
+}
+
+model AccountHead {
+  id              String        @id @default(cuid())
+  code            String        @unique
+  name            String
+  accountType     AccountType
+  parentId        String?
+  openingBalance  Decimal       @db.Decimal(14, 2) @default(0)
+  currentBalance  Decimal       @db.Decimal(14, 2) @default(0)
+  status          AccountStatus @default(ACTIVE)
+  isSystemAccount Boolean       @default(false)
+  description     String?       @db.Text
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  parent          AccountHead?  @relation("AccountHeadHierarchy", fields: [parentId], references: [id])
+  children        AccountHead[] @relation("AccountHeadHierarchy")
+  journalLines    JournalEntryLine[]
+  bankReconciliations BankReconciliation[]
+  payments        Payment[]     @relation("PaymentBankAccount")
+
+  @@index([accountType])
+  @@index([parentId])
+  @@index([status])
+  @@map("account_heads")
+}
+
+model JournalEntry {
+  id              String             @id @default(cuid())
+  entryNumber     String             @unique
+  date            DateTime
+  description     String             @db.Text
+  status          JournalEntryStatus @default(DRAFT)
+  referenceType   String?
+  referenceId     String?
+  createdBy       String
+  approvedBy      String?
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  creator         User               @relation("JournalEntryCreator", fields: [createdBy], references: [id])
+  approver        User?              @relation("JournalEntryApprover", fields: [approvedBy], references: [id])
+  lines           JournalEntryLine[]
+  closingPeriods  PeriodClose[]      @relation("ClosingJournalEntry")
+
+  @@index([status])
+  @@index([date])
+  @@index([referenceType, referenceId])
+  @@index([createdBy])
+  @@map("journal_entries")
+}
+
+model JournalEntryLine {
+  id              String        @id @default(cuid())
+  journalEntryId  String
+  accountHeadId   String
+  debitAmount     Decimal       @db.Decimal(14, 2) @default(0)
+  creditAmount    Decimal       @db.Decimal(14, 2) @default(0)
+  description     String?       @db.Text
+
+  createdAt       DateTime      @default(now())
+
+  journalEntry    JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  accountHead     AccountHead   @relation(fields: [accountHeadId], references: [id])
+  reconciliationItems BankReconciliationItem[]
+
+  @@index([journalEntryId])
+  @@index([accountHeadId])
+  @@map("journal_entry_lines")
+}
+
+model BankReconciliation {
+  id               String               @id @default(cuid())
+  bankAccountId    String
+  statementDate    DateTime
+  statementBalance Decimal              @db.Decimal(14, 2)
+  systemBalance    Decimal              @db.Decimal(14, 2)
+  status           ReconciliationStatus @default(IN_PROGRESS)
+  reconciledBy     String
+
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  bankAccount      AccountHead          @relation(fields: [bankAccountId], references: [id])
+  reconciler       User                 @relation("BankReconciler", fields: [reconciledBy], references: [id])
+  items            BankReconciliationItem[]
+
+  @@index([bankAccountId])
+  @@index([status])
+  @@map("bank_reconciliations")
+}
+
+model BankReconciliationItem {
+  id                  String             @id @default(cuid())
+  reconciliationId    String
+  journalEntryLineId  String?
+  description         String             @db.Text
+  statementAmount     Decimal            @db.Decimal(14, 2)
+  statementDate       DateTime
+  matched             Boolean            @default(false)
+  notes               String?            @db.Text
+
+  createdAt           DateTime           @default(now())
+
+  reconciliation      BankReconciliation @relation(fields: [reconciliationId], references: [id], onDelete: Cascade)
+  journalEntryLine    JournalEntryLine?  @relation(fields: [journalEntryLineId], references: [id])
+
+  @@index([reconciliationId])
+  @@index([journalEntryLineId])
+  @@map("bank_reconciliation_items")
+}
+
+model PeriodClose {
+  id                    String           @id @default(cuid())
+  periodType            PeriodType
+  periodDate            DateTime
+  netProfit             Decimal          @db.Decimal(14, 2)
+  status                PeriodCloseStatus @default(CLOSED)
+  closedBy              String
+  closingJournalEntryId String?
+  reopenReason          String?          @db.Text
+
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  closer                User             @relation("PeriodCloser", fields: [closedBy], references: [id])
+  closingJournalEntry   JournalEntry?    @relation("ClosingJournalEntry", fields: [closingJournalEntryId], references: [id])
+
+  @@unique([periodType, periodDate])
+  @@index([status])
+  @@map("period_closes")
 }

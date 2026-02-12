@@ -50,6 +50,7 @@ import { ReturnsPage } from './features/returns/pages/ReturnsPage';
 import { CreateReturnPage } from './features/returns/pages/CreateReturnPage';
 import { CreditNoteDetailPage } from './features/returns/pages/CreditNoteDetailPage';
 import { AuditTrailPage } from './features/audit/pages/AuditTrailPage';
+import { ChartOfAccountsPage } from './features/accounting/pages/ChartOfAccountsPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -591,6 +592,18 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <TaxSettingsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Accounting routes (Epic 5) */}
+          <Route
+            path="/accounting/chart-of-accounts"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ChartOfAccountsPage />
                 </Layout>
               </ProtectedRoute>
             }

@@ -559,6 +559,74 @@ async function main() {
   });
   console.log('  ✓ System settings created (TAX_RATE=18%)');
 
+  // ============ Seed Chart of Accounts (Epic 5) ============
+  console.log('\n📊 Seeding Chart of Accounts...');
+
+  const accountHeads = [
+    // ASSETS (1xxx)
+    { code: '1000', name: 'Assets', accountType: 'ASSET' as const, parentCode: null, isSystemAccount: true },
+    { code: '1100', name: 'Bank Accounts', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: true },
+    { code: '1101', name: 'Main Bank Account', accountType: 'ASSET' as const, parentCode: '1100', isSystemAccount: true },
+    { code: '1102', name: 'Petty Cash', accountType: 'ASSET' as const, parentCode: '1100', isSystemAccount: true },
+    { code: '1200', name: 'Accounts Receivable', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: true },
+    { code: '1300', name: 'Inventory', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: true },
+    { code: '1400', name: 'Fixed Assets', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: false },
+
+    // LIABILITIES (2xxx)
+    { code: '2000', name: 'Liabilities', accountType: 'LIABILITY' as const, parentCode: null, isSystemAccount: true },
+    { code: '2100', name: 'Accounts Payable', accountType: 'LIABILITY' as const, parentCode: '2000', isSystemAccount: true },
+    { code: '2200', name: 'Tax Payable', accountType: 'LIABILITY' as const, parentCode: '2000', isSystemAccount: true },
+    { code: '2300', name: 'Loans Payable', accountType: 'LIABILITY' as const, parentCode: '2000', isSystemAccount: false },
+
+    // EQUITY (3xxx)
+    { code: '3000', name: 'Equity', accountType: 'EQUITY' as const, parentCode: null, isSystemAccount: true },
+    { code: '3100', name: "Owner's Capital", accountType: 'EQUITY' as const, parentCode: '3000', isSystemAccount: true },
+    { code: '3200', name: 'Retained Earnings', accountType: 'EQUITY' as const, parentCode: '3000', isSystemAccount: true },
+
+    // REVENUE (4xxx)
+    { code: '4000', name: 'Revenue', accountType: 'REVENUE' as const, parentCode: null, isSystemAccount: true },
+    { code: '4100', name: 'Sales Revenue', accountType: 'REVENUE' as const, parentCode: '4000', isSystemAccount: true },
+    { code: '4200', name: 'Other Income', accountType: 'REVENUE' as const, parentCode: '4000', isSystemAccount: false },
+
+    // EXPENSES (5xxx)
+    { code: '5000', name: 'Expenses', accountType: 'EXPENSE' as const, parentCode: null, isSystemAccount: true },
+    { code: '5100', name: 'Cost of Goods Sold', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: true },
+    { code: '5150', name: 'Inventory Loss', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: true },
+    { code: '5200', name: 'Rent Expense', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: false },
+    { code: '5300', name: 'Utilities Expense', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: false },
+    { code: '5400', name: 'Salaries Expense', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: false },
+    { code: '5500', name: 'Transport Expense', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: false },
+    { code: '5900', name: 'Other Expenses', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: false },
+  ];
+
+  // Create accounts in order (parents first)
+  const accountIdMap: Record<string, string> = {};
+
+  for (const acct of accountHeads) {
+    const existing = await prisma.accountHead.findUnique({ where: { code: acct.code } });
+    if (existing) {
+      accountIdMap[acct.code] = existing.id;
+      continue;
+    }
+
+    const parentId = acct.parentCode ? accountIdMap[acct.parentCode] : null;
+
+    const created = await prisma.accountHead.create({
+      data: {
+        code: acct.code,
+        name: acct.name,
+        accountType: acct.accountType,
+        parentId,
+        isSystemAccount: acct.isSystemAccount,
+        openingBalance: 0,
+        currentBalance: 0,
+      },
+    });
+    accountIdMap[acct.code] = created.id;
+  }
+
+  console.log(`  ✓ ${accountHeads.length} account heads seeded`);
+
   console.log('✓ Reference data seeded successfully');
   console.log('🌱 Seed completed successfully!');
 }

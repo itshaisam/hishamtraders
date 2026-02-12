@@ -5,7 +5,7 @@
 **Priority:** Critical
 **Estimated Effort:** 10-12 hours
 **Dependencies:** Epic 1 (Foundation)
-**Status:** Draft — Phase 2
+**Status:** Done
 
 ---
 
@@ -20,34 +20,42 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] `AccountHead` model: id, code (unique), name, accountType, parentId (self-relation), description, openingBalance, currentBalance, status
-   - [ ] `AccountType` enum: ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE
-   - [ ] `AccountStatus` enum: ACTIVE, INACTIVE
-   - [ ] Standard numbering: 1000-1999 (Assets), 2000-2999 (Liabilities), 3000-3999 (Equity), 4000-4999 (Revenue), 5000-5999 (Expenses)
+   - [x] `AccountHead` model: id, code (unique), name, accountType, parentId (self-relation), description, openingBalance, currentBalance, status, isSystemAccount
+   - [x] `AccountType` enum: ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE
+   - [x] `AccountStatus` enum: ACTIVE, INACTIVE
+   - [x] Standard numbering: 1000-1999 (Assets), 2000-2999 (Liabilities), 3000-3999 (Equity), 4000-4999 (Revenue), 5000-5999 (Expenses)
+   - [x] All Epic 5 models added in single migration: JournalEntry, JournalEntryLine, BankReconciliation, BankReconciliationItem, PeriodClose
+   - [x] `bankAccountId` added to Payment model
 
 2. **Backend API:**
-   - [ ] `POST /api/v1/account-heads` — Create new account
-   - [ ] `GET /api/v1/account-heads` — Return hierarchical account list (tree structure)
-   - [ ] `GET /api/v1/account-heads/:id` — Return account details with balance
-   - [ ] `PUT /api/v1/account-heads/:id` — Update account (name, description only; code immutable)
-   - [ ] `DELETE /api/v1/account-heads/:id` — Soft-delete (only if no transactions and no children)
+   - [x] `POST /api/v1/account-heads` — Create new account
+   - [x] `GET /api/v1/account-heads` — Return flat list with filters (search, accountType, status)
+   - [x] `GET /api/v1/account-heads/tree` — Return hierarchical tree structure
+   - [x] `GET /api/v1/account-heads/:id` — Return account details with balance
+   - [x] `PUT /api/v1/account-heads/:id` — Update account (name, parent, description, openingBalance, status)
+   - [x] `DELETE /api/v1/account-heads/:id` — Hard-delete (only if no journal lines, no children, not system account)
 
 3. **Hierarchical Structure:**
-   - [ ] Parent accounts can have child accounts (self-referential FK)
-   - [ ] Example: 1100 Bank Accounts → 1101 Bank A, 1102 Bank B
-   - [ ] Opening balances entered for initial setup
+   - [x] Parent accounts can have child accounts (self-referential FK)
+   - [x] Example: 1100 Bank Accounts → 1101 Main Bank Account, 1102 Petty Cash
+   - [x] Opening balances entered for initial setup
+   - [x] Code prefix must match account type (1xxx=ASSET, etc.)
+   - [x] Parent must be same account type
 
 4. **Frontend:**
-   - [ ] Chart of Accounts page displays tree hierarchy
-   - [ ] Add/edit accounts with type validation
-   - [ ] Display account balances (current, opening)
+   - [x] Chart of Accounts page displays tree hierarchy with expandable nodes
+   - [x] Inline form for add/edit accounts with type auto-detection from code prefix
+   - [x] Display account balances (current, opening)
+   - [x] Search and filter by account type
+   - [x] Delete with confirmation modal
 
 5. **Authorization:**
-   - [ ] Only `ADMIN` and `ACCOUNTANT` can manage accounts
-   - [ ] Other roles: 403 Forbidden
+   - [x] Only `ADMIN` and `ACCOUNTANT` can create/update accounts
+   - [x] Only `ADMIN` can delete accounts
+   - [x] All authenticated roles can view
 
 6. **Seed Standard Accounts:**
-   - [ ] Create seed script with standard Chart of Accounts (see Dev Notes)
+   - [x] 25 standard accounts seeded via seed script (Assets, Liabilities, Equity, Revenue, Expenses)
 
 ---
 
@@ -55,9 +63,9 @@
 
 ### Implementation Status
 
-**Backend:** Not started. `AccountHead` model does not exist in schema.
+**Backend:** Complete. All models, enums, migration, seed, and CRUD API implemented.
 
-**Frontend:** No Chart of Accounts page exists.
+**Frontend:** Complete. ChartOfAccountsPage with tree view, inline form, search/filter, and Accounting sidebar menu.
 
 ### Database Schema (Proposed)
 
