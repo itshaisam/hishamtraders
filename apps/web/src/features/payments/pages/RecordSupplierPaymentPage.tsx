@@ -7,6 +7,7 @@ import { useCreateSupplierPayment, usePOBalance } from '../../../hooks/usePaymen
 import { useSuppliers } from '../../suppliers/hooks/useSuppliers';
 import { usePurchaseOrders } from '../../purchase-orders/hooks/usePurchaseOrders';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
+import { useBankAccounts } from '../../../hooks/useBankAccounts';
 import { PaymentMethod, PaymentReferenceType } from '../../../types/payment.types';
 
 interface PaymentFormData {
@@ -17,6 +18,7 @@ interface PaymentFormData {
   method: PaymentMethod;
   date: string;
   notes: string;
+  bankAccountId: string;
 }
 
 function RecordSupplierPaymentPage() {
@@ -33,6 +35,7 @@ function RecordSupplierPaymentPage() {
   const cs = currencyData?.currencySymbol || 'PKR';
   const { data: suppliersData, isLoading: suppliersLoading } = useSuppliers({ page: 1, limit: 1000 });
   const { data: posData, isLoading: posLoading } = usePurchaseOrders({ page: 1, limit: 1000 });
+  const { data: bankAccounts } = useBankAccounts();
 
   const selectedSupplierId = watch('supplierId');
   const selectedPOId = watch('referenceId');
@@ -66,6 +69,7 @@ function RecordSupplierPaymentPage() {
         method: data.method,
         date: data.date,
         notes: data.notes,
+        bankAccountId: data.bankAccountId || undefined,
       });
       navigate('/payments/supplier/history');
     } catch (error) {
@@ -214,6 +218,27 @@ function RecordSupplierPaymentPage() {
               <p className="mt-1 text-sm text-red-600">{errors.method.message}</p>
             )}
           </div>
+
+          {/* Bank Account */}
+          {selectedMethod && selectedMethod !== PaymentMethod.CASH && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bank Account
+              </label>
+              <select
+                {...register('bankAccountId')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Default (Main Bank Account)</option>
+                {bankAccounts?.filter((a) => a.code !== '1102').map((bank) => (
+                  <option key={bank.id} value={bank.id}>
+                    {bank.code} - {bank.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">Select which bank account to debit</p>
+            </div>
+          )}
 
           {/* Reference/Notes (required for cheque/bank transfer) */}
           <div>

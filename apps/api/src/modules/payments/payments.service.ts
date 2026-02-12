@@ -14,6 +14,7 @@ export interface CreateSupplierPaymentDto {
   date: Date;
   notes?: string;
   recordedBy: string;
+  bankAccountId?: string;
 }
 
 export interface CreateClientPaymentDto {
@@ -24,6 +25,7 @@ export interface CreateClientPaymentDto {
   date: Date;
   notes?: string;
   recordedBy: string;
+  bankAccountId?: string;
 }
 
 export class PaymentsService {
@@ -76,11 +78,14 @@ export class PaymentsService {
             connect: { id: dto.supplierId },
           }
         : undefined,
+      ...(dto.bankAccountId && {
+        bankAccount: { connect: { id: dto.bankAccountId } },
+      }),
     });
 
-    // Auto journal entry: DR A/P, CR Main Bank
+    // Auto journal entry: DR A/P, CR Bank
     await AutoJournalService.onSupplierPayment(
-      { id: payment.id, amount: dto.amount, date: dto.date, referenceNumber: dto.notes },
+      { id: payment.id, amount: dto.amount, date: dto.date, referenceNumber: dto.notes, bankAccountId: dto.bankAccountId },
       dto.recordedBy
     );
 
@@ -159,6 +164,7 @@ export class PaymentsService {
         date: dto.date,
         notes: dto.notes || null,
         recordedBy: dto.recordedBy,
+        ...(dto.bankAccountId && { bankAccountId: dto.bankAccountId }),
       },
       include: {
         client: {
@@ -197,9 +203,9 @@ export class PaymentsService {
       invoicesAllocated: allocation.allocations.length,
     });
 
-    // Auto journal entry: DR Main Bank, CR A/R
+    // Auto journal entry: DR Bank, CR A/R
     await AutoJournalService.onClientPayment(
-      { id: payment.id, amount: dto.amount, date: dto.date, referenceNumber: dto.referenceNumber },
+      { id: payment.id, amount: dto.amount, date: dto.date, referenceNumber: dto.referenceNumber, bankAccountId: dto.bankAccountId },
       dto.recordedBy
     );
 

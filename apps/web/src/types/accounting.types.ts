@@ -112,3 +112,30 @@ export interface JournalEntryFilters {
   page?: number;
   limit?: number;
 }
+
+// Bank Account types (Story 5.7)
+export interface BankAccount {
+  id: string;
+  code: string;
+  name: string;
+  currentBalance: number;
+  isSystemAccount: boolean;
+  parentId: string | null;
+}
+
+// Petty Cash types (Story 5.9)
+export interface PettyCashBalance {
+  balance: number;
+  accountName: string;
+}
+
+export interface PettyCashTransaction {
+  id: string;
+  date: string;
+  entryNumber: string;
+  description: string;
+  referenceType: string | null;
+  referenceId: string | null;
+  debit: number;
+  credit: number;
+}

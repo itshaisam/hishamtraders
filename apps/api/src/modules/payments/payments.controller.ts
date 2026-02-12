@@ -76,7 +76,7 @@ export class PaymentsController {
    */
   createSupplierPayment = async (req: AuthRequest, res: Response) => {
     try {
-      const { supplierId, paymentReferenceType, referenceId, amount, method, date, notes } =
+      const { supplierId, paymentReferenceType, referenceId, amount, method, date, notes, bankAccountId } =
         req.body;
 
       const payment = await this.service.createSupplierPayment({
@@ -88,6 +88,7 @@ export class PaymentsController {
         date: new Date(date),
         notes,
         recordedBy: req.user!.userId,
+        bankAccountId: bankAccountId || undefined,
       });
 
       // Audit log
@@ -203,7 +204,7 @@ export class PaymentsController {
    */
   createClientPayment = async (req: AuthRequest, res: Response) => {
     try {
-      const { clientId, amount, method, referenceNumber, date, notes } = req.body;
+      const { clientId, amount, method, referenceNumber, date, notes, bankAccountId } = req.body;
 
       const result = await this.service.createClientPayment({
         clientId,
@@ -213,6 +214,7 @@ export class PaymentsController {
         date: new Date(date),
         notes,
         recordedBy: req.user!.userId,
+        bankAccountId: bankAccountId || undefined,
       });
 
       // Audit log

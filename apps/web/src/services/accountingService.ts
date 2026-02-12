@@ -8,6 +8,9 @@ import {
   CreateJournalEntryDto,
   UpdateJournalEntryDto,
   JournalEntryFilters,
+  BankAccount,
+  PettyCashBalance,
+  PettyCashTransaction,
 } from '../types/accounting.types';
 
 export const accountingService = {
@@ -141,6 +144,45 @@ export const accountingService = {
       status: string;
       message: string;
     }>(`/journal-entries/${id}`);
+
+    return response.data;
+  },
+
+  // Bank Accounts (Story 5.7)
+  async getBankAccounts() {
+    const response = await apiClient.get<{
+      status: string;
+      data: BankAccount[];
+    }>('/bank-accounts');
+
+    return response.data.data;
+  },
+
+  // Petty Cash (Story 5.9)
+  async getPettyCashBalance() {
+    const response = await apiClient.get<{
+      status: string;
+      data: PettyCashBalance;
+    }>('/petty-cash/balance');
+
+    return response.data.data;
+  },
+
+  async getPettyCashTransactions(limit: number = 20) {
+    const response = await apiClient.get<{
+      status: string;
+      data: PettyCashTransaction[];
+    }>(`/petty-cash/transactions?limit=${limit}`);
+
+    return response.data.data;
+  },
+
+  async createPettyCashAdvance(amount: number, bankAccountId: string) {
+    const response = await apiClient.post<{
+      status: string;
+      data: any;
+      message: string;
+    }>('/petty-cash/advance', { amount, bankAccountId });
 
     return response.data;
   },

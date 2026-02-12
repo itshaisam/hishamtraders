@@ -46,6 +46,7 @@ export interface CreateSupplierPaymentDto {
   method: PaymentMethod;
   date: string;
   notes?: string;
+  bankAccountId?: string;
 }
 
 export interface CreateClientPaymentDto {
@@ -55,6 +56,7 @@ export interface CreateClientPaymentDto {
   referenceNumber?: string;
   date: string;
   notes?: string;
+  bankAccountId?: string;
 }
 
 export interface PaymentFilters {

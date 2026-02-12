@@ -57,6 +57,8 @@ import { JournalEntryDetailPage } from './features/accounting/pages/JournalEntry
 import { TrialBalancePage } from './features/accounting/pages/TrialBalancePage';
 import { BalanceSheetPage } from './features/accounting/pages/BalanceSheetPage';
 import { GeneralLedgerPage } from './features/accounting/pages/GeneralLedgerPage';
+import { BankAccountsPage } from './features/accounting/pages/BankAccountsPage';
+import { PettyCashPage } from './features/accounting/pages/PettyCashPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -687,6 +689,30 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <GeneralLedgerPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Bank Accounts (Story 5.7) */}
+          <Route
+            path="/accounting/bank-accounts"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <BankAccountsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Petty Cash (Story 5.9) */}
+          <Route
+            path="/accounting/petty-cash"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PettyCashPage />
                 </Layout>
               </ProtectedRoute>
             }

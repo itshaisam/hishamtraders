@@ -32,6 +32,15 @@ const EXPENSE_ACCOUNT_MAP: Record<string, string> = {
   MISC: '5900',
 };
 
+async function resolveBankAccountCode(tx: PrismaLike, bankAccountId?: string): Promise<string> {
+  if (!bankAccountId) return '1101'; // Default to Main Bank Account
+  const account = await tx.accountHead.findUnique({
+    where: { id: bankAccountId },
+    select: { code: true },
+  });
+  return account?.code || '1101';
+}
+
 async function getAccountByCode(tx: PrismaLike, code: string) {
   const account = await tx.accountHead.findFirst({
     where: { code },
@@ -213,13 +222,15 @@ export const AutoJournalService = {
   },
 
   /**
-   * Client payment: DR Main Bank (1101)  CR A/R (1200)
+   * Client payment: DR Bank  CR A/R (1200)
+   * Uses bankAccountId to resolve bank account code, defaults to 1101 Main Bank
    */
   async onClientPayment(
-    paymentData: { id: string; amount: number; date: Date; referenceNumber?: string | null },
+    paymentData: { id: string; amount: number; date: Date; referenceNumber?: string | null; bankAccountId?: string },
     userId: string
   ) {
     return prisma.$transaction(async (tx) => {
+      const bankCode = await resolveBankAccountCode(tx, paymentData.bankAccountId);
       return createAutoJournalEntry(tx, {
         date: paymentData.date,
         description: `Client payment received${paymentData.referenceNumber ? ` (${paymentData.referenceNumber})` : ''}`,
@@ -227,7 +238,7 @@ export const AutoJournalService = {
         referenceId: paymentData.id,
         userId,
         lines: [
-          { accountCode: '1101', debit: paymentData.amount, credit: 0, description: 'Bank deposit' },
+          { accountCode: bankCode, debit: paymentData.amount, credit: 0, description: 'Bank deposit' },
           { accountCode: '1200', debit: 0, credit: paymentData.amount, description: 'A/R reduction' },
         ],
       });
@@ -235,13 +246,15 @@ export const AutoJournalService = {
   },
 
   /**
-   * Supplier payment: DR A/P (2100)  CR Main Bank (1101)
+   * Supplier payment: DR A/P (2100)  CR Bank
+   * Uses bankAccountId to resolve bank account code, defaults to 1101 Main Bank
    */
   async onSupplierPayment(
-    paymentData: { id: string; amount: number; date: Date; referenceNumber?: string | null },
+    paymentData: { id: string; amount: number; date: Date; referenceNumber?: string | null; bankAccountId?: string },
     userId: string
   ) {
     return prisma.$transaction(async (tx) => {
+      const bankCode = await resolveBankAccountCode(tx, paymentData.bankAccountId);
       return createAutoJournalEntry(tx, {
         date: paymentData.date,
         description: `Supplier payment${paymentData.referenceNumber ? ` (${paymentData.referenceNumber})` : ''}`,
@@ -250,7 +263,7 @@ export const AutoJournalService = {
         userId,
         lines: [
           { accountCode: '2100', debit: paymentData.amount, credit: 0, description: 'A/P reduction' },
-          { accountCode: '1101', debit: 0, credit: paymentData.amount, description: 'Bank payment' },
+          { accountCode: bankCode, debit: 0, credit: paymentData.amount, description: 'Bank payment' },
         ],
       });
     });

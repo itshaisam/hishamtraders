@@ -6,6 +6,7 @@ import { DollarSign, ArrowLeft, CheckCircle, AlertCircle, Info } from 'lucide-re
 import { useCreateClientPayment, useClientOutstandingInvoices } from '../../../hooks/usePayments';
 import { useClients } from '../../../hooks/useClients';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
+import { useBankAccounts } from '../../../hooks/useBankAccounts';
 import { PaymentMethod } from '../../../types/payment.types';
 
 interface PaymentFormData {
@@ -15,6 +16,7 @@ interface PaymentFormData {
   referenceNumber: string;
   date: string;
   notes: string;
+  bankAccountId: string;
 }
 
 function RecordClientPaymentPage() {
@@ -34,6 +36,7 @@ function RecordClientPaymentPage() {
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
   const { data: clientsData, isLoading: clientsLoading } = useClients({ page: 1, limit: 1000 });
+  const { data: bankAccounts } = useBankAccounts();
 
   const selectedClientId = watch('clientId');
   const selectedMethod = watch('method');
@@ -59,6 +62,7 @@ function RecordClientPaymentPage() {
         referenceNumber: data.referenceNumber || undefined,
         date: data.date,
         notes: data.notes,
+        bankAccountId: data.bankAccountId || undefined,
       });
 
       // Show allocation result
@@ -322,6 +326,27 @@ function RecordClientPaymentPage() {
               {errors.referenceNumber && (
                 <p className="mt-1 text-sm text-red-600">{errors.referenceNumber.message}</p>
               )}
+            </div>
+          )}
+
+          {/* Bank Account */}
+          {selectedMethod && selectedMethod !== PaymentMethod.CASH && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bank Account
+              </label>
+              <select
+                {...register('bankAccountId')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Default (Main Bank Account)</option>
+                {bankAccounts?.filter((a) => a.code !== '1102').map((bank) => (
+                  <option key={bank.id} value={bank.id}>
+                    {bank.code} - {bank.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">Select which bank account to credit</p>
             </div>
           )}
 

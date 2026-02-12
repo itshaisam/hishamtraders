@@ -469,6 +469,18 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                 >
                   General Ledger
                 </Link>
+                <Link
+                  to="/accounting/bank-accounts"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Bank Accounts
+                </Link>
+                <Link
+                  to="/accounting/petty-cash"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Petty Cash
+                </Link>
               </div>
             )}
           </div>
