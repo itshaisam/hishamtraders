@@ -37,6 +37,16 @@ router.get(
 );
 
 /**
+ * GET /api/inventory/expiry-alerts
+ * Get inventory items expiring within N days (Story 6.7)
+ * Query params: days (default 30), warehouseId (optional)
+ */
+router.get(
+  '/expiry-alerts',
+  inventoryController.getExpiryAlerts.bind(inventoryController)
+);
+
+/**
  * GET /api/inventory/available/:productId
  * Get available quantity for a product
  * Query params: productVariantId, warehouseId (optional)

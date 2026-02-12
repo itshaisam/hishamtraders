@@ -19,6 +19,7 @@ import { POViewPage } from './features/purchase-orders/pages/POViewPage';
 import { WarehousesPage } from './features/warehouses/pages/WarehousesPage';
 import { WarehouseFormPage } from './features/warehouses/pages/WarehouseFormPage';
 import { WarehouseDetailPage } from './features/warehouses/pages/WarehouseDetailPage';
+import BinLocationManagementPage from './features/warehouses/pages/BinLocationManagementPage';
 import { ReceiveGoodsPage } from './features/purchase-orders/pages/ReceiveGoodsPage';
 import { InventoryPage } from './features/inventory/pages/InventoryPage';
 import { StockAdjustmentPage } from './features/inventory/pages/StockAdjustmentPage';
@@ -45,6 +46,7 @@ import SalesReportPage from './features/reports/pages/SalesReportPage';
 import PaymentReportPage from './features/reports/pages/PaymentReportPage';
 import ImportReportPage from './features/reports/pages/ImportReportPage';
 import ExpenseReportPage from './features/reports/pages/ExpenseReportPage';
+import GatePassReportPage from './features/reports/pages/GatePassReportPage';
 import { TaxSettingsPage } from './features/settings/pages/TaxSettingsPage';
 import { ReturnsPage } from './features/returns/pages/ReturnsPage';
 import { CreateReturnPage } from './features/returns/pages/CreateReturnPage';
@@ -65,6 +67,25 @@ import { MonthEndClosingPage } from './features/accounting/pages/MonthEndClosing
 import GatePassListPage from './features/gate-passes/pages/GatePassListPage';
 import CreateGatePassPage from './features/gate-passes/pages/CreateGatePassPage';
 import GatePassDetailPage from './features/gate-passes/pages/GatePassDetailPage';
+import StockTransferListPage from './features/stock-transfers/pages/StockTransferListPage';
+import CreateStockTransferPage from './features/stock-transfers/pages/CreateStockTransferPage';
+import StockTransferDetailPage from './features/stock-transfers/pages/StockTransferDetailPage';
+import BinTransferPage from './features/warehouses/pages/BinTransferPage';
+import ExpiryAlertsPage from './features/inventory/pages/ExpiryAlertsPage';
+import StockCountListPage from './features/stock-counts/pages/StockCountListPage';
+import CreateStockCountPage from './features/stock-counts/pages/CreateStockCountPage';
+import StockCountDetailPage from './features/stock-counts/pages/StockCountDetailPage';
+import HelpIndexPage from './features/help/pages/HelpIndexPage';
+import GettingStartedPage from './features/help/pages/GettingStartedPage';
+import DashboardGuidePage from './features/help/pages/DashboardGuidePage';
+import InventoryGuidePage from './features/help/pages/InventoryGuidePage';
+import PurchasesGuidePage from './features/help/pages/PurchasesGuidePage';
+import SalesGuidePage from './features/help/pages/SalesGuidePage';
+import PaymentsGuidePage from './features/help/pages/PaymentsGuidePage';
+import ReportsGuidePage from './features/help/pages/ReportsGuidePage';
+import AccountingGuidePage from './features/help/pages/AccountingGuidePage';
+import AdministrationGuidePage from './features/help/pages/AdministrationGuidePage';
+import DatabaseSetupGuidePage from './features/help/pages/DatabaseSetupGuidePage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -264,6 +285,28 @@ function App() {
             }
           />
 
+          <Route
+            path="/warehouses/bin-locations"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <BinLocationManagementPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/warehouses/bin-transfers"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <BinTransferPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Inventory route */}
           <Route
             path="/stock-levels"
@@ -317,6 +360,18 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <StockMovementsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Expiry Alerts (Story 6.7) */}
+          <Route
+            path="/inventory/expiry-alerts"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ExpiryAlertsPage />
                 </Layout>
               </ProtectedRoute>
             }
@@ -565,6 +620,19 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Gate Pass Report (Story 6.10) */}
+          <Route
+            path="/reports/gate-passes"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <GatePassReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Returns / Credit Notes routes (Story 3.9) */}
           <Route
             path="/returns"
@@ -791,6 +859,70 @@ function App() {
             }
           />
 
+          {/* Stock Transfers (Story 6.4) */}
+          <Route
+            path="/stock-transfers"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <StockTransferListPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stock-transfers/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateStockTransferPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stock-transfers/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <StockTransferDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Stock Counts (Story 6.9) */}
+          <Route
+            path="/stock-counts"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <StockCountListPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stock-counts/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateStockCountPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stock-counts/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <StockCountDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Audit Trail */}
           <Route
             path="/audit-trail"
@@ -798,6 +930,118 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <AuditTrailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Help / User Guide */}
+          <Route
+            path="/help"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <HelpIndexPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help/getting-started"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <GettingStartedPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help/dashboard"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <DashboardGuidePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help/inventory"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <InventoryGuidePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help/purchases"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PurchasesGuidePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help/sales"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <SalesGuidePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help/payments"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PaymentsGuidePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help/reports"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ReportsGuidePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help/accounting"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AccountingGuidePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help/administration"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AdministrationGuidePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help/setup"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <DatabaseSetupGuidePage />
                 </Layout>
               </ProtectedRoute>
             }

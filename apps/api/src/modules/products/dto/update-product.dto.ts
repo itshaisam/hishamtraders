@@ -9,6 +9,8 @@ export const updateProductSchema = z.object({
   reorderLevel: z.string().or(z.number()).pipe(z.coerce.number().int()).optional(),
   binLocation: z.string().optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+  hasExpiry: z.boolean().optional(),
+  shelfLifeDays: z.string().or(z.number()).pipe(z.coerce.number().int().positive()).optional().nullable(),
 });
 
 export type UpdateProductDto = z.infer<typeof updateProductSchema>;

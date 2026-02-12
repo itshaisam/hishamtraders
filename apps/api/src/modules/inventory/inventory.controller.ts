@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { InventoryService, InventoryFilters } from './inventory.service.js';
+import { prisma } from '../../lib/prisma.js';
 
 export class InventoryController {
   private inventoryService: InventoryService;
@@ -171,6 +172,48 @@ export class InventoryController {
       res.status(500).json({
         success: false,
         message: 'Failed to fetch available quantity',
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * GET /api/inventory/expiry-alerts
+   * Get inventory items expiring within N days (Story 6.7)
+   */
+  async getExpiryAlerts(req: Request, res: Response) {
+    try {
+      const days = req.query.days ? parseInt(req.query.days as string) : 30;
+      const warehouseId = req.query.warehouseId as string | undefined;
+
+      const alertDate = new Date();
+      alertDate.setDate(alertDate.getDate() + days);
+
+      const where: any = {
+        expiryDate: { lte: alertDate },
+        quantity: { gt: 0 },
+      };
+      if (warehouseId) where.warehouseId = warehouseId;
+
+      const items = await prisma.inventory.findMany({
+        where,
+        include: {
+          product: { select: { id: true, name: true, sku: true } },
+          warehouse: { select: { id: true, name: true } },
+        },
+        orderBy: { expiryDate: 'asc' },
+      });
+
+      res.status(200).json({
+        success: true,
+        data: items,
+        count: items.length,
+      });
+    } catch (error: any) {
+      console.error('Error fetching expiry alerts:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch expiry alerts',
         error: error.message,
       });
     }

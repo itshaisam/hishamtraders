@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { WarehousesController } from './warehouses.controller.js';
+import { BinLocationController } from './bin-location.controller.js';
+import { BinTransferController } from './bin-transfer.controller.js';
 import { authenticate } from '../../middleware/auth.middleware.js';
 import { requirePermission } from '../../middleware/permission.middleware.js';
 import { auditLog } from './warehouses.middleware.js';
@@ -47,6 +49,18 @@ router.put(
   auditLog('UPDATE_WAREHOUSE_GP_CONFIG'),
   controller.updateGatePassConfig
 );
+
+// Bin location routes (Story 6.5)
+const binController = new BinLocationController();
+
+router.get('/:id/bins', requirePermission('warehouses', 'read'), binController.listBins);
+router.post('/:id/bins', requirePermission('warehouses', 'create'), binController.createBin);
+router.put('/:id/bins/:binId', requirePermission('warehouses', 'update'), binController.updateBin);
+router.delete('/:id/bins/:binId', requirePermission('warehouses', 'delete'), binController.deleteBin);
+
+// Bin-to-bin transfer (Story 6.6)
+const binTransferController = new BinTransferController();
+router.post('/:id/bin-transfers', requirePermission('warehouses', 'update'), binTransferController.transfer);
 
 // DELETE /api/v1/warehouses/:id - Delete warehouse (ADMIN only)
 router.delete(

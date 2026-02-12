@@ -92,6 +92,21 @@ export class StockAdjustmentService {
       createdBy: userId,
     });
 
+    // Story 6.8: Auto-approve if quantity is within threshold
+    try {
+      const thresholdSetting = await prisma.systemSetting.findUnique({
+        where: { key: 'stock_adjustment_auto_approve_threshold' },
+      });
+      if (thresholdSetting) {
+        const threshold = parseInt(thresholdSetting.value, 10);
+        if (!isNaN(threshold) && Math.abs(data.quantity) <= threshold) {
+          return await this.approveAdjustment(adjustment.id, userId);
+        }
+      }
+    } catch {
+      // If auto-approval fails, fall through and return the pending adjustment
+    }
+
     return adjustment;
   }
 

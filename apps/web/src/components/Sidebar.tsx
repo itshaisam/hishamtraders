@@ -171,6 +171,18 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                   Warehouses & Bins
                 </Link>
                 <Link
+                  to="/warehouses/bin-locations"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Bin Locations
+                </Link>
+                <Link
+                  to="/warehouses/bin-transfers"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Bin Transfers
+                </Link>
+                <Link
                   to="/inventory/adjustments/new"
                   className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                 >
@@ -195,10 +207,28 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                   Stock Movements Report
                 </Link>
                 <Link
+                  to="/inventory/expiry-alerts"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Expiry Alerts
+                </Link>
+                <Link
                   to="/gate-passes"
                   className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                 >
                   Gate Passes
+                </Link>
+                <Link
+                  to="/stock-transfers"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Stock Transfers
+                </Link>
+                <Link
+                  to="/stock-counts"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Stock Counts
                 </Link>
               </div>
             )}
@@ -418,6 +448,12 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                 className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
               >
                 Cash Flow
+              </Link>
+              <Link
+                to="/reports/gate-passes"
+                className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                Gate Pass Report
               </Link>
             </div>
           )}

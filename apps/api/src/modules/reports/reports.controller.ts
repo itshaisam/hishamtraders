@@ -7,6 +7,7 @@ import { SalesReportService } from './sales-report.service.js';
 import { PaymentReportService } from './payment-report.service.js';
 import { ImportReportService } from './import-report.service.js';
 import { ExpenseReportService } from './expense-report.service.js';
+import { GatePassReportService } from './gate-pass-report.service.js';
 import { TrialBalanceService } from './trial-balance.service.js';
 import { BalanceSheetService } from './balance-sheet.service.js';
 import { GeneralLedgerService } from './general-ledger.service.js';
@@ -30,6 +31,7 @@ export class ReportsController {
   private trialBalanceService: TrialBalanceService;
   private balanceSheetService: BalanceSheetService;
   private generalLedgerService: GeneralLedgerService;
+  private gatePassReportService: GatePassReportService;
 
   constructor() {
     this.creditLimitReportService = new CreditLimitReportService(prisma);
@@ -42,6 +44,7 @@ export class ReportsController {
     this.trialBalanceService = new TrialBalanceService();
     this.balanceSheetService = new BalanceSheetService();
     this.generalLedgerService = new GeneralLedgerService();
+    this.gatePassReportService = new GatePassReportService(prisma);
   }
 
   // ---- Existing endpoints ----
@@ -283,6 +286,40 @@ export class ReportsController {
       const report = await this.generalLedgerService.getGeneralLedger(accountHeadId, dateFrom, dateTo);
       logger.info('General ledger generated', { accountHeadId, userId: req.user?.id });
       res.json({ success: true, data: report });
+    } catch (error) { next(error); }
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // Story 6.10: Gate Pass Reports
+  // ════════════════════════════════════════════════════════════════════
+
+  getGatePassActivity = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { warehouseId, status, purpose, dateFrom, dateTo, page, limit } = req.query;
+      const result = await this.gatePassReportService.getActivityReport({
+        warehouseId: warehouseId as string,
+        status: status as string,
+        purpose: purpose as string,
+        dateFrom: dateFrom as string,
+        dateTo: dateTo as string,
+        page: page ? parseInt(page as string) : undefined,
+        limit: limit ? parseInt(limit as string) : undefined,
+      });
+      logger.info('Gate pass activity report generated', { userId: (req as any).user?.id });
+      res.json({ success: true, ...result });
+    } catch (error) { next(error); }
+  };
+
+  getGatePassSummary = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { warehouseId, dateFrom, dateTo } = req.query;
+      const result = await this.gatePassReportService.getSummary({
+        warehouseId: warehouseId as string,
+        dateFrom: dateFrom as string,
+        dateTo: dateTo as string,
+      });
+      logger.info('Gate pass summary report generated', { userId: (req as any).user?.id });
+      res.json({ success: true, data: result });
     } catch (error) { next(error); }
   };
 

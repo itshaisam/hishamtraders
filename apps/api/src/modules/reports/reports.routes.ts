@@ -46,6 +46,10 @@ router.get('/trial-balance', controller.getTrialBalance);
 router.get('/balance-sheet', controller.getBalanceSheet);
 router.get('/general-ledger', controller.getGeneralLedger);
 
+// Gate pass reports (Story 6.10)
+router.get('/gate-passes/summary', controller.getGatePassSummary);
+router.get('/gate-passes', controller.getGatePassActivity);
+
 // Excel export routes (Story 4.9)
 router.get('/stock/export', controller.exportStockReport);
 router.get('/stock-valuation/export', controller.exportStockValuation);

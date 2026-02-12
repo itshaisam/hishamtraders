@@ -10,6 +10,8 @@ export const createProductSchema = z.object({
   reorderLevel: z.string().or(z.number()).pipe(z.coerce.number().int().default(10)),
   binLocation: z.string().optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
+  hasExpiry: z.boolean().default(false),
+  shelfLifeDays: z.string().or(z.number()).pipe(z.coerce.number().int().positive()).optional().nullable(),
 });
 
 export type CreateProductDto = z.infer<typeof createProductSchema>;

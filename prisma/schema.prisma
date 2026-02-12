@@ -169,6 +169,10 @@ model Warehouse {
   stockAdjustments StockAdjustment[]
   invoices         Invoice[]
   gatePasses       GatePass[]
+  binLocations     BinLocation[]          // Story 6.5
+  outboundTransfers  StockTransfer[] @relation("TransferSource")       // Story 6.4
+  inboundTransfers   StockTransfer[] @relation("TransferDestination")  // Story 6.4
+  stockCounts        StockCount[]   // Story 6.9
 
   @@index([status])
   @@map("warehouses")
@@ -260,6 +264,7 @@ model Inventory {
   quantity    Int      @default(0)
   batchNo     String?
   binLocation String?
+  expiryDate  DateTime?  // Story 6.7
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -404,6 +409,10 @@ model Product {
   binLocation   String?
   status        ProductStatus  @default(ACTIVE)
 
+  // Batch/Expiry tracking (Story 6.7)
+  hasExpiry     Boolean        @default(false)
+  shelfLifeDays Int?
+
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   createdBy     String?
@@ -421,6 +430,8 @@ model Product {
   invoiceItems     InvoiceItem[]
   creditNoteItems  CreditNoteItem[]   // Story 3.9
   gatePassItems    GatePassItem[]     // Epic 6
+  stockTransferItems StockTransferItem[] // Story 6.4
+  stockCountItems    StockCountItem[]    // Story 6.9
 
   @@index([status])
   @@index([sku])
@@ -596,6 +607,9 @@ model User {
   periodCloses           PeriodClose[]   @relation("PeriodCloser")          // Epic 5
   issuedGatePasses       GatePass[]      @relation("IssuedGatePasses")      // Epic 6
   approvedGatePasses     GatePass[]      @relation("ApprovedGatePasses")    // Epic 6
+  requestedTransfers     StockTransfer[] @relation("TransferRequester")     // Story 6.4
+  approvedTransfers      StockTransfer[] @relation("TransferApprover")      // Story 6.4
+  createdStockCounts     StockCount[]    @relation("StockCountCreator")     // Story 6.9
 
   @@index([email])
   @@index([roleId])
@@ -1095,4 +1109,140 @@ model PeriodClose {
   @@unique([periodType, periodDate])
   @@index([status])
   @@map("period_closes")
+}
+
+// ============================================================================
+// STOCK TRANSFERS (Story 6.4)
+// ============================================================================
+
+enum TransferStatus {
+  PENDING
+  APPROVED
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+}
+
+model StockTransfer {
+  id                     String         @id @default(cuid())
+  transferNumber         String         @unique
+  sourceWarehouseId      String
+  destinationWarehouseId String
+  status                 TransferStatus @default(PENDING)
+  requestedBy            String
+  approvedBy             String?
+  dispatchedBy           String?
+  completedBy            String?
+  notes                  String?        @db.Text
+
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  sourceWarehouse        Warehouse      @relation("TransferSource", fields: [sourceWarehouseId], references: [id])
+  destinationWarehouse   Warehouse      @relation("TransferDestination", fields: [destinationWarehouseId], references: [id])
+  requester              User           @relation("TransferRequester", fields: [requestedBy], references: [id])
+  approver               User?          @relation("TransferApprover", fields: [approvedBy], references: [id])
+  items                  StockTransferItem[]
+
+  @@index([sourceWarehouseId])
+  @@index([destinationWarehouseId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("stock_transfers")
+}
+
+model StockTransferItem {
+  id               String        @id @default(cuid())
+  stockTransferId  String
+  productId        String
+  batchNo          String?
+  quantity         Int
+  receivedQuantity Int?
+  notes            String?       @db.Text
+
+  createdAt        DateTime      @default(now())
+
+  stockTransfer    StockTransfer @relation(fields: [stockTransferId], references: [id], onDelete: Cascade)
+  product          Product       @relation(fields: [productId], references: [id])
+
+  @@index([stockTransferId])
+  @@index([productId])
+  @@map("stock_transfer_items")
+}
+
+// ============================================================================
+// BIN LOCATIONS (Story 6.5)
+// ============================================================================
+
+model BinLocation {
+  id          String   @id @default(cuid())
+  warehouseId String
+  code        String
+  zone        String?
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@unique([warehouseId, code])
+  @@index([warehouseId])
+  @@map("bin_locations")
+}
+
+// ============================================================================
+// PHYSICAL STOCK COUNTS (Story 6.9)
+// ============================================================================
+
+enum CountStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model StockCount {
+  id          String      @id @default(cuid())
+  countNumber String      @unique
+  warehouseId String
+  status      CountStatus @default(PLANNED)
+  countDate   DateTime
+  notes       String?     @db.Text
+  createdBy   String
+  completedBy String?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  warehouse   Warehouse   @relation(fields: [warehouseId], references: [id])
+  creator     User        @relation("StockCountCreator", fields: [createdBy], references: [id])
+  items       StockCountItem[]
+
+  @@index([warehouseId])
+  @@index([status])
+  @@index([countDate])
+  @@map("stock_counts")
+}
+
+model StockCountItem {
+  id             String    @id @default(cuid())
+  stockCountId   String
+  productId      String
+  batchNo        String?
+  binLocation    String?
+  systemQuantity Int
+  countedQuantity Int?
+  variance       Int?
+  notes          String?   @db.Text
+
+  createdAt      DateTime  @default(now())
+
+  stockCount     StockCount @relation(fields: [stockCountId], references: [id], onDelete: Cascade)
+  product        Product    @relation(fields: [productId], references: [id])
+
+  @@index([stockCountId])
+  @@index([productId])
+  @@map("stock_count_items")
 }
