@@ -1,15 +1,15 @@
 import { z } from 'zod';
 
 const receiveGoodsItemSchema = z.object({
-  productId: z.string().cuid('Invalid product ID'),
-  productVariantId: z.string().cuid('Invalid variant ID').optional().nullable(),
+  productId: z.string().min(1, 'Product ID is required'),
+  productVariantId: z.string().min(1, 'Variant ID is required').optional().nullable(),
   quantity: z.number().int().positive('Quantity must be greater than 0'),
   binLocation: z.string().optional().nullable(),
   batchNo: z.string().optional().nullable(),
 });
 
 export const receiveGoodsSchema = z.object({
-  warehouseId: z.string().cuid('Invalid warehouse ID'),
+  warehouseId: z.string().min(1, 'Warehouse ID is required'),
   receivedDate: z
     .string()
     .or(z.date())
