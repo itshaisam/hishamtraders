@@ -10,7 +10,11 @@ export const createExpenseSchema = z.object({
     .string()
     .min(3, 'Description must be at least 3 characters')
     .max(500, 'Description must not exceed 500 characters'),
-  date: z.coerce.date().refine((date) => date <= new Date(), {
+  date: z.coerce.date().refine((date) => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return date <= today;
+  }, {
     message: 'Date cannot be in the future',
   }),
   paymentMethod: z.nativeEnum(PaymentMethod, {

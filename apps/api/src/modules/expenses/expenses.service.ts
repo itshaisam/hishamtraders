@@ -14,7 +14,9 @@ export class ExpenseService {
       throw new BadRequestError('Amount must be greater than 0');
     }
 
-    if (data.date > new Date()) {
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+    if (data.date > endOfToday) {
       throw new BadRequestError('Date cannot be in the future');
     }
 
@@ -84,8 +86,12 @@ export class ExpenseService {
       throw new BadRequestError('Amount must be greater than 0');
     }
 
-    if (data.date && data.date > new Date()) {
-      throw new BadRequestError('Date cannot be in the future');
+    if (data.date) {
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+      if (data.date > endOfToday) {
+        throw new BadRequestError('Date cannot be in the future');
+      }
     }
 
     if (data.description && data.description.trim().length < 3) {
