@@ -3,13 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Plus, Edit, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, X, History } from 'lucide-react';
 import { ProductForm } from '../components/ProductForm';
 import { AttributeBuilder } from '../components/AttributeBuilder';
 import { useProduct, useUpdateProduct } from '../hooks/useProducts';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { useVariantsByProduct, useDeleteVariant, useCreateVariant, useUpdateVariant } from '../hooks/useVariants';
 import { Button, Breadcrumbs, Input, FormField } from '../../../components/ui';
+import { ChangeHistoryModal } from '../../../components/ChangeHistoryModal';
 import { ProductVariant, CreateVariantDto } from '../types/variant.types';
 
 const variantSchema = z.object({
@@ -46,6 +47,7 @@ export const ProductDetailPage: React.FC = () => {
 
   const [showVariantForm, setShowVariantForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState<ProductVariant | undefined>(undefined);
+  const [showHistory, setShowHistory] = useState(false);
 
   // Extract product data from API response
   const product = response?.data;
@@ -220,6 +222,10 @@ export const ProductDetailPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit Product</h1>
             <p className="mt-1 text-sm sm:text-base text-gray-600">Update product information and details</p>
           </div>
+          <button onClick={() => setShowHistory(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <History size={16} />
+            History
+          </button>
         </div>
 
         {/* Form Card - Full width on mobile, wider on desktop */}
@@ -494,6 +500,16 @@ export const ProductDetailPage: React.FC = () => {
           ) : null}
         </div>
       </div>
+
+      {id && (
+        <ChangeHistoryModal
+          entityType="PRODUCT"
+          entityId={id}
+          currentData={product as any}
+          isOpen={showHistory}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
     </div>
   );
 };

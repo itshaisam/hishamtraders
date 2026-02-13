@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, History } from 'lucide-react';
 import { POForm } from '../components/POForm';
 import { POFormSkeleton } from '../components/POFormSkeleton';
 import { usePurchaseOrder, useUpdatePurchaseOrder } from '../hooks/usePurchaseOrders';
 import { Spinner, Button, Breadcrumbs } from '../../../components/ui';
+import { ChangeHistoryModal } from '../../../components/ChangeHistoryModal';
 
 /**
  * PODetailPage - Full page for editing an existing purchase order
@@ -18,6 +19,7 @@ export const PODetailPage: React.FC = () => {
 
   // Extract PO data from API response
   const purchaseOrder = response?.data;
+  const [showHistory, setShowHistory] = useState(false);
 
   const handleSubmit = async (data: any) => {
     if (!id) return;
@@ -78,6 +80,10 @@ export const PODetailPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit Purchase Order</h1>
             <p className="mt-1 text-sm sm:text-base text-gray-600">Order ID: {purchaseOrder.id}</p>
           </div>
+          <button onClick={() => setShowHistory(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <History size={16} />
+            History
+          </button>
         </div>
 
         {/* Form Card - Full width on mobile, wider on desktop */}
@@ -85,6 +91,16 @@ export const PODetailPage: React.FC = () => {
           <POForm purchaseOrder={purchaseOrder} onSubmit={handleSubmit} isLoading={isUpdating} />
         </div>
       </div>
+
+      {id && (
+        <ChangeHistoryModal
+          entityType="PURCHASE_ORDER"
+          entityId={id}
+          currentData={purchaseOrder as any}
+          isOpen={showHistory}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
     </div>
   );
 };

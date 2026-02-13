@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, History } from 'lucide-react';
 import { SupplierForm } from '../components/SupplierForm';
 import { SupplierFormSkeleton } from '../components/SupplierFormSkeleton';
 import { useSupplier, useUpdateSupplier } from '../hooks/useSuppliers';
 import { Spinner, Button, Breadcrumbs } from '../../../components/ui';
+import { ChangeHistoryModal } from '../../../components/ChangeHistoryModal';
 
 /**
  * SupplierDetailPage - Full page for editing an existing supplier
@@ -18,6 +19,7 @@ export const SupplierDetailPage: React.FC = () => {
 
   // Extract supplier data from API response
   const supplier = response?.data;
+  const [showHistory, setShowHistory] = useState(false);
 
   const handleSubmit = async (data: any) => {
     if (!id) return;
@@ -76,6 +78,10 @@ export const SupplierDetailPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit Supplier</h1>
             <p className="mt-1 text-sm sm:text-base text-gray-600">Update supplier information and details</p>
           </div>
+          <button onClick={() => setShowHistory(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <History size={16} />
+            History
+          </button>
         </div>
 
         {/* Form Card - Full width on mobile, wider on desktop */}
@@ -83,6 +89,16 @@ export const SupplierDetailPage: React.FC = () => {
           <SupplierForm supplier={supplier} onSubmit={handleSubmit} isLoading={isUpdating} />
         </div>
       </div>
+
+      {id && (
+        <ChangeHistoryModal
+          entityType="SUPPLIER"
+          entityId={id}
+          currentData={supplier as any}
+          isOpen={showHistory}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
     </div>
   );
 };

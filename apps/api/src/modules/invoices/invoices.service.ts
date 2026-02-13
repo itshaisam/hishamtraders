@@ -11,6 +11,7 @@ import { VoidInvoiceDto } from './dto/void-invoice.dto.js';
 import { generateInvoiceNumber } from '../../utils/invoice-number.util.js';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
+import { changeHistoryService } from '../../services/change-history.service.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
 import { GatePassService } from '../gate-passes/gate-pass.service.js';
 import { validatePeriodNotClosed } from '../../utils/period-lock.js';
@@ -429,6 +430,9 @@ export class InvoicesService {
     if (!invoice) {
       throw new NotFoundError('Invoice not found');
     }
+
+    // Capture snapshot before voiding
+    await changeHistoryService.captureSnapshot('INVOICE', invoiceId, invoice as any, userId);
 
     // Validate not already voided
     if (invoice.status === 'VOIDED') {

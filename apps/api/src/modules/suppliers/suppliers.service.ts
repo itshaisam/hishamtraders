@@ -1,4 +1,5 @@
 import logger from '../../lib/logger.js';
+import { changeHistoryService } from '../../services/change-history.service.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors.js';
 import { CreateSupplierDto } from './dto/create-supplier.dto.js';
 import { UpdateSupplierDto } from './dto/update-supplier.dto.js';
@@ -71,6 +72,9 @@ export class SuppliersService {
         throw new BadRequestError('Invalid email format');
       }
     }
+
+    // Capture snapshot before update
+    await changeHistoryService.captureSnapshot('SUPPLIER', id, supplier as any);
 
     const updatedSupplier = await suppliersRepository.update(id, data);
     logger.info('Supplier updated', {

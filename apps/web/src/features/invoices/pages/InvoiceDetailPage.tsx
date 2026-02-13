@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle, RotateCcw, Printer, FileDown, Link2, Check, PackageX, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle, RotateCcw, Printer, FileDown, Link2, Check, PackageX, ClipboardList, History } from 'lucide-react';
 import { format } from 'date-fns';
 import { useInvoiceById, useVoidInvoice, useInvoices } from '../../../hooks/useInvoices';
 import { useCurrencySymbol, useCompanyName, useCompanyLogo } from '../../../hooks/useSettings';
@@ -9,6 +9,7 @@ import { VoidInvoiceModal } from '../components/VoidInvoiceModal';
 import { useAuthStore } from '../../../stores/auth.store';
 import { generateInvoicePdf } from '../../../utils/invoicePdf';
 import { invoicesService } from '../../../services/invoicesService';
+import { ChangeHistoryModal } from '../../../components/ChangeHistoryModal';
 import toast from 'react-hot-toast';
 
 export function InvoiceDetailPage() {
@@ -24,6 +25,7 @@ export function InvoiceDetailPage() {
   const companyLogo = companyLogoData?.companyLogo || '';
   const voidMutation = useVoidInvoice();
   const [showVoidModal, setShowVoidModal] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const canVoid =
     invoice?.status === 'PENDING' &&
@@ -532,6 +534,10 @@ export function InvoiceDetailPage() {
                   Void
                 </button>
               )}
+              <button onClick={() => setShowHistory(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50">
+                <History size={16} />
+                History
+              </button>
             </div>
           </div>
 
@@ -730,6 +736,16 @@ export function InvoiceDetailPage() {
             onClose={() => setShowVoidModal(false)}
             onConfirm={handleVoidConfirm}
             isLoading={voidMutation.isPending}
+          />
+        )}
+
+        {id && (
+          <ChangeHistoryModal
+            entityType="INVOICE"
+            entityId={id}
+            currentData={invoice as any}
+            isOpen={showHistory}
+            onClose={() => setShowHistory(false)}
           />
         )}
       </div>

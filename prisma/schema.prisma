@@ -615,6 +615,7 @@ model User {
   createdPromises        PaymentPromise[] @relation("CreatedPromises")      // Epic 7
   alertsReceived         Alert[]         @relation("AlertTargetUser")       // Epic 7
   alertsAcknowledged     Alert[]         @relation("AlertAcknowledger")     // Epic 7
+  changeHistory          ChangeHistory[]                                    // Epic 8
 
   @@index([email])
   @@index([roleId])
@@ -642,6 +643,27 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([action])
   @@map("audit_logs")
+}
+
+// ============================================================================
+// CHANGE HISTORY (Epic 8.2 — Version Comparison)
+// ============================================================================
+
+model ChangeHistory {
+  id           String   @id @default(cuid())
+  entityType   String   // PRODUCT, CLIENT, SUPPLIER, PURCHASE_ORDER, INVOICE, PAYMENT
+  entityId     String
+  version      Int
+  changedBy    String?
+  changedAt    DateTime @default(now())
+  snapshot     Json     // Whitelisted fields snapshot at time of change
+  changeReason String?  @db.Text
+
+  user User? @relation(fields: [changedBy], references: [id])
+
+  @@unique([entityType, entityId, version])
+  @@index([entityType, entityId])
+  @@map("change_history")
 }
 
 // ============================================================================

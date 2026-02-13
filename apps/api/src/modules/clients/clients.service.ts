@@ -1,5 +1,6 @@
 import { Client, ClientStatus } from '@prisma/client';
 import { ClientRepository, ClientFilters } from './clients.repository.js';
+import { changeHistoryService } from '../../services/change-history.service.js';
 
 export interface CreateClientDto {
   name: string;
@@ -97,8 +98,9 @@ export class ClientService {
   }
 
   async updateClient(id: string, data: UpdateClientDto): Promise<Client> {
-    // Check if client exists
-    await this.getClientById(id);
+    // Check if client exists + capture snapshot before update
+    const existingClient = await this.getClientById(id);
+    await changeHistoryService.captureSnapshot('CLIENT', id, existingClient as any);
 
     // Validation: credit limit must be >= 0
     if (data.creditLimit !== undefined && data.creditLimit < 0) {

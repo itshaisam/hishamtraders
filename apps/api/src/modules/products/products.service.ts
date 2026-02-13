@@ -1,4 +1,5 @@
 import logger from '../../lib/logger.js';
+import { changeHistoryService } from '../../services/change-history.service.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../../utils/errors.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
@@ -90,6 +91,9 @@ export class ProductsService {
     if (data.sellingPrice !== undefined && data.sellingPrice <= 0) {
       throw new BadRequestError('Selling price must be greater than 0');
     }
+
+    // Capture snapshot before update
+    await changeHistoryService.captureSnapshot('PRODUCT', id, product as any);
 
     const updatedProduct = await productsRepository.update(id, data);
     logger.info('Product updated', {

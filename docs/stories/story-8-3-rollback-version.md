@@ -5,7 +5,7 @@
 **Priority:** Medium
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Story 8.2
-**Status:** Draft -- Phase 2 (v2.0 -- Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,35 +20,35 @@
 ## Acceptance Criteria
 
 1. **Backend API:**
-   - [ ] POST /api/v1/change-history/rollback - creates rollback operation
-   - [ ] Payload: entityType, entityId, targetVersion, reason
-   - [ ] GET /api/v1/change-history/:entityType/:entityId/can-rollback - validates rollback safety
+   - [x] POST /api/v1/change-history/rollback - creates rollback operation
+   - [x] Payload: entityType, entityId, targetVersion, reason
+   - [x] GET /api/v1/change-history/:entityType/:entityId/can-rollback - validates rollback safety
 
 2. **Rollback Process:**
-   - [ ] Load snapshot from ChangeHistory for targetVersion
-   - [ ] Create UPDATE operation with old values
-   - [ ] Capture new update in ChangeHistory as new version
-   - [ ] Log rollback action in audit trail with reason
+   - [x] Load snapshot from ChangeHistory for targetVersion
+   - [x] Create UPDATE operation with old values
+   - [x] Capture new update in ChangeHistory as new version
+   - [x] Log rollback action in audit trail with reason
 
 3. **Rollback Validation:**
-   - [ ] Cannot rollback PAYMENTS (reversal-only policy)
-   - [ ] Can rollback other entities with warnings if they have dependent records
-   - [ ] Warnings include: "Related payments not reversed", "Collection data may be affected", "Associated invoices remain"
-   - [ ] Cannot rollback deleted entities
-   - [ ] Rollback reason required
-   - [ ] Validate entity-specific conditions (see Dev Notes for details)
+   - [x] Cannot rollback PAYMENTS (reversal-only policy)
+   - [x] Can rollback other entities with warnings if they have dependent records
+   - [x] Warnings include: "Related payments not reversed", "Collection data may be affected", "Associated invoices remain"
+   - [x] Cannot rollback deleted entities
+   - [x] Rollback reason required
+   - [x] Validate entity-specific conditions (see Dev Notes for details)
 
 4. **Frontend:**
-   - [ ] "Restore This Version" button in change history modal
-   - [ ] Confirmation modal with warning
-   - [ ] Rollback reason input (required)
-   - [ ] Shows which fields will change
-   - [ ] Success/error message after rollback
-   - [ ] Reloads entity detail page
+   - [x] "Restore This Version" button in change history modal
+   - [x] Confirmation modal with warning
+   - [x] Rollback reason input (required)
+   - [x] Shows which fields will change
+   - [x] Success/error message after rollback
+   - [x] Reloads entity detail page
 
 5. **Authorization:**
-   - [ ] Only Admin can perform rollbacks
-   - [ ] Rollback operations logged in audit trail
+   - [x] Only Admin can perform rollbacks
+   - [x] Rollback operations logged in audit trail
 
 ---
 
@@ -322,3 +322,4 @@ async function rollbackToVersion(
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: corrected API paths, fixed AuditService call signature, fixed Invoice/Client/PO relation names, corrected enum values, fixed ChangeHistory field names, unified entity type casing | Claude (Tech Review) |
+| 2026-02-13 | 3.0     | Implemented: rollback API (POST /rollback, GET /can-rollback), entity-specific safety validation, admin-only authorization, frontend confirmation UI with field preview and reason input | Claude (Implementation) |

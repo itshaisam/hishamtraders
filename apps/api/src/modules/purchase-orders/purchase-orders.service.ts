@@ -1,4 +1,5 @@
 import logger from '../../lib/logger.js';
+import { changeHistoryService } from '../../services/change-history.service.js';
 import { PurchaseOrderRepository } from './purchase-orders.repository.js';
 import { PurchaseOrderFilters } from './dto/purchase-order-filter.dto.js';
 import { CreatePurchaseOrderRequest } from './dto/create-purchase-order.dto.js';
@@ -123,6 +124,9 @@ export class PurchaseOrderService {
       if (data.status) {
         this.validateStatusTransition(po.status, data.status);
       }
+
+      // Capture snapshot before update
+      await changeHistoryService.captureSnapshot('PURCHASE_ORDER', id, po as any, userId);
 
       logger.info(`Updating purchase order: ${po.poNumber}`, {
         userId,
