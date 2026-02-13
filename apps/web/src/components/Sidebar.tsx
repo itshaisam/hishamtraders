@@ -68,14 +68,14 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
 
       {/* Sidebar - Fixed on desktop, drawer on mobile */}
       <div
-        className={`bg-white h-screen fixed left-0 top-0 border-r border-gray-200 transition-all duration-300 ${
+        className={`bg-white h-screen fixed left-0 top-0 border-r border-gray-200 transition-all duration-300 flex flex-col ${
           isMobile ? 'z-40 w-60' : 'z-40 hidden sm:block'
         } ${isMobile && !isOpen ? '-translate-x-full' : ''} ${
           isCollapsed && !isMobile ? 'w-16' : !isMobile ? 'w-60' : ''
         }`}
       >
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
         {!isCollapsed && !isMobile && (
           <div>
             <h1 className="text-lg font-bold text-gray-900">{companyName?.companyName || 'General ERP'}</h1>
@@ -105,7 +105,7 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
 
       {/* User Info */}
       {!isCollapsed && (
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
               {user?.name.charAt(0)}
@@ -679,7 +679,7 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
       </nav>
 
       {/* Footer Actions */}
-      <div className="border-t border-gray-200 p-2">
+      <div className="border-t border-gray-200 p-2 flex-shrink-0">
         <Link
           to="/help"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"

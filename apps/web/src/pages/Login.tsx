@@ -73,7 +73,7 @@ export function Login() {
                   focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent
                   ${errors.email ? 'border-red-500' : 'border-gray-300'}
                 `}
-                placeholder="admin@hishamtraders.com"
+                placeholder="Enter your email"
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
@@ -119,12 +119,6 @@ export function Login() {
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
 
-            {/* Default Credentials Info */}
-            <div className="mt-4 p-3 bg-gray-50 rounded-md border border-gray-200">
-              <p className="text-xs text-gray-600 font-medium mb-1">Default Admin Credentials:</p>
-              <p className="text-xs text-gray-500">Email: admin@hishamtraders.com</p>
-              <p className="text-xs text-gray-500">Password: admin123</p>
-            </div>
           </form>
         </div>
       </div>
