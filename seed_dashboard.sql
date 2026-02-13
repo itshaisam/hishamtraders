@@ -1,8 +1,8 @@
-SET @c1 = (SELECT id FROM clients WHERE companyName = 'ABC Construction' LIMIT 1);
-SET @c2 = (SELECT id FROM clients WHERE companyName = 'Paradise Builders' LIMIT 1);
-SET @c3 = (SELECT id FROM clients WHERE companyName = 'Metro Plumbing' LIMIT 1);
-SET @c4 = (SELECT id FROM clients WHERE companyName = 'Royal Interiors' LIMIT 1);
-SET @c5 = (SELECT id FROM clients WHERE companyName = 'Green Valley Homes' LIMIT 1);
+SET @c1 = (SELECT id FROM clients WHERE name = 'ABC Construction' LIMIT 1);
+SET @c2 = (SELECT id FROM clients WHERE name = 'Paradise Builders' LIMIT 1);
+SET @c3 = (SELECT id FROM clients WHERE name = 'Metro Plumbing' LIMIT 1);
+SET @c4 = (SELECT id FROM clients WHERE name = 'Royal Interiors' LIMIT 1);
+SET @c5 = (SELECT id FROM clients WHERE name = 'Green Valley Homes' LIMIT 1);
 SET @w1 = (SELECT id FROM warehouses WHERE name = 'Main Warehouse - Karachi' LIMIT 1);
 SET @w2 = (SELECT id FROM warehouses WHERE name = 'Islamabad Branch Warehouse' LIMIT 1);
 SET @p1 = (SELECT id FROM products WHERE sku = 'SINK-001' LIMIT 1);

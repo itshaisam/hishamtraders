@@ -41,10 +41,10 @@ async function main() {
 
   console.log('Creating default admin user...');
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@hishamtraders.com' },
+    where: { email: 'admin@admin.com' },
     update: {},
     create: {
-      email: 'admin@hishamtraders.com',
+      email: 'admin@admin.com',
       passwordHash: hashedPassword,
       name: 'System Administrator',
       roleId: adminRole.id,
@@ -54,7 +54,7 @@ async function main() {
 
   console.log('✓ Default admin user created');
   console.log('\n📋 Default Admin Credentials:');
-  console.log('   Email: admin@hishamtraders.com');
+  console.log('   Email: admin@admin.com');
   console.log('   Password: admin123');
   console.log('   ⚠️  CHANGE THIS PASSWORD IN PRODUCTION!\n');
 

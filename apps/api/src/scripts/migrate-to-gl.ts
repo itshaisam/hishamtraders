@@ -503,7 +503,7 @@ async function main() {
 
   // Find admin user
   const admin = await prisma.user.findFirst({
-    where: { email: 'admin@hishamtraders.com' },
+    where: { role: { name: 'ADMIN' } },
     select: { id: true, name: true },
   });
 
