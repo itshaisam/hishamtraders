@@ -5,7 +5,7 @@
 **Priority:** Medium
 **Estimated Effort:** 6-8 hours
 **Dependencies:** All previous Epic 7 stories (7.1-7.9), especially Story 7.6 (Alert model)
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,33 +20,33 @@
 ## Acceptance Criteria
 
 1. **Dashboard Widgets:**
-   - [ ] Today's Schedule (clients to visit based on recoveryDay)
-   - [ ] Due Promises (promises due today or overdue)
-   - [ ] Collection Metrics (today / this week / this month)
-   - [ ] Overdue Summary (total amount by aging buckets)
-   - [ ] Recent Visits (last 5 visits)
-   - [ ] Alert Summary (unacknowledged alerts count + critical count)
-   - [ ] Promise Fulfillment Rate (last 30 days)
-   - [ ] Top 5 Overdue Clients
+   - [x] Today's Schedule (clients to visit based on recoveryDay)
+   - [x] Due Promises (promises due today or overdue)
+   - [x] Collection Metrics (today / this week / this month)
+   - [x] Overdue Summary (total amount by aging buckets)
+   - [x] Recent Visits (last 5 visits)
+   - [x] Alert Summary (unacknowledged alerts count + critical count)
+   - [x] Promise Fulfillment Rate (last 30 days)
+   - [x] Top 5 Overdue Clients
 
 2. **Backend API:**
-   - [ ] `GET /api/v1/dashboard/recovery` — returns all dashboard data in one response
-   - [ ] Role-scoped: Recovery Agent sees only their data; Admin sees all
+   - [x] `GET /api/v1/dashboard/recovery` — returns all dashboard data in one response
+   - [x] Role-scoped: Recovery Agent sees only their data; Admin sees all
 
 3. **Interactive Features:**
-   - [ ] Click widget to navigate to detail page
-   - [ ] Quick actions: Log Visit, Record Payment, View Client
-   - [ ] Auto-refresh every 5 minutes, manual refresh button
+   - [x] Click widget to navigate to detail page
+   - [x] Quick actions: Log Visit, Record Payment, View Client
+   - [x] Auto-refresh every 5 minutes, manual refresh button
 
 4. **Frontend:**
-   - [ ] Recovery Dashboard page with widget-based grid layout
-   - [ ] Overdue summary pie chart via `recharts` (external dependency — must install)
-   - [ ] Use `<Card>` with children directly (no `Card.Body`)
-   - [ ] Responsive grid for mobile
+   - [x] Recovery Dashboard page with widget-based grid layout
+   - [x] Overdue summary pie chart via `recharts` (external dependency — must install)
+   - [x] Use `<Card>` with children directly (no `Card.Body`)
+   - [x] Responsive grid for mobile
 
 5. **Authorization:**
-   - [ ] Recovery Agent: only their assigned clients and data
-   - [ ] Admin/Accountant: organization-wide metrics
+   - [x] Recovery Agent: only their assigned clients and data
+   - [x] Admin/Accountant: organization-wide metrics
 
 ---
 
@@ -54,7 +54,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. This is the final "glue" story — aggregates data from earlier Epic 7 stories' models.
+**Backend:** Implemented. This is the final "glue" story — aggregates data from earlier Epic 7 stories' models.
 
 ### Key Corrections
 
@@ -255,3 +255,4 @@ apps/web/src/features/dashboard/pages/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API path (/api/v1/), Card.Body removed, UNPAID→PENDING, noted dependency on Story 7.6 for Alert model, recharts as external dep, noted performance concern with many queries, noted English locale for day names, trimmed frontend to notes | Claude (AI Review) |
+| 2026-02-12 | 3.0     | Implemented: all acceptance criteria completed | Claude (AI Implementation) |

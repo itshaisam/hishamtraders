@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Epic 3 (Clients), Story 7.1
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,42 +20,42 @@
 ## Acceptance Criteria
 
 1. **Alert Configuration:**
-   - [ ] AlertRule table for configurable alert rules
-   - [ ] Default rules seeded:
+   - [x] AlertRule table for configurable alert rules
+   - [x] Default rules seeded:
      - 7 days overdue: Alert recovery agent (LOW priority)
      - 14 days overdue: Alert recovery agent + accountant (MEDIUM priority)
      - 30 days overdue: Alert all roles (HIGH priority)
      - 60+ days overdue: Alert all + mark CRITICAL
 
 2. **Database Schema:**
-   - [ ] AlertRule model: daysOverdue, priority, targetRoles (JSON), action
-   - [ ] Alert model: type, priority, message, relatedType, relatedId, targetUserId
-   - [ ] This story is the **canonical definition** for Alert/AlertRule — other stories reference it
+   - [x] AlertRule model: daysOverdue, priority, targetRoles (JSON), action
+   - [x] Alert model: type, priority, message, relatedType, relatedId, targetUserId
+   - [x] This story is the **canonical definition** for Alert/AlertRule — other stories reference it
 
 3. **Daily Alert Job:**
-   - [ ] Cron job checks overdue invoices daily (separate setup, not in API server)
-   - [ ] Creates alerts based on matching rules
-   - [ ] Deduplicates: skip if unacknowledged alert exists for same client + priority within 24h
+   - [x] Cron job checks overdue invoices daily (separate setup, not in API server)
+   - [x] Creates alerts based on matching rules
+   - [x] Deduplicates: skip if unacknowledged alert exists for same client + priority within 24h
 
 4. **Backend API:**
-   - [ ] `GET /api/v1/alerts` — get current user's unacknowledged alerts
-   - [ ] `PUT /api/v1/alerts/:id/acknowledge` — mark alert as acknowledged
-   - [ ] `GET /api/v1/alerts/overdue-clients` — overdue client summary
+   - [x] `GET /api/v1/alerts` — get current user's unacknowledged alerts
+   - [x] `PUT /api/v1/alerts/:id/acknowledge` — mark alert as acknowledged
+   - [x] `GET /api/v1/alerts/overdue-clients` — overdue client summary
 
 5. **Escalation Workflow:**
-   - [ ] 30+ days overdue with no visit in 7 days: create CRITICAL alert for admins
+   - [x] 30+ days overdue with no visit in 7 days: create CRITICAL alert for admins
 
 6. **Frontend:**
-   - [ ] Alert bell icon in navbar with unread count badge
-   - [ ] Alert dropdown panel with recent alerts
-   - [ ] Alerts listing page with type filters
-   - [ ] Click alert navigates to client detail
-   - [ ] Acknowledge button per alert
-   - [ ] Use `<Card>` with children directly (no `Card.Body`)
+   - [x] Alert bell icon in navbar with unread count badge
+   - [x] Alert dropdown panel with recent alerts
+   - [x] Alerts listing page with type filters
+   - [x] Click alert navigates to client detail
+   - [x] Acknowledge button per alert
+   - [x] Use `<Card>` with children directly (no `Card.Body`)
 
 7. **Authorization:**
-   - [ ] Each user sees only alerts targeted to them
-   - [ ] Admin can configure alert rules
+   - [x] Each user sees only alerts targeted to them
+   - [x] Admin can configure alert rules
 
 ---
 
@@ -63,7 +63,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Introduces new Alert and AlertRule models.
+**Backend:** Implemented. Introduces new Alert and AlertRule models.
 
 ### Key Corrections
 
@@ -308,3 +308,4 @@ apps/web/src/features/alerts/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), Card.Body removed, targetRoles changed from String[] to Json (MySQL), fixed duplicate OR in getUserAlerts, added @unique on AlertRule.name for upsert, UNPAID→PENDING, deferred EMAIL/SMS for MVP, trimmed frontend to notes | Claude (AI Review) |
+| 2026-02-12 | 3.0     | Implemented: all acceptance criteria completed | Claude (AI Implementation) |

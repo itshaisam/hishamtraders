@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 5-7 hours
 **Dependencies:** Story 7.4
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,39 +20,39 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] PaymentPromise table — NEW model (see Dev Notes)
-   - [ ] PromiseStatus enum — NEW enum
+   - [x] PaymentPromise table — NEW model (see Dev Notes)
+   - [x] PromiseStatus enum — NEW enum
 
 2. **Promise Statuses:**
-   - [ ] PENDING: Promise date not yet reached
-   - [ ] FULFILLED: Full payment received on or before promise date
-   - [ ] PARTIAL: Partial payment received
-   - [ ] BROKEN: Promise date passed, no payment
-   - [ ] CANCELLED: Promise cancelled by agent/admin
+   - [x] PENDING: Promise date not yet reached
+   - [x] FULFILLED: Full payment received on or before promise date
+   - [x] PARTIAL: Partial payment received
+   - [x] BROKEN: Promise date passed, no payment
+   - [x] CANCELLED: Promise cancelled by agent/admin
 
 3. **Backend API:**
-   - [ ] `POST /api/v1/recovery/promises` — creates payment promise
-   - [ ] `PUT /api/v1/recovery/promises/:id/fulfill` — marks promise as fulfilled
-   - [ ] `PUT /api/v1/recovery/promises/:id/cancel` — cancels promise
-   - [ ] `GET /api/v1/recovery/promises/due` — promises due today or overdue
-   - [ ] `GET /api/v1/recovery/promises?clientId=xxx` — client's promise history
+   - [x] `POST /api/v1/recovery/promises` — creates payment promise
+   - [x] `PUT /api/v1/recovery/promises/:id/fulfill` — marks promise as fulfilled
+   - [x] `PUT /api/v1/recovery/promises/:id/cancel` — cancels promise
+   - [x] `GET /api/v1/recovery/promises/due` — promises due today or overdue
+   - [x] `GET /api/v1/recovery/promises?clientId=xxx` — client's promise history
 
 4. **Auto-Update Logic:**
-   - [ ] When payment recorded, check for pending promises (earliest first — FIFO)
-   - [ ] Match payment against promises in order of promise date
-   - [ ] If payment >= promiseAmount: Mark promise FULFILLED
-   - [ ] If payment < promiseAmount: Mark promise PARTIAL
-   - [ ] **Promise matching is FIFO by promise date** (earliest promise matched first)
+   - [x] When payment recorded, check for pending promises (earliest first — FIFO)
+   - [x] Match payment against promises in order of promise date
+   - [x] If payment >= promiseAmount: Mark promise FULFILLED
+   - [x] If payment < promiseAmount: Mark promise PARTIAL
+   - [x] **Promise matching is FIFO by promise date** (earliest promise matched first)
 
 5. **Frontend:**
-   - [ ] Due Promises page (today and overdue)
-   - [ ] Promise history on client page
-   - [ ] Promise fulfillment rate widget
-   - [ ] Color coding: Green (fulfilled), Yellow (pending), Red (broken)
+   - [x] Due Promises page (today and overdue)
+   - [x] Promise history on client page
+   - [x] Promise fulfillment rate widget
+   - [x] Color coding: Green (fulfilled), Yellow (pending), Red (broken)
 
 6. **Authorization:**
-   - [ ] Recovery Agent can create/fulfill promises for their clients
-   - [ ] Admin can view all promises
+   - [x] Recovery Agent can create/fulfill promises for their clients
+   - [x] Admin can view all promises
 
 ---
 
@@ -60,7 +60,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Depends on Story 7.4 (RecoveryVisit model).
+**Backend:** Implemented. Depends on Story 7.4 (RecoveryVisit model).
 
 ### Key Corrections
 
@@ -416,3 +416,4 @@ apps/web/src/features/recovery/components/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), auditLogger->AuditService with correct action enum, userId:'SYSTEM'->actual userId, Card.Body->Card, prisma.alert.create deferred to Story 7.6, documented PaymentPromise/PromiseStatus as NEW models, kept FIFO auto-matching logic, deferred broken-promise cron to Story 7.6, trimmed frontend to skeleton + notes | Claude (AI Review) |
+| 2026-02-12 | 3.0     | Implemented: all acceptance criteria completed | Claude (AI Implementation) |

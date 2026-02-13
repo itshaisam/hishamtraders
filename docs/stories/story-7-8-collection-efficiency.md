@@ -5,7 +5,7 @@
 **Priority:** Medium
 **Estimated Effort:** 5-7 hours
 **Dependencies:** Epic 3 (Clients), Story 7.1
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,32 +20,32 @@
 ## Acceptance Criteria
 
 1. **Collection Efficiency Metrics:**
-   - [ ] Collection Rate = (Collections / Receivables) x 100
-   - [ ] DSO = (Average A/R / Daily Revenue) x Days in Period (30-day rolling default)
-   - [ ] CEI = (Beginning AR + Revenue - Ending AR) / (Beginning AR + Revenue - Ending Current AR) x 100
-   - [ ] Average Collection Period = avg days from invoice date to payment date
-   - [ ] Overdue Percentage = (Overdue / Total Receivables) x 100
+   - [x] Collection Rate = (Collections / Receivables) x 100
+   - [x] DSO = (Average A/R / Daily Revenue) x Days in Period (30-day rolling default)
+   - [x] CEI = (Beginning AR + Revenue - Ending AR) / (Beginning AR + Revenue - Ending Current AR) x 100
+   - [x] Average Collection Period = avg days from invoice date to payment date
+   - [x] Overdue Percentage = (Overdue / Total Receivables) x 100
 
 2. **Backend API:**
-   - [ ] `GET /api/v1/reports/collection-efficiency` — returns all metrics
-   - [ ] `GET /api/v1/reports/collection-efficiency/trend` — 12-month trend
-   - [ ] Query params: `dateFrom`, `dateTo`, `recoveryAgentId`
-   - [ ] Default period: current month
+   - [x] `GET /api/v1/reports/collection-efficiency` — returns all metrics
+   - [x] `GET /api/v1/reports/collection-efficiency/trend` — 12-month trend
+   - [x] Query params: `dateFrom`, `dateTo`, `recoveryAgentId`
+   - [x] Default period: current month
 
 3. **Benchmarking:**
-   - [ ] Target DSO from `prisma.systemSetting` (key: `DSO_TARGET`, default: 30)
-   - [ ] Target collection rate from `prisma.systemSetting` (key: `COLLECTION_RATE_TARGET`, default: 90)
-   - [ ] Show variance from target
+   - [x] Target DSO from `prisma.systemSetting` (key: `DSO_TARGET`, default: 30)
+   - [x] Target collection rate from `prisma.systemSetting` (key: `COLLECTION_RATE_TARGET`, default: 90)
+   - [x] Show variance from target
 
 4. **Frontend:**
-   - [ ] Collection Efficiency Dashboard with KPI cards and trend indicators
-   - [ ] Line chart: DSO trend; Bar chart: monthly collection rate; Pie chart: receivables distribution
-   - [ ] Charts via `recharts` (external dependency — must install)
-   - [ ] Use `<Card>` with children directly (no `Card.Body`)
+   - [x] Collection Efficiency Dashboard with KPI cards and trend indicators
+   - [x] Line chart: DSO trend; Bar chart: monthly collection rate; Pie chart: receivables distribution
+   - [x] Charts via `recharts` (external dependency — must install)
+   - [x] Use `<Card>` with children directly (no `Card.Body`)
 
 5. **Authorization:**
-   - [ ] Admin and Accountant can view all metrics
-   - [ ] Recovery Agent can view team-filtered metrics
+   - [x] Admin and Accountant can view all metrics
+   - [x] Recovery Agent can view team-filtered metrics
 
 ---
 
@@ -53,7 +53,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Pure reporting — no new schema.
+**Backend:** Implemented. Pure reporting — no new schema.
 
 ### Key Corrections
 
@@ -230,3 +230,4 @@ apps/web/src/features/reports/pages/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), Card.Body removed, prisma.configuration→prisma.systemSetting, UNPAID→PENDING, invoice.date→invoiceDate, fixed infinite recursion with skipTrend flag, recharts as external dep, trimmed frontend to notes | Claude (AI Review) |
+| 2026-02-12 | 3.0     | Implemented: all acceptance criteria completed | Claude (AI Implementation) |

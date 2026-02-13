@@ -56,7 +56,8 @@ export default function RecoveryVisitLogPage() {
     queryFn: () => recoveryService.getTodayRoute(),
   });
 
-  const clients = (routeData?.data || []) as any[];
+  const routeResponse = routeData?.data as any;
+  const clients = (Array.isArray(routeResponse) ? routeResponse : routeResponse?.clients || []) as any[];
 
   const { data: visitData } = useQuery({
     queryKey: ['client-visits', form.clientId],

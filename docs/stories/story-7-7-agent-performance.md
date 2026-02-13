@@ -5,7 +5,7 @@
 **Priority:** Medium
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Story 7.1, Story 7.4, Story 7.5
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,35 +20,35 @@
 ## Acceptance Criteria
 
 1. **Performance Metrics per Agent:**
-   - [ ] Total clients assigned
-   - [ ] Total outstanding balance / total overdue balance
-   - [ ] Collections in period (amount and count)
-   - [ ] Recovery visits in period (count)
-   - [ ] Promise fulfillment rate (%)
-   - [ ] Average days to collect
-   - [ ] Collection efficiency (collected / outstanding)
+   - [x] Total clients assigned
+   - [x] Total outstanding balance / total overdue balance
+   - [x] Collections in period (amount and count)
+   - [x] Recovery visits in period (count)
+   - [x] Promise fulfillment rate (%)
+   - [x] Average days to collect
+   - [x] Collection efficiency (collected / outstanding)
 
 2. **Backend API:**
-   - [ ] `GET /api/v1/recovery/agents/performance` — all agents summary
-   - [ ] `GET /api/v1/recovery/agents/:id/performance` — specific agent details
-   - [ ] `GET /api/v1/recovery/agents/:id/collections-trend` — 12-month trend
-   - [ ] Query params: `dateFrom`, `dateTo` (default: current month)
+   - [x] `GET /api/v1/recovery/agents/performance` — all agents summary
+   - [x] `GET /api/v1/recovery/agents/:id/performance` — specific agent details
+   - [x] `GET /api/v1/recovery/agents/:id/collections-trend` — 12-month trend
+   - [x] Query params: `dateFrom`, `dateTo` (default: current month)
 
 3. **Comparative Metrics:**
-   - [ ] Rank agents by collection amount
-   - [ ] Agent comparison table
+   - [x] Rank agents by collection amount
+   - [x] Agent comparison table
 
 4. **Frontend:**
-   - [ ] Agent Performance page with summary cards and comparison table
-   - [ ] Individual agent detail view with trend chart
-   - [ ] Date range filter using `<input type="date">` (no `DatePicker` component)
-   - [ ] Charts via `recharts` (external dependency — must install)
-   - [ ] Use `<Card>` with children directly (no `Card.Body`)
-   - [ ] Export to Excel (server-side via `exceljs`, Story 4.9 pattern)
+   - [x] Agent Performance page with summary cards and comparison table
+   - [x] Individual agent detail view with trend chart
+   - [x] Date range filter using `<input type="date">` (no `DatePicker` component)
+   - [x] Charts via `recharts` (external dependency — must install)
+   - [x] Use `<Card>` with children directly (no `Card.Body`)
+   - [x] Export to Excel (server-side via `exceljs`, Story 4.9 pattern)
 
 5. **Authorization:**
-   - [ ] Admin and Accountant can view all agents
-   - [ ] Recovery Agent can view only their own performance
+   - [x] Admin and Accountant can view all agents
+   - [x] Recovery Agent can view only their own performance
 
 ---
 
@@ -56,7 +56,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Depends on RecoveryVisit (7.4) and PaymentPromise (7.5) models.
+**Backend:** Implemented. Depends on RecoveryVisit (7.4) and PaymentPromise (7.5) models.
 
 ### Key Corrections
 
@@ -205,3 +205,4 @@ apps/web/src/features/recovery/pages/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), Card.Body removed, DatePicker→input[type=date], UNPAID→PENDING, noted N+1 performance issue, recharts as external dep, XLSX→server-side exceljs, trimmed frontend to notes | Claude (AI Review) |
+| 2026-02-12 | 3.0     | Implemented: all acceptance criteria completed | Claude (AI Implementation) |

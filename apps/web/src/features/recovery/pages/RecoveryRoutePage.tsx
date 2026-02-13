@@ -20,7 +20,8 @@ export default function RecoveryRoutePage() {
         : recoveryService.getTodayRoute(),
   });
 
-  const clients = (data?.data || []) as any[];
+  const routeResponse = data?.data as any;
+  const clients = (Array.isArray(routeResponse) ? routeResponse : routeResponse?.clients || []) as any[];
   const filtered = search
     ? clients.filter((c: any) =>
         c.name?.toLowerCase().includes(search.toLowerCase()) ||

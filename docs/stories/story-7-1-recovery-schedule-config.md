@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Epic 3 (Clients)
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,25 +20,25 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] Client table expanded: `recoveryDay` (RecoveryDay enum), `recoveryAgentId` (FK to User) — NEW fields
-   - [ ] Recovery days: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, NONE
+   - [x] Client table expanded: `recoveryDay` (RecoveryDay enum), `recoveryAgentId` (FK to User) — NEW fields
+   - [x] Recovery days: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, NONE
 
 2. **Backend API:**
-   - [ ] `PUT /api/v1/clients/:id` — updates recoveryDay and recoveryAgentId
-   - [ ] `GET /api/v1/recovery/schedule?date=YYYY-MM-DD` — returns clients scheduled for that day
-   - [ ] Calculates day of week from date and filters clients
+   - [x] `PUT /api/v1/clients/:id` — updates recoveryDay and recoveryAgentId
+   - [x] `GET /api/v1/recovery/schedule?date=YYYY-MM-DD` — returns clients scheduled for that day
+   - [x] Calculates day of week from date and filters clients
 
 3. **Response Data:**
-   - [ ] Client name, contact, address, current balance, overdue amount, last payment date, recovery agent
+   - [x] Client name, contact, address, current balance, overdue amount, last payment date, recovery agent
 
 4. **Frontend:**
-   - [ ] Client form includes Recovery Day dropdown
-   - [ ] Client form includes Recovery Agent dropdown (users with RECOVERY_AGENT role)
-   - [ ] Client detail page displays recovery schedule
+   - [x] Client form includes Recovery Day dropdown
+   - [x] Client form includes Recovery Agent dropdown (users with RECOVERY_AGENT role)
+   - [x] Client detail page displays recovery schedule
 
 5. **Authorization:**
-   - [ ] Accountant, Admin can configure
-   - [ ] Recovery schedule changes logged via `AuditService.log()`
+   - [x] Accountant, Admin can configure
+   - [x] Recovery schedule changes logged via `AuditService.log()`
 
 ---
 
@@ -46,7 +46,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Depends on Client model (Epic 3).
+**Backend:** Implemented. Depends on Client model (Epic 3).
 
 ### Key Corrections
 
@@ -186,3 +186,4 @@ apps/web/src/features/clients/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), InvoiceStatus UNPAID->PENDING, noted recoveryDay and recoveryAgentId as NEW Client fields requiring migration, auditLogger->AuditService, trimmed frontend to notes only | Claude (AI Review) |
+| 2026-02-12 | 3.0     | Implemented: all acceptance criteria completed | Claude (AI Implementation) |

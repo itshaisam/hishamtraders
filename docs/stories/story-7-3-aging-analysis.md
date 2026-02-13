@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Epic 3 (Clients)
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,48 +20,48 @@
 ## Acceptance Criteria
 
 1. **Aging Buckets:**
-   - [ ] Current (0 days overdue)
-   - [ ] 1-7 days overdue
-   - [ ] 8-14 days overdue
-   - [ ] 15-30 days overdue
-   - [ ] 30+ days overdue
+   - [x] Current (0 days overdue)
+   - [x] 1-7 days overdue
+   - [x] 8-14 days overdue
+   - [x] 15-30 days overdue
+   - [x] 30+ days overdue
 
 2. **Backend API:**
-   - [ ] `GET /api/v1/reports/aging-analysis` — generates aging report
-   - [ ] Filters: clientId, recoveryAgentId, area, city, asOfDate (default: today)
-   - [ ] Shows: Client name, total balance, amount per bucket, oldest invoice date, recovery agent
+   - [x] `GET /api/v1/reports/aging-analysis` — generates aging report
+   - [x] Filters: clientId, recoveryAgentId, area, city, asOfDate (default: today)
+   - [x] Shows: Client name, total balance, amount per bucket, oldest invoice date, recovery agent
 
 3. **Calculation Logic:**
-   - [ ] For each client, analyze PENDING/PARTIAL invoices
-   - [ ] Group by days overdue (invoice.dueDate vs asOfDate)
-   - [ ] Amount per invoice = `invoice.total - invoice.paidAmount`
-   - [ ] Sum amounts per bucket
+   - [x] For each client, analyze PENDING/PARTIAL invoices
+   - [x] Group by days overdue (invoice.dueDate vs asOfDate)
+   - [x] Amount per invoice = `invoice.total - invoice.paidAmount`
+   - [x] Sum amounts per bucket
 
 4. **Summary Statistics:**
-   - [ ] Total receivables
-   - [ ] Total current vs total overdue
-   - [ ] Percentage per bucket
-   - [ ] Average days outstanding
+   - [x] Total receivables
+   - [x] Total current vs total overdue
+   - [x] Percentage per bucket
+   - [x] Average days outstanding
 
 5. **Export:**
-   - [ ] Excel export via server-side `exceljs` (GET /api/v1/reports/aging-analysis/export)
+   - [x] Excel export via server-side `exceljs` (GET /api/v1/reports/aging-analysis/export)
 
 6. **Frontend:**
-   - [ ] Aging Analysis page with filter controls
-   - [ ] Summary cards at top (one per bucket)
-   - [ ] Data table with color-coded columns
-   - [ ] Bar chart visualization
-   - [ ] Export to Excel button (triggers server-side export)
+   - [x] Aging Analysis page with filter controls
+   - [x] Summary cards at top (one per bucket)
+   - [x] Data table with color-coded columns
+   - [x] Bar chart visualization
+   - [x] Export to Excel button (triggers server-side export)
 
 7. **Color Coding:**
-   - [ ] Current: Green
-   - [ ] 1-7 days: Light Yellow
-   - [ ] 8-14 days: Yellow
-   - [ ] 15-30 days: Orange
-   - [ ] 30+ days: Red
+   - [x] Current: Green
+   - [x] 1-7 days: Light Yellow
+   - [x] 8-14 days: Yellow
+   - [x] 15-30 days: Orange
+   - [x] 30+ days: Red
 
 8. **Authorization:**
-   - [ ] Accountant, Admin, Recovery Agent (filtered by their clients)
+   - [x] Accountant, Admin, Recovery Agent (filtered by their clients)
 
 ---
 
@@ -69,7 +69,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Depends on Client and Invoice models (Epic 3).
+**Backend:** Implemented. Depends on Client and Invoice models (Epic 3).
 
 ### Key Corrections
 
@@ -305,3 +305,4 @@ apps/web/src/features/recovery/pages/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), InvoiceStatus UNPAID->PENDING, Card.Body->Card, DatePicker->input[type=date], XLSX frontend->server-side exceljs, noted recharts as external dep, trimmed frontend to notes | Claude (AI Review) |
+| 2026-02-12 | 3.0     | Implemented: all acceptance criteria completed | Claude (AI Implementation) |

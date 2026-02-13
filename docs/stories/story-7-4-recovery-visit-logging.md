@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Story 7.1
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,42 +20,42 @@
 ## Acceptance Criteria
 
 1. **Database Schema:**
-   - [ ] RecoveryVisit table — NEW model (see Dev Notes)
-   - [ ] VisitOutcome enum — NEW enum
+   - [x] RecoveryVisit table — NEW model (see Dev Notes)
+   - [x] VisitOutcome enum — NEW enum
 
 2. **Visit Outcomes:**
-   - [ ] PAYMENT_COLLECTED
-   - [ ] PROMISE_MADE
-   - [ ] CLIENT_UNAVAILABLE
-   - [ ] REFUSED_TO_PAY
-   - [ ] PARTIAL_PAYMENT
-   - [ ] DISPUTE_RAISED
-   - [ ] OTHER
+   - [x] PAYMENT_COLLECTED
+   - [x] PROMISE_MADE
+   - [x] CLIENT_UNAVAILABLE
+   - [x] REFUSED_TO_PAY
+   - [x] PARTIAL_PAYMENT
+   - [x] DISPUTE_RAISED
+   - [x] OTHER
 
 3. **Backend API:**
-   - [ ] `POST /api/v1/recovery/visits` — creates visit log
-   - [ ] `GET /api/v1/recovery/visits?clientId=xxx` — visit history for client
-   - [ ] `GET /api/v1/recovery/visits/my` — logged-in agent's visits
-   - [ ] Validation: If outcome = PAYMENT_COLLECTED or PARTIAL_PAYMENT, amountCollected required
-   - [ ] Validation: If outcome = PROMISE_MADE, promiseDate and promiseAmount required
+   - [x] `POST /api/v1/recovery/visits` — creates visit log
+   - [x] `GET /api/v1/recovery/visits?clientId=xxx` — visit history for client
+   - [x] `GET /api/v1/recovery/visits/my` — logged-in agent's visits
+   - [x] Validation: If outcome = PAYMENT_COLLECTED or PARTIAL_PAYMENT, amountCollected required
+   - [x] Validation: If outcome = PROMISE_MADE, promiseDate and promiseAmount required
 
 4. **Integration:**
-   - [ ] If amountCollected > 0, optionally create payment record
-   - [ ] If promise made, create PaymentPromise record (Story 7.5 dependency)
+   - [x] If amountCollected > 0, optionally create payment record
+   - [x] If promise made, create PaymentPromise record (Story 7.5 dependency)
 
 5. **Location Capture:**
-   - [ ] Capture GPS coordinates from browser when visit logged (mobile)
-   - [ ] Store as latitude/longitude on RecoveryVisit record
-   - [ ] Distance verification against client address is optional (client has no GPS fields)
+   - [x] Capture GPS coordinates from browser when visit logged (mobile)
+   - [x] Store as latitude/longitude on RecoveryVisit record
+   - [x] Distance verification against client address is optional (client has no GPS fields)
 
 6. **Frontend:**
-   - [ ] Visit Log form with outcome selection
-   - [ ] Conditional fields based on outcome
-   - [ ] Visit history timeline on client page
+   - [x] Visit Log form with outcome selection
+   - [x] Conditional fields based on outcome
+   - [x] Visit history timeline on client page
 
 7. **Authorization:**
-   - [ ] Recovery Agent can log visits for their assigned clients
-   - [ ] Admin can view all visits
+   - [x] Recovery Agent can log visits for their assigned clients
+   - [x] Admin can view all visits
 
 ---
 
@@ -63,7 +63,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Depends on Story 7.1 (Client schema changes).
+**Backend:** Implemented. Depends on Story 7.1 (Client schema changes).
 
 ### Key Corrections
 
@@ -302,3 +302,4 @@ apps/web/src/features/recovery/components/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), auditLogger->AuditService with correct action enum, Card.Body->Card, DatePicker->input[type=date], noted client has no GPS fields (distance check deferred), documented RecoveryVisit as NEW model, noted paymentPromise as Story 7.5 dependency, trimmed frontend to skeleton + notes, noted react-hook-form/zod as external deps | Claude (AI Review) |
+| 2026-02-12 | 3.0     | Implemented: all acceptance criteria completed | Claude (AI Implementation) |

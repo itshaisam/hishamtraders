@@ -5,7 +5,7 @@
 **Priority:** Medium
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Story 7.1, Story 7.4, Story 7.5
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,37 +20,37 @@
 ## Acceptance Criteria
 
 1. **Report Types:**
-   - [ ] Visit Activity Report (visits by agent/date)
-   - [ ] Collection Summary Report (collections by agent/period)
-   - [ ] Overdue Clients Report (aging buckets)
-   - [ ] Agent Productivity Report (visits per day, success rate)
-   - [ ] Payment Promise Report (promises with status)
-   - [ ] Recovery Schedule Report (clients by day)
+   - [x] Visit Activity Report (visits by agent/date)
+   - [x] Collection Summary Report (collections by agent/period)
+   - [x] Overdue Clients Report (aging buckets)
+   - [x] Agent Productivity Report (visits per day, success rate)
+   - [x] Payment Promise Report (promises with status)
+   - [x] Recovery Schedule Report (clients by day)
 
 2. **Backend API:**
-   - [ ] `GET /api/v1/reports/recovery/visits` — visit activity
-   - [ ] `GET /api/v1/reports/recovery/collections` — collection summary
-   - [ ] `GET /api/v1/reports/recovery/overdue` — overdue clients
-   - [ ] `GET /api/v1/reports/recovery/productivity` — agent productivity
-   - [ ] `GET /api/v1/reports/recovery/promises` — payment promises
-   - [ ] `GET /api/v1/reports/recovery/schedule` — recovery schedule
+   - [x] `GET /api/v1/reports/recovery/visits` — visit activity
+   - [x] `GET /api/v1/reports/recovery/collections` — collection summary
+   - [x] `GET /api/v1/reports/recovery/overdue` — overdue clients
+   - [x] `GET /api/v1/reports/recovery/productivity` — agent productivity
+   - [x] `GET /api/v1/reports/recovery/promises` — payment promises
+   - [x] `GET /api/v1/reports/recovery/schedule` — recovery schedule
 
 3. **Common Filters:**
-   - [ ] Date range (using `<input type="date">`, no `DatePicker`)
-   - [ ] Recovery agent, client, visit outcome, promise status
+   - [x] Date range (using `<input type="date">`, no `DatePicker`)
+   - [x] Recovery agent, client, visit outcome, promise status
 
 4. **Export:**
-   - [ ] Excel export via server-side `exceljs` (Story 4.9 pattern, NOT frontend `XLSX`)
+   - [x] Excel export via server-side `exceljs` (Story 4.9 pattern, NOT frontend `XLSX`)
 
 5. **Frontend:**
-   - [ ] Reports Center page linking to each report
-   - [ ] Each report has dedicated page with filters and data table
-   - [ ] Use `<Card>` with children directly (no `Card.Body`)
-   - [ ] Date inputs: `<input type="date">`
+   - [x] Reports Center page linking to each report
+   - [x] Each report has dedicated page with filters and data table
+   - [x] Use `<Card>` with children directly (no `Card.Body`)
+   - [x] Date inputs: `<input type="date">`
 
 6. **Authorization:**
-   - [ ] Admin and Accountant can view all reports
-   - [ ] Recovery Agent can view only their own data
+   - [x] Admin and Accountant can view all reports
+   - [x] Recovery Agent can view only their own data
 
 ---
 
@@ -58,7 +58,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Depends on RecoveryVisit (7.4) and PaymentPromise (7.5) models.
+**Backend:** Implemented. Depends on RecoveryVisit (7.4) and PaymentPromise (7.5) models.
 
 ### Key Corrections
 
@@ -308,3 +308,4 @@ apps/web/src/features/reports/pages/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), Card.Body removed, DatePicker→input[type=date], XLSX→server-side exceljs, UNPAID→PENDING, noted N+1 issues in collection summary and overdue reports, trimmed frontend to notes | Claude (AI Review) |
+| 2026-02-12 | 3.0     | Implemented: all acceptance criteria completed | Claude (AI Implementation) |

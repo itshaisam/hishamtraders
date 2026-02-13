@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 6-8 hours
 **Dependencies:** Story 7.1
-**Status:** Draft — Phase 2 (v2.0 — Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,30 +20,30 @@
 ## Acceptance Criteria
 
 1. **Backend API:**
-   - [ ] `GET /api/v1/recovery/schedule/today` — returns clients scheduled for logged-in recovery agent
-   - [ ] If user is Admin/Accountant, can specify `?agentId=xxx`
-   - [ ] Clients filtered by: recoveryDay matches today, balance > 0, status = ACTIVE
-   - [ ] Sorted by: overdueAmount DESC (highest priority first), then balance DESC
+   - [x] `GET /api/v1/recovery/schedule/today` — returns clients scheduled for logged-in recovery agent
+   - [x] If user is Admin/Accountant, can specify `?agentId=xxx`
+   - [x] Clients filtered by: recoveryDay matches today, balance > 0, status = ACTIVE
+   - [x] Sorted by: overdueAmount DESC (highest priority first), then balance DESC
 
 2. **Response Data:**
-   - [ ] Client name, contact person, phone, address (full), current balance, overdue amount, days overdue, last payment date, last visit date, payment promise date
+   - [x] Client name, contact person, phone, address (full), current balance, overdue amount, days overdue, last payment date, last visit date, payment promise date
 
 3. **Frontend:**
-   - [ ] Recovery Route page shows today's clients
-   - [ ] Card-based layout with client details
-   - [ ] Click-to-call phone integration (`tel:` links)
-   - [ ] Google Maps link for address navigation
-   - [ ] Visit log button (links to Story 7.4)
-   - [ ] Collect payment button (links to payment recording)
-   - [ ] Priority badge (HIGH/MEDIUM/LOW based on overdue days)
+   - [x] Recovery Route page shows today's clients
+   - [x] Card-based layout with client details
+   - [x] Click-to-call phone integration (`tel:` links)
+   - [x] Google Maps link for address navigation
+   - [x] Visit log button (links to Story 7.4)
+   - [x] Collect payment button (links to payment recording)
+   - [x] Priority badge (HIGH/MEDIUM/LOW based on overdue days)
 
 4. **Mobile Optimization:**
-   - [ ] Responsive design for mobile devices
-   - [ ] Large touch targets for buttons
+   - [x] Responsive design for mobile devices
+   - [x] Large touch targets for buttons
 
 5. **Authorization:**
-   - [ ] Recovery Agent can see only their assigned clients
-   - [ ] Admin/Accountant can view any agent's route
+   - [x] Recovery Agent can see only their assigned clients
+   - [x] Admin/Accountant can view any agent's route
 
 ---
 
@@ -51,7 +51,7 @@
 
 ### Implementation Status
 
-**Backend:** Not started. Depends on Story 7.1 (Client schema changes).
+**Backend:** Implemented. Depends on Story 7.1 (Client schema changes).
 
 ### Key Corrections
 
@@ -197,3 +197,4 @@ apps/web/src/features/recovery/pages/
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: Fixed API paths (/api/v1/), InvoiceStatus UNPAID->PENDING, removed Card.Body, noted client.latitude/longitude as non-existent (deferred), noted recoveryVisits/paymentPromises as new relations, removed PWA/Service Worker code entirely, trimmed frontend to skeleton + notes | Claude (AI Review) |
+| 2026-02-12 | 3.0     | Implemented: all acceptance criteria completed | Claude (AI Implementation) |
