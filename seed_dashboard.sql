@@ -1,16 +1,16 @@
-SET @c1 = 'cmjk5eaoj002eexv448klfgtc';
-SET @c2 = 'cmjk5eap0002fexv4mh82duo4';
-SET @c3 = 'cmjk5eapa002gexv4m51pfxe9';
-SET @c4 = 'cmjk5eaph002hexv4d2dowfjc';
-SET @c5 = 'cmjk5eapo002iexv49e4tg66x';
-SET @w1 = 'cmjk5998l0024exg0n35h0h72';
-SET @w2 = 'cmjk5998s0025exg09ef9wocp';
-SET @p1 = 'cmi3jlljb001fexiwheoulnsh';
-SET @p2 = 'cmi3jllk5001hexiwx24j6w4y';
-SET @p3 = 'cmi3jllkd001jexiwac51qpfa';
-SET @p4 = 'cmi3jllkh001lexiwgry9b76a';
-SET @p5 = 'cmi3jllkm001nexiwyjnsgy89';
-SET @p6 = 'cmi3jllks001pexiwgexpz0ha';
+SET @c1 = (SELECT id FROM clients WHERE companyName = 'ABC Construction' LIMIT 1);
+SET @c2 = (SELECT id FROM clients WHERE companyName = 'Paradise Builders' LIMIT 1);
+SET @c3 = (SELECT id FROM clients WHERE companyName = 'Metro Plumbing' LIMIT 1);
+SET @c4 = (SELECT id FROM clients WHERE companyName = 'Royal Interiors' LIMIT 1);
+SET @c5 = (SELECT id FROM clients WHERE companyName = 'Green Valley Homes' LIMIT 1);
+SET @w1 = (SELECT id FROM warehouses WHERE name = 'Main Warehouse - Karachi' LIMIT 1);
+SET @w2 = (SELECT id FROM warehouses WHERE name = 'Islamabad Branch Warehouse' LIMIT 1);
+SET @p1 = (SELECT id FROM products WHERE sku = 'SINK-001' LIMIT 1);
+SET @p2 = (SELECT id FROM products WHERE sku = 'SINK-002' LIMIT 1);
+SET @p3 = (SELECT id FROM products WHERE sku = 'FAUCET-001' LIMIT 1);
+SET @p4 = (SELECT id FROM products WHERE sku = 'FAUCET-002' LIMIT 1);
+SET @p5 = (SELECT id FROM products WHERE sku = 'TOILET-001' LIMIT 1);
+SET @p6 = (SELECT id FROM products WHERE sku = 'TOILET-002' LIMIT 1);
 
 INSERT INTO invoices (id,invoiceNumber,clientId,warehouseId,invoiceDate,dueDate,paymentType,subtotal,taxAmount,taxRate,total,paidAmount,status,createdAt,updatedAt) VALUES
 ('inv_seed_001','INV-20260113-001',@c1,@w1,DATE_SUB(CURDATE(),INTERVAL 28 DAY),DATE_ADD(CURDATE(),INTERVAL 2 DAY),'CREDIT',2500,0,0,2500,0,'PENDING',NOW(),NOW()),
