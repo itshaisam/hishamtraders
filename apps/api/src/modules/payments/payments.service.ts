@@ -5,6 +5,7 @@ import { NotFoundError } from '../../utils/errors.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
 import { validatePeriodNotClosed } from '../../utils/period-lock.js';
 import logger from '../../lib/logger.js';
+import { recoveryService } from '../recovery/recovery.service.js';
 
 export interface CreateSupplierPaymentDto {
   supplierId: string;
@@ -215,6 +216,18 @@ export class PaymentsService {
       { id: payment.id, amount: dto.amount, date: dto.date, referenceNumber: dto.referenceNumber, bankAccountId: dto.bankAccountId },
       dto.recordedBy
     );
+
+    // Match payment to pending promises (best-effort, FIFO)
+    try {
+      await recoveryService.matchPaymentToPromises(
+        dto.clientId,
+        dto.amount,
+        dto.date,
+        dto.recordedBy
+      );
+    } catch (err) {
+      logger.warn('Failed to match payment to promises', { clientId: dto.clientId, error: err });
+    }
 
     return { payment, allocation };
   }

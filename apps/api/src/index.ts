@@ -35,6 +35,8 @@ import { periodCloseRoutes } from './modules/period-close/period-close.routes.js
 import { gatePassRoutes } from './modules/gate-passes/gate-pass.routes.js';
 import { stockTransferRoutes } from './modules/stock-transfers/stock-transfer.routes.js';
 import { stockCountRoutes } from './modules/stock-counts/stock-count.routes.js';
+import { recoveryRoutes } from './modules/recovery/recovery.routes.js';
+import { alertRoutes } from './modules/alerts/alert.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
@@ -111,6 +113,8 @@ app.use('/api/v1/period-close', periodCloseRoutes);
 app.use('/api/v1/gate-passes', gatePassRoutes);
 app.use('/api/v1/stock-transfers', stockTransferRoutes);
 app.use('/api/v1/stock-counts', stockCountRoutes);
+app.use('/api/v1/recovery', recoveryRoutes);
+app.use('/api/v1/alerts', alertRoutes);
 app.use('/api/v1', dashboardRoutes);
 
 // 404 handler (must be after all routes)

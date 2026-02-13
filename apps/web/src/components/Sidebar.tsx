@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth.store';
 import { usePermission } from '../hooks/usePermission';
+import { useCompanyName } from '../hooks/useSettings';
 import {
   LayoutDashboard,
   Package,
@@ -19,6 +20,7 @@ import {
   ClipboardList,
   BookOpen,
   X,
+  Shield,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -33,6 +35,7 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
   const location = useLocation();
   const { user, clearAuth } = useAuthStore();
   const { hasRole, isAdmin } = usePermission();
+  const { data: companyName } = useCompanyName();
 
   const handleLogout = () => {
     clearAuth();
@@ -75,7 +78,7 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         {!isCollapsed && !isMobile && (
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Hisham Traders</h1>
+            <h1 className="text-lg font-bold text-gray-900">{companyName?.companyName || 'General ERP'}</h1>
             <p className="text-xs text-gray-500">ERP System</p>
           </div>
         )}
@@ -381,6 +384,85 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                 >
                   Payment History
                 </Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Recovery Menu */}
+        {hasRole(['ADMIN', 'RECOVERY_AGENT', 'ACCOUNTANT']) && (
+          <div className="mt-2">
+            <button
+              onClick={() => toggleMenu('recovery')}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <Shield size={20} />
+                {!isCollapsed && <span className="text-sm font-medium">Recovery</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    isMenuExpanded('recovery') ? 'rotate-180' : ''
+                  }`}
+                />
+              )}
+            </button>
+            {isMenuExpanded('recovery') && !isCollapsed && (
+              <div className="ml-6 mt-1 space-y-1">
+                <Link
+                  to="/recovery"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/recovery/route"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Today's Route
+                </Link>
+                <Link
+                  to="/recovery/visits/log"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Log Visit
+                </Link>
+                <Link
+                  to="/recovery/promises"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Due Promises
+                </Link>
+                <Link
+                  to="/recovery/aging"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Aging Analysis
+                </Link>
+                <Link
+                  to="/recovery/alerts"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Alerts
+                </Link>
+                {hasRole(['ADMIN', 'ACCOUNTANT']) && (
+                  <>
+                    <Link
+                      to="/recovery/agents/performance"
+                      className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                    >
+                      Agent Performance
+                    </Link>
+                    <Link
+                      to="/recovery/collection-efficiency"
+                      className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                    >
+                      Collection Efficiency
+                    </Link>
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -12,6 +12,8 @@ export interface CreateClientDto {
   creditLimit?: number;
   paymentTermsDays?: number;
   status?: ClientStatus;
+  recoveryDay?: string;
+  recoveryAgentId?: string;
 }
 
 export interface UpdateClientDto {
@@ -25,6 +27,8 @@ export interface UpdateClientDto {
   creditLimit?: number;
   paymentTermsDays?: number;
   status?: ClientStatus;
+  recoveryDay?: string;
+  recoveryAgentId?: string;
 }
 
 export class ClientService {
@@ -56,6 +60,8 @@ export class ClientService {
       creditLimit: data.creditLimit ?? 0,
       paymentTermsDays: data.paymentTermsDays ?? 30,
       status: data.status ?? 'ACTIVE',
+      recoveryDay: (data.recoveryDay as any) ?? 'NONE',
+      ...(data.recoveryAgentId ? { recoveryAgent: { connect: { id: data.recoveryAgentId } } } : {}),
     });
   }
 
@@ -104,7 +110,21 @@ export class ClientService {
       throw new Error('Payment terms must be greater than 0 days');
     }
 
-    return this.repository.update(id, data);
+    // Build Prisma-compatible update input (handle recoveryAgent relation)
+    const { recoveryAgentId, recoveryDay, ...rest } = data;
+    const updateData: any = { ...rest };
+    if (recoveryDay !== undefined) {
+      updateData.recoveryDay = recoveryDay;
+    }
+    if (recoveryAgentId !== undefined) {
+      if (recoveryAgentId) {
+        updateData.recoveryAgent = { connect: { id: recoveryAgentId } };
+      } else {
+        updateData.recoveryAgent = { disconnect: true };
+      }
+    }
+
+    return this.repository.update(id, updateData);
   }
 
   async deleteClient(id: string): Promise<Client> {

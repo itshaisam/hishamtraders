@@ -13,6 +13,8 @@ export interface ClientInvoice {
   paymentType: string;
 }
 
+export type RecoveryDay = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'NONE';
+
 export interface Client {
   id: string;
   name: string;
@@ -26,6 +28,8 @@ export interface Client {
   paymentTermsDays: number;
   balance: number;
   status: ClientStatus;
+  recoveryDay?: RecoveryDay | null;
+  recoveryAgentId?: string | null;
   createdAt: string;
   updatedAt: string;
   creditUtilization?: number;
@@ -44,6 +48,8 @@ export interface CreateClientDto {
   creditLimit?: number;
   paymentTermsDays?: number;
   status?: ClientStatus;
+  recoveryDay?: RecoveryDay;
+  recoveryAgentId?: string;
 }
 
 export interface UpdateClientDto {
@@ -57,6 +63,8 @@ export interface UpdateClientDto {
   creditLimit?: number;
   paymentTermsDays?: number;
   status?: ClientStatus;
+  recoveryDay?: RecoveryDay;
+  recoveryAgentId?: string;
 }
 
 export interface ClientFilters {

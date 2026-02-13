@@ -11,6 +11,10 @@ import { GatePassReportService } from './gate-pass-report.service.js';
 import { TrialBalanceService } from './trial-balance.service.js';
 import { BalanceSheetService } from './balance-sheet.service.js';
 import { GeneralLedgerService } from './general-ledger.service.js';
+import { AgingAnalysisService } from './aging-analysis.service.js';
+import { AgentPerformanceService } from './agent-performance.service.js';
+import { CollectionEfficiencyService } from './collection-efficiency.service.js';
+import { RecoveryReportsService } from './recovery-reports.service.js';
 import { expenseService } from '../expenses/expenses.service.js';
 import { generateExcel } from '../../utils/excel-export.util.js';
 import { BadRequestError } from '../../utils/errors.js';
@@ -32,6 +36,10 @@ export class ReportsController {
   private balanceSheetService: BalanceSheetService;
   private generalLedgerService: GeneralLedgerService;
   private gatePassReportService: GatePassReportService;
+  private agingAnalysisService: AgingAnalysisService;
+  private agentPerformanceService: AgentPerformanceService;
+  private collectionEfficiencyService: CollectionEfficiencyService;
+  private recoveryReportsService: RecoveryReportsService;
 
   constructor() {
     this.creditLimitReportService = new CreditLimitReportService(prisma);
@@ -45,6 +53,10 @@ export class ReportsController {
     this.balanceSheetService = new BalanceSheetService();
     this.generalLedgerService = new GeneralLedgerService();
     this.gatePassReportService = new GatePassReportService(prisma);
+    this.agingAnalysisService = new AgingAnalysisService(prisma);
+    this.agentPerformanceService = new AgentPerformanceService(prisma);
+    this.collectionEfficiencyService = new CollectionEfficiencyService(prisma);
+    this.recoveryReportsService = new RecoveryReportsService(prisma);
   }
 
   // ---- Existing endpoints ----
@@ -319,6 +331,128 @@ export class ReportsController {
         dateTo: dateTo as string,
       });
       logger.info('Gate pass summary report generated', { userId: (req as any).user?.id });
+      res.json({ success: true, data: result });
+    } catch (error) { next(error); }
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // Story 7.3: Aging Analysis
+  // ════════════════════════════════════════════════════════════════════
+
+  getAgingAnalysis = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filters = {
+        agentId: req.query.agentId as string | undefined,
+        city: req.query.city as string | undefined,
+        minBalance: req.query.minBalance ? parseFloat(req.query.minBalance as string) : undefined,
+      };
+      const asOfDate = req.query.asOfDate ? new Date(req.query.asOfDate as string) : undefined;
+      const result = await this.agingAnalysisService.getAgingAnalysis(filters, asOfDate);
+      logger.info('Aging analysis generated', { userId: req.user?.id });
+      res.json({ success: true, data: result });
+    } catch (error) { next(error); }
+  };
+
+  exportAgingAnalysis = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filters = {
+        agentId: req.query.agentId as string | undefined,
+        city: req.query.city as string | undefined,
+        minBalance: req.query.minBalance ? parseFloat(req.query.minBalance as string) : undefined,
+      };
+      const asOfDate = req.query.asOfDate ? new Date(req.query.asOfDate as string) : undefined;
+      const buffer = await this.agingAnalysisService.exportAgingAnalysisExcel(
+        filters,
+        asOfDate,
+        req.user?.email || 'System'
+      );
+      logger.info('Aging analysis exported', { userId: req.user?.id });
+      this.sendExcel(res, buffer, 'aging-analysis');
+    } catch (error) { next(error); }
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // Story 7.8: Collection Efficiency
+  // ════════════════════════════════════════════════════════════════════
+
+  getCollectionEfficiency = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { dateFrom, dateTo, agentId } = req.query;
+      const result = await this.collectionEfficiencyService.getCollectionEfficiencyMetrics(
+        dateFrom as string | undefined,
+        dateTo as string | undefined,
+        agentId as string | undefined
+      );
+      logger.info('Collection efficiency report generated', { userId: req.user?.id });
+      res.json({ success: true, data: result });
+    } catch (error) { next(error); }
+  };
+
+  getCollectionEfficiencyTrend = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const months = req.query.months ? parseInt(req.query.months as string) : 6;
+      const result = await this.collectionEfficiencyService.getTrend(months);
+      logger.info('Collection efficiency trend generated', { userId: req.user?.id });
+      res.json({ success: true, data: result });
+    } catch (error) { next(error); }
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // Story 7.9: Recovery Reports
+  // ════════════════════════════════════════════════════════════════════
+
+  getVisitActivityReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filters = {
+        agentId: req.query.agentId as string | undefined,
+        dateFrom: req.query.dateFrom as string | undefined,
+        dateTo: req.query.dateTo as string | undefined,
+        outcome: req.query.outcome as string | undefined,
+        page: req.query.page ? parseInt(req.query.page as string) : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+      };
+      const result = await this.recoveryReportsService.visitActivityReport(filters);
+      logger.info('Visit activity report generated', { userId: req.user?.id });
+      res.json({ success: true, ...result });
+    } catch (error) { next(error); }
+  };
+
+  getCollectionSummaryReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filters = {
+        dateFrom: req.query.dateFrom as string | undefined,
+        dateTo: req.query.dateTo as string | undefined,
+        agentId: req.query.agentId as string | undefined,
+      };
+      const result = await this.recoveryReportsService.collectionSummaryReport(filters);
+      logger.info('Collection summary report generated', { userId: req.user?.id });
+      res.json({ success: true, data: result });
+    } catch (error) { next(error); }
+  };
+
+  getOverdueClientsReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filters = {
+        minDaysOverdue: req.query.minDaysOverdue ? parseInt(req.query.minDaysOverdue as string) : undefined,
+        city: req.query.city as string | undefined,
+        agentId: req.query.agentId as string | undefined,
+        page: req.query.page ? parseInt(req.query.page as string) : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+      };
+      const result = await this.recoveryReportsService.overdueClientsReport(filters);
+      logger.info('Overdue clients report generated', { userId: req.user?.id });
+      res.json({ success: true, ...result });
+    } catch (error) { next(error); }
+  };
+
+  getAgentProductivityReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const filters = {
+        dateFrom: req.query.dateFrom as string | undefined,
+        dateTo: req.query.dateTo as string | undefined,
+      };
+      const result = await this.recoveryReportsService.agentProductivityReport(filters);
+      logger.info('Agent productivity report generated', { userId: req.user?.id });
       res.json({ success: true, data: result });
     } catch (error) { next(error); }
   };

@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
+import AlertBell from './AlertBell';
 
 interface LayoutProps {
   children: ReactNode;
@@ -23,13 +24,23 @@ export default function Layout({ children }: LayoutProps) {
         <div className="sm:hidden bg-white border-b border-gray-200 sticky top-0 z-20">
           <div className="flex items-center justify-between p-3">
             <h1 className="text-lg font-bold text-gray-900">Hisham Traders</h1>
-            <button
-              onClick={() => setMobileNavOpen(!mobileNavOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition"
-              aria-label="Open navigation menu"
-            >
-              <Menu size={24} className="text-gray-700" />
-            </button>
+            <div className="flex items-center gap-1">
+              <AlertBell />
+              <button
+                onClick={() => setMobileNavOpen(!mobileNavOpen)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                aria-label="Open navigation menu"
+              >
+                <Menu size={24} className="text-gray-700" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop header bar with AlertBell */}
+        <div className="hidden sm:block bg-white border-b border-gray-200 sticky top-0 z-20">
+          <div className="flex items-center justify-end px-6 py-2">
+            <AlertBell />
           </div>
         </div>
 

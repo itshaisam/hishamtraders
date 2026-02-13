@@ -50,6 +50,20 @@ router.get('/general-ledger', controller.getGeneralLedger);
 router.get('/gate-passes/summary', controller.getGatePassSummary);
 router.get('/gate-passes', controller.getGatePassActivity);
 
+// Aging analysis (Story 7.3)
+router.get('/aging-analysis', controller.getAgingAnalysis);
+router.get('/aging-analysis/export', controller.exportAgingAnalysis);
+
+// Collection efficiency (Story 7.8)
+router.get('/collection-efficiency', controller.getCollectionEfficiency);
+router.get('/collection-efficiency/trend', controller.getCollectionEfficiencyTrend);
+
+// Recovery reports (Story 7.9)
+router.get('/recovery/visits', controller.getVisitActivityReport);
+router.get('/recovery/collections', controller.getCollectionSummaryReport);
+router.get('/recovery/overdue', controller.getOverdueClientsReport);
+router.get('/recovery/productivity', controller.getAgentProductivityReport);
+
 // Excel export routes (Story 4.9)
 router.get('/stock/export', controller.exportStockReport);
 router.get('/stock-valuation/export', controller.exportStockValuation);

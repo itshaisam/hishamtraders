@@ -610,6 +610,11 @@ model User {
   requestedTransfers     StockTransfer[] @relation("TransferRequester")     // Story 6.4
   approvedTransfers      StockTransfer[] @relation("TransferApprover")      // Story 6.4
   createdStockCounts     StockCount[]    @relation("StockCountCreator")     // Story 6.9
+  recoveryClients        Client[]        @relation("RecoveryAgentClients")  // Epic 7
+  recoveryVisits         RecoveryVisit[] @relation("RecoveryVisits")        // Epic 7
+  createdPromises        PaymentPromise[] @relation("CreatedPromises")      // Epic 7
+  alertsReceived         Alert[]         @relation("AlertTargetUser")       // Epic 7
+  alertsAcknowledged     Alert[]         @relation("AlertAcknowledger")     // Epic 7
 
   @@index([email])
   @@index([roleId])
@@ -734,13 +739,21 @@ model Client {
   taxExempt       Boolean      @default(false)
   taxExemptReason String?      @db.Text
 
+  // Recovery management (Epic 7)
+  recoveryDay       RecoveryDay? @default(NONE)
+  recoveryAgentId   String?
+
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
 
   invoices        Invoice[]
   payments        Payment[]            // Story 3.6: Client payments
   creditNotes     CreditNote[]         // Story 3.9: Credit notes
+  recoveryAgent   User?                @relation("RecoveryAgentClients", fields: [recoveryAgentId], references: [id])
+  recoveryVisits  RecoveryVisit[]      // Epic 7
+  paymentPromises PaymentPromise[]     // Epic 7
 
+  @@index([recoveryAgentId])
   @@map("clients")
 }
 
@@ -1245,4 +1258,146 @@ model StockCountItem {
   @@index([stockCountId])
   @@index([productId])
   @@map("stock_count_items")
+}
+
+// ============================================================================
+// RECOVERY & COLLECTION MANAGEMENT (Epic 7)
+// ============================================================================
+
+enum RecoveryDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  NONE
+}
+
+enum VisitOutcome {
+  PAYMENT_COLLECTED
+  PROMISE_MADE
+  CLIENT_UNAVAILABLE
+  REFUSED_TO_PAY
+  PARTIAL_PAYMENT
+  DISPUTE_RAISED
+  OTHER
+}
+
+enum PromiseStatus {
+  PENDING
+  FULFILLED
+  PARTIAL
+  BROKEN
+  CANCELLED
+}
+
+enum AlertType {
+  CLIENT_OVERDUE
+  PROMISE_BROKEN
+  STOCK_LOW
+  EXPIRY_WARNING
+  CREDIT_LIMIT_EXCEEDED
+}
+
+enum AlertPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertAction {
+  NOTIFY
+  EMAIL
+  SMS
+}
+
+model RecoveryVisit {
+  id              String       @id @default(cuid())
+  visitNumber     String       @unique
+  clientId        String
+  visitDate       DateTime
+  visitTime       String?
+  outcome         VisitOutcome
+  amountCollected Decimal      @db.Decimal(12, 2) @default(0)
+  promiseDate     DateTime?
+  promiseAmount   Decimal?     @db.Decimal(12, 2)
+  notes           String?      @db.Text
+  visitedBy       String
+  latitude        Float?
+  longitude       Float?
+
+  createdAt       DateTime     @default(now())
+
+  client          Client       @relation(fields: [clientId], references: [id])
+  visitor         User         @relation("RecoveryVisits", fields: [visitedBy], references: [id])
+  paymentPromise  PaymentPromise?
+
+  @@index([clientId, visitDate])
+  @@index([visitedBy])
+  @@map("recovery_visits")
+}
+
+model PaymentPromise {
+  id                String        @id @default(cuid())
+  clientId          String
+  promiseDate       DateTime
+  promiseAmount     Decimal       @db.Decimal(12, 2)
+  actualPaymentDate DateTime?
+  actualAmount      Decimal?      @db.Decimal(12, 2)
+  status            PromiseStatus @default(PENDING)
+  recoveryVisitId   String?       @unique
+  notes             String?       @db.Text
+  createdBy         String
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  client            Client        @relation(fields: [clientId], references: [id])
+  recoveryVisit     RecoveryVisit? @relation(fields: [recoveryVisitId], references: [id])
+  creator           User          @relation("CreatedPromises", fields: [createdBy], references: [id])
+
+  @@index([clientId, status])
+  @@index([promiseDate, status])
+  @@map("payment_promises")
+}
+
+model AlertRule {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  daysOverdue Int
+  priority    AlertPriority
+  targetRoles Json
+  action      AlertAction
+  isActive    Boolean       @default(true)
+
+  createdAt   DateTime      @default(now())
+
+  @@map("alert_rules")
+}
+
+model Alert {
+  id              String        @id @default(cuid())
+  type            AlertType
+  priority        AlertPriority
+  message         String        @db.Text
+  relatedType     String?
+  relatedId       String?
+  targetUserId    String?
+  targetRole      String?
+  acknowledged    Boolean       @default(false)
+  acknowledgedBy  String?
+  acknowledgedAt  DateTime?
+  expiresAt       DateTime?
+
+  createdAt       DateTime      @default(now())
+
+  targetUser      User?         @relation("AlertTargetUser", fields: [targetUserId], references: [id])
+  acknowledger    User?         @relation("AlertAcknowledger", fields: [acknowledgedBy], references: [id])
+
+  @@index([targetUserId, acknowledged])
+  @@index([type, relatedId])
+  @@index([targetRole, acknowledged])
+  @@map("alerts")
 }

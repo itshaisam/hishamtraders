@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Input, FormField, RadioBadgeGroup } from '../../../components/ui';
+import { useQuery } from '@tanstack/react-query';
+import { Button, Input, FormField, RadioBadgeGroup, Select } from '../../../components/ui';
 import { Client, CreateClientDto } from '../../../types/client.types';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
+import { recoveryService } from '../../../services/recoveryService';
 
 const COUNTRY_CODES = [
   { code: '+92', label: 'PK +92' },
@@ -24,6 +26,16 @@ function splitPhone(fullPhone?: string | null): { countryCode: string; number: s
   return { countryCode: '+92', number: fullPhone };
 }
 
+const RECOVERY_DAYS = [
+  { value: 'NONE', label: 'Not Assigned' },
+  { value: 'MONDAY', label: 'Monday' },
+  { value: 'TUESDAY', label: 'Tuesday' },
+  { value: 'WEDNESDAY', label: 'Wednesday' },
+  { value: 'THURSDAY', label: 'Thursday' },
+  { value: 'FRIDAY', label: 'Friday' },
+  { value: 'SATURDAY', label: 'Saturday' },
+];
+
 export const clientFormSchema = z.object({
   name: z.string().min(1, 'Client name is required').min(2, 'Name must be at least 2 characters'),
   contactPerson: z.string().optional(),
@@ -35,6 +47,8 @@ export const clientFormSchema = z.object({
   creditLimit: z.number().min(0, 'Credit limit cannot be negative').default(0),
   paymentTermsDays: z.number().min(1, 'Payment terms must be at least 1 day').default(30),
   status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
+  recoveryDay: z.string().optional(),
+  recoveryAgentId: z.string().optional(),
 });
 
 type ClientFormData = z.infer<typeof clientFormSchema>;
@@ -57,6 +71,12 @@ export const ClientForm: React.FC<ClientFormProps> = ({
   const [status, setStatus] = useState(client?.status || 'ACTIVE');
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
+
+  const { data: agentsData } = useQuery({
+    queryKey: ['recovery-agents'],
+    queryFn: () => recoveryService.getRecoveryAgents(),
+  });
+  const recoveryAgents = (agentsData as any)?.data || [];
 
   // Phone country code state
   const phoneParts = splitPhone(client?.phone);
@@ -90,6 +110,8 @@ export const ClientForm: React.FC<ClientFormProps> = ({
       creditLimit: client?.creditLimit || 0,
       paymentTermsDays: client?.paymentTermsDays || 30,
       status: client?.status || 'ACTIVE',
+      recoveryDay: client?.recoveryDay || 'NONE',
+      recoveryAgentId: client?.recoveryAgentId || '',
     },
   });
 
@@ -113,6 +135,8 @@ export const ClientForm: React.FC<ClientFormProps> = ({
         creditLimit: client.creditLimit,
         paymentTermsDays: client.paymentTermsDays,
         status: client.status,
+        recoveryDay: client.recoveryDay || 'NONE',
+        recoveryAgentId: client.recoveryAgentId || '',
       });
       setStatus(client.status);
     }
@@ -136,7 +160,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
 
   const handleFormSubmit = async (data: ClientFormData) => {
     try {
-      await onSubmit(data);
+      await onSubmit(data as any);
     } catch (error) {
       console.error('Form submission error:', error);
     }
@@ -317,7 +341,41 @@ export const ClientForm: React.FC<ClientFormProps> = ({
         </div>
       </div>
 
-      {/* SECTION 4: Status */}
+      {/* SECTION 4: Recovery Settings */}
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-3">
+          Recovery Settings
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField label="Recovery Day" helperText="Day of week for recovery visits">
+            <select
+              {...register('recoveryDay')}
+              disabled={isLoading}
+              className="w-full rounded border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {RECOVERY_DAYS.map((d) => (
+                <option key={d.value} value={d.value}>{d.label}</option>
+              ))}
+            </select>
+          </FormField>
+
+          <FormField label="Recovery Agent" helperText="Assigned collection agent">
+            <select
+              {...register('recoveryAgentId')}
+              disabled={isLoading}
+              className="w-full rounded border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Not Assigned</option>
+              {recoveryAgents.map((a: any) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </select>
+          </FormField>
+        </div>
+      </div>
+
+      {/* SECTION 5: Status */}
       <div className="space-y-6">
         <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-3">
           Status

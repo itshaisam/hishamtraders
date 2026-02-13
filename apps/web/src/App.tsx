@@ -75,6 +75,18 @@ import ExpiryAlertsPage from './features/inventory/pages/ExpiryAlertsPage';
 import StockCountListPage from './features/stock-counts/pages/StockCountListPage';
 import CreateStockCountPage from './features/stock-counts/pages/CreateStockCountPage';
 import StockCountDetailPage from './features/stock-counts/pages/StockCountDetailPage';
+import RecoveryDashboardPage from './features/recovery/pages/RecoveryDashboardPage';
+import RecoveryRoutePage from './features/recovery/pages/RecoveryRoutePage';
+import RecoveryVisitLogPage from './features/recovery/pages/RecoveryVisitLogPage';
+import DuePromisesPage from './features/recovery/pages/DuePromisesPage';
+import AgingAnalysisPage from './features/recovery/pages/AgingAnalysisPage';
+import AlertsPage from './features/recovery/pages/AlertsPage';
+import AgentPerformancePage from './features/recovery/pages/AgentPerformancePage';
+import CollectionEfficiencyPage from './features/recovery/pages/CollectionEfficiencyPage';
+import VisitActivityReportPage from './features/reports/pages/VisitActivityReportPage';
+import CollectionSummaryPage from './features/reports/pages/CollectionSummaryPage';
+import OverdueClientsReportPage from './features/reports/pages/OverdueClientsReportPage';
+import AgentProductivityPage from './features/reports/pages/AgentProductivityPage';
 import HelpIndexPage from './features/help/pages/HelpIndexPage';
 import GettingStartedPage from './features/help/pages/GettingStartedPage';
 import DashboardGuidePage from './features/help/pages/DashboardGuidePage';
@@ -918,6 +930,130 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <StockCountDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Recovery (Epic 7) */}
+          <Route
+            path="/recovery"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RecoveryDashboardPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recovery/route"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RecoveryRoutePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recovery/visits/log"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <RecoveryVisitLogPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recovery/promises"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <DuePromisesPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recovery/aging"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AgingAnalysisPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recovery/alerts"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AlertsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recovery/agents/performance"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AgentPerformancePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recovery/collection-efficiency"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CollectionEfficiencyPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Recovery Reports (Story 7.9) */}
+          <Route
+            path="/reports/recovery/visits"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <VisitActivityReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/recovery/collections"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CollectionSummaryPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/recovery/overdue"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <OverdueClientsReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/recovery/productivity"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AgentProductivityPage />
                 </Layout>
               </ProtectedRoute>
             }
