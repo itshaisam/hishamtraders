@@ -5,6 +5,6 @@ export const useAuditLogs = (params: AuditLogParams = {}) => {
   return useQuery({
     queryKey: ['audit-logs', params],
     queryFn: () => auditService.getAuditLogs(params),
-    staleTime: 30 * 1000, // 30s — audit data changes frequently
+    staleTime: 30 * 1000,
   });
 };

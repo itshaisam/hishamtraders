@@ -5,7 +5,7 @@
 **Priority:** High
 **Estimated Effort:** 8-10 hours
 **Dependencies:** Epic 1 (Audit logging infrastructure)
-**Status:** Draft -- Phase 2 (v2.0 -- Revised)
+**Status:** Implemented (v3.0)
 
 ---
 
@@ -20,49 +20,49 @@
 ## Acceptance Criteria
 
 1. **Backend API:**
-   - [ ] GET /api/v1/audit-logs - returns audit log entries with pagination (default 50 per page)
-   - [ ] Supports pagination: page, limit parameters
-   - [ ] Sorted by timestamp DESC (newest first)
+   - [x] GET /api/v1/audit-logs - returns audit log entries with pagination (default 50 per page)
+   - [x] Supports pagination: page, limit parameters
+   - [x] Sorted by timestamp DESC (newest first)
 
 2. **Filters Supported:**
-   - [ ] userId (user who performed action)
-   - [ ] entityType (Product, Invoice, Payment, Client, etc.)
-   - [ ] action (CREATE, UPDATE, DELETE, VIEW, LOGIN, LOGOUT, PERMISSION_CHECK)
-   - [ ] dateFrom, dateTo (timestamp range)
-   - [ ] entityId (specific record ID)
-   - [ ] ipAddress (source IP address)
+   - [x] userId (user who performed action)
+   - [x] entityType (Product, Invoice, Payment, Client, etc.)
+   - [x] action (CREATE, UPDATE, DELETE, VIEW, LOGIN, LOGOUT, PERMISSION_CHECK)
+   - [x] dateFrom, dateTo (timestamp range)
+   - [x] entityId (specific record ID)
+   - [x] ipAddress (source IP address)
 
 3. **Search Capability:**
-   - [ ] Search by: entity ID, user email/name, notes content
-   - [ ] Case-insensitive partial match (MySQL is case-insensitive by default with utf8 collation -- no special mode needed)
-   - [ ] Performance optimized with existing database indexes on frequently searched fields
+   - [x] Search by: entity ID, user email/name, notes content
+   - [x] Case-insensitive partial match (MySQL is case-insensitive by default with utf8 collation -- no special mode needed)
+   - [x] Performance optimized with existing database indexes on frequently searched fields
 
 4. **Response Data:**
-   - [ ] timestamp, userId, userName, userEmail, action, entityType, entityId, ipAddress
-   - [ ] changedFields summary (field names only, not full values)
-   - [ ] Total count for pagination
+   - [x] timestamp, userId, userName, userEmail, action, entityType, entityId, ipAddress
+   - [x] changedFields summary (field names only, not full values)
+   - [x] Total count for pagination
 
 5. **Detailed Log Entry:**
-   - [ ] GET /api/v1/audit-logs/:id - returns full audit log entry
-   - [ ] Includes complete changedFields JSON (old and new values)
-   - [ ] Includes notes field content
+   - [x] GET /api/v1/audit-logs/:id - returns full audit log entry
+   - [x] Includes complete changedFields JSON (old and new values)
+   - [x] Includes notes field content
 
 6. **Frontend - Audit Trail Page:**
-   - [ ] Filter panel: User dropdown, Entity Type dropdown, Action dropdown, Date Range (native date inputs)
-   - [ ] Search bar: Entity ID, User, Notes text
-   - [ ] Results table: Timestamp | User | Action | Entity Type | Entity ID | IP Address | Details
-   - [ ] Expandable rows show changed fields (old vs new values)
-   - [ ] Pagination controls
-   - [ ] "Export to Excel" button
-   - [ ] Critical actions (DELETE) displayed in red
+   - [x] Filter panel: User dropdown, Entity Type dropdown, Action dropdown, Date Range (native date inputs)
+   - [x] Search bar: Entity ID, User, Notes text
+   - [x] Results table: Timestamp | User | Action | Entity Type | Entity ID | IP Address | Details
+   - [x] Expandable rows show changed fields (old vs new values)
+   - [x] Pagination controls
+   - [x] "Export to Excel" button
+   - [x] Critical actions (DELETE) displayed in red
 
 7. **Navigation:**
-   - [ ] Click entity ID navigates to entity detail page (if accessible)
-   - [ ] Click user name filters to show all actions by that user
+   - [x] Click entity ID navigates to entity detail page (if accessible)
+   - [x] Click user name filters to show all actions by that user
 
 8. **Authorization:**
-   - [ ] Admin can access full audit trail viewer
-   - [ ] Non-admin users can view only their own audit logs (filter by userId = current user)
+   - [x] Admin can access full audit trail viewer
+   - [x] Non-admin users can view only their own audit logs (filter by userId = current user)
 
 ---
 
@@ -650,3 +650,4 @@ const AuditLogDetails: FC<{ logId: string }> = ({ logId }) => {
 |------------|---------|------------------------|--------|
 | 2025-01-15 | 1.0     | Initial story creation | Sarah (Product Owner) |
 | 2026-02-10 | 2.0     | Revised: corrected API paths, removed nonexistent components (Card.Body, DatePicker), fixed MySQL query patterns, aligned with actual AuditLog schema, replaced fetch with apiClient, fixed authorization logic | Claude (Tech Review) |
+| 2026-02-13 | 3.0     | Implemented: Fixed audit middleware entityType extraction, added GET /:id detail endpoint, added Excel export, enhanced filters (entityId, ipAddress, search across user/notes), non-admin authorization, user dropdown, changedFieldsSummary | Claude (Implementation) |

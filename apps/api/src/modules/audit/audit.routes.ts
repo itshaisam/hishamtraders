@@ -8,7 +8,13 @@ const controller = new AuditController();
 
 router.use(authenticate);
 
-// Admin only
-router.get('/', requireRole(['ADMIN']), controller.getAuditLogs);
+// Export must come before /:id to avoid matching 'export' as an id
+router.get('/export', requireRole(['ADMIN']), controller.exportAuditLogs);
+
+// Detail endpoint - accessible to all authenticated users (controller checks ownership)
+router.get('/:id', controller.getAuditLogDetail);
+
+// List endpoint - accessible to all authenticated users (controller filters by role)
+router.get('/', controller.getAuditLogs);
 
 export { router as auditRoutes };
