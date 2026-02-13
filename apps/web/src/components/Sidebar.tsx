@@ -69,7 +69,7 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
       {/* Sidebar - Fixed on desktop, drawer on mobile */}
       <div
         className={`bg-white h-screen fixed left-0 top-0 border-r border-gray-200 transition-all duration-300 flex flex-col ${
-          isMobile ? 'z-40 w-60' : 'z-40 hidden sm:block'
+          isMobile ? 'z-40 w-60' : 'z-40 hidden sm:flex sm:flex-col'
         } ${isMobile && !isOpen ? '-translate-x-full' : ''} ${
           isCollapsed && !isMobile ? 'w-16' : !isMobile ? 'w-60' : ''
         }`}
