@@ -6,6 +6,7 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { authService } from '../services/auth.service';
 import { useAuthStore } from '../stores/auth.store';
+import { useCompanyName } from '../hooks/useSettings';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -18,6 +19,7 @@ export function Login() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [isLoading, setIsLoading] = useState(false);
+  const { data: companyData } = useCompanyName();
 
   const {
     register,
@@ -52,7 +54,7 @@ export function Login() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-900">Hisham Traders</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">{companyData?.companyName || 'Advance ERP System'}</h2>
           <p className="mt-2 text-sm text-gray-600">Sign in to your account</p>
         </div>
 

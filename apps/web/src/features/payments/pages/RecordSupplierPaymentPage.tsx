@@ -33,8 +33,8 @@ function RecordSupplierPaymentPage() {
   const createPayment = useCreateSupplierPayment();
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
-  const { data: suppliersData, isLoading: suppliersLoading } = useSuppliers({ page: 1, limit: 1000 });
-  const { data: posData, isLoading: posLoading } = usePurchaseOrders({ page: 1, limit: 1000 });
+  const { data: suppliersData, isLoading: suppliersLoading } = useSuppliers({ page: 1, limit: 100 });
+  const { data: posData, isLoading: posLoading } = usePurchaseOrders({ page: 1, limit: 100 });
   const { data: bankAccounts } = useBankAccounts();
 
   const selectedSupplierId = watch('supplierId');

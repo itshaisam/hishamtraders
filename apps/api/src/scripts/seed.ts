@@ -205,7 +205,18 @@ async function main() {
       category: 'tax',
     },
   });
-  console.log('  ✓ System settings created (TAX_RATE=18%)');
+  await prisma.systemSetting.upsert({
+    where: { key: 'COMPANY_NAME' },
+    update: {},
+    create: {
+      key: 'COMPANY_NAME',
+      value: 'Hisham Traders',
+      dataType: 'string',
+      label: 'Company Name',
+      category: 'company',
+    },
+  });
+  console.log('  ✓ System settings created (TAX_RATE=18%, COMPANY_NAME)');
 
   // ============ Seed Chart of Accounts (Epic 5) ============
   console.log('\n📊 Seeding Chart of Accounts...');

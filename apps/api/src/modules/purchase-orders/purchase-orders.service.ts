@@ -1,5 +1,7 @@
 import logger from '../../lib/logger.js';
+import { prisma } from '../../lib/prisma.js';
 import { changeHistoryService } from '../../services/change-history.service.js';
+import { AutoJournalService } from '../../services/auto-journal.service.js';
 import { PurchaseOrderRepository } from './purchase-orders.repository.js';
 import { PurchaseOrderFilters } from './dto/purchase-order-filter.dto.js';
 import { CreatePurchaseOrderRequest } from './dto/create-purchase-order.dto.js';
@@ -276,9 +278,31 @@ export class PurchaseOrderService {
         amount: costData.amount,
       });
 
-      const cost = await this.repository.addCost(poId, costData, userId);
+      // Use transaction to create cost record + journal entry atomically
+      const cost = await prisma.$transaction(async (tx) => {
+        const costRecord = await tx.pOCost.create({
+          data: {
+            poId,
+            type: costData.type,
+            amount: costData.amount,
+            description: costData.description,
+            createdBy: userId,
+          },
+        });
 
-      logger.info(`Cost added successfully to PO: ${po.poNumber}`, {
+        // Create journal entry: DR Inventory (1300) / CR A/P (2100)
+        await AutoJournalService.onPOCostAdded(tx, {
+          poId,
+          poNumber: po.poNumber,
+          amount: costData.amount,
+          type: costData.type,
+          date: new Date(),
+        }, userId);
+
+        return costRecord;
+      });
+
+      logger.info(`Cost added with journal entry for PO: ${po.poNumber}`, {
         userId,
         costId: cost.id,
       });

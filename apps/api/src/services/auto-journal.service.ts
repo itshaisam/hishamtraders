@@ -291,6 +291,28 @@ export const AutoJournalService = {
   },
 
   /**
+   * PO additional/landed cost added: DR Inventory (1300)  CR A/P (2100)
+   * Mirrors onGoodsReceived but for additional costs (shipping, customs, tax, other)
+   */
+  async onPOCostAdded(
+    tx: PrismaLike,
+    cost: { poId: string; poNumber: string; amount: number; type: string; date: Date },
+    userId: string
+  ) {
+    return createAutoJournalEntry(tx, {
+      date: cost.date,
+      description: `PO additional cost (${cost.type}): ${cost.poNumber}`,
+      referenceType: 'PO',
+      referenceId: cost.poId,
+      userId,
+      lines: [
+        { accountCode: '1300', debit: cost.amount, credit: 0, description: `Landed cost (${cost.type}) for ${cost.poNumber}` },
+        { accountCode: '2100', debit: 0, credit: cost.amount, description: `A/P for ${cost.type} — ${cost.poNumber}` },
+      ],
+    });
+  },
+
+  /**
    * Expense: DR Expense account (5xxx)  CR Cash/Bank
    * Cash → 1102 Petty Cash, Bank → 1101 Main Bank
    */
