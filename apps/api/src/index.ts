@@ -71,7 +71,8 @@ app.use((req, res, next) => {
   if (
     req.path.startsWith('/api/v1/auth/login') ||
     req.path.startsWith('/health') ||
-    req.path.startsWith('/api/v1/invoices/public/')
+    req.path.startsWith('/api/v1/invoices/public/') ||
+    req.path === '/api/v1/settings/company-name'
   ) {
     return next();
   }

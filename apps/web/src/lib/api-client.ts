@@ -35,8 +35,13 @@ apiClient.interceptors.response.use(
     // Handle 401 - Unauthorized
     if (status === 401) {
       useAuthStore.getState().clearAuth();
-      window.location.href = '/login';
-      toast.error('Session expired. Please login again.');
+
+      // Don't redirect if already on login page (prevents infinite loop)
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+        toast.error('Session expired. Please login again.');
+      }
+
       return Promise.reject(error);
     }
 
