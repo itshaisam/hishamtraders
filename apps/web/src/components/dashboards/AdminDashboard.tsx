@@ -124,7 +124,7 @@ export default function AdminDashboard() {
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto whitespace-nowrap">
           {tabs.map(tab => (
             <button
               key={tab.key}
