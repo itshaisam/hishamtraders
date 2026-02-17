@@ -55,6 +55,7 @@ export class AuthService {
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
+        tenantId: user.tenantId,
         userId: user.id,
         action: 'LOGIN',
         entityType: 'User',
@@ -86,9 +87,13 @@ export class AuthService {
    * Log user logout event
    */
   static async logout(userId: string, ipAddress?: string, userAgent?: string) {
+    // Fetch user to get tenantId for audit log
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { tenantId: true } });
+
     // Create audit log entry
     await prisma.auditLog.create({
       data: {
+        tenantId: user?.tenantId ?? 'default-tenant',
         userId,
         action: 'LOGOUT',
         entityType: 'User',

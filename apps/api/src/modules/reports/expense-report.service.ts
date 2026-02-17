@@ -1,5 +1,3 @@
-import { PrismaClient } from '@prisma/client';
-
 interface ExpenseReportFilters {
   dateFrom: Date;
   dateTo: Date;
@@ -9,7 +7,7 @@ interface ExpenseReportFilters {
 }
 
 export class ExpenseReportService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   async getExpenseReport(filters: ExpenseReportFilters) {
     const page = filters.page || 1;
@@ -50,7 +48,7 @@ export class ExpenseReportService {
       average: count > 0 ? Math.round((totalExpenses / count) * 100) / 100 : 0,
     };
 
-    const data = expenses.map((e) => ({
+    const data = expenses.map((e: any) => ({
       id: e.id,
       date: e.date.toISOString(),
       category: e.category,
@@ -81,7 +79,7 @@ export class ExpenseReportService {
         select: { amount: true },
       });
 
-      const total = expenses.reduce((sum, e) => sum + parseFloat(e.amount.toString()), 0);
+      const total = expenses.reduce((sum: number, e: any) => sum + parseFloat(e.amount.toString()), 0);
 
       const monthLabel = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
       months.push({ month: monthLabel, total: Math.round(total * 100) / 100 });

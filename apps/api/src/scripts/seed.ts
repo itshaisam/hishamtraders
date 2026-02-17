@@ -39,7 +39,7 @@ async function main() {
   const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
   console.log('Creating default admin user...');
-  const adminUser = await prisma.user.upsert({
+  const adminUser = await (prisma.user as any).upsert({
     where: { email: 'admin@admin.com' },
     update: {},
     create: {
@@ -60,6 +60,7 @@ async function main() {
   // Create initial audit log
   await prisma.auditLog.create({
     data: {
+      tenantId: 'default-tenant',
       userId: adminUser.id,
       action: 'CREATE',
       entityType: 'User',
@@ -194,7 +195,7 @@ async function main() {
 
   // System Settings
   console.log('  Creating system settings...');
-  await prisma.systemSetting.upsert({
+  await (prisma.systemSetting as any).upsert({
     where: { key: 'TAX_RATE' },
     update: {},
     create: {
@@ -205,7 +206,7 @@ async function main() {
       category: 'tax',
     },
   });
-  await prisma.systemSetting.upsert({
+  await (prisma.systemSetting as any).upsert({
     where: { key: 'COMPANY_NAME' },
     update: {},
     create: {
@@ -262,7 +263,7 @@ async function main() {
   const accountIdMap: Record<string, string> = {};
 
   for (const acct of accountHeads) {
-    const existing = await prisma.accountHead.findUnique({ where: { code: acct.code } });
+    const existing = await prisma.accountHead.findFirst({ where: { code: acct.code } });
     if (existing) {
       accountIdMap[acct.code] = existing.id;
       continue;
@@ -270,7 +271,7 @@ async function main() {
 
     const parentId = acct.parentCode ? accountIdMap[acct.parentCode] : null;
 
-    const created = await prisma.accountHead.create({
+    const created = await (prisma.accountHead as any).create({
       data: {
         code: acct.code,
         name: acct.name,

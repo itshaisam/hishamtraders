@@ -134,7 +134,7 @@ async function createJournalEntry(
 
   const entryNumber = await generateEntryNumber(tx, opts.date);
 
-  await tx.journalEntry.create({
+  await (tx.journalEntry as any).create({
     data: {
       entryNumber,
       date: opts.date,

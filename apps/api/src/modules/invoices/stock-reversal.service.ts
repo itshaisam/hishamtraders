@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import { format } from 'date-fns';
 import { AuditService } from '../../services/audit.service.js';
 import logger from '../../lib/logger.js';
@@ -9,7 +8,7 @@ import logger from '../../lib/logger.js';
  * Story 3.4: Invoice Voiding and Stock Reversal
  */
 export class StockReversalService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   /**
    * Generate a unique batch number for reversed stock

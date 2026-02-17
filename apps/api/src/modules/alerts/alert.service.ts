@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma.js';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { NotFoundError } from '../../utils/errors.js';
 import logger from '../../lib/logger.js';
 import { AlertType, AlertPriority, AlertAction, PromiseStatus, InvoiceStatus } from '@prisma/client';
@@ -207,6 +207,7 @@ class AlertService {
 
             await prisma.alert.create({
               data: {
+                tenantId: getTenantId(),
                 type: AlertType.CLIENT_OVERDUE,
                 priority: rule.priority,
                 message: `Client "${client.name}" has overdue payments of Rs. ${overdueAmount.toLocaleString()} (${daysOverdue} days overdue). Rule: ${rule.name}`,
@@ -260,6 +261,7 @@ class AlertService {
       if (!existingAlert) {
         await prisma.alert.create({
           data: {
+            tenantId: getTenantId(),
             type: AlertType.PROMISE_BROKEN,
             priority: AlertPriority.HIGH,
             message: `Payment promise by "${promise.client.name}" for Rs. ${Number(promise.promiseAmount).toLocaleString()} (due ${promise.promiseDate.toISOString().split('T')[0]}) was broken.`,
@@ -320,7 +322,7 @@ class AlertService {
 
     for (const rule of defaults) {
       const upserted = await prisma.alertRule.upsert({
-        where: { name: rule.name },
+        where: { tenantId_name: { tenantId: getTenantId(), name: rule.name } },
         update: {
           daysOverdue: rule.daysOverdue,
           priority: rule.priority,
@@ -328,6 +330,7 @@ class AlertService {
           action: rule.action,
         },
         create: {
+          tenantId: getTenantId(),
           name: rule.name,
           daysOverdue: rule.daysOverdue,
           priority: rule.priority,

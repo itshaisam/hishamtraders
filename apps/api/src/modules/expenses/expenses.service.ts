@@ -1,4 +1,5 @@
 import { Expense } from '@prisma/client';
+import { getTenantId } from '../../lib/prisma.js';
 import { expenseRepository, ExpenseFilters } from './expenses.repository.js';
 import { CreateExpenseDto } from './dto/create-expense.dto.js';
 import { UpdateExpenseDto } from './dto/update-expense.dto.js';
@@ -29,6 +30,7 @@ export class ExpenseService {
 
     // Create expense
     const expense = await expenseRepository.create({
+      tenant: { connect: { id: getTenantId() } },
       category: data.category,
       amount: data.amount,
       description: data.description.trim(),

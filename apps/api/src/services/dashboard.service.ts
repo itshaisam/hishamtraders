@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma.js';
+import { prisma, getTenantId } from '../lib/prisma.js';
 import { Prisma } from '@prisma/client';
 
 export class DashboardService {
@@ -7,6 +7,7 @@ export class DashboardService {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const tenantId = getTenantId();
 
     const [
       // Stock value
@@ -70,6 +71,8 @@ export class DashboardService {
         FROM inventory i
         JOIN products p ON p.id = i.productId
         WHERE p.status = 'ACTIVE'
+          AND i.tenantId = ${tenantId}
+          AND p.tenantId = ${tenantId}
         GROUP BY i.productId, p.reorderLevel
       `,
 
@@ -105,6 +108,7 @@ export class DashboardService {
         FROM invoices
         WHERE invoiceDate >= ${thirtyDaysAgo}
           AND status != 'VOIDED'
+          AND tenantId = ${tenantId}
         GROUP BY DATE(invoiceDate)
         ORDER BY date ASC
       `,
@@ -366,6 +370,7 @@ export class DashboardService {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const weekStart = new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const tenantId = getTenantId();
 
     const [
       todaySales,
@@ -446,6 +451,7 @@ export class DashboardService {
         FROM invoices
         WHERE invoiceDate >= ${weekStart}
           AND status != 'VOIDED'
+          AND tenantId = ${tenantId}
         GROUP BY DATE(invoiceDate)
         ORDER BY date ASC
       `,
@@ -524,6 +530,7 @@ export class DashboardService {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tenantId = getTenantId();
 
     const [
       clientPaymentsAgg,
@@ -617,17 +624,17 @@ export class DashboardService {
         ) d
         LEFT JOIN (
           SELECT DATE(date) as dt, SUM(amount) as total
-          FROM payments WHERE paymentType = 'CLIENT' AND date >= ${sevenDaysAgo}
+          FROM payments WHERE paymentType = 'CLIENT' AND date >= ${sevenDaysAgo} AND tenantId = ${tenantId}
           GROUP BY DATE(date)
         ) pin ON d.dt = pin.dt
         LEFT JOIN (
           SELECT DATE(date) as dt, SUM(amount) as total
-          FROM payments WHERE paymentType = 'SUPPLIER' AND date >= ${sevenDaysAgo}
+          FROM payments WHERE paymentType = 'SUPPLIER' AND date >= ${sevenDaysAgo} AND tenantId = ${tenantId}
           GROUP BY DATE(date)
         ) pout ON d.dt = pout.dt
         LEFT JOIN (
           SELECT DATE(date) as dt, SUM(amount) as total
-          FROM expenses WHERE date >= ${sevenDaysAgo}
+          FROM expenses WHERE date >= ${sevenDaysAgo} AND tenantId = ${tenantId}
           GROUP BY DATE(date)
         ) eout ON d.dt = eout.dt
         ORDER BY d.dt ASC

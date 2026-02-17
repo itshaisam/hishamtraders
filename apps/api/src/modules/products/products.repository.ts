@@ -1,8 +1,7 @@
-import { PrismaClient, Product, ProductStatus } from '@prisma/client';
+import { Product, ProductStatus } from '@prisma/client';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
-
-const prisma = new PrismaClient();
+import { prisma, getTenantId } from '../../lib/prisma.js';
 
 // Helper function to transform product for API response
 const transformProduct = (product: any) => ({
@@ -27,6 +26,7 @@ export class ProductsRepository {
   async create(data: CreateProductDto & { sku: string }): Promise<Product> {
     const product = await prisma.product.create({
       data: {
+        tenantId: getTenantId(),
         sku: data.sku.toUpperCase(),
         name: data.name,
         brandId: data.brandId || null,
@@ -108,7 +108,7 @@ export class ProductsRepository {
   }
 
   async findBySku(sku: string): Promise<Product | null> {
-    const product = await prisma.product.findUnique({
+    const product = await prisma.product.findFirst({
       where: { sku: sku.toUpperCase() },
       include: {
         category: true,

@@ -1,4 +1,4 @@
-import { PrismaClient, InvoiceStatus, Prisma } from '@prisma/client';
+import { InvoiceStatus, Prisma } from '@prisma/client';
 import logger from '../../lib/logger.js';
 
 export interface InvoiceAllocation {
@@ -19,7 +19,7 @@ export interface AllocationResult {
  * Handles FIFO-based allocation of client payments to outstanding invoices
  */
 export class PaymentAllocationService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   /**
    * Allocate payment to client invoices using FIFO (oldest unpaid first)

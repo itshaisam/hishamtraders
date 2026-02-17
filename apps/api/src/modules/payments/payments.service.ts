@@ -1,4 +1,5 @@
-import { PaymentType, PaymentMethod, PaymentReferenceType, PrismaClient, Prisma } from '@prisma/client';
+import { PaymentType, PaymentMethod, PaymentReferenceType, Prisma } from '@prisma/client';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { PaymentsRepository, PaymentFilters, UnifiedPaymentFilters } from './payments.repository.js';
 import { PaymentAllocationService, AllocationResult } from './payment-allocation.service.js';
 import { NotFoundError } from '../../utils/errors.js';
@@ -32,13 +33,11 @@ export interface CreateClientPaymentDto {
 
 export class PaymentsService {
   private repository: PaymentsRepository;
-  private prisma: PrismaClient;
   private allocationService: PaymentAllocationService;
 
   constructor() {
     this.repository = new PaymentsRepository();
-    this.prisma = new PrismaClient();
-    this.allocationService = new PaymentAllocationService(this.prisma);
+    this.allocationService = new PaymentAllocationService(prisma);
   }
 
   /**
@@ -75,6 +74,7 @@ export class PaymentsService {
       method: dto.method,
       date: dto.date,
       notes: dto.notes || null,
+      tenantId: getTenantId(),
       user: {
         connect: { id: dto.recordedBy },
       },
@@ -86,7 +86,7 @@ export class PaymentsService {
       ...(dto.bankAccountId && {
         bankAccount: { connect: { id: dto.bankAccountId } },
       }),
-    });
+    } as any);
 
     // Auto journal entry: DR A/P, CR Bank
     await AutoJournalService.onSupplierPayment(
@@ -153,7 +153,7 @@ export class PaymentsService {
     }
 
     // Verify client exists
-    const client = await this.prisma.client.findUnique({
+    const client = await prisma.client.findUnique({
       where: { id: dto.clientId },
     });
 
@@ -162,7 +162,7 @@ export class PaymentsService {
     }
 
     // Create payment record
-    const payment = await this.prisma.payment.create({
+    const payment = await prisma.payment.create({
       data: {
         clientId: dto.clientId,
         paymentType: PaymentType.CLIENT,
@@ -172,6 +172,7 @@ export class PaymentsService {
         date: dto.date,
         notes: dto.notes || null,
         recordedBy: dto.recordedBy,
+        tenantId: getTenantId(),
         ...(dto.bankAccountId && { bankAccountId: dto.bankAccountId }),
       },
       include: {
@@ -236,7 +237,7 @@ export class PaymentsService {
    * Get client payment history
    */
   async getClientPaymentHistory(clientId: string) {
-    return this.prisma.payment.findMany({
+    return prisma.payment.findMany({
       where: {
         clientId,
         paymentType: PaymentType.CLIENT,
@@ -271,7 +272,7 @@ export class PaymentsService {
    * Get all client payments with optional client filter (Story 3.6)
    */
   async getAllClientPayments(clientId?: string) {
-    return this.prisma.payment.findMany({
+    return prisma.payment.findMany({
       where: {
         paymentType: PaymentType.CLIENT,
         ...(clientId && { clientId }),
@@ -349,7 +350,7 @@ export class PaymentsService {
     // For supplier payments with PO reference, look up the PO
     let purchaseOrder = null;
     if (payment.paymentType === 'SUPPLIER' && payment.paymentReferenceType === 'PO' && payment.referenceId) {
-      purchaseOrder = await this.prisma.purchaseOrder.findUnique({
+      purchaseOrder = await prisma.purchaseOrder.findUnique({
         where: { id: payment.referenceId },
         select: { id: true, poNumber: true, totalAmount: true, status: true },
       });

@@ -82,7 +82,7 @@ export class AccountHeadRepository {
   }
 
   async findByCode(code: string): Promise<AccountHead | null> {
-    return prisma.accountHead.findUnique({
+    return prisma.accountHead.findFirst({
       where: { code },
     });
   }

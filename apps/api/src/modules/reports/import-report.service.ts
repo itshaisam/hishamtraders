@@ -1,5 +1,3 @@
-import { PrismaClient } from '@prisma/client';
-
 interface ImportReportFilters {
   dateFrom?: Date;
   dateTo?: Date;
@@ -10,7 +8,7 @@ interface ImportReportFilters {
 }
 
 export class ImportReportService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   async getImportCostReport(filters: ImportReportFilters) {
     const page = filters.page || 1;
@@ -81,7 +79,7 @@ export class ImportReportService {
     summary.totalOther = Math.round(summary.totalOther * 100) / 100;
     summary.totalLanded = Math.round(summary.totalLanded * 100) / 100;
 
-    const data = orders.map((po) => {
+    const data = orders.map((po: any) => {
       const productCost = parseFloat(po.totalAmount.toString());
       let shipping = 0, customs = 0, tax = 0, other = 0;
       for (const c of po.costs) {

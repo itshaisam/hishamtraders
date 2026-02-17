@@ -1,5 +1,3 @@
-import { PrismaClient } from '@prisma/client';
-
 interface SalesReportFilters {
   dateFrom: Date;
   dateTo: Date;
@@ -10,7 +8,7 @@ interface SalesReportFilters {
 }
 
 export class SalesReportService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   async getSalesReport(filters: SalesReportFilters) {
     const page = filters.page || 1;
@@ -59,7 +57,7 @@ export class SalesReportService {
     summary.totalPaid = Math.round(summary.totalPaid * 100) / 100;
     summary.totalOutstanding = Math.round(summary.totalOutstanding * 100) / 100;
 
-    const data = invoices.map((inv) => {
+    const data = invoices.map((inv: any) => {
       const t = parseFloat(inv.total.toString());
       const p = parseFloat(inv.paidAmount.toString());
       return {

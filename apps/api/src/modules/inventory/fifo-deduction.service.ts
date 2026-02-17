@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import logger from '../../lib/logger.js';
 import { BadRequestError } from '../../utils/errors.js';
 
@@ -9,7 +8,7 @@ export interface BatchDeduction {
 }
 
 export class FifoDeductionService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   /**
    * Check if sufficient stock is available for a product in a warehouse
@@ -108,7 +107,7 @@ export class FifoDeductionService {
     }
 
     // Calculate total available
-    const totalAvailable = inventoryRecords.reduce((sum, record) => sum + record.quantity, 0);
+    const totalAvailable = inventoryRecords.reduce((sum: number, record: any) => sum + record.quantity, 0);
 
     if (totalAvailable < quantityNeeded) {
       throw new BadRequestError(

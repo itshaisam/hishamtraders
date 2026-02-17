@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma.js';
+import { prisma, getTenantId } from '../lib/prisma.js';
 import { Prisma } from '@prisma/client';
 
 export interface AuditLogData {
@@ -36,6 +36,7 @@ export class AuditService {
 
       await prisma.auditLog.create({
         data: {
+          tenantId: getTenantId(),
           userId: data.userId,
           action: data.action,
           entityType: data.entityType,

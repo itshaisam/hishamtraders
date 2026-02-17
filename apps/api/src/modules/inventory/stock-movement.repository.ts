@@ -1,6 +1,5 @@
-import { PrismaClient, StockMovement, MovementType } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { StockMovement, MovementType } from '@prisma/client';
+import { prisma } from '../../lib/prisma.js';
 
 export interface StockMovementFilters {
   productId?: string;

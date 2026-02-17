@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import logger from '../../lib/logger.js';
-
-const prisma = new PrismaClient();
 
 export const auditLog = (action: string) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -34,6 +32,7 @@ export const auditLog = (action: string) => {
         prisma.auditLog
           .create({
             data: {
+              tenantId: getTenantId(),
               userId: user.userId,
               action,
               entityType: 'Warehouse',

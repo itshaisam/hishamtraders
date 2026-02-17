@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma.js';
+import { prisma, getTenantId } from '../lib/prisma.js';
 import { Prisma } from '@prisma/client';
 import { AuditService } from './audit.service.js';
 import { BadRequestError, NotFoundError } from '../utils/errors.js';
@@ -80,6 +80,7 @@ class ChangeHistoryService {
       // Create new version
       await prisma.changeHistory.create({
         data: {
+          tenantId: getTenantId(),
           entityType,
           entityId,
           version: newVersion,
@@ -211,9 +212,11 @@ class ChangeHistoryService {
     userId: string
   ): Promise<{ fieldsRestored: string[] }> {
     // 1. Find the target version snapshot
-    const historyEntry = await prisma.changeHistory.findUnique({
+    const historyEntry = await prisma.changeHistory.findFirst({
       where: {
-        entityType_entityId_version: { entityType, entityId, version: targetVersion },
+        entityType,
+        entityId,
+        version: targetVersion,
       },
     });
     if (!historyEntry) {

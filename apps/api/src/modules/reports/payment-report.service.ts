@@ -1,5 +1,3 @@
-import { PrismaClient } from '@prisma/client';
-
 interface PaymentReportFilters {
   dateFrom: Date;
   dateTo: Date;
@@ -10,7 +8,7 @@ interface PaymentReportFilters {
 }
 
 export class PaymentReportService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   async getPaymentCollectionReport(filters: PaymentReportFilters) {
     const page = filters.page || 1;
@@ -63,7 +61,7 @@ export class PaymentReportService {
       })),
     };
 
-    const data = payments.map((p) => ({
+    const data = payments.map((p: any) => ({
       id: p.id,
       date: p.date.toISOString(),
       clientName: p.client?.name || 'N/A',
@@ -103,7 +101,7 @@ export class PaymentReportService {
 
     const now = new Date();
 
-    const data = clients.map((c) => {
+    const data = clients.map((c: any) => {
       let overdueAmount = 0;
       let oldestDueDate: Date | null = null;
 
@@ -134,7 +132,7 @@ export class PaymentReportService {
       };
     });
 
-    data.sort((a, b) => b.balance - a.balance);
+    data.sort((a: any, b: any) => b.balance - a.balance);
 
     return data;
   }

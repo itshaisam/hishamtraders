@@ -1,7 +1,8 @@
-import { PrismaClient, Prisma, GatePassStatus } from '@prisma/client';
+import { Prisma, GatePassStatus } from '@prisma/client';
 import { CreateGatePassDto } from './dto/create-gate-pass.dto.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
+import { getTenantId } from '../../lib/prisma.js';
 import logger from '../../lib/logger.js';
 
 interface GatePassFilters {
@@ -16,7 +17,7 @@ interface GatePassFilters {
 }
 
 export class GatePassService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   /**
    * Generate gate pass number: GP-{WH3}-YYYYMMDD-XXX
@@ -73,7 +74,7 @@ export class GatePassService {
     const isAutoMode = warehouse.gatePassMode === 'AUTO';
     const initialStatus: GatePassStatus = isAutoMode ? 'APPROVED' : 'PENDING';
 
-    const gatePass = await this.prisma.$transaction(async (tx) => {
+    const gatePass = await this.prisma.$transaction(async (tx: any) => {
       const created = await tx.gatePass.create({
         data: {
           gatePassNumber,
@@ -86,13 +87,15 @@ export class GatePassService {
           issuedBy: userId,
           approvedBy: isAutoMode ? userId : undefined,
           notes: data.notes,
+          tenantId: getTenantId(),
           items: {
-            create: data.items.map((item) => ({
+            create: data.items.map((item: any) => ({
               productId: item.productId,
               batchNo: item.batchNo,
               binLocation: item.binLocation,
               quantity: item.quantity,
               description: item.description,
+              tenantId: getTenantId(),
             })),
           },
         },
@@ -161,12 +164,14 @@ export class GatePassService {
         issuedBy: userId,
         approvedBy: isAutoMode ? userId : undefined,
         notes: `Auto-created from invoice ${invoice.invoiceNumber}`,
+        tenantId: getTenantId(),
         items: {
-          create: invoice.items.map((item) => ({
+          create: invoice.items.map((item: any) => ({
             productId: item.productId,
             batchNo: item.batchNo,
             quantity: item.quantity,
             description: `Invoice item: ${item.product.name}`,
+            tenantId: getTenantId(),
           })),
         },
       },
@@ -232,6 +237,7 @@ export class GatePassService {
           referenceId: gatePass.referenceId || gatePass.id,
           userId,
           notes: `Gate pass ${gatePass.gatePassNumber} - dispatched`,
+          tenantId: getTenantId(),
         },
       });
     }
@@ -273,6 +279,7 @@ export class GatePassService {
             warehouseId: gatePass.warehouseId,
             batchNo: item.batchNo,
             quantity: item.quantity,
+            tenantId: getTenantId(),
           },
         });
       }
@@ -287,6 +294,7 @@ export class GatePassService {
           referenceId: gatePass.id,
           userId,
           notes: `Gate pass ${gatePass.gatePassNumber} cancelled - stock restored`,
+          tenantId: getTenantId(),
         },
       });
     }
@@ -449,7 +457,7 @@ export class GatePassService {
       throw new BadRequestError(`Cannot dispatch gate pass with status ${gatePass.status}`);
     }
 
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx: any) => {
       const result = await tx.gatePass.update({
         where: { id },
         data: { status: 'IN_TRANSIT', dispatchedBy: userId },
@@ -540,7 +548,7 @@ export class GatePassService {
       (gatePass.warehouse.gatePassMode === 'MANUAL' && !gatePass.referenceId &&
         gatePass.status === 'IN_TRANSIT');
 
-    const updated = await this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx: any) => {
       if (needsRestore) {
         await this.restoreInventory(tx, id, userId);
       }

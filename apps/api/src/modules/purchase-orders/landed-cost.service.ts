@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import { NotFoundError } from '../../utils/errors.js';
 
 export interface LandedCostBreakdown {
@@ -29,7 +28,7 @@ export interface LandedCostResult {
 }
 
 export class LandedCostService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   /**
    * Calculate landed cost for a purchase order
@@ -56,13 +55,13 @@ export class LandedCostService {
     }
 
     // Calculate total product cost
-    const totalProductCost = po.items.reduce((sum, item) => {
+    const totalProductCost = po.items.reduce((sum: number, item: any) => {
       const itemCost = Number(item.totalCost);
       return sum + itemCost;
     }, 0);
 
     // Calculate total additional costs
-    const totalAdditionalCosts = po.costs.reduce((sum, cost) => {
+    const totalAdditionalCosts = po.costs.reduce((sum: number, cost: any) => {
       return sum + Number(cost.amount);
     }, 0);
 
@@ -70,7 +69,7 @@ export class LandedCostService {
     const grandTotal = totalProductCost + totalAdditionalCosts;
 
     // Calculate breakdown for each product
-    const breakdown: LandedCostBreakdown[] = po.items.map((item) => {
+    const breakdown: LandedCostBreakdown[] = po.items.map((item: any) => {
       const productCost = Number(item.totalCost);
 
       // Calculate product ratio (percentage of total product cost)
@@ -105,7 +104,7 @@ export class LandedCostService {
       totalAdditionalCosts,
       grandTotal,
       breakdown,
-      costs: po.costs.map((cost) => ({
+      costs: po.costs.map((cost: any) => ({
         id: cost.id,
         type: cost.type,
         amount: Number(cost.amount),

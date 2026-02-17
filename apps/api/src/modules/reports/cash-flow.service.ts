@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-
 export class CashFlowService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   /**
    * Get cash flow report for a date range (Story 3.8)
@@ -26,15 +24,15 @@ export class CashFlowService {
     ]);
 
     const totalCashIn = clientPayments.reduce(
-      (sum, p) => sum + parseFloat(p.amount.toString()),
+      (sum: number, p: any) => sum + parseFloat(p.amount.toString()),
       0
     );
     const totalSupplierOut = supplierPayments.reduce(
-      (sum, p) => sum + parseFloat(p.amount.toString()),
+      (sum: number, p: any) => sum + parseFloat(p.amount.toString()),
       0
     );
     const totalExpenseOut = expenses.reduce(
-      (sum, e) => sum + parseFloat(e.amount.toString()),
+      (sum: number, e: any) => sum + parseFloat(e.amount.toString()),
       0
     );
     const totalCashOut = totalSupplierOut + totalExpenseOut;
@@ -46,13 +44,13 @@ export class CashFlowService {
       CHEQUE: { cashIn: 0, cashOut: 0 },
     };
 
-    clientPayments.forEach((p) => {
+    clientPayments.forEach((p: any) => {
       methods[p.method].cashIn += parseFloat(p.amount.toString());
     });
-    supplierPayments.forEach((p) => {
+    supplierPayments.forEach((p: any) => {
       methods[p.method].cashOut += parseFloat(p.amount.toString());
     });
-    expenses.forEach((e) => {
+    expenses.forEach((e: any) => {
       methods[e.paymentMethod].cashOut += parseFloat(e.amount.toString());
     });
 

@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 interface GatePassReportFilters {
   warehouseId?: string;
@@ -11,7 +11,7 @@ interface GatePassReportFilters {
 }
 
 export class GatePassReportService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   async getActivityReport(filters: GatePassReportFilters) {
     const page = filters.page || 1;
@@ -89,14 +89,14 @@ export class GatePassReportService {
     });
 
     // Fetch warehouse names
-    const warehouseIds = warehouseCounts.map((w) => w.warehouseId);
+    const warehouseIds = warehouseCounts.map((w: any) => w.warehouseId);
     const warehouses = await this.prisma.warehouse.findMany({
       where: { id: { in: warehouseIds } },
       select: { id: true, name: true },
     });
-    const warehouseMap = new Map(warehouses.map((w) => [w.id, w.name]));
+    const warehouseMap = new Map(warehouses.map((w: any) => [w.id, w.name]));
 
-    const byWarehouse = warehouseCounts.map((w) => ({
+    const byWarehouse = warehouseCounts.map((w: any) => ({
       warehouseId: w.warehouseId,
       warehouseName: warehouseMap.get(w.warehouseId) || 'Unknown',
       count: w._count.id,

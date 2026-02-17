@@ -39,6 +39,7 @@ import { recoveryRoutes } from './modules/recovery/recovery.routes.js';
 import { alertRoutes } from './modules/alerts/alert.routes.js';
 import { changeHistoryRoutes } from './modules/change-history/change-history.routes.js';
 import { authenticate } from './middleware/auth.middleware.js';
+import { tenantMiddleware } from './middleware/tenant.middleware.js';
 import { auditMiddleware } from './middleware/audit.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 import logger from './lib/logger.js';
@@ -78,6 +79,9 @@ app.use((req, res, next) => {
   }
   return authenticate(req, res, next);
 });
+
+// Tenant context middleware (must be after auth)
+app.use(tenantMiddleware);
 
 // Audit middleware (logs all mutating operations)
 app.use('/api/v1', auditMiddleware);

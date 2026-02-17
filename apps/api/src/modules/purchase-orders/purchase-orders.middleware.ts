@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, getTenantId } from '../../lib/prisma.js';
 
 /**
  * Audit middleware for purchase order operations
@@ -39,6 +37,7 @@ export const auditPurchaseOrderAction = (action: string) => {
           // Log audit record asynchronously
           prisma.auditLog.create({
             data: {
+              tenantId: getTenantId(),
               userId,
               action,
               entityType: 'PurchaseOrder',

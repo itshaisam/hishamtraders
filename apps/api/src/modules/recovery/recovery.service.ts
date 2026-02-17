@@ -1,5 +1,5 @@
 import { Prisma, VisitOutcome, PromiseStatus, RecoveryDay } from '@prisma/client';
-import { prisma } from '../../lib/prisma.js';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import logger from '../../lib/logger.js';
 
@@ -285,9 +285,10 @@ export class RecoveryService {
 
     const visitNumber = await this.generateVisitNumber(data.visitDate);
 
-    const visit = await prisma.$transaction(async (tx) => {
+    const visit = await prisma.$transaction(async (tx: any) => {
       const created = await tx.recoveryVisit.create({
         data: {
+          tenantId: getTenantId(),
           visitNumber,
           clientId: data.clientId,
           visitDate: data.visitDate,
@@ -311,6 +312,7 @@ export class RecoveryService {
       if (data.outcome === 'PROMISE_MADE' && data.promiseDate && data.promiseAmount) {
         await tx.paymentPromise.create({
           data: {
+            tenantId: getTenantId(),
             clientId: data.clientId,
             promiseDate: data.promiseDate,
             promiseAmount: data.promiseAmount,
@@ -435,6 +437,7 @@ export class RecoveryService {
 
     const promise = await prisma.paymentPromise.create({
       data: {
+        tenantId: getTenantId(),
         clientId: data.clientId,
         promiseDate: data.promiseDate,
         promiseAmount: data.promiseAmount,
@@ -617,7 +620,7 @@ export class RecoveryService {
       status: PromiseStatus;
     }> = [];
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       for (const promise of pendingPromises) {
         if (remaining <= 0) break;
 

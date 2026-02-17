@@ -1,5 +1,3 @@
-import { PrismaClient } from '@prisma/client';
-
 interface StockReportFilters {
   warehouseId?: string;
   categoryId?: string;
@@ -9,7 +7,7 @@ interface StockReportFilters {
 }
 
 export class StockReportService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   async getStockReport(filters: StockReportFilters) {
     const page = filters.page || 1;
@@ -34,13 +32,13 @@ export class StockReportService {
     // Apply status filter
     let filtered = allInventory;
     if (filters.status === 'in-stock') {
-      filtered = allInventory.filter((i) => i.quantity > i.product.reorderLevel);
+      filtered = allInventory.filter((i: any) => i.quantity > i.product.reorderLevel);
     } else if (filters.status === 'low-stock') {
       filtered = allInventory.filter(
-        (i) => i.quantity > 0 && i.quantity <= i.product.reorderLevel
+        (i: any) => i.quantity > 0 && i.quantity <= i.product.reorderLevel
       );
     } else if (filters.status === 'out-of-stock') {
-      filtered = allInventory.filter((i) => i.quantity <= 0);
+      filtered = allInventory.filter((i: any) => i.quantity <= 0);
     }
 
     const total = filtered.length;
@@ -48,7 +46,7 @@ export class StockReportService {
     // Pagination
     const paginated = filtered.slice(skip, skip + limit);
 
-    const data = paginated.map((inv) => {
+    const data = paginated.map((inv: any) => {
       const costPrice = parseFloat(inv.product.costPrice.toString());
       const qty = inv.quantity;
       let status = 'In Stock';
@@ -70,7 +68,7 @@ export class StockReportService {
     });
 
     const totalValue = filtered.reduce(
-      (sum, inv) => sum + inv.quantity * parseFloat(inv.product.costPrice.toString()),
+      (sum: number, inv: any) => sum + inv.quantity * parseFloat(inv.product.costPrice.toString()),
       0
     );
 

@@ -1,10 +1,9 @@
-import { PrismaClient, AdjustmentType, AdjustmentStatus } from '@prisma/client';
+import { AdjustmentType, AdjustmentStatus } from '@prisma/client';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { StockAdjustmentRepository } from './stock-adjustment.repository.js';
 import { InventoryRepository } from './inventory.repository.js';
 import { AuditService } from '../../services/audit.service.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
-
-const prisma = new PrismaClient();
 
 export interface CreateAdjustmentDto {
   productId: string;
@@ -94,7 +93,7 @@ export class StockAdjustmentService {
 
     // Story 6.8: Auto-approve if quantity is within threshold
     try {
-      const thresholdSetting = await prisma.systemSetting.findUnique({
+      const thresholdSetting = await prisma.systemSetting.findFirst({
         where: { key: 'stock_adjustment_auto_approve_threshold' },
       });
       if (thresholdSetting) {
@@ -170,7 +169,7 @@ export class StockAdjustmentService {
     }
 
     // Execute in transaction to ensure atomicity
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       let updatedInventory;
 
       // 1. Update or create inventory
@@ -183,6 +182,7 @@ export class StockAdjustmentService {
         // Create new inventory record only if quantity is positive
         updatedInventory = await tx.inventory.create({
           data: {
+            tenantId: getTenantId(),
             productId: adjustment.productId,
             productVariantId: adjustment.productVariantId,
             warehouseId: adjustment.warehouseId,
@@ -198,6 +198,7 @@ export class StockAdjustmentService {
       // 2. Create stock movement
       const stockMovement = await tx.stockMovement.create({
         data: {
+          tenantId: getTenantId(),
           productId: adjustment.productId,
           productVariantId: adjustment.productVariantId,
           warehouseId: adjustment.warehouseId,

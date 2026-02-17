@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, GatePassStatus } from '@prisma/client';
+import { GatePassStatus } from '@prisma/client';
 import { GatePassService } from './gate-pass.service.js';
 import { createGatePassSchema } from './dto/create-gate-pass.dto.js';
 import { prisma } from '../../lib/prisma.js';
@@ -8,7 +8,7 @@ export class GatePassController {
   private service: GatePassService;
 
   constructor() {
-    this.service = new GatePassService(prisma as unknown as PrismaClient);
+    this.service = new GatePassService(prisma);
   }
 
   create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

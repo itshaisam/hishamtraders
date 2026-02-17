@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import { prisma as defaultPrisma } from '../../lib/prisma.js';
 import logger from '../../lib/logger.js';
 import { generateExcel } from '../../utils/excel-export.util.js';
@@ -42,10 +41,10 @@ interface AgingAnalysisResult {
 }
 
 export class AgingAnalysisService {
-  private prisma: PrismaClient;
+  private prisma: any;
 
-  constructor(prismaClient?: PrismaClient) {
-    this.prisma = prismaClient ?? (defaultPrisma as PrismaClient);
+  constructor(prismaClient?: any) {
+    this.prisma = prismaClient ?? defaultPrisma;
   }
 
   /**

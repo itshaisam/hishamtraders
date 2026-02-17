@@ -1,8 +1,6 @@
 import { Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma.js';
 import { AuthRequest } from '../types/auth.types.js';
-
-const prisma = new PrismaClient();
 
 /**
  * Authorization middleware to check if user has required role(s)

@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { addDays } from 'date-fns';
 import { InvoicesRepository } from './invoices.repository.js';
 import { SettingsService } from '../settings/settings.service.js';
@@ -25,7 +25,7 @@ export class InvoicesService {
   private stockReversalService: StockReversalService;
   private gatePassService: GatePassService;
 
-  constructor(private prisma: PrismaClient) {
+  constructor(private prisma: any) {
     this.repository = new InvoicesRepository(prisma);
     this.settingsService = new SettingsService(prisma);
     this.fifoService = new FifoDeductionService(prisma);
@@ -104,7 +104,7 @@ export class InvoicesService {
     }
 
     // 10. Create invoice with transaction
-    const invoice = await this.prisma.$transaction(async (tx) => {
+    const invoice = await this.prisma.$transaction(async (tx: any) => {
       // Create invoice with items
       const createdInvoice = await tx.invoice.create({
         data: {
@@ -456,7 +456,7 @@ export class InvoicesService {
     }
 
     // Execute void operation in transaction
-    return await this.prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx: any) => {
       // 1. Reverse stock
       await this.stockReversalService.reverseInvoiceStock(invoiceId, userId, tx);
 

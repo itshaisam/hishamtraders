@@ -1,11 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { SettingsService } from './settings.service.js';
 import { BadRequestError, ForbiddenError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
 import logger from '../../lib/logger.js';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../lib/prisma.js';
 
 export class SettingsController {
   private settingsService: SettingsService;

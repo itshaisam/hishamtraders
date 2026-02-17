@@ -1,8 +1,8 @@
-import { PrismaClient, Invoice, Prisma } from '@prisma/client';
+import { Invoice, Prisma } from '@prisma/client';
 import { InvoiceFilterDto } from './dto/invoice-filter.dto.js';
 
 export class InvoicesRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   /**
    * Find all invoices with filters and pagination

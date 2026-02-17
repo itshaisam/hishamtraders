@@ -1,6 +1,5 @@
-import { PrismaClient, Inventory, MovementType, ReferenceType } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { Inventory, MovementType, ReferenceType } from '@prisma/client';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 
 export class InventoryRepository {
   /**
@@ -36,6 +35,7 @@ export class InventoryRepository {
   }): Promise<Inventory> {
     const inventory = await prisma.inventory.create({
       data: {
+        tenantId: getTenantId(),
         productId: data.productId,
         productVariantId: data.productVariantId || null,
         warehouseId: data.warehouseId,
@@ -96,6 +96,7 @@ export class InventoryRepository {
   }) {
     const movement = await prisma.stockMovement.create({
       data: {
+        tenantId: getTenantId(),
         productId: data.productId,
         productVariantId: data.productVariantId || null,
         warehouseId: data.warehouseId,

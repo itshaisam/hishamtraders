@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma.js';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { NotFoundError, BadRequestError } from '../../utils/errors.js';
 import logger from '../../lib/logger.js';
 
@@ -46,6 +46,7 @@ export class BinLocationService {
     try {
       const bin = await prisma.binLocation.create({
         data: {
+          tenantId: getTenantId(),
           warehouseId,
           code: data.code.trim().toUpperCase(),
           zone: data.zone?.trim() || null,

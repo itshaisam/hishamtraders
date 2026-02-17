@@ -1,7 +1,7 @@
 import { PrismaClient, AccountType } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient() as any;
 
 // ═══════════════════════════════════════════════════════════════
 // Helpers
@@ -720,7 +720,7 @@ async function main() {
   ];
 
   // Create invoices within a transaction so journal entries and balances are consistent
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     for (const inv of invoices) {
       const existing = await tx.invoice.findUnique({ where: { invoiceNumber: inv.invoiceNumber } });
       if (existing) continue;
@@ -791,9 +791,9 @@ async function main() {
   });
 
   let paymentCount = 0;
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     for (const inv of invoices.filter((i) => i.paidAmount > 0)) {
-      const invoiceRecord = paymentInvoices.find((pi) => pi.invoiceNumber === inv.invoiceNumber);
+      const invoiceRecord = paymentInvoices.find((pi: any) => pi.invoiceNumber === inv.invoiceNumber);
       if (!invoiceRecord) continue;
 
       // Check if payment already exists
@@ -842,7 +842,7 @@ async function main() {
 
   // ============ Supplier Payments ============
   console.log('\n💸 Creating supplier payments...');
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     // Payment for PO-2025-003 (RECEIVED)
     const po3 = await tx.purchaseOrder.findUnique({ where: { poNumber: 'PO-2025-003' } });
     if (po3) {
@@ -922,7 +922,7 @@ async function main() {
 
   // ============ Goods Received Journal Entry (for PO-2025-003) ============
   console.log('\n📥 Creating goods received journal entry...');
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     const po3 = await tx.purchaseOrder.findUnique({ where: { poNumber: 'PO-2025-003' } });
     if (po3) {
       // JE: DR Inventory (1300) / CR A/P (2100)
@@ -961,7 +961,7 @@ async function main() {
     SUPPLIES: '5900', MAINTENANCE: '5900', MARKETING: '5900', MISC: '5900',
   };
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     for (const exp of expensesData) {
       const existing = await tx.expense.findFirst({
         where: { description: exp.description, date: exp.date },

@@ -1,5 +1,5 @@
 import { Prisma, CountStatus } from '@prisma/client';
-import { prisma } from '../../lib/prisma.js';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { NotFoundError, BadRequestError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
 import logger from '../../lib/logger.js';
@@ -49,7 +49,7 @@ export class StockCountService {
 
     const countNumber = await this.generateCountNumber();
 
-    const stockCount = await prisma.stockCount.create({
+    const stockCount = await (prisma.stockCount as any).create({
       data: {
         countNumber,
         warehouseId: data.warehouseId,
@@ -57,12 +57,14 @@ export class StockCountService {
         countDate: new Date(data.countDate),
         notes: data.notes?.trim() || null,
         createdBy: userId,
+        tenantId: getTenantId(),
         items: {
-          create: inventoryItems.map((inv) => ({
+          create: inventoryItems.map((inv: any) => ({
             productId: inv.productId,
             batchNo: inv.batchNo,
             binLocation: inv.binLocation,
             systemQuantity: inv.quantity,
+            tenantId: getTenantId(),
           })),
         },
       },
@@ -190,9 +192,9 @@ export class StockCountService {
       throw new BadRequestError(`${uncounted.length} items have not been counted yet`);
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async (tx: any) => {
       // Create stock adjustments for items with variance
-      const itemsWithVariance = stockCount.items.filter((i) => i.variance !== null && i.variance !== 0);
+      const itemsWithVariance = stockCount.items.filter((i: any) => i.variance !== null && i.variance !== 0);
 
       for (const item of itemsWithVariance) {
         await tx.stockAdjustment.create({
@@ -205,6 +207,7 @@ export class StockCountService {
             notes: item.notes,
             status: 'PENDING',
             createdBy: userId,
+            tenantId: getTenantId(),
           },
         });
       }

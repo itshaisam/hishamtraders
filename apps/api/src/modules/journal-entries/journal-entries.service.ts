@@ -1,5 +1,5 @@
 import { JournalEntry, Prisma } from '@prisma/client';
-import { prisma } from '../../lib/prisma.js';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { CreateJournalEntryDto } from './dto/create-journal-entry.dto.js';
 import { UpdateJournalEntryDto } from './dto/update-journal-entry.dto.js';
 import { JournalEntryFilters } from './dto/journal-entry-filter.dto.js';
@@ -38,7 +38,7 @@ export class JournalEntryService {
 
     const entryNumber = await generateJournalEntryNumber(data.date);
 
-    const entry = await prisma.journalEntry.create({
+    const entry = await (prisma.journalEntry as any).create({
       data: {
         entryNumber,
         date: data.date,
@@ -47,12 +47,14 @@ export class JournalEntryService {
         referenceType: data.referenceType || null,
         referenceId: data.referenceId || null,
         createdBy: userId,
+        tenantId: getTenantId(),
         lines: {
-          create: data.lines.map((line) => ({
+          create: data.lines.map((line: any) => ({
             accountHeadId: line.accountHeadId,
             debitAmount: line.debitAmount,
             creditAmount: line.creditAmount,
             description: line.description || null,
+            tenantId: getTenantId(),
           })),
         },
       },
@@ -137,7 +139,7 @@ export class JournalEntryService {
       }
     }
 
-    const entry = await prisma.$transaction(async (tx) => {
+    const entry = await prisma.$transaction(async (tx: any) => {
       // If lines are being updated, delete old and create new
       if (data.lines) {
         await tx.journalEntryLine.deleteMany({
@@ -145,7 +147,7 @@ export class JournalEntryService {
         });
       }
 
-      return tx.journalEntry.update({
+      return (tx.journalEntry as any).update({
         where: { id },
         data: {
           date: data.date,
@@ -155,11 +157,12 @@ export class JournalEntryService {
           ...(data.lines
             ? {
                 lines: {
-                  create: data.lines.map((line) => ({
+                  create: data.lines.map((line: any) => ({
                     accountHeadId: line.accountHeadId,
                     debitAmount: line.debitAmount,
                     creditAmount: line.creditAmount,
                     description: line.description || null,
+                    tenantId: getTenantId(),
                   })),
                 },
               }
@@ -181,7 +184,7 @@ export class JournalEntryService {
   }
 
   async post(id: string, userId: string) {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const entry = await tx.journalEntry.findUnique({
         where: { id },
         include: {
@@ -194,11 +197,11 @@ export class JournalEntryService {
 
       // Verify balance
       const totalDebits = entry.lines.reduce(
-        (sum, l) => sum + parseFloat(l.debitAmount.toString()),
+        (sum: any, l: any) => sum + parseFloat(l.debitAmount.toString()),
         0
       );
       const totalCredits = entry.lines.reduce(
-        (sum, l) => sum + parseFloat(l.creditAmount.toString()),
+        (sum: any, l: any) => sum + parseFloat(l.creditAmount.toString()),
         0
       );
 

@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import { SettingsRepository } from './settings.repository.js';
 import logger from '../../lib/logger.js';
 
@@ -16,7 +15,7 @@ export class SettingsService {
   private repository: SettingsRepository;
   private cache: SettingsCache = {};
 
-  constructor(prisma: PrismaClient) {
+  constructor(prisma: any) {
     this.repository = new SettingsRepository(prisma);
   }
 

@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma as prismaClient } from '../../lib/prisma.js';
 import logger from '../../lib/logger.js';
 
@@ -31,9 +31,9 @@ interface AgentProductivityFilters {
 }
 
 export class RecoveryReportsService {
-  private prisma: PrismaClient;
+  private prisma: any;
 
-  constructor(prisma?: PrismaClient) {
+  constructor(prisma?: any) {
     this.prisma = prisma || prismaClient;
   }
 
@@ -99,7 +99,7 @@ export class RecoveryReportsService {
       totalCollected: Math.round(totalCollected * 100) / 100,
     };
 
-    const data = visits.map((v) => ({
+    const data = visits.map((v: any) => ({
       id: v.id,
       visitNumber: v.visitNumber,
       clientId: v.clientId,
@@ -535,7 +535,7 @@ export class RecoveryReportsService {
     }
 
     // Build result rows
-    const results = agents.map((agent) => {
+    const results = agents.map((agent: any) => {
       const visitData = agentVisitData.get(agent.id) || {
         totalVisits: 0,
         totalCollected: 0,
@@ -576,7 +576,7 @@ export class RecoveryReportsService {
     });
 
     // Sort by totalCollected descending
-    results.sort((a, b) => b.totalCollected - a.totalCollected);
+    results.sort((a: any, b: any) => b.totalCollected - a.totalCollected);
 
     return results;
   }

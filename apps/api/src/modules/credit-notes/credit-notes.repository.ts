@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 export interface CreditNoteFilters {
   clientId?: string;
@@ -9,7 +9,7 @@ export interface CreditNoteFilters {
 }
 
 export class CreditNotesRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   async findById(id: string) {
     return this.prisma.creditNote.findUnique({

@@ -1,4 +1,5 @@
 import { AccountHead, AccountType } from '@prisma/client';
+import { getTenantId } from '../../lib/prisma.js';
 import { accountHeadRepository, AccountHeadRepository } from './account-heads.repository.js';
 import { CreateAccountHeadDto } from './dto/create-account-head.dto.js';
 import { UpdateAccountHeadDto } from './dto/update-account-head.dto.js';
@@ -44,6 +45,7 @@ export class AccountHeadService {
     }
 
     const accountHead = await accountHeadRepository.create({
+      tenant: { connect: { id: getTenantId() } },
       code: data.code,
       name: data.name,
       accountType: data.accountType,

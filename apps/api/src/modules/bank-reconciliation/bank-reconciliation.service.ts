@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma.js';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import logger from '../../lib/logger.js';
 
@@ -85,6 +85,7 @@ export class BankReconciliationService {
 
     const session = await prisma.bankReconciliation.create({
       data: {
+        tenantId: getTenantId(),
         bankAccountId: dto.bankAccountId,
         statementDate: new Date(dto.statementDate),
         statementBalance: dto.statementBalance,
@@ -170,6 +171,7 @@ export class BankReconciliationService {
 
     const item = await prisma.bankReconciliationItem.create({
       data: {
+        tenantId: getTenantId(),
         reconciliationId,
         description: dto.description,
         statementAmount: dto.statementAmount,

@@ -1,8 +1,7 @@
-import { PrismaClient, Supplier, SupplierStatus } from '@prisma/client';
+import { Supplier, SupplierStatus } from '@prisma/client';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { CreateSupplierDto } from './dto/create-supplier.dto.js';
 import { UpdateSupplierDto } from './dto/update-supplier.dto.js';
-
-const prisma = new PrismaClient();
 
 // Helper function to transform supplier for API response
 const transformSupplier = (supplier: any) => ({
@@ -15,6 +14,7 @@ export class SuppliersRepository {
   async create(data: CreateSupplierDto): Promise<Supplier> {
     const supplier = await prisma.supplier.create({
       data: {
+        tenantId: getTenantId(),
         name: data.name,
         countryId: data.countryId || null,
         contactPerson: data.contactPerson || null,
@@ -85,7 +85,7 @@ export class SuppliersRepository {
   }
 
   async findByName(name: string): Promise<Supplier | null> {
-    const supplier = await prisma.supplier.findUnique({
+    const supplier = await prisma.supplier.findFirst({
       where: { name },
       include: {
         country: true,

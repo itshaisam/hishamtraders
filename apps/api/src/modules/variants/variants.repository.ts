@@ -1,9 +1,8 @@
-import { PrismaClient, ProductVariant, VariantStatus, Prisma } from '@prisma/client';
+import { ProductVariant, VariantStatus, Prisma } from '@prisma/client';
 import { CreateVariantDto } from './dto/create-variant.dto.js';
 import { UpdateVariantDto } from './dto/update-variant.dto.js';
 import { VariantFilterDto } from './dto/variant-filter.dto.js';
-
-const prisma = new PrismaClient();
+import { prisma, getTenantId } from '../../lib/prisma.js';
 
 // Type for variant with product relation
 type VariantWithProduct = ProductVariant & {
@@ -30,6 +29,7 @@ export class VariantsRepository {
   async create(data: CreateVariantDto & { createdBy?: string }): Promise<ProductVariant> {
     const variant = await prisma.productVariant.create({
       data: {
+        tenantId: getTenantId(),
         productId: data.productId,
         sku: data.sku!.toUpperCase(),
         variantName: data.variantName,
@@ -114,7 +114,7 @@ export class VariantsRepository {
   }
 
   async findBySku(sku: string): Promise<ProductVariant | null> {
-    const variant = await prisma.productVariant.findUnique({
+    const variant = await prisma.productVariant.findFirst({
       where: { sku: sku.toUpperCase() },
       include: {
         product: {
@@ -126,7 +126,7 @@ export class VariantsRepository {
         },
       },
     });
-    return variant ? transformVariant(variant) : null;
+    return variant ? transformVariant(variant as VariantWithProduct) : null;
   }
 
   async findByProductId(productId: string, status?: VariantStatus): Promise<ProductVariant[]> {

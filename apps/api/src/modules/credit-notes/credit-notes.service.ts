@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { format } from 'date-fns';
 import { CreditNotesRepository, CreditNoteFilters } from './credit-notes.repository.js';
 import { CreateCreditNoteDto } from './dto/create-credit-note.dto.js';
@@ -6,6 +6,7 @@ import { VoidCreditNoteDto } from './dto/void-credit-note.dto.js';
 import { generateCreditNoteNumber } from '../../utils/credit-note-number.util.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
+import { getTenantId } from '../../lib/prisma.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
 import { validatePeriodNotClosed } from '../../utils/period-lock.js';
 import logger from '../../lib/logger.js';
@@ -13,7 +14,7 @@ import logger from '../../lib/logger.js';
 export class CreditNotesService {
   private repository: CreditNotesRepository;
 
-  constructor(private prisma: PrismaClient) {
+  constructor(private prisma: any) {
     this.repository = new CreditNotesRepository(prisma);
   }
 
@@ -63,7 +64,7 @@ export class CreditNotesService {
     }> = [];
 
     for (const dtoItem of dto.items) {
-      const invoiceItem = invoice.items.find((i) => i.id === dtoItem.invoiceItemId);
+      const invoiceItem = invoice.items.find((i: any) => i.id === dtoItem.invoiceItemId);
       if (!invoiceItem) {
         throw new BadRequestError(`Invoice item ${dtoItem.invoiceItemId} not found on this invoice`);
       }
@@ -115,7 +116,7 @@ export class CreditNotesService {
     const totalAmount = subtotal + taxAmount;
 
     // 5. Execute in transaction
-    const creditNote = await this.prisma.$transaction(async (tx) => {
+    const creditNote = await this.prisma.$transaction(async (tx: any) => {
       // Generate credit note number
       const creditNoteNumber = await generateCreditNoteNumber(this.prisma);
 
@@ -131,6 +132,7 @@ export class CreditNotesService {
           taxAmount: new Prisma.Decimal(taxAmount.toFixed(2)),
           totalAmount: new Prisma.Decimal(totalAmount.toFixed(2)),
           createdBy: userId,
+          tenantId: getTenantId(),
         },
       });
 
@@ -147,6 +149,7 @@ export class CreditNotesService {
             unitPrice: new Prisma.Decimal(item.unitPrice.toFixed(2)),
             discount: new Prisma.Decimal(item.discount.toFixed(2)),
             total: new Prisma.Decimal(item.total.toFixed(2)),
+            tenantId: getTenantId(),
           },
         });
 
@@ -174,6 +177,7 @@ export class CreditNotesService {
               warehouseId: invoice.warehouseId,
               quantity: item.quantityReturned,
               batchNo: returnBatchNo,
+              tenantId: getTenantId(),
             },
           });
         }
@@ -190,6 +194,7 @@ export class CreditNotesService {
             referenceId: cn.id,
             userId,
             notes: `Credit note ${creditNoteNumber} - Return from invoice ${invoice.invoiceNumber}`,
+            tenantId: getTenantId(),
           },
         });
       }
@@ -270,7 +275,7 @@ export class CreditNotesService {
       throw new BadRequestError('Credit note invoice has no associated warehouse');
     }
 
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: any) => {
       // Reverse inventory for each item
       for (const item of creditNote.items) {
         // Find the inventory batch to decrement
@@ -327,6 +332,7 @@ export class CreditNotesService {
             referenceId: creditNote.id,
             userId,
             notes: `Void credit note ${creditNote.creditNoteNumber} - reversing return. Reason: ${dto.reason}`,
+            tenantId: getTenantId(),
           },
         });
       }

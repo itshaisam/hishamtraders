@@ -1,5 +1,5 @@
 import { Prisma, TransferStatus } from '@prisma/client';
-import { prisma } from '../../lib/prisma.js';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { NotFoundError, BadRequestError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
 import logger from '../../lib/logger.js';
@@ -63,7 +63,7 @@ export class StockTransferService {
 
     const transferNumber = await this.generateTransferNumber();
 
-    const transfer = await prisma.stockTransfer.create({
+    const transfer = await (prisma.stockTransfer as any).create({
       data: {
         transferNumber,
         sourceWarehouseId: data.sourceWarehouseId,
@@ -71,12 +71,14 @@ export class StockTransferService {
         status: 'PENDING',
         requestedBy: userId,
         notes: data.notes?.trim() || null,
+        tenantId: getTenantId(),
         items: {
-          create: data.items.map((item) => ({
+          create: data.items.map((item: any) => ({
             productId: item.productId,
             batchNo: item.batchNo || null,
             quantity: item.quantity,
             notes: item.notes?.trim() || null,
+            tenantId: getTenantId(),
           })),
         },
       },
@@ -196,7 +198,7 @@ export class StockTransferService {
     if (!transfer) throw new NotFoundError('Stock transfer not found');
     if (transfer.status !== 'APPROVED') throw new BadRequestError(`Cannot dispatch transfer with status ${transfer.status}`);
 
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async (tx: any) => {
       // Deduct inventory from source warehouse
       for (const item of transfer.items) {
         const inventory = await tx.inventory.findFirst({
@@ -228,6 +230,7 @@ export class StockTransferService {
             referenceId: transfer.id,
             userId,
             notes: `Transfer ${transfer.transferNumber} dispatched to ${transfer.destinationWarehouse.name}`,
+            tenantId: getTenantId(),
           },
         });
       }
@@ -286,7 +289,7 @@ export class StockTransferService {
     if (!transfer) throw new NotFoundError('Stock transfer not found');
     if (transfer.status !== 'IN_TRANSIT') throw new BadRequestError(`Cannot receive transfer with status ${transfer.status}`);
 
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async (tx: any) => {
       for (const received of receivedItems) {
         const item = transfer.items.find((i) => i.id === received.itemId);
         if (!item) throw new BadRequestError(`Transfer item ${received.itemId} not found`);
@@ -321,6 +324,7 @@ export class StockTransferService {
                 warehouseId: transfer.destinationWarehouseId,
                 batchNo: item.batchNo,
                 quantity: received.receivedQuantity,
+                tenantId: getTenantId(),
               },
             });
           }
@@ -336,6 +340,7 @@ export class StockTransferService {
               referenceId: transfer.id,
               userId,
               notes: `Transfer ${transfer.transferNumber} received`,
+              tenantId: getTenantId(),
             },
           });
         }
@@ -380,7 +385,7 @@ export class StockTransferService {
 
     const oldStatus = transfer.status;
 
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async (tx: any) => {
       // If IN_TRANSIT, restore source warehouse inventory
       if (transfer.status === 'IN_TRANSIT') {
         for (const item of transfer.items) {
@@ -404,6 +409,7 @@ export class StockTransferService {
                 warehouseId: transfer.sourceWarehouseId,
                 batchNo: item.batchNo,
                 quantity: item.quantity,
+                tenantId: getTenantId(),
               },
             });
           }
@@ -418,6 +424,7 @@ export class StockTransferService {
               referenceId: transfer.id,
               userId,
               notes: `Transfer ${transfer.transferNumber} cancelled - stock restored`,
+              tenantId: getTenantId(),
             },
           });
         }

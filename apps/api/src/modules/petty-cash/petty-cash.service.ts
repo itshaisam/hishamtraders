@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma.js';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { calculateBalanceChange } from '../../utils/balance-helper.js';
 import logger from '../../lib/logger.js';
 
@@ -52,7 +52,7 @@ export class PettyCashService {
     }
 
     // Create journal entry in transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Generate entry number
       const date = new Date();
       const year = date.getFullYear();
@@ -74,7 +74,7 @@ export class PettyCashService {
       const entryNumber = `${prefix}${String(nextSeq).padStart(3, '0')}`;
 
       // Create POSTED journal entry
-      const entry = await tx.journalEntry.create({
+      const entry = await (tx.journalEntry as any).create({
         data: {
           entryNumber,
           date,
@@ -84,6 +84,7 @@ export class PettyCashService {
           referenceId: 'advance',
           createdBy: userId,
           approvedBy: userId,
+          tenantId: getTenantId(),
           lines: {
             create: [
               {
@@ -91,12 +92,14 @@ export class PettyCashService {
                 debitAmount: amount,
                 creditAmount: 0,
                 description: 'Petty cash advance',
+                tenantId: getTenantId(),
               },
               {
                 accountHeadId: bankAccount.id,
                 debitAmount: 0,
                 creditAmount: amount,
                 description: `Transfer from ${bankAccount.name}`,
+                tenantId: getTenantId(),
               },
             ],
           },

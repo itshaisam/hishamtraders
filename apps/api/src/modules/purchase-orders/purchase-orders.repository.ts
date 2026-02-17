@@ -1,4 +1,4 @@
-import { PrismaClient, PurchaseOrder, POItem, POStatus, POCost } from '@prisma/client';
+import { PurchaseOrder, POItem, POStatus, POCost } from '@prisma/client';
 import { PurchaseOrderFilters } from './dto/purchase-order-filter.dto.js';
 import { CreatePurchaseOrderRequest, POItemInput } from './dto/create-purchase-order.dto.js';
 import { UpdatePurchaseOrderRequest } from './dto/update-purchase-order.dto.js';
@@ -6,7 +6,7 @@ import { AddPOCostRequest } from './dto/add-po-cost.dto.js';
 import { UpdateImportDetailsRequest } from './dto/update-import-details.dto.js';
 
 export class PurchaseOrderRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   /**
    * Transform Prisma Decimal values to numbers for JSON serialization
@@ -69,7 +69,7 @@ export class PurchaseOrderRepository {
     );
 
     // Create PO and items in transaction
-    const po = await this.prisma.$transaction(async (tx) => {
+    const po = await this.prisma.$transaction(async (tx: any) => {
       const createdPO = await tx.purchaseOrder.create({
         data: {
           poNumber,
@@ -162,7 +162,7 @@ export class PurchaseOrderRepository {
     ]);
 
     return {
-      data: data.map(po => this.transformDecimals(po)),
+      data: data.map((po: any) => this.transformDecimals(po)),
       pagination: {
         page,
         limit,
@@ -196,7 +196,7 @@ export class PurchaseOrderRepository {
    * Find a purchase order by PO number
    */
   async findByPoNumber(poNumber: string) {
-    const po = await this.prisma.purchaseOrder.findUnique({
+    const po = await this.prisma.purchaseOrder.findFirst({
       where: { poNumber },
       include: {
         supplier: true,

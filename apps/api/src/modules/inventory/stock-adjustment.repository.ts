@@ -1,11 +1,9 @@
 import {
-  PrismaClient,
   StockAdjustment,
   AdjustmentType,
   AdjustmentStatus,
 } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, getTenantId } from '../../lib/prisma.js';
 
 export class StockAdjustmentRepository {
   /**
@@ -23,6 +21,7 @@ export class StockAdjustmentRepository {
   }): Promise<StockAdjustment> {
     const adjustment = await prisma.stockAdjustment.create({
       data: {
+        tenantId: getTenantId(),
         productId: data.productId,
         productVariantId: data.productVariantId || null,
         warehouseId: data.warehouseId,

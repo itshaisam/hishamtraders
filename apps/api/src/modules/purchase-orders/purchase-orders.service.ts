@@ -1,5 +1,5 @@
 import logger from '../../lib/logger.js';
-import { prisma } from '../../lib/prisma.js';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { changeHistoryService } from '../../services/change-history.service.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
 import { PurchaseOrderRepository } from './purchase-orders.repository.js';
@@ -279,9 +279,10 @@ export class PurchaseOrderService {
       });
 
       // Use transaction to create cost record + journal entry atomically
-      const cost = await prisma.$transaction(async (tx) => {
+      const cost = await prisma.$transaction(async (tx: any) => {
         const costRecord = await tx.pOCost.create({
           data: {
+            tenantId: getTenantId(),
             poId,
             type: costData.type,
             amount: costData.amount,

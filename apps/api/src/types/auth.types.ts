@@ -25,7 +25,7 @@ export interface JWTPayload {
   userId: string;
   email: string;
   roleId: string;
-  tenantId: string | null;
+  tenantId: string;
   roleName?: string; // Added by role middleware
   iat?: number;
   exp?: number;

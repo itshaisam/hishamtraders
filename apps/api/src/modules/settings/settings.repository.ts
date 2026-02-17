@@ -1,13 +1,13 @@
-import { PrismaClient, SystemSetting } from '@prisma/client';
+import { SystemSetting } from '@prisma/client';
 
 export class SettingsRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   /**
    * Get a system setting by key
    */
   async findByKey(key: string): Promise<SystemSetting | null> {
-    return this.prisma.systemSetting.findUnique({
+    return this.prisma.systemSetting.findFirst({
       where: { key },
     });
   }

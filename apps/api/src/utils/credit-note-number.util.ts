@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import { format } from 'date-fns';
 
 /**
@@ -7,7 +6,7 @@ import { format } from 'date-fns';
  *
  * Sequence resets daily (XXX starts from 001 each day)
  */
-export async function generateCreditNoteNumber(prisma: PrismaClient): Promise<string> {
+export async function generateCreditNoteNumber(prisma: any): Promise<string> {
   const today = new Date();
   const dateStr = format(today, 'yyyyMMdd');
   const prefix = `CN-${dateStr}-`;

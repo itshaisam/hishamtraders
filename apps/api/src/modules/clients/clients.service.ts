@@ -1,4 +1,5 @@
 import { Client, ClientStatus } from '@prisma/client';
+import { getTenantId } from '../../lib/prisma.js';
 import { ClientRepository, ClientFilters } from './clients.repository.js';
 import { changeHistoryService } from '../../services/change-history.service.js';
 
@@ -51,6 +52,7 @@ export class ClientService {
     }
 
     return this.repository.create({
+      tenant: { connect: { id: getTenantId() } },
       name: data.name,
       contactPerson: data.contactPerson,
       phone: data.phone,

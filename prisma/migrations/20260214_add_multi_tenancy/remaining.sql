@@ -1,0 +1,82 @@
+-- Remaining migration: tenantId indexes + FK constraints
+-- Note: inventory keeps original @@unique([productId, productVariantId, warehouseId, batchNo])
+-- because adding tenantId exceeds MySQL 3072-byte key limit, and products/warehouses are already tenant-scoped
+
+-- Add tenantId indexes for query performance
+CREATE INDEX `suppliers_tenantId_idx` ON `suppliers`(`tenantId`);
+CREATE INDEX `warehouses_tenantId_idx` ON `warehouses`(`tenantId`);
+CREATE INDEX `bin_locations_tenantId_idx` ON `bin_locations`(`tenantId`);
+CREATE INDEX `products_tenantId_idx` ON `products`(`tenantId`);
+CREATE INDEX `product_variants_tenantId_idx` ON `product_variants`(`tenantId`);
+CREATE INDEX `purchase_orders_tenantId_idx` ON `purchase_orders`(`tenantId`);
+CREATE INDEX `po_items_tenantId_idx` ON `po_items`(`tenantId`);
+CREATE INDEX `po_costs_tenantId_idx` ON `po_costs`(`tenantId`);
+CREATE INDEX `inventory_tenantId_idx` ON `inventory`(`tenantId`);
+CREATE INDEX `stock_movements_tenantId_idx` ON `stock_movements`(`tenantId`);
+CREATE INDEX `stock_adjustments_tenantId_idx` ON `stock_adjustments`(`tenantId`);
+CREATE INDEX `stock_transfers_tenantId_idx` ON `stock_transfers`(`tenantId`);
+CREATE INDEX `stock_transfer_items_tenantId_idx` ON `stock_transfer_items`(`tenantId`);
+CREATE INDEX `stock_counts_tenantId_idx` ON `stock_counts`(`tenantId`);
+CREATE INDEX `stock_count_items_tenantId_idx` ON `stock_count_items`(`tenantId`);
+CREATE INDEX `clients_tenantId_idx` ON `clients`(`tenantId`);
+CREATE INDEX `invoices_tenantId_idx` ON `invoices`(`tenantId`);
+CREATE INDEX `invoice_items_tenantId_idx` ON `invoice_items`(`tenantId`);
+CREATE INDEX `credit_notes_tenantId_idx` ON `credit_notes`(`tenantId`);
+CREATE INDEX `credit_note_items_tenantId_idx` ON `credit_note_items`(`tenantId`);
+CREATE INDEX `payments_tenantId_idx` ON `payments`(`tenantId`);
+CREATE INDEX `payment_allocations_tenantId_idx` ON `payment_allocations`(`tenantId`);
+CREATE INDEX `expenses_tenantId_idx` ON `expenses`(`tenantId`);
+CREATE INDEX `gate_passes_tenantId_idx` ON `gate_passes`(`tenantId`);
+CREATE INDEX `gate_pass_items_tenantId_idx` ON `gate_pass_items`(`tenantId`);
+CREATE INDEX `account_heads_tenantId_idx` ON `account_heads`(`tenantId`);
+CREATE INDEX `journal_entries_tenantId_idx` ON `journal_entries`(`tenantId`);
+CREATE INDEX `journal_entry_lines_tenantId_idx` ON `journal_entry_lines`(`tenantId`);
+CREATE INDEX `bank_reconciliations_tenantId_idx` ON `bank_reconciliations`(`tenantId`);
+CREATE INDEX `bank_reconciliation_items_tenantId_idx` ON `bank_reconciliation_items`(`tenantId`);
+CREATE INDEX `period_closes_tenantId_idx` ON `period_closes`(`tenantId`);
+CREATE INDEX `recovery_visits_tenantId_idx` ON `recovery_visits`(`tenantId`);
+CREATE INDEX `payment_promises_tenantId_idx` ON `payment_promises`(`tenantId`);
+CREATE INDEX `alerts_tenantId_idx` ON `alerts`(`tenantId`);
+CREATE INDEX `alert_rules_tenantId_idx` ON `alert_rules`(`tenantId`);
+CREATE INDEX `system_settings_tenantId_idx` ON `system_settings`(`tenantId`);
+CREATE INDEX `change_history_tenantId_idx` ON `change_history`(`tenantId`);
+
+-- Add foreign key constraints for tenantId
+ALTER TABLE `users` ADD CONSTRAINT `users_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `suppliers` ADD CONSTRAINT `suppliers_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `warehouses` ADD CONSTRAINT `warehouses_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `bin_locations` ADD CONSTRAINT `bin_locations_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `products` ADD CONSTRAINT `products_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `product_variants` ADD CONSTRAINT `product_variants_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `purchase_orders` ADD CONSTRAINT `purchase_orders_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `po_items` ADD CONSTRAINT `po_items_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `po_costs` ADD CONSTRAINT `po_costs_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `inventory` ADD CONSTRAINT `inventory_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `stock_movements` ADD CONSTRAINT `stock_movements_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `stock_adjustments` ADD CONSTRAINT `stock_adjustments_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `stock_transfers` ADD CONSTRAINT `stock_transfers_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `stock_transfer_items` ADD CONSTRAINT `stock_transfer_items_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `stock_counts` ADD CONSTRAINT `stock_counts_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `stock_count_items` ADD CONSTRAINT `stock_count_items_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `clients` ADD CONSTRAINT `clients_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `invoices` ADD CONSTRAINT `invoices_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `invoice_items` ADD CONSTRAINT `invoice_items_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `credit_notes` ADD CONSTRAINT `credit_notes_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `credit_note_items` ADD CONSTRAINT `credit_note_items_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `payments` ADD CONSTRAINT `payments_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `payment_allocations` ADD CONSTRAINT `payment_allocations_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `expenses` ADD CONSTRAINT `expenses_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `gate_passes` ADD CONSTRAINT `gate_passes_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `gate_pass_items` ADD CONSTRAINT `gate_pass_items_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `account_heads` ADD CONSTRAINT `account_heads_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `journal_entries` ADD CONSTRAINT `journal_entries_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `journal_entry_lines` ADD CONSTRAINT `journal_entry_lines_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `bank_reconciliations` ADD CONSTRAINT `bank_reconciliations_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `bank_reconciliation_items` ADD CONSTRAINT `bank_reconciliation_items_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `period_closes` ADD CONSTRAINT `period_closes_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `recovery_visits` ADD CONSTRAINT `recovery_visits_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `payment_promises` ADD CONSTRAINT `payment_promises_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `alerts` ADD CONSTRAINT `alerts_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `alert_rules` ADD CONSTRAINT `alert_rules_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `system_settings` ADD CONSTRAINT `system_settings_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `change_history` ADD CONSTRAINT `change_history_tenantId_fkey` FOREIGN KEY (`tenantId`) REFERENCES `tenants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

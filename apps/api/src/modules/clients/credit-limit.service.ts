@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import { NotFoundError } from '../../utils/errors.js';
 
 export interface CreditLimitCheck {
@@ -12,7 +11,7 @@ export interface CreditLimitCheck {
 }
 
 export class CreditLimitService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: any) {}
 
   /**
    * Check if adding an amount would exceed or approach credit limit
@@ -91,7 +90,7 @@ export class CreditLimitService {
 
     // Calculate utilization and filter
     const clientsWithUtilization = clients
-      .map((client) => {
+      .map((client: any) => {
         const balance = parseFloat(client.balance.toString());
         const limit = parseFloat(client.creditLimit.toString());
         const utilization = limit > 0 ? (balance / limit) * 100 : 0;
@@ -105,8 +104,8 @@ export class CreditLimitService {
             utilization >= 100 ? ('EXCEEDED' as const) : ('WARNING' as const),
         };
       })
-      .filter((client) => client.utilization >= warningThreshold)
-      .sort((a, b) => b.utilization - a.utilization);
+      .filter((client: any) => client.utilization >= warningThreshold)
+      .sort((a: any, b: any) => b.utilization - a.utilization);
 
     return clientsWithUtilization;
   }

@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma as defaultPrisma } from '../../lib/prisma.js';
 import logger from '../../lib/logger.js';
 
@@ -22,9 +22,9 @@ interface TrendItem {
 }
 
 export class CollectionEfficiencyService {
-  private prisma: PrismaClient;
+  private prisma: any;
 
-  constructor(prismaClient?: PrismaClient) {
+  constructor(prismaClient?: any) {
     this.prisma = prismaClient || defaultPrisma;
   }
 

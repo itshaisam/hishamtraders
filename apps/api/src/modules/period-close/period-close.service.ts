@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma.js';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { calculateBalanceChange } from '../../utils/balance-helper.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
@@ -43,7 +43,7 @@ export class PeriodCloseService {
     const periodStart = new Date(year, month - 1, 1);
     periodStart.setHours(0, 0, 0, 0);
 
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: any) => {
       // 1. Verify trial balance is balanced (all posted entries up to period end)
       const allLines = await tx.journalEntryLine.findMany({
         where: {
@@ -55,8 +55,8 @@ export class PeriodCloseService {
         select: { debitAmount: true, creditAmount: true },
       });
 
-      const totalDebits = allLines.reduce((s, l) => s + parseFloat(l.debitAmount.toString()), 0);
-      const totalCredits = allLines.reduce((s, l) => s + parseFloat(l.creditAmount.toString()), 0);
+      const totalDebits = allLines.reduce((s: number, l: any) => s + parseFloat(l.debitAmount.toString()), 0);
+      const totalCredits = allLines.reduce((s: number, l: any) => s + parseFloat(l.creditAmount.toString()), 0);
 
       if (Math.abs(totalDebits - totalCredits) > 0.01) {
         throw new BadRequestError(
@@ -214,6 +214,7 @@ export class PeriodCloseService {
 
         const closingEntry = await tx.journalEntry.create({
           data: {
+            tenantId: getTenantId(),
             entryNumber,
             date: periodDate,
             description: `Month-end closing ${year}-${monthStr}`,
@@ -222,7 +223,7 @@ export class PeriodCloseService {
             createdBy: userId,
             approvedBy: userId,
             lines: {
-              create: closingLines,
+              create: closingLines.map((line) => ({ ...line, tenantId: getTenantId() })),
             },
           },
         });
@@ -252,6 +253,7 @@ export class PeriodCloseService {
       // 4. Create PeriodClose record
       const periodClose = await tx.periodClose.create({
         data: {
+          tenantId: getTenantId(),
           periodType: 'MONTH',
           periodDate,
           netProfit,

@@ -1,6 +1,5 @@
-import { PrismaClient, PaymentType, PaymentMethod, PaymentReferenceType, Prisma } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { PaymentType, PaymentMethod, PaymentReferenceType, Prisma } from '@prisma/client';
+import { prisma } from '../../lib/prisma.js';
 
 export interface PaymentFilters {
   supplierId?: string;

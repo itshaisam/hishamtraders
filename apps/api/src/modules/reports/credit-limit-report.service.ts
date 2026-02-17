@@ -1,10 +1,9 @@
-import { PrismaClient } from '@prisma/client';
 import { CreditLimitService } from '../clients/credit-limit.service.js';
 
 export class CreditLimitReportService {
   private creditLimitService: CreditLimitService;
 
-  constructor(private prisma: PrismaClient) {
+  constructor(private prisma: any) {
     this.creditLimitService = new CreditLimitService(prisma);
   }
 
@@ -34,20 +33,20 @@ export class CreditLimitReportService {
       },
     });
 
-    const clientsWithUtilization = clients.map((client) => {
+    const clientsWithUtilization = clients.map((client: any) => {
       const balance = parseFloat(client.balance.toString());
       const limit = parseFloat(client.creditLimit.toString());
       const utilization = limit > 0 ? (balance / limit) * 100 : 0;
       return { balance, limit, utilization };
     });
 
-    const exceeded = clientsWithUtilization.filter((c) => c.utilization > 100).length;
-    const warning = clientsWithUtilization.filter((c) => c.utilization >= 80 && c.utilization <= 100)
+    const exceeded = clientsWithUtilization.filter((c: any) => c.utilization > 100).length;
+    const warning = clientsWithUtilization.filter((c: any) => c.utilization >= 80 && c.utilization <= 100)
       .length;
-    const healthy = clientsWithUtilization.filter((c) => c.utilization < 80).length;
+    const healthy = clientsWithUtilization.filter((c: any) => c.utilization < 80).length;
 
-    const totalBalance = clientsWithUtilization.reduce((sum, c) => sum + c.balance, 0);
-    const totalLimit = clientsWithUtilization.reduce((sum, c) => sum + c.limit, 0);
+    const totalBalance = clientsWithUtilization.reduce((sum: number, c: any) => sum + c.balance, 0);
+    const totalLimit = clientsWithUtilization.reduce((sum: number, c: any) => sum + c.limit, 0);
     const averageUtilization =
       totalLimit > 0 ? (totalBalance / totalLimit) * 100 : 0;
 
@@ -86,7 +85,7 @@ export class CreditLimitReportService {
     });
 
     // Group by tax rate
-    const groupedByRate = invoices.reduce((acc, invoice) => {
+    const groupedByRate = invoices.reduce((acc: any, invoice: any) => {
       const rate = parseFloat(invoice.taxRate.toString());
       const tax = parseFloat(invoice.taxAmount.toString());
 
@@ -101,7 +100,7 @@ export class CreditLimitReportService {
     }, {} as Record<number, { taxRate: number; taxAmount: number; invoiceCount: number }>);
 
     const byTaxRate = Object.values(groupedByRate);
-    const totalTaxCollected = byTaxRate.reduce((sum, item) => sum + item.taxAmount, 0);
+    const totalTaxCollected = byTaxRate.reduce((sum: number, item: any) => sum + item.taxAmount, 0);
 
     return {
       totalTaxCollected,

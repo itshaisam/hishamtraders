@@ -118,7 +118,7 @@ export async function isVariantSkuUnique(
     const skuUpper = sku.toUpperCase();
 
     // Check if SKU exists in products table
-    const existingProduct = await prisma.product.findUnique({
+    const existingProduct = await prisma.product.findFirst({
       where: { sku: skuUpper },
       select: { id: true },
     });

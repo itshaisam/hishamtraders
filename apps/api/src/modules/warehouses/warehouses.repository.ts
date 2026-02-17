@@ -1,13 +1,13 @@
-import { PrismaClient, Warehouse, WarehouseStatus, GatePassMode } from '@prisma/client';
+import { Warehouse, WarehouseStatus, GatePassMode } from '@prisma/client';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto.js';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto.js';
-
-const prisma = new PrismaClient();
 
 export class WarehousesRepository {
   async create(data: CreateWarehouseDto, userId: string): Promise<Warehouse> {
     const warehouse = await prisma.warehouse.create({
       data: {
+        tenantId: getTenantId(),
         name: data.name,
         location: data.location || null,
         city: data.city || null,

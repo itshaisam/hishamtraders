@@ -1,11 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { InventoryRepository } from './inventory.repository.js';
 import { NotFoundError, BadRequestError } from '../../utils/errors.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
 import logger from '../../lib/logger.js';
 import { format } from 'date-fns';
-
-const prisma = new PrismaClient();
 
 export interface ReceiveGoodsItem {
   productId: string;
@@ -106,7 +104,7 @@ export class StockReceiptService {
     }
 
     // Use transaction for atomic operations
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       for (const item of data.items) {
         const batchNo = item.batchNo || this.generateBatchNo();
 
@@ -136,6 +134,7 @@ export class StockReceiptService {
           // Create new inventory record
           await tx.inventory.create({
             data: {
+              tenantId: getTenantId(),
               productId: item.productId,
               productVariantId: item.productVariantId || null,
               warehouseId: data.warehouseId,
@@ -155,6 +154,7 @@ export class StockReceiptService {
         // Create stock movement record
         await tx.stockMovement.create({
           data: {
+            tenantId: getTenantId(),
             productId: item.productId,
             productVariantId: item.productVariantId || null,
             warehouseId: data.warehouseId,

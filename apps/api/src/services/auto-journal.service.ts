@@ -1,4 +1,3 @@
-import { Prisma, ExpenseCategory } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { calculateBalanceChange } from '../utils/balance-helper.js';
 import logger from '../lib/logger.js';
@@ -19,7 +18,7 @@ import logger from '../lib/logger.js';
  */
 
 // Use Prisma transaction client OR regular PrismaClient
-type PrismaLike = Prisma.TransactionClient;
+type PrismaLike = any;
 
 const EXPENSE_ACCOUNT_MAP: Record<string, string> = {
   RENT: '5200',

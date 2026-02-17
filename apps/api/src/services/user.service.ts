@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
 import { Prisma } from '@prisma/client';
-import { prisma } from '../lib/prisma.js';
+import { prisma, getTenantId } from '../lib/prisma.js';
 import { AuditService } from './audit.service.js';
 
 interface CreateUserData {
@@ -154,6 +154,7 @@ export class UserService {
     // Create user
     const user = await prisma.user.create({
       data: {
+        tenantId: getTenantId(),
         email,
         name,
         roleId,

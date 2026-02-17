@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma as defaultPrisma } from '../../lib/prisma.js';
 import logger from '../../lib/logger.js';
 
@@ -32,9 +32,9 @@ interface AgentListSummary {
 }
 
 export class AgentPerformanceService {
-  private prisma: PrismaClient;
+  private prisma: any;
 
-  constructor(prismaClient?: PrismaClient) {
+  constructor(prismaClient?: any) {
     this.prisma = prismaClient || defaultPrisma;
   }
 
@@ -186,7 +186,7 @@ export class AgentPerformanceService {
       return [];
     }
 
-    const agentIds = agents.map((a) => a.id);
+    const agentIds = agents.map((a: any) => a.id);
 
     // 2. Visit counts per agent
     const visitWhere: Prisma.RecoveryVisitWhereInput = {
@@ -265,7 +265,7 @@ export class AgentPerformanceService {
     }
 
     // 6. Assemble results
-    const results: AgentListSummary[] = agents.map((agent) => {
+    const results: AgentListSummary[] = agents.map((agent: any) => {
       const totalVisits = visitCountMap.get(agent.id) || 0;
       const totalCollected = collectionMap.get(agent.id) || 0;
       const assignedClients = clientCountMap.get(agent.id) || 0;

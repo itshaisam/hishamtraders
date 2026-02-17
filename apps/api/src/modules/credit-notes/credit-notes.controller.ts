@@ -1,12 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { CreditNotesService } from './credit-notes.service.js';
 import { createCreditNoteSchema } from './dto/create-credit-note.dto.js';
 import { voidCreditNoteSchema } from './dto/void-credit-note.dto.js';
 import { UnauthorizedError } from '../../utils/errors.js';
 import logger from '../../lib/logger.js';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../lib/prisma.js';
 
 export class CreditNotesController {
   private service: CreditNotesService;

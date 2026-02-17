@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { CreditLimitReportService } from './credit-limit-report.service.js';
 import { CashFlowService } from './cash-flow.service.js';
 import { StockReportService } from './stock-report.service.js';
@@ -19,10 +18,9 @@ import { expenseService } from '../expenses/expenses.service.js';
 import { generateExcel } from '../../utils/excel-export.util.js';
 import { BadRequestError } from '../../utils/errors.js';
 import logger from '../../lib/logger.js';
+import { prisma } from '../../lib/prisma.js';
 
 const MAX_EXPORT_ROWS = 10000;
-
-const prisma = new PrismaClient();
 
 export class ReportsController {
   private creditLimitReportService: CreditLimitReportService;
@@ -703,8 +701,8 @@ export class ReportsController {
     try {
       const data = await this.paymentReportService.getReceivablesReport();
 
-      const totalBalance = data.reduce((s, d) => s + d.balance, 0);
-      const totalOverdue = data.reduce((s, d) => s + d.overdueAmount, 0);
+      const totalBalance = data.reduce((s: number, d: any) => s + d.balance, 0);
+      const totalOverdue = data.reduce((s: number, d: any) => s + d.overdueAmount, 0);
 
       const buffer = await generateExcel({
         title: 'Outstanding Receivables',

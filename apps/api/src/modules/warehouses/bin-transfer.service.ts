@@ -1,4 +1,4 @@
-import { prisma } from '../../lib/prisma.js';
+import { prisma, getTenantId } from '../../lib/prisma.js';
 import { NotFoundError, BadRequestError } from '../../utils/errors.js';
 import { AuditService } from '../../services/audit.service.js';
 import logger from '../../lib/logger.js';
@@ -40,7 +40,7 @@ export class BinTransferService {
       );
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Deduct from source bin
       await tx.inventory.update({
         where: { id: sourceInventory.id },
@@ -65,6 +65,7 @@ export class BinTransferService {
       } else {
         await tx.inventory.create({
           data: {
+            tenantId: getTenantId(),
             productId: data.productId,
             warehouseId,
             batchNo: data.batchNo || null,
@@ -77,6 +78,7 @@ export class BinTransferService {
       // Create stock movement record
       await tx.stockMovement.create({
         data: {
+          tenantId: getTenantId(),
           productId: data.productId,
           warehouseId,
           movementType: 'ADJUSTMENT',

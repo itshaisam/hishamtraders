@@ -1,4 +1,4 @@
-import { PrismaClient, Client, ClientStatus, Prisma } from '@prisma/client';
+import { Client, ClientStatus, Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 
 export interface ClientFilters {
@@ -11,7 +11,7 @@ export interface ClientFilters {
 }
 
 export class ClientRepository {
-  private prisma: PrismaClient;
+  private prisma: any;
 
   constructor() {
     this.prisma = prisma;
@@ -134,8 +134,8 @@ export class ClientRepository {
     });
 
     return clients
-      .map((c) => c.city)
-      .filter((city): city is string => city !== null)
+      .map((c: any) => c.city)
+      .filter((city: any): city is string => city !== null)
       .sort();
   }
 }

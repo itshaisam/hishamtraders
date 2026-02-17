@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { InvoicesService } from './invoices.service.js';
 import { createInvoiceSchema } from './dto/create-invoice.dto.js';
@@ -8,8 +7,7 @@ import { voidInvoiceSchema } from './dto/void-invoice.dto.js';
 import { UnauthorizedError, NotFoundError, BadRequestError } from '../../utils/errors.js';
 import { generateInvoicePdf } from '../../utils/pdf/invoice-pdf.util.js';
 import logger from '../../lib/logger.js';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../lib/prisma.js';
 
 export class InvoicesController {
   private service: InvoicesService;
@@ -251,7 +249,7 @@ export class InvoicesController {
       }
 
       // Get company name from system settings
-      const businessNameSetting = await prisma.systemSetting.findUnique({
+      const businessNameSetting = await prisma.systemSetting.findFirst({
         where: { key: 'BUSINESS_NAME' },
       });
       const companyName = businessNameSetting?.value || 'Hisham Traders';
