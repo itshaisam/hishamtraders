@@ -75,7 +75,7 @@ export class GatePassService {
     const initialStatus: GatePassStatus = isAutoMode ? 'APPROVED' : 'PENDING';
 
     const gatePass = await this.prisma.$transaction(async (tx: any) => {
-      const created = await tx.gatePass.create({
+      const gp = await tx.gatePass.create({
         data: {
           gatePassNumber,
           warehouseId: data.warehouseId,
@@ -88,17 +88,23 @@ export class GatePassService {
           approvedBy: isAutoMode ? userId : undefined,
           notes: data.notes,
           tenantId: getTenantId(),
-          items: {
-            create: data.items.map((item: any) => ({
-              productId: item.productId,
-              batchNo: item.batchNo,
-              binLocation: item.binLocation,
-              quantity: item.quantity,
-              description: item.description,
-              tenantId: getTenantId(),
-            })),
-          },
         },
+      });
+
+      await tx.gatePassItem.createMany({
+        data: data.items.map((item: any) => ({
+          gatePassId: gp.id,
+          productId: item.productId,
+          batchNo: item.batchNo,
+          binLocation: item.binLocation,
+          quantity: item.quantity,
+          description: item.description,
+          tenantId: getTenantId(),
+        })),
+      });
+
+      const created = await tx.gatePass.findUnique({
+        where: { id: gp.id },
         include: {
           items: { include: { product: { select: { id: true, name: true, sku: true } } } },
           warehouse: { select: { id: true, name: true } },
@@ -152,7 +158,7 @@ export class GatePassService {
     const isAutoMode = invoice.warehouse.gatePassMode === 'AUTO';
     const initialStatus: GatePassStatus = isAutoMode ? 'APPROVED' : 'PENDING';
 
-    const gatePass = await this.prisma.gatePass.create({
+    const gp = await this.prisma.gatePass.create({
       data: {
         gatePassNumber,
         warehouseId: invoice.warehouseId,
@@ -165,16 +171,22 @@ export class GatePassService {
         approvedBy: isAutoMode ? userId : undefined,
         notes: `Auto-created from invoice ${invoice.invoiceNumber}`,
         tenantId: getTenantId(),
-        items: {
-          create: invoice.items.map((item: any) => ({
-            productId: item.productId,
-            batchNo: item.batchNo,
-            quantity: item.quantity,
-            description: `Invoice item: ${item.product.name}`,
-            tenantId: getTenantId(),
-          })),
-        },
       },
+    });
+
+    await this.prisma.gatePassItem.createMany({
+      data: invoice.items.map((item: any) => ({
+        gatePassId: gp.id,
+        productId: item.productId,
+        batchNo: item.batchNo,
+        quantity: item.quantity,
+        description: `Invoice item: ${item.product.name}`,
+        tenantId: getTenantId(),
+      })),
+    });
+
+    const gatePass = await this.prisma.gatePass.findUnique({
+      where: { id: gp.id },
       include: {
         items: true,
         warehouse: { select: { id: true, name: true } },

@@ -61,7 +61,7 @@ export class PaymentAllocationService {
         data: {
           paymentId,
           invoiceId: invoice.id,
-          amount: new Prisma.Decimal(allocationAmount.toFixed(2)),
+          amount: new Prisma.Decimal(allocationAmount.toFixed(4)),
         },
       });
 
@@ -70,7 +70,7 @@ export class PaymentAllocationService {
       await this.prisma.invoice.update({
         where: { id: invoice.id },
         data: {
-          paidAmount: new Prisma.Decimal(newPaidAmount.toFixed(2)),
+          paidAmount: new Prisma.Decimal(newPaidAmount.toFixed(4)),
           status: this.calculateInvoiceStatus(
             parseFloat(invoice.total.toString()),
             newPaidAmount,
@@ -208,7 +208,7 @@ export class PaymentAllocationService {
     await this.prisma.client.update({
       where: { id: clientId },
       data: {
-        balance: new Prisma.Decimal(newBalance.toFixed(2)),
+        balance: new Prisma.Decimal(newBalance.toFixed(4)),
       },
     });
 

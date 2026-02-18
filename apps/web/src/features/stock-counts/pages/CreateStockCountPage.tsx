@@ -4,6 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { apiClient } from '../../../lib/api-client';
 import { stockCountService } from '../../../services/stockCountService';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 export default function CreateStockCountPage() {
   const navigate = useNavigate();
@@ -27,7 +28,8 @@ export default function CreateStockCountPage() {
   });
 
   return (
-    <div className="p-6 max-w-lg mx-auto">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Stock Counts', href: '/stock-counts' }, { label: 'Create Stock Count' }]} className="mb-4" />
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Create Stock Count</h1>
       <form onSubmit={(e) => { e.preventDefault(); createMutation.mutate(); }} className="bg-white rounded-lg shadow p-6 space-y-4">
         <div>

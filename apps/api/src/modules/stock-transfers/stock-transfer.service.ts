@@ -63,7 +63,7 @@ export class StockTransferService {
 
     const transferNumber = await this.generateTransferNumber();
 
-    const transfer = await (prisma.stockTransfer as any).create({
+    const created = await prisma.stockTransfer.create({
       data: {
         transferNumber,
         sourceWarehouseId: data.sourceWarehouseId,
@@ -72,23 +72,29 @@ export class StockTransferService {
         requestedBy: userId,
         notes: data.notes?.trim() || null,
         tenantId: getTenantId(),
-        items: {
-          create: data.items.map((item: any) => ({
-            productId: item.productId,
-            batchNo: item.batchNo || null,
-            quantity: item.quantity,
-            notes: item.notes?.trim() || null,
-            tenantId: getTenantId(),
-          })),
-        },
       },
+    });
+
+    await prisma.stockTransferItem.createMany({
+      data: data.items.map((item: any) => ({
+        stockTransferId: created.id,
+        productId: item.productId,
+        batchNo: item.batchNo || null,
+        quantity: item.quantity,
+        notes: item.notes?.trim() || null,
+        tenantId: getTenantId(),
+      })),
+    });
+
+    const transfer = (await prisma.stockTransfer.findUnique({
+      where: { id: created.id },
       include: {
         sourceWarehouse: { select: { id: true, name: true } },
         destinationWarehouse: { select: { id: true, name: true } },
         requester: { select: { id: true, name: true } },
         items: { include: { product: { select: { id: true, name: true, sku: true } } } },
       },
-    });
+    }))!;
 
     await AuditService.log({
       userId,

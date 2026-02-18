@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
 import { Card, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 import { useAccountHeads } from '../../../hooks/useAccountHeads';
 import {
   useCreateJournalEntry,
@@ -103,8 +104,8 @@ export function CreateJournalEntryPage() {
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-PK', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
     }).format(amount);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -162,7 +163,8 @@ export function CreateJournalEntryPage() {
   }
 
   return (
-    <div className="p-6 space-y-4 max-w-5xl">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Accounting', href: '/accounting/journal-entries' }, { label: isEdit ? 'Edit Journal Entry' : 'New Journal Entry' }]} className="mb-4" />
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
@@ -281,7 +283,7 @@ export function CreateJournalEntryPage() {
                         value={line.debitAmount}
                         onChange={(e) => updateLine(line.key, 'debitAmount', e.target.value)}
                         min="0"
-                        step="0.01"
+                        step="0.0001"
                         placeholder="0.00"
                         className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-right font-mono focus:ring-1 focus:ring-blue-500"
                       />
@@ -292,7 +294,7 @@ export function CreateJournalEntryPage() {
                         value={line.creditAmount}
                         onChange={(e) => updateLine(line.key, 'creditAmount', e.target.value)}
                         min="0"
-                        step="0.01"
+                        step="0.0001"
                         placeholder="0.00"
                         className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-right font-mono focus:ring-1 focus:ring-blue-500"
                       />

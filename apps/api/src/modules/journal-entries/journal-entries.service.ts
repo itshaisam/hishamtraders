@@ -38,7 +38,7 @@ export class JournalEntryService {
 
     const entryNumber = await generateJournalEntryNumber(data.date);
 
-    const entry = await (prisma.journalEntry as any).create({
+    const created = await prisma.journalEntry.create({
       data: {
         entryNumber,
         date: data.date,
@@ -48,18 +48,24 @@ export class JournalEntryService {
         referenceId: data.referenceId || null,
         createdBy: userId,
         tenantId: getTenantId(),
-        lines: {
-          create: data.lines.map((line: any) => ({
-            accountHeadId: line.accountHeadId,
-            debitAmount: line.debitAmount,
-            creditAmount: line.creditAmount,
-            description: line.description || null,
-            tenantId: getTenantId(),
-          })),
-        },
       },
-      include: INCLUDE_LINES,
     });
+
+    await prisma.journalEntryLine.createMany({
+      data: data.lines.map((line: any) => ({
+        journalEntryId: created.id,
+        accountHeadId: line.accountHeadId,
+        debitAmount: line.debitAmount,
+        creditAmount: line.creditAmount,
+        description: line.description || null,
+        tenantId: getTenantId(),
+      })),
+    });
+
+    const entry = (await prisma.journalEntry.findUnique({
+      where: { id: created.id },
+      include: INCLUDE_LINES,
+    }))!;
 
     await AuditService.log({
       userId,
@@ -147,27 +153,31 @@ export class JournalEntryService {
         });
       }
 
-      return (tx.journalEntry as any).update({
+      const updated = await tx.journalEntry.update({
         where: { id },
         data: {
           date: data.date,
           description: data.description?.trim(),
           referenceType: data.referenceType,
           referenceId: data.referenceId,
-          ...(data.lines
-            ? {
-                lines: {
-                  create: data.lines.map((line: any) => ({
-                    accountHeadId: line.accountHeadId,
-                    debitAmount: line.debitAmount,
-                    creditAmount: line.creditAmount,
-                    description: line.description || null,
-                    tenantId: getTenantId(),
-                  })),
-                },
-              }
-            : {}),
         },
+      });
+
+      if (data.lines) {
+        await tx.journalEntryLine.createMany({
+          data: data.lines.map((line: any) => ({
+            journalEntryId: id,
+            accountHeadId: line.accountHeadId,
+            debitAmount: line.debitAmount,
+            creditAmount: line.creditAmount,
+            description: line.description || null,
+            tenantId: getTenantId(),
+          })),
+        });
+      }
+
+      return tx.journalEntry.findUnique({
+        where: { id },
         include: INCLUDE_LINES,
       });
     });
@@ -205,9 +215,9 @@ export class JournalEntryService {
         0
       );
 
-      if (Math.abs(totalDebits - totalCredits) > 0.01) {
+      if (Math.abs(totalDebits - totalCredits) > 0.0001) {
         throw new BadRequestError(
-          `Entry is not balanced. Debits: ${totalDebits.toFixed(2)}, Credits: ${totalCredits.toFixed(2)}`
+          `Entry is not balanced. Debits: ${totalDebits.toFixed(4)}, Credits: ${totalCredits.toFixed(4)}`
         );
       }
 
@@ -239,7 +249,7 @@ export class JournalEntryService {
         action: 'UPDATE',
         entityType: 'JournalEntry',
         entityId: id,
-        notes: `Journal entry posted: ${entry.entryNumber} (Debits: ${totalDebits.toFixed(2)}, Credits: ${totalCredits.toFixed(2)})`,
+        notes: `Journal entry posted: ${entry.entryNumber} (Debits: ${totalDebits.toFixed(4)}, Credits: ${totalCredits.toFixed(4)})`,
       });
 
       return posted;
@@ -268,9 +278,9 @@ export class JournalEntryService {
     const totalDebits = lines.reduce((sum, l) => sum + (l.debitAmount || 0), 0);
     const totalCredits = lines.reduce((sum, l) => sum + (l.creditAmount || 0), 0);
 
-    if (Math.abs(totalDebits - totalCredits) > 0.01) {
+    if (Math.abs(totalDebits - totalCredits) > 0.0001) {
       throw new BadRequestError(
-        `Debits (${totalDebits.toFixed(2)}) must equal Credits (${totalCredits.toFixed(2)})`
+        `Debits (${totalDebits.toFixed(4)}) must equal Credits (${totalCredits.toFixed(4)})`
       );
     }
   }

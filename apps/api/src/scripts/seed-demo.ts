@@ -82,8 +82,8 @@ async function createJournalEntry(
     resolvedLines.push({
       accountHeadId: account.id,
       accountType: account.accountType,
-      debitAmount: Math.round(line.debit * 100) / 100,
-      creditAmount: Math.round(line.credit * 100) / 100,
+      debitAmount: Math.round(line.debit * 10000) / 10000,
+      creditAmount: Math.round(line.credit * 10000) / 10000,
       description: line.description || null,
     });
   }

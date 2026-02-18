@@ -36,8 +36,7 @@ export const ReceiveGoodsPage: React.FC = () => {
 
   if (isError || !purchaseOrder) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-5xl mx-auto px-4">
+      <div className="p-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <h2 className="text-lg font-semibold text-red-900 mb-2">Purchase Order Not Found</h2>
             <p className="text-red-700 mb-4">
@@ -50,7 +49,6 @@ export const ReceiveGoodsPage: React.FC = () => {
               Back to Orders
             </button>
           </div>
-        </div>
       </div>
     );
   }
@@ -58,8 +56,7 @@ export const ReceiveGoodsPage: React.FC = () => {
   // Check if PO can be received
   if (purchaseOrder.status === 'RECEIVED') {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-5xl mx-auto px-4">
+      <div className="p-6">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
             <h2 className="text-lg font-semibold text-yellow-900 mb-2">Already Received</h2>
             <p className="text-yellow-700 mb-4">
@@ -72,15 +69,13 @@ export const ReceiveGoodsPage: React.FC = () => {
               View Purchase Order
             </button>
           </div>
-        </div>
       </div>
     );
   }
 
   if (purchaseOrder.status === 'CANCELLED') {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-5xl mx-auto px-4">
+      <div className="p-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <h2 className="text-lg font-semibold text-red-900 mb-2">Cannot Receive</h2>
             <p className="text-red-700 mb-4">
@@ -93,22 +88,21 @@ export const ReceiveGoodsPage: React.FC = () => {
               View Purchase Order
             </button>
           </div>
-        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-5xl mx-auto px-4 space-y-4">
+    <div className="p-6 space-y-4">
         {/* Breadcrumbs */}
         <Breadcrumbs
           items={[
+            { label: 'Purchases', href: '/purchase-orders' },
             { label: 'Purchase Orders', href: '/purchase-orders' },
             { label: purchaseOrder.poNumber, href: `/purchase-orders/${id}/view` },
             { label: 'Receive Goods' },
           ]}
-          className="text-xs sm:text-sm"
+          className="mb-4"
         />
 
         {/* Header with back button */}
@@ -136,7 +130,6 @@ export const ReceiveGoodsPage: React.FC = () => {
             isLoading={receiveGoodsMutation.isPending}
           />
         </div>
-      </div>
     </div>
   );
 };

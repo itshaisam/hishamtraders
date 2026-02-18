@@ -5,6 +5,7 @@ import { apiClient } from '../../../lib/api-client';
 import { useCreateGatePass } from '../../../hooks/useGatePasses';
 import { GatePassPurpose, CreateGatePassDto } from '../../../types/gate-pass.types';
 import { Button } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 interface ProductOption {
   id: string;
@@ -104,7 +105,8 @@ export default function CreateGatePassPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Gate Passes', href: '/gate-passes' }, { label: 'Create Gate Pass' }]} className="mb-4" />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Create Gate Pass</h1>
         <p className="text-sm text-gray-500 mt-1">Create a new outbound gate pass</p>

@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 import { ArrowLeft, Calendar, MapPin, Building2, CreditCard, FileText, XCircle, RotateCcw, Printer, FileDown, Link2, Check, PackageX, ClipboardList, History } from 'lucide-react';
 import { format } from 'date-fns';
 import { useInvoiceById, useVoidInvoice, useInvoices } from '../../../hooks/useInvoices';
@@ -117,7 +118,7 @@ export function InvoiceDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="p-6">
         <div className="text-center text-gray-500">Loading invoice...</div>
       </div>
     );
@@ -125,7 +126,7 @@ export function InvoiceDetailPage() {
 
   if (error || !invoice) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="p-6">
         <div className="text-center text-red-500">Failed to load invoice</div>
       </div>
     );
@@ -144,7 +145,8 @@ export function InvoiceDetailPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Sales', href: '/invoices' }, { label: 'Invoices', href: '/invoices' }, { label: invoice?.invoiceNumber || 'Invoice Detail' }]} className="mb-4 no-print" />
       {/* ===== Print Styles ===== */}
       <style>{`
         @media print {

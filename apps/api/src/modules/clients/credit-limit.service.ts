@@ -44,8 +44,8 @@ export class CreditLimitService {
     if (utilization > 100) {
       status = 'EXCEEDED';
       message = `Credit limit exceeded. Current balance: Rs.${currentBalance.toFixed(
-        2
-      )}, Limit: Rs.${creditLimit.toFixed(2)}, New total: Rs.${newBalance.toFixed(2)}`;
+        4
+      )}, Limit: Rs.${creditLimit.toFixed(4)}, New total: Rs.${newBalance.toFixed(4)}`;
     } else if (utilization >= warningThreshold) {
       status = 'WARNING';
       message = `Client approaching credit limit (${utilization.toFixed(0)}% utilized)`;

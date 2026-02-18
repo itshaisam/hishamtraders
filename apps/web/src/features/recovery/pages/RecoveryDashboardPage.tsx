@@ -4,6 +4,7 @@ import { Calendar, DollarSign, AlertTriangle, Clock, Users, TrendingUp, Bell, Ta
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { recoveryService } from '../../../services/recoveryService';
 import { Card, Button, Badge, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const formatCurrency = (n: number) =>
   `PKR ${Number(n || 0).toLocaleString('en-PK', { minimumFractionDigits: 0 })}`;
@@ -38,6 +39,7 @@ export default function RecoveryDashboardPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs items={[{ label: 'Recovery', href: '/recovery/dashboard' }, { label: 'Dashboard' }]} className="mb-4" />
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Recovery Dashboard</h1>

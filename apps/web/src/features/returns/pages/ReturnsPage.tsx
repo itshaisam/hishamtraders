@@ -5,6 +5,7 @@ import { Eye, RotateCcw } from 'lucide-react';
 import { useCreditNotes } from '../../../hooks/useCreditNotes';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { CreditNoteFilters, CreditNoteStatus } from '../../../types/credit-note.types';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 export function ReturnsPage() {
   const navigate = useNavigate();
@@ -27,7 +28,8 @@ export function ReturnsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Sales', href: '/invoices' }, { label: 'Returns' }]} className="mb-4" />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Sales Returns / Credit Notes</h1>

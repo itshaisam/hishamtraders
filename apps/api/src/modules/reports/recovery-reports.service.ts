@@ -96,7 +96,7 @@ export class RecoveryReportsService {
         outcome,
         count,
       })),
-      totalCollected: Math.round(totalCollected * 100) / 100,
+      totalCollected: Math.round(totalCollected * 10000) / 10000,
     };
 
     const data = visits.map((v: any) => ({
@@ -174,7 +174,7 @@ export class RecoveryReportsService {
     const agentCollections = Array.from(agentMap.entries()).map(([agentId, data]) => ({
       agentId,
       agentName: data.agentName,
-      totalCollected: Math.round(data.totalCollected * 100) / 100,
+      totalCollected: Math.round(data.totalCollected * 10000) / 10000,
       visitCount: data.visitCount,
     }));
 
@@ -216,7 +216,7 @@ export class RecoveryReportsService {
     const dailyCollections = Array.from(dailyMap.entries())
       .map(([date, amount]) => ({
         date,
-        amount: Math.round(amount * 100) / 100,
+        amount: Math.round(amount * 10000) / 10000,
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
@@ -225,7 +225,7 @@ export class RecoveryReportsService {
     for (const v of visits) {
       visitTotal += parseFloat(v.amountCollected.toString());
     }
-    const totalCollected = Math.round((visitTotal + formalTotal) * 100) / 100;
+    const totalCollected = Math.round((visitTotal + formalTotal) * 10000) / 10000;
 
     return {
       agentCollections,
@@ -341,7 +341,7 @@ export class RecoveryReportsService {
         phone: client.phone,
         recoveryAgentId: client.recoveryAgentId,
         recoveryAgentName: client.recoveryAgent?.name || null,
-        overdueAmount: Math.round(overdueAmount * 100) / 100,
+        overdueAmount: Math.round(overdueAmount * 10000) / 10000,
         overdueInvoiceCount: client.invoices.length,
         daysOverdue,
         oldestDueDate: oldestDueDate.toISOString(),
@@ -425,7 +425,7 @@ export class RecoveryReportsService {
     return {
       data: paginatedRows,
       summary: {
-        totalOverdue: Math.round(totalOverdue * 100) / 100,
+        totalOverdue: Math.round(totalOverdue * 10000) / 10000,
         clientCount: totalFiltered,
       },
       meta: {
@@ -548,9 +548,9 @@ export class RecoveryReportsService {
       const assignedClients = assignedClientsMap.get(agent.id) || 0;
       const visitedClients = visitData.visitedClients.size;
 
-      const visitsPerDay = Math.round((visitData.totalVisits / periodDays) * 100) / 100;
+      const visitsPerDay = Math.round((visitData.totalVisits / periodDays) * 10000) / 10000;
       const avgCollectionPerVisit = visitData.totalVisits > 0
-        ? Math.round((visitData.totalCollected / visitData.totalVisits) * 100) / 100
+        ? Math.round((visitData.totalCollected / visitData.totalVisits) * 10000) / 10000
         : 0;
       const fulfillmentRate = promiseData.promisesMade > 0
         ? Math.round((promiseData.promisesFulfilled / promiseData.promisesMade) * 10000) / 100
@@ -564,7 +564,7 @@ export class RecoveryReportsService {
         agentName: agent.name,
         totalVisits: visitData.totalVisits,
         visitsPerDay,
-        totalCollected: Math.round(visitData.totalCollected * 100) / 100,
+        totalCollected: Math.round(visitData.totalCollected * 10000) / 10000,
         avgCollectionPerVisit,
         promisesMade: promiseData.promisesMade,
         promisesFulfilled: promiseData.promisesFulfilled,

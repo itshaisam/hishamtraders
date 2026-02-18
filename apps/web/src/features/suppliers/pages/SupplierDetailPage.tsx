@@ -39,8 +39,7 @@ export const SupplierDetailPage: React.FC = () => {
 
   if (isError || !supplier) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-5xl mx-auto px-4">
+      <div className="p-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <h2 className="text-lg font-semibold text-red-900 mb-2">Supplier Not Found</h2>
             <p className="text-red-700 mb-4">The supplier you're looking for doesn't exist or has been deleted.</p>
@@ -48,21 +47,20 @@ export const SupplierDetailPage: React.FC = () => {
               Back to Suppliers
             </Button>
           </div>
-        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-5xl mx-auto px-4 space-y-4">
+    <div className="p-6 space-y-4">
         {/* Breadcrumbs - Responsive */}
         <Breadcrumbs
           items={[
+            { label: 'Purchases', href: '/purchase-orders' },
             { label: 'Suppliers', href: '/suppliers' },
             { label: supplier.name },
           ]}
-          className="text-xs sm:text-sm"
+          className="mb-4"
         />
 
         {/* Header with back button - Responsive Flex */}
@@ -88,7 +86,6 @@ export const SupplierDetailPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-6 md:p-8 mt-2">
           <SupplierForm supplier={supplier} onSubmit={handleSubmit} isLoading={isUpdating} />
         </div>
-      </div>
 
       {id && (
         <ChangeHistoryModal

@@ -60,13 +60,13 @@ export function CreditUtilizationDisplay({ client }: CreditUtilizationDisplayPro
           <div>
             <p className="text-xs text-gray-500">Current Balance</p>
             <p className="text-sm font-semibold text-gray-800">
-              {cs} {balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {cs} {balance.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
             </p>
           </div>
           <div className="text-right">
             <p className="text-xs text-gray-500">Credit Limit</p>
             <p className="text-sm font-semibold text-gray-800">
-              {cs} {creditLimit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {cs} {creditLimit.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
             </p>
           </div>
         </div>

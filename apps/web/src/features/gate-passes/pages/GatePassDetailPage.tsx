@@ -12,6 +12,7 @@ import {
 import { useCompanyName, useCompanyLogo } from '../../../hooks/useSettings';
 import { GatePassStatus } from '../../../types/gate-pass.types';
 import { Badge, Button, Spinner, Modal } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const statusVariants: Record<GatePassStatus, 'warning' | 'info' | 'default' | 'success' | 'danger'> = {
   PENDING: 'warning',
@@ -75,6 +76,7 @@ export default function GatePassDetailPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Gate Passes', href: '/gate-passes' }, { label: gatePass?.gatePassNumber || 'Gate Pass Detail' }]} className="mb-4" />
       {/* ===== Print Styles ===== */}
       <style>{`
         @media print {

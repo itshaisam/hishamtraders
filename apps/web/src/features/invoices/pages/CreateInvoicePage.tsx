@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, addDays, parseISO } from 'date-fns';
@@ -203,7 +204,8 @@ export function CreateInvoicePage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Sales', href: '/invoices' }, { label: 'Invoices', href: '/invoices' }, { label: 'Create Invoice' }]} className="mb-4" />
       <div className="mb-6">
         <button
           onClick={() => navigate('/invoices')}
@@ -212,7 +214,7 @@ export function CreateInvoicePage() {
           <ArrowLeft size={20} />
           Back to Invoices
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">Create Invoice</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Create Invoice</h1>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -449,7 +451,7 @@ export function CreateInvoicePage() {
                       <td className="py-2 px-2">
                         <input
                           type="number"
-                          step="0.01"
+                          step="0.0001"
                           {...register(`items.${index}.unitPrice`, { valueAsNumber: true })}
                           className="w-24 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />

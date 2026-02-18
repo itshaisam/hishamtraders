@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { stockCountService } from '../../../services/stockCountService';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const statusColors: Record<string, string> = {
   PLANNED: 'bg-blue-100 text-blue-800',
@@ -25,6 +26,7 @@ export default function StockCountListPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Stock Counts' }]} className="mb-4" />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Physical Stock Counts</h1>

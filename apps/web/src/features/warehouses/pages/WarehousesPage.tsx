@@ -55,15 +55,14 @@ export const WarehousesPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 space-y-6">
-        <Breadcrumbs items={[{ label: 'Warehouses' }]} className="text-xs sm:text-sm" />
+    <div className="p-6">
+        <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Warehouses' }]} className="mb-4" />
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Warehouses</h1>
-            <p className="mt-1 text-sm sm:text-base text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-900">Warehouses</h1>
+            <p className="mt-1 text-sm text-gray-600">
               Manage warehouse locations and inventory
             </p>
           </div>
@@ -224,7 +223,6 @@ export const WarehousesPage: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 };

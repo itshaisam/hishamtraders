@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
+import { ListPageSkeleton } from '../../../components/ui';
 import { Edit, Trash, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { useExpenses, useDeleteExpense } from '../../../hooks/useExpenses';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
@@ -106,13 +108,14 @@ export function ExpensesPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
+      <Breadcrumbs items={[{ label: 'Payments', href: '/payments/supplier' }, { label: 'Expenses' }]} className="mb-4" />
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-900">Expenses</h1>
         <div className="text-right">
           <div className="text-xs text-gray-500 uppercase tracking-wide">Period Total</div>
           <div className="text-xl font-bold text-red-600">
-            {cs} {totalExpenses.toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+            {cs} {totalExpenses.toLocaleString('en-PK', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
           </div>
         </div>
       </div>
@@ -217,10 +220,7 @@ export function ExpensesPage() {
 
       {/* Expense Ledger */}
       {isLoading ? (
-        <div className="bg-white p-8 rounded-lg shadow text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-          <p className="mt-2 text-gray-600">Loading expenses...</p>
-        </div>
+        <ListPageSkeleton />
       ) : error ? (
         <div className="bg-white p-8 rounded-lg shadow text-center">
           <p className="text-red-600">Failed to load expenses</p>
@@ -239,7 +239,7 @@ export function ExpensesPage() {
                   {format(new Date(dateKey + 'T00:00:00'), 'EEEE, MMM dd, yyyy')}
                 </span>
                 <span className="text-sm font-bold text-gray-900">
-                  {cs} {dayTotals[dateKey].toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+                  {cs} {dayTotals[dateKey].toLocaleString('en-PK', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                 </span>
               </div>
 
@@ -280,7 +280,8 @@ export function ExpensesPage() {
                     {/* Amount */}
                     <span className="text-sm font-semibold text-gray-900 tabular-nums w-28 text-right">
                       {cs} {parseFloat(expense.amount.toString()).toLocaleString('en-PK', {
-                        minimumFractionDigits: 2,
+                        minimumFractionDigits: 4,
+                        maximumFractionDigits: 4,
                       })}
                     </span>
 

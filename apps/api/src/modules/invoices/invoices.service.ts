@@ -114,11 +114,11 @@ export class InvoicesService {
           invoiceDate: data.invoiceDate,
           dueDate,
           paymentType: data.paymentType,
-          subtotal: new Prisma.Decimal(subtotal.toFixed(2)),
-          taxAmount: new Prisma.Decimal(taxAmount.toFixed(2)),
-          taxRate: new Prisma.Decimal(taxRate.toFixed(2)), // Snapshot tax rate (Story 3.5)
-          total: new Prisma.Decimal(total.toFixed(2)),
-          paidAmount: data.paymentType === 'CASH' ? new Prisma.Decimal(total.toFixed(2)) : new Prisma.Decimal(0),
+          subtotal: new Prisma.Decimal(subtotal.toFixed(4)),
+          taxAmount: new Prisma.Decimal(taxAmount.toFixed(4)),
+          taxRate: new Prisma.Decimal(taxRate.toFixed(4)), // Snapshot tax rate (Story 3.5)
+          total: new Prisma.Decimal(total.toFixed(4)),
+          paidAmount: data.paymentType === 'CASH' ? new Prisma.Decimal(total.toFixed(4)) : new Prisma.Decimal(0),
           status: data.paymentType === 'CASH' ? 'PAID' : 'PENDING',
           notes: data.adminOverride && data.overrideReason
             ? `${data.notes || ''}\n[ADMIN OVERRIDE] ${data.overrideReason}`.trim()
@@ -147,9 +147,9 @@ export class InvoicesService {
             productVariantId: item.productVariantId,
             batchNo: deductions[0]?.batchNo || null,
             quantity: item.quantity,
-            unitPrice: new Prisma.Decimal(item.unitPrice.toFixed(2)),
-            discount: new Prisma.Decimal(item.discount.toFixed(2)),
-            total: new Prisma.Decimal(item.total.toFixed(2)),
+            unitPrice: new Prisma.Decimal(item.unitPrice.toFixed(4)),
+            discount: new Prisma.Decimal(item.discount.toFixed(4)),
+            total: new Prisma.Decimal(item.total.toFixed(4)),
           },
         });
 
@@ -180,7 +180,7 @@ export class InvoicesService {
           where: { id: data.clientId },
           data: {
             balance: {
-              increment: new Prisma.Decimal(total.toFixed(2)),
+              increment: new Prisma.Decimal(total.toFixed(4)),
             },
           },
         });
@@ -468,7 +468,7 @@ export class InvoicesService {
 
         await tx.client.update({
           where: { id: invoice.clientId },
-          data: { balance: new Prisma.Decimal(newBalance.toFixed(2)) },
+          data: { balance: new Prisma.Decimal(newBalance.toFixed(4)) },
         });
 
         logger.info('Client balance updated for voided invoice', {

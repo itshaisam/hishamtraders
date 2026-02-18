@@ -71,19 +71,16 @@ export const PurchaseOrdersPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 space-y-6">
-        {/* Breadcrumbs - Responsive */}
+    <div className="p-6">
         <Breadcrumbs
-          items={[{ label: 'Purchase Orders' }]}
-          className="text-xs sm:text-sm"
+          items={[{ label: 'Purchases', href: '/purchase-orders' }, { label: 'Purchase Orders' }]}
+          className="mb-4"
         />
 
-        {/* Header - Responsive Flex */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Purchase Orders</h1>
-            <p className="mt-1 text-sm sm:text-base text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-900">Purchase Orders</h1>
+            <p className="mt-1 text-sm text-gray-600">
               Manage supplier purchase orders and tracking
             </p>
           </div>
@@ -194,8 +191,6 @@ export const PurchaseOrdersPage: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
-
     </div>
   );
 };

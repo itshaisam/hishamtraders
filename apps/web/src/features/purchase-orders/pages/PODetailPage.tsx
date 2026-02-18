@@ -39,8 +39,7 @@ export const PODetailPage: React.FC = () => {
 
   if (isError || !purchaseOrder) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-5xl mx-auto px-4">
+      <div className="p-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <h2 className="text-lg font-semibold text-red-900 mb-2">Purchase Order Not Found</h2>
             <p className="text-red-700 mb-4">
@@ -50,21 +49,20 @@ export const PODetailPage: React.FC = () => {
               Back to Orders
             </Button>
           </div>
-        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-5xl mx-auto px-4 space-y-4">
+    <div className="p-6 space-y-4">
         {/* Breadcrumbs - Responsive */}
         <Breadcrumbs
           items={[
+            { label: 'Purchases', href: '/purchase-orders' },
             { label: 'Purchase Orders', href: '/purchase-orders' },
             { label: purchaseOrder.poNumber },
           ]}
-          className="text-xs sm:text-sm"
+          className="mb-4"
         />
 
         {/* Header with back button - Responsive Flex */}
@@ -90,7 +88,6 @@ export const PODetailPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-6 md:p-8 mt-2">
           <POForm purchaseOrder={purchaseOrder} onSubmit={handleSubmit} isLoading={isUpdating} />
         </div>
-      </div>
 
       {id && (
         <ChangeHistoryModal

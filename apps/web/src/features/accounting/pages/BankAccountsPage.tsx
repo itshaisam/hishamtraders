@@ -1,7 +1,8 @@
 import { Landmark } from 'lucide-react';
 import { useBankAccounts } from '../../../hooks/useBankAccounts';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
-import Spinner from '../../../components/ui/Spinner';
+import { ListPageSkeleton, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 export function BankAccountsPage() {
   const { data: accounts, isLoading } = useBankAccounts();
@@ -12,6 +13,7 @@ export function BankAccountsPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Accounting', href: '/accounting/chart-of-accounts' }, { label: 'Bank Accounts' }]} className="mb-4" />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <Landmark className="h-6 w-6" />
@@ -24,7 +26,7 @@ export function BankAccountsPage() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
         <p className="text-sm text-blue-600">Total Balance (All Accounts)</p>
         <p className="text-2xl font-bold text-blue-900">
-          {cs} {totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          {cs} {totalBalance.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
         </p>
       </div>
 
@@ -55,7 +57,7 @@ export function BankAccountsPage() {
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">{account.name}</h3>
               <p className="text-xl font-bold text-gray-900">
-                {cs} {account.currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {cs} {account.currentBalance.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
               </p>
             </div>
           ))}

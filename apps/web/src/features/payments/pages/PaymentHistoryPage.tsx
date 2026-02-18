@@ -9,6 +9,7 @@ import {
   UnifiedPaymentFilters,
 } from '../../../types/payment.types';
 import { format } from 'date-fns';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 export default function PaymentHistoryPage() {
   const [filters, setFilters] = useState<UnifiedPaymentFilters>({
@@ -41,6 +42,7 @@ export default function PaymentHistoryPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Payments', href: '/payments/supplier' }, { label: 'Payment History' }]} className="mb-4" />
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -201,7 +203,7 @@ export default function PaymentHistoryPage() {
                       <td className={`px-4 py-3 text-sm text-right font-semibold whitespace-nowrap ${
                         payment.type === 'CLIENT' ? 'text-green-700' : 'text-red-700'
                       }`}>
-                        {payment.type === 'CLIENT' ? '+' : '-'}{cs} {payment.amount.toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+                        {payment.type === 'CLIENT' ? '+' : '-'}{cs} {payment.amount.toLocaleString('en-PK', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
                         {PAYMENT_METHOD_LABELS[payment.method as PaymentMethod] || payment.method}

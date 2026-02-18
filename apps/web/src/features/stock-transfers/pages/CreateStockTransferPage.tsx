@@ -4,6 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { apiClient } from '../../../lib/api-client';
 import { stockTransferService } from '../../../services/stockTransferService';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 interface TransferItem {
   productId: string;
@@ -70,7 +71,8 @@ export default function CreateStockTransferPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Stock Transfers', href: '/stock-transfers' }, { label: 'Create Transfer' }]} className="mb-4" />
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Create Stock Transfer</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">

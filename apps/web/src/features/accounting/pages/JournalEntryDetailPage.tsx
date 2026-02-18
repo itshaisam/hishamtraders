@@ -2,6 +2,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Edit2, CheckCircle, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Card, Badge, Spinner, Modal } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 import {
   useJournalEntry,
   usePostJournalEntry,
@@ -28,7 +29,8 @@ export function JournalEntryDetailPage() {
     new Intl.NumberFormat('en-PK', {
       style: 'currency',
       currency: 'PKR',
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
     }).format(amount);
 
   const formatDate = (dateStr: string) =>
@@ -61,6 +63,7 @@ export function JournalEntryDetailPage() {
 
   return (
     <div className="p-6 space-y-4 max-w-5xl">
+      <Breadcrumbs items={[{ label: 'Accounting', href: '/accounting/chart-of-accounts' }, { label: 'Journal Entries', href: '/accounting/journal-entries' }, { label: entry?.entryNumber || 'Detail' }]} className="mb-4" />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Users, TrendingUp, Target, DollarSign } from 'lucide-react';
 import { recoveryService } from '../../../services/recoveryService';
 import { Card, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const formatCurrency = (n: number) =>
   `PKR ${Number(n || 0).toLocaleString('en-PK', { minimumFractionDigits: 0 })}`;
@@ -30,6 +31,7 @@ export default function AgentPerformancePage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs items={[{ label: 'Recovery', href: '/recovery/dashboard' }, { label: 'Agent Performance' }]} className="mb-4" />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Agent Performance</h1>
         <p className="text-gray-600 mt-1">Recovery agent comparison and metrics</p>

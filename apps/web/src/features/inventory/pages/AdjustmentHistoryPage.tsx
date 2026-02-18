@@ -39,19 +39,19 @@ export const AdjustmentHistoryPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 space-y-6">
+    <div className="p-6">
         <Breadcrumbs
           items={[
-            { label: 'Inventory', href: '/inventory' },
+            { label: 'Inventory', href: '/stock-levels' },
             { label: 'Adjustment History' },
           ]}
+          className="mb-4"
         />
 
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Stock Adjustment History</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Stock Adjustment History</h1>
             <p className="mt-2 text-gray-600">View all stock adjustments and their approval status</p>
           </div>
           <button
@@ -208,7 +208,6 @@ export const AdjustmentHistoryPage: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 };

@@ -127,10 +127,10 @@ export class CreditNotesService {
           invoiceId: dto.invoiceId,
           clientId: invoice.clientId,
           reason: dto.reason,
-          subtotal: new Prisma.Decimal(subtotal.toFixed(2)),
-          taxRate: new Prisma.Decimal(taxRate.toFixed(2)),
-          taxAmount: new Prisma.Decimal(taxAmount.toFixed(2)),
-          totalAmount: new Prisma.Decimal(totalAmount.toFixed(2)),
+          subtotal: new Prisma.Decimal(subtotal.toFixed(4)),
+          taxRate: new Prisma.Decimal(taxRate.toFixed(4)),
+          taxAmount: new Prisma.Decimal(taxAmount.toFixed(4)),
+          totalAmount: new Prisma.Decimal(totalAmount.toFixed(4)),
           createdBy: userId,
           tenantId: getTenantId(),
         },
@@ -146,9 +146,9 @@ export class CreditNotesService {
             productVariantId: item.productVariantId,
             batchNo: item.batchNo,
             quantityReturned: item.quantityReturned,
-            unitPrice: new Prisma.Decimal(item.unitPrice.toFixed(2)),
-            discount: new Prisma.Decimal(item.discount.toFixed(2)),
-            total: new Prisma.Decimal(item.total.toFixed(2)),
+            unitPrice: new Prisma.Decimal(item.unitPrice.toFixed(4)),
+            discount: new Prisma.Decimal(item.discount.toFixed(4)),
+            total: new Prisma.Decimal(item.total.toFixed(4)),
             tenantId: getTenantId(),
           },
         });
@@ -203,7 +203,7 @@ export class CreditNotesService {
       await tx.client.update({
         where: { id: invoice.clientId },
         data: {
-          balance: { decrement: new Prisma.Decimal(totalAmount.toFixed(2)) },
+          balance: { decrement: new Prisma.Decimal(totalAmount.toFixed(4)) },
         },
       });
 
@@ -341,7 +341,7 @@ export class CreditNotesService {
       await tx.client.update({
         where: { id: creditNote.clientId },
         data: {
-          balance: { increment: new Prisma.Decimal(Number(creditNote.totalAmount).toFixed(2)) },
+          balance: { increment: new Prisma.Decimal(Number(creditNote.totalAmount).toFixed(4)) },
         },
       });
 

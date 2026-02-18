@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/api-client';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const statusColors: Record<string, string> = {
   PENDING: 'bg-yellow-100 text-yellow-800',
@@ -57,6 +58,7 @@ export default function GatePassReportPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Reports', href: '/reports' }, { label: 'Gate Pass Report' }]} className="mb-4" />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Gate Pass Reports</h1>
         <p className="text-sm text-gray-500 mt-1">Activity and summary reports for gate passes</p>

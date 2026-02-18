@@ -6,6 +6,8 @@ import { useAllClientPayments } from '../../../hooks/usePayments';
 import { useClients } from '../../../hooks/useClients';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { PaymentMethod } from '../../../types/payment.types';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
+import { ListPageSkeleton } from '../../../components/ui';
 
 function ClientPaymentsPage() {
   const [selectedClientId, setSelectedClientId] = useState<string>('');
@@ -32,6 +34,7 @@ function ClientPaymentsPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Payments', href: '/payments/supplier' }, { label: 'Customer Payments' }]} className="mb-4" />
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -75,7 +78,7 @@ function ClientPaymentsPage() {
       {/* Table */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-gray-500">Loading payments...</div>
+          <ListPageSkeleton />
         ) : error ? (
           <div className="p-8 text-center text-red-500">
             Error loading payments. Please try again.
@@ -127,7 +130,7 @@ function ClientPaymentsPage() {
                       {payment.client?.name || '-'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold text-green-700">
-                      {cs} {parseFloat(payment.amount).toFixed(2)}
+                      {cs} {parseFloat(payment.amount).toFixed(4)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <span
@@ -150,7 +153,7 @@ function ClientPaymentsPage() {
                                 {allocation.invoice.invoiceNumber}
                               </span>
                               <span className="text-gray-500 text-xs">
-                                ({cs} {parseFloat(allocation.amount).toFixed(2)})
+                                ({cs} {parseFloat(allocation.amount).toFixed(4)})
                               </span>
                             </div>
                           ))}

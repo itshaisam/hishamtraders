@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { apiClient } from '../../../lib/api-client';
+import { Breadcrumbs } from '../../../components/ui';
 
 export default function BinTransferPage() {
   const [warehouseId, setWarehouseId] = useState('');
@@ -64,7 +65,8 @@ export default function BinTransferPage() {
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Warehouses', href: '/warehouses' }, { label: 'Bin Transfer' }]} className="mb-4" />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Bin-to-Bin Transfer</h1>
         <p className="text-sm text-gray-500 mt-1">Move stock between bin locations within a warehouse</p>

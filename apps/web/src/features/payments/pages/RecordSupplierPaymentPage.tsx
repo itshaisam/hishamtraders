@@ -9,6 +9,7 @@ import { usePurchaseOrders } from '../../purchase-orders/hooks/usePurchaseOrders
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { useBankAccounts } from '../../../hooks/useBankAccounts';
 import { PaymentMethod, PaymentReferenceType } from '../../../types/payment.types';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 interface PaymentFormData {
   supplierId: string;
@@ -79,6 +80,7 @@ function RecordSupplierPaymentPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Payments', href: '/payments/supplier' }, { label: 'Supplier Payments', href: '/payments/supplier/history' }, { label: 'Record Payment' }]} className="mb-4" />
       <div className="mb-6 flex items-center gap-4">
         <button
           onClick={() => navigate(-1)}
@@ -149,7 +151,7 @@ function RecordSupplierPaymentPage() {
                 <option value="">Select Purchase Order</option>
                 {filteredPOs?.map((po: any) => (
                   <option key={po.id} value={po.id}>
-                    {po.poNumber} - {cs} {parseFloat(po.totalAmount).toFixed(2)}
+                    {po.poNumber} - {cs} {parseFloat(po.totalAmount).toFixed(4)}
                   </option>
                 ))}
               </select>
@@ -166,15 +168,15 @@ function RecordSupplierPaymentPage() {
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
                   <p className="text-blue-600">Total Amount</p>
-                  <p className="font-semibold text-blue-900">{cs} {poBalance.total.toFixed(2)}</p>
+                  <p className="font-semibold text-blue-900">{cs} {poBalance.total.toFixed(4)}</p>
                 </div>
                 <div>
                   <p className="text-blue-600">Paid</p>
-                  <p className="font-semibold text-green-700">{cs} {poBalance.paid.toFixed(2)}</p>
+                  <p className="font-semibold text-green-700">{cs} {poBalance.paid.toFixed(4)}</p>
                 </div>
                 <div>
                   <p className="text-blue-600">Outstanding</p>
-                  <p className="font-semibold text-red-700">{cs} {poBalance.outstanding.toFixed(2)}</p>
+                  <p className="font-semibold text-red-700">{cs} {poBalance.outstanding.toFixed(4)}</p>
                 </div>
               </div>
             </div>
@@ -187,7 +189,7 @@ function RecordSupplierPaymentPage() {
             </label>
             <input
               type="number"
-              step="0.01"
+              step="0.0001"
               {...register('amount', {
                 required: 'Amount is required',
                 min: { value: 0.01, message: 'Amount must be greater than 0' },

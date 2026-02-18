@@ -50,19 +50,16 @@ export const SuppliersPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 space-y-6">
-        {/* Breadcrumbs - Responsive */}
+    <div className="p-6">
         <Breadcrumbs
-          items={[{ label: 'Suppliers' }]}
-          className="text-xs sm:text-sm"
+          items={[{ label: 'Purchases', href: '/purchase-orders' }, { label: 'Suppliers' }]}
+          className="mb-4"
         />
 
-        {/* Header - Responsive Flex */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Suppliers</h1>
-            <p className="mt-1 text-sm sm:text-base text-gray-600">Manage supplier information and payment terms</p>
+            <h1 className="text-2xl font-bold text-gray-900">Suppliers</h1>
+            <p className="mt-1 text-sm text-gray-600">Manage supplier information and payment terms</p>
           </div>
           {canEdit && (
             <Button
@@ -128,7 +125,6 @@ export const SuppliersPage: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 };

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { MapPin, CheckCircle, XCircle } from 'lucide-react';
 import { recoveryService } from '../../../services/recoveryService';
 import { Card, Button, Input, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const OUTCOMES = [
   { value: 'PAYMENT_COLLECTED', label: 'Payment Collected' },
@@ -105,6 +106,7 @@ export default function RecoveryVisitLogPage() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
+      <Breadcrumbs items={[{ label: 'Recovery', href: '/recovery/dashboard' }, { label: 'Log Visit' }]} className="mb-4" />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Log Recovery Visit</h1>
         <p className="text-gray-600 mt-1">Record the outcome of a customer visit</p>
@@ -195,7 +197,7 @@ export default function RecoveryVisitLogPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Amount Collected (PKR) *</label>
               <Input
                 type="number"
-                step="0.01"
+                step="0.0001"
                 min="0.01"
                 value={form.amountCollected}
                 onChange={(e) => setForm({ ...form, amountCollected: e.target.value })}
@@ -222,7 +224,7 @@ export default function RecoveryVisitLogPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Promise Amount (PKR) *</label>
                 <Input
                   type="number"
-                  step="0.01"
+                  step="0.0001"
                   min="0.01"
                   value={form.promiseAmount}
                   onChange={(e) => setForm({ ...form, promiseAmount: e.target.value })}

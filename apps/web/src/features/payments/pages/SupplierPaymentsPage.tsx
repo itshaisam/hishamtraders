@@ -6,6 +6,8 @@ import { useSupplierPayments } from '../../../hooks/usePayments';
 import { useSuppliers } from '../../suppliers/hooks/useSuppliers';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { PaymentFilters, PaymentMethod } from '../../../types/payment.types';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
+import { ListPageSkeleton } from '../../../components/ui';
 
 function SupplierPaymentsPage() {
   const [filters, setFilters] = useState<PaymentFilters>({
@@ -43,6 +45,7 @@ function SupplierPaymentsPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Payments', href: '/payments/supplier' }, { label: 'Supplier Payments' }]} className="mb-4" />
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -136,7 +139,7 @@ function SupplierPaymentsPage() {
       {/* Table */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-gray-500">Loading payments...</div>
+          <ListPageSkeleton />
         ) : error ? (
           <div className="p-8 text-center text-red-500">
             Error loading payments. Please try again.
@@ -193,7 +196,7 @@ function SupplierPaymentsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold text-green-700">
-                        {cs} {parseFloat(payment.amount).toFixed(2)}
+                        {cs} {parseFloat(payment.amount).toFixed(4)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
                         <span

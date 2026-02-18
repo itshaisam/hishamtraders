@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { recoveryService } from '../../../services/recoveryService';
 import { Card, Spinner, Badge } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const formatCurrency = (n: number) =>
   `PKR ${Number(n || 0).toLocaleString('en-PK', { minimumFractionDigits: 0 })}`;
@@ -27,6 +28,7 @@ export default function VisitActivityReportPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs items={[{ label: 'Reports', href: '/reports' }, { label: 'Visit Activity' }]} className="mb-4" />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Visit Activity Report</h1>
         <p className="text-gray-600 mt-1">Recovery visit logs and outcomes</p>

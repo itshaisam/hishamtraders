@@ -52,11 +52,11 @@ export class PaymentReportService {
     }
 
     const summary = {
-      totalCollected: Math.round(totalCollected * 100) / 100,
+      totalCollected: Math.round(totalCollected * 10000) / 10000,
       count: allPayments.length,
       byMethod: Array.from(byMethodMap.entries()).map(([method, v]) => ({
         method,
-        total: Math.round(v.total * 100) / 100,
+        total: Math.round(v.total * 10000) / 10000,
         count: v.count,
       })),
     };
@@ -126,7 +126,7 @@ export class PaymentReportService {
         clientName: c.name,
         balance: parseFloat(c.balance.toString()),
         creditLimit: parseFloat(c.creditLimit.toString()),
-        overdueAmount: Math.round(overdueAmount * 100) / 100,
+        overdueAmount: Math.round(overdueAmount * 10000) / 10000,
         oldestDueDate: oldestDueDate ? oldestDueDate.toISOString() : null,
         daysPastDue,
       };

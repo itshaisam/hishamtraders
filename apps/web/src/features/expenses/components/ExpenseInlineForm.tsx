@@ -152,7 +152,7 @@ export function ExpenseInlineForm({ editingExpenseId, onCancelEdit }: ExpenseInl
             <label className="block text-xs font-medium text-gray-500 mb-1">Amount ({cs})</label>
             <input
               type="number"
-              step="0.01"
+              step="0.0001"
               min="0.01"
               {...register('amount', {
                 required: 'Amount is required',

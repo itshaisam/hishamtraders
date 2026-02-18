@@ -72,12 +72,12 @@ export class ImportReportService {
     }
 
     // Round
-    summary.totalProductCost = Math.round(summary.totalProductCost * 100) / 100;
-    summary.totalShipping = Math.round(summary.totalShipping * 100) / 100;
-    summary.totalCustoms = Math.round(summary.totalCustoms * 100) / 100;
-    summary.totalTax = Math.round(summary.totalTax * 100) / 100;
-    summary.totalOther = Math.round(summary.totalOther * 100) / 100;
-    summary.totalLanded = Math.round(summary.totalLanded * 100) / 100;
+    summary.totalProductCost = Math.round(summary.totalProductCost * 10000) / 10000;
+    summary.totalShipping = Math.round(summary.totalShipping * 10000) / 10000;
+    summary.totalCustoms = Math.round(summary.totalCustoms * 10000) / 10000;
+    summary.totalTax = Math.round(summary.totalTax * 10000) / 10000;
+    summary.totalOther = Math.round(summary.totalOther * 10000) / 10000;
+    summary.totalLanded = Math.round(summary.totalLanded * 10000) / 10000;
 
     const data = orders.map((po: any) => {
       const productCost = parseFloat(po.totalAmount.toString());
@@ -97,11 +97,11 @@ export class ImportReportService {
         orderDate: po.orderDate.toISOString(),
         supplierName: po.supplier.name,
         productCost,
-        shipping: Math.round(shipping * 100) / 100,
-        customs: Math.round(customs * 100) / 100,
-        tax: Math.round(tax * 100) / 100,
-        other: Math.round(other * 100) / 100,
-        totalLanded: Math.round((productCost + shipping + customs + tax + other) * 100) / 100,
+        shipping: Math.round(shipping * 10000) / 10000,
+        customs: Math.round(customs * 10000) / 10000,
+        tax: Math.round(tax * 10000) / 10000,
+        other: Math.round(other * 10000) / 10000,
+        totalLanded: Math.round((productCost + shipping + customs + tax + other) * 10000) / 10000,
         status: po.status,
       };
     });

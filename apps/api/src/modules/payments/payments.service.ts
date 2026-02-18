@@ -166,7 +166,7 @@ export class PaymentsService {
       data: {
         clientId: dto.clientId,
         paymentType: PaymentType.CLIENT,
-        amount: new Prisma.Decimal(dto.amount.toFixed(2)),
+        amount: new Prisma.Decimal(dto.amount.toFixed(4)),
         method: dto.method,
         referenceNumber: dto.referenceNumber || null,
         date: dto.date,

@@ -6,6 +6,7 @@ import { useCreditNote, useVoidCreditNote, useApplyCreditNote } from '../../../h
 import { usePermission } from '../../../hooks/usePermission';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { VoidCreditNoteModal } from '../components/VoidCreditNoteModal';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 export function CreditNoteDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -52,7 +53,7 @@ export function CreditNoteDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="p-6">
         <div className="text-center text-gray-500">Loading credit note...</div>
       </div>
     );
@@ -60,14 +61,15 @@ export function CreditNoteDetailPage() {
 
   if (error || !creditNote) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="p-6">
         <div className="text-center text-red-500">Failed to load credit note</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Sales', href: '/invoices' }, { label: 'Returns', href: '/returns' }, { label: creditNote?.creditNoteNumber || 'Credit Note Detail' }]} className="mb-4" />
       <div className="mb-6 print:hidden">
         <button
           onClick={() => navigate('/returns')}
@@ -107,7 +109,7 @@ export function CreditNoteDetailPage() {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
               {creditNote.creditNoteNumber}
             </h1>
             <span

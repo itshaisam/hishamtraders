@@ -43,9 +43,9 @@ export class ExpenseReportService {
 
     const count = allExpenses.length;
     const summary = {
-      totalExpenses: Math.round(totalExpenses * 100) / 100,
+      totalExpenses: Math.round(totalExpenses * 10000) / 10000,
       count,
-      average: count > 0 ? Math.round((totalExpenses / count) * 100) / 100 : 0,
+      average: count > 0 ? Math.round((totalExpenses / count) * 10000) / 10000 : 0,
     };
 
     const data = expenses.map((e: any) => ({
@@ -82,7 +82,7 @@ export class ExpenseReportService {
       const total = expenses.reduce((sum: number, e: any) => sum + parseFloat(e.amount.toString()), 0);
 
       const monthLabel = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
-      months.push({ month: monthLabel, total: Math.round(total * 100) / 100 });
+      months.push({ month: monthLabel, total: Math.round(total * 10000) / 10000 });
     }
 
     return months;

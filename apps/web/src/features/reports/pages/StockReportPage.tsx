@@ -8,6 +8,7 @@ import { useExportExcel } from '../../../hooks/useExportExcel';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { formatCurrencyDecimal } from '../../../lib/formatCurrency';
 import ExportButtons from '../components/ExportButtons';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 export default function StockReportPage() {
   const { data: currencyData } = useCurrencySymbol();
@@ -101,6 +102,7 @@ export default function StockReportPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Reports', href: '/reports' }, { label: 'Stock Report' }]} className="mb-4" />
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">

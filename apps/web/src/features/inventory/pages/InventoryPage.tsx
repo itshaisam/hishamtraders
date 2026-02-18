@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, Package, ChevronDown, ChevronRight, Lightbulb } from 'lucide-react';
 import { useGroupedInventory } from '@/hooks/useInventory';
 import { useWarehousesForSelect } from '@/hooks/useWarehouses';
-import { Breadcrumbs } from '@/components/ui';
+import { Breadcrumbs, ListPageSkeleton } from '@/components/ui';
 import { StockStatus } from '@/types/inventory.types';
 import { InventoryInfoBanner } from '../components/InventoryInfoBanner';
 import { format } from 'date-fns';
@@ -62,14 +62,13 @@ export const InventoryPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 space-y-6">
-        <Breadcrumbs items={[{ label: 'Inventory' }]} className="text-xs sm:text-sm" />
+    <div className="p-6">
+        <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Stock Levels' }]} className="mb-4" />
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Stock Levels</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Stock Levels</h1>
             <p className="mt-1 text-sm sm:text-base text-gray-600">
               Real-time inventory tracking across all warehouses
             </p>
@@ -282,7 +281,6 @@ export const InventoryPage: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 };

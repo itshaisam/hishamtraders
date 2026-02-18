@@ -118,8 +118,8 @@ async function createJournalEntry(
     resolvedLines.push({
       accountHeadId: account.id,
       accountType: account.accountType,
-      debitAmount: Math.round(line.debit * 100) / 100,
-      creditAmount: Math.round(line.credit * 100) / 100,
+      debitAmount: Math.round(line.debit * 10000) / 10000,
+      creditAmount: Math.round(line.credit * 10000) / 10000,
       description: line.description,
     });
   }
@@ -127,8 +127,8 @@ async function createJournalEntry(
   // Validate
   const totalD = resolvedLines.reduce((s, l) => s + l.debitAmount, 0);
   const totalC = resolvedLines.reduce((s, l) => s + l.creditAmount, 0);
-  if (Math.abs(totalD - totalC) > 0.01) {
-    console.error(`  UNBALANCED: debits=${totalD.toFixed(2)} credits=${totalC.toFixed(2)} — ${opts.description}`);
+  if (Math.abs(totalD - totalC) > 0.0001) {
+    console.error(`  UNBALANCED: debits=${totalD.toFixed(4)} credits=${totalC.toFixed(4)} — ${opts.description}`);
     return;
   }
 
@@ -443,7 +443,7 @@ async function migrateStockAdjustments(adminId: string) {
       costPrice = parseFloat((product?.costPrice || 0).toString());
     }
 
-    const amount = Math.round(Math.abs(adj.quantity) * costPrice * 100) / 100;
+    const amount = Math.round(Math.abs(adj.quantity) * costPrice * 10000) / 10000;
     if (amount <= 0) {
       counts.stockAdjustments.skipped++;
       continue;
@@ -483,12 +483,12 @@ async function validateTrialBalance() {
   const totalCredits = lines.reduce((s, l) => s + parseFloat(l.creditAmount.toString()), 0);
   const diff = Math.abs(totalDebits - totalCredits);
 
-  console.log(`  Total Debits:  ${totalDebits.toFixed(2)}`);
-  console.log(`  Total Credits: ${totalCredits.toFixed(2)}`);
-  console.log(`  Difference:    ${diff.toFixed(2)}`);
-  console.log(`  Balanced:      ${diff < 0.01 ? 'YES ✓' : 'NO ✗'}`);
+  console.log(`  Total Debits:  ${totalDebits.toFixed(4)}`);
+  console.log(`  Total Credits: ${totalCredits.toFixed(4)}`);
+  console.log(`  Difference:    ${diff.toFixed(4)}`);
+  console.log(`  Balanced:      ${diff < 0.0001 ? 'YES ✓' : 'NO ✗'}`);
 
-  if (diff >= 0.01) {
+  if (diff >= 0.0001) {
     console.error('\n  ⚠ WARNING: Trial balance is NOT balanced after migration!');
   }
 }

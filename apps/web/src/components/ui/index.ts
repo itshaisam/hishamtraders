@@ -25,3 +25,9 @@ export {
   SkeletonInput,
   SkeletonTable,
 } from './Skeleton';
+export {
+  ListPageSkeleton,
+  FormPageSkeleton,
+  DetailPageSkeleton,
+  CardGridSkeleton,
+} from './PageSkeletons';

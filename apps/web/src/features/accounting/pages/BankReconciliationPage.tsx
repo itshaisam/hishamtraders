@@ -6,9 +6,10 @@ import toast from 'react-hot-toast';
 import { useReconciliations, useCreateReconciliation } from '../../../hooks/useReconciliation';
 import { useBankAccounts } from '../../../hooks/useBankAccounts';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
-import Spinner from '../../../components/ui/Spinner';
+import { ListPageSkeleton, Spinner } from '../../../components/ui';
 import Badge from '../../../components/ui/Badge';
 import Modal from '../../../components/ui/Modal';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 export function BankReconciliationPage() {
   const navigate = useNavigate();
@@ -55,6 +56,7 @@ export function BankReconciliationPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Accounting', href: '/accounting/chart-of-accounts' }, { label: 'Bank Reconciliation' }]} className="mb-4" />
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -123,13 +125,13 @@ export function BankReconciliationPage() {
                         {format(new Date(s.statementDate), 'dd MMM yyyy')}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {cs} {s.statementBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        {cs} {s.statementBalance.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {cs} {s.systemBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        {cs} {s.systemBalance.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                       </td>
                       <td className={`px-4 py-3 text-right font-medium ${Math.abs(diff) < 0.01 ? 'text-green-700' : 'text-red-700'}`}>
-                        {cs} {diff.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        {cs} {diff.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                       </td>
                       <td className="px-4 py-3 text-center">{s._count?.items || 0}</td>
                       <td className="px-4 py-3 text-center">
@@ -197,7 +199,7 @@ export function BankReconciliationPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Statement Balance</label>
             <input
               type="number"
-              step="0.01"
+              step="0.0001"
               value={newBalance}
               onChange={(e) => setNewBalance(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"

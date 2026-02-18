@@ -8,9 +8,9 @@ export function formatCurrency(value: number, symbol: string): string {
   return `${symbol} ${value.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
-/** With 2 decimals: "PKR 1,234.50" */
+/** With 4 decimals: "PKR 1,234.5000" */
 export function formatCurrencyDecimal(value: number, symbol: string): string {
-  return `${symbol} ${value.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `${symbol} ${value.toLocaleString('en-PK', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
 }
 
 /** Dashboard compact: "PKR 1.50M" / "PKR 23.4K" */

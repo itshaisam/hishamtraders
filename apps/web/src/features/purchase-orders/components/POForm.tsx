@@ -218,9 +218,9 @@ export const POForm: React.FC<POFormProps> = ({
     }
   };
 
-  const calculateLineTotal = (qty: number, cost: number) => (qty * cost).toFixed(2);
+  const calculateLineTotal = (qty: number, cost: number) => (qty * cost).toFixed(4);
   const calculateGrandTotal = () =>
-    items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0).toFixed(2);
+    items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0).toFixed(4);
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
@@ -468,7 +468,7 @@ export const POForm: React.FC<POFormProps> = ({
                 value={unitCost}
                 onChange={(e) => setUnitCost(Math.max(0, Number(e.target.value)))}
                 min="0"
-                step="0.01"
+                step="0.0001"
                 disabled={isLoading}
                 className="py-2.5"
               />
@@ -531,7 +531,7 @@ export const POForm: React.FC<POFormProps> = ({
                       <td className="px-4 py-2 text-gray-900">{displayName}</td>
                       <td className="px-4 py-2 text-right text-gray-900">{item.quantity}</td>
                       <td className="px-4 py-2 text-right text-gray-900">
-                        {cs} {item.unitCost.toFixed(2)}
+                        {cs} {item.unitCost.toFixed(4)}
                       </td>
                       <td className="px-4 py-2 text-right font-semibold text-gray-900">
                         {cs} {calculateLineTotal(item.quantity, item.unitCost)}

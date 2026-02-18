@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Badge, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 import { reportsService, TrialBalanceRow } from '../../../services/reportsService';
 
 const TYPE_COLORS: Record<string, 'info' | 'warning' | 'success' | 'danger' | 'default'> = {
@@ -21,12 +22,13 @@ export function TrialBalancePage() {
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-PK', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
     }).format(amount);
 
   return (
     <div className="p-6 space-y-4">
+      <Breadcrumbs items={[{ label: 'Accounting', href: '/accounting/chart-of-accounts' }, { label: 'Trial Balance' }]} className="mb-4" />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

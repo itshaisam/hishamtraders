@@ -7,6 +7,7 @@ import { useCreateCreditNote } from '../../../hooks/useCreditNotes';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { CreateCreditNoteDto } from '../../../types/credit-note.types';
 import { invoicesService } from '../../../services/invoicesService';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 interface ReturnItem {
   invoiceItemId: string;
@@ -132,7 +133,7 @@ export function CreateReturnPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="p-6">
         <div className="text-center text-gray-500">Loading invoice...</div>
       </div>
     );
@@ -140,7 +141,7 @@ export function CreateReturnPage() {
 
   if (!invoice) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="p-6">
         <div className="text-center text-red-500">Invoice not found</div>
       </div>
     );
@@ -148,7 +149,7 @@ export function CreateReturnPage() {
 
   if (invoice.status !== 'PAID' && invoice.status !== 'PARTIAL') {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="p-6">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
           <h2 className="text-lg font-semibold text-yellow-900">Not Eligible for Return</h2>
           <p className="text-yellow-700 mt-2">
@@ -166,7 +167,8 @@ export function CreateReturnPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Sales', href: '/invoices' }, { label: 'Returns', href: '/returns' }, { label: 'Create Sales Return' }]} className="mb-4" />
       <div className="mb-6">
         <button
           onClick={() => navigate(`/invoices/${invoiceId}`)}

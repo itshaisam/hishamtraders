@@ -86,7 +86,7 @@ export const ClientPaymentHistory: React.FC<ClientPaymentHistoryProps> = ({ clie
                   {format(new Date(payment.date), 'yyyy-MM-dd')}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold text-green-700">
-                  {cs} {parseFloat(payment.amount).toFixed(2)}
+                  {cs} {parseFloat(payment.amount).toFixed(4)}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm">
                   <span
@@ -109,7 +109,7 @@ export const ClientPaymentHistory: React.FC<ClientPaymentHistoryProps> = ({ clie
                             {allocation.invoice.invoiceNumber}
                           </span>
                           <span className="text-gray-500 text-xs">
-                            ({cs} {parseFloat(allocation.amount).toFixed(2)})
+                            ({cs} {parseFloat(allocation.amount).toFixed(4)})
                           </span>
                         </div>
                       ))}

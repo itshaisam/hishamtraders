@@ -48,8 +48,7 @@ export const POViewPage: React.FC = () => {
 
   if (isError || !purchaseOrder) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-5xl mx-auto px-4">
+      <div className="p-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <h2 className="text-lg font-semibold text-red-900 mb-2">Purchase Order Not Found</h2>
             <p className="text-red-700 mb-4">
@@ -59,21 +58,20 @@ export const POViewPage: React.FC = () => {
               Back to Orders
             </Button>
           </div>
-        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-5xl mx-auto px-4 space-y-4">
+    <div className="p-6 space-y-4">
         {/* Breadcrumbs - Responsive */}
         <Breadcrumbs
           items={[
+            { label: 'Purchases', href: '/purchase-orders' },
             { label: 'Purchase Orders', href: '/purchase-orders' },
             { label: `${purchaseOrder.poNumber} (View)` },
           ]}
-          className="text-xs sm:text-sm"
+          className="mb-4"
         />
 
         {/* Header with back button - Responsive Flex */}
@@ -250,10 +248,10 @@ export const POViewPage: React.FC = () => {
                         </td>
                         <td className="px-4 py-3 text-right text-gray-900">{item.quantity}</td>
                         <td className="px-4 py-3 text-right text-gray-900">
-                          {cs} {typeof item.unitCost === 'number' ? item.unitCost.toFixed(2) : Number(item.unitCost).toFixed(2)}
+                          {cs} {typeof item.unitCost === 'number' ? item.unitCost.toFixed(4) : Number(item.unitCost).toFixed(4)}
                         </td>
                         <td className="px-4 py-3 text-right text-gray-900 font-medium">
-                          {cs} {typeof item.totalCost === 'number' ? item.totalCost.toFixed(2) : Number(item.totalCost).toFixed(2)}
+                          {cs} {typeof item.totalCost === 'number' ? item.totalCost.toFixed(4) : Number(item.totalCost).toFixed(4)}
                         </td>
                       </tr>
                     ))}
@@ -277,15 +275,15 @@ export const POViewPage: React.FC = () => {
                     {cs}{' '}
                     {purchaseOrder.items
                       .reduce((sum, item) => sum + (typeof item.totalCost === 'number' ? item.totalCost : Number(item.totalCost)), 0)
-                      .toFixed(2)}
+                      .toFixed(4)}
                   </span>
                 </div>
                 <div className="border-t border-gray-200 pt-3 flex justify-between">
                   <span className="text-lg font-semibold text-gray-900">Total:</span>
                   <span className="text-lg font-semibold text-blue-600">
                     {cs} {typeof purchaseOrder.totalAmount === 'number'
-                      ? purchaseOrder.totalAmount.toFixed(2)
-                      : Number(purchaseOrder.totalAmount).toFixed(2)}
+                      ? purchaseOrder.totalAmount.toFixed(4)
+                      : Number(purchaseOrder.totalAmount).toFixed(4)}
                   </span>
                 </div>
               </div>
@@ -355,7 +353,6 @@ export const POViewPage: React.FC = () => {
             Back to Orders
           </Button>
         </div>
-      </div>
 
     </div>
   );

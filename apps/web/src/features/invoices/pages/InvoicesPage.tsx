@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Eye } from 'lucide-react';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
+import { ListPageSkeleton } from '../../../components/ui';
 import { format } from 'date-fns';
 import { useInvoices } from '../../../hooks/useInvoices';
 import { useClients } from '../../../hooks/useClients';
@@ -65,9 +67,10 @@ export function InvoicesPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Sales', href: '/invoices' }, { label: 'Invoices' }]} className="mb-4" />
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Sales Invoices</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Sales Invoices</h1>
         <button
           onClick={() => navigate('/invoices/create')}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -161,7 +164,7 @@ export function InvoicesPage() {
       {/* Invoice List */}
       <div className="bg-white rounded-lg shadow">
         {isLoading ? (
-          <div className="p-8 text-center text-gray-500">Loading invoices...</div>
+          <ListPageSkeleton />
         ) : error ? (
           <div className="p-8 text-center text-red-500">Failed to load invoices</div>
         ) : !data?.data.length ? (

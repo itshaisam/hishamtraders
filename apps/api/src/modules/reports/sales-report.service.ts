@@ -53,9 +53,9 @@ export class SalesReportService {
       summary.totalOutstanding += t - p;
     }
 
-    summary.totalAmount = Math.round(summary.totalAmount * 100) / 100;
-    summary.totalPaid = Math.round(summary.totalPaid * 100) / 100;
-    summary.totalOutstanding = Math.round(summary.totalOutstanding * 100) / 100;
+    summary.totalAmount = Math.round(summary.totalAmount * 10000) / 10000;
+    summary.totalPaid = Math.round(summary.totalPaid * 10000) / 10000;
+    summary.totalOutstanding = Math.round(summary.totalOutstanding * 10000) / 10000;
 
     const data = invoices.map((inv: any) => {
       const t = parseFloat(inv.total.toString());
@@ -69,7 +69,7 @@ export class SalesReportService {
         taxAmount: parseFloat(inv.taxAmount.toString()),
         total: t,
         paidAmount: p,
-        outstanding: Math.round((t - p) * 100) / 100,
+        outstanding: Math.round((t - p) * 10000) / 10000,
         status: inv.status,
       };
     });
@@ -103,7 +103,7 @@ export class SalesReportService {
         clientId,
         clientName: c.name,
         invoiceCount: c.count,
-        revenue: Math.round(c.revenue * 100) / 100,
+        revenue: Math.round(c.revenue * 10000) / 10000,
       }))
       .sort((a, b) => b.revenue - a.revenue);
 
@@ -142,7 +142,7 @@ export class SalesReportService {
         productName: p.name,
         sku: p.sku,
         qtySold: p.qty,
-        revenue: Math.round(p.revenue * 100) / 100,
+        revenue: Math.round(p.revenue * 10000) / 10000,
       }))
       .sort((a, b) => b.revenue - a.revenue);
 

@@ -95,26 +95,26 @@ export class TrialBalanceService {
         name: account.name,
         accountType: account.accountType,
         openingBalance: opening,
-        totalDebits: Math.round(agg.totalDebits * 100) / 100,
-        totalCredits: Math.round(agg.totalCredits * 100) / 100,
-        closingBalance: Math.round(closingBalance * 100) / 100,
-        debitBalance: Math.round(debitBalance * 100) / 100,
-        creditBalance: Math.round(creditBalance * 100) / 100,
+        totalDebits: Math.round(agg.totalDebits * 10000) / 10000,
+        totalCredits: Math.round(agg.totalCredits * 10000) / 10000,
+        closingBalance: Math.round(closingBalance * 10000) / 10000,
+        debitBalance: Math.round(debitBalance * 10000) / 10000,
+        creditBalance: Math.round(creditBalance * 10000) / 10000,
       });
     }
 
     const totals = {
-      totalDebits: Math.round(rows.reduce((s, r) => s + r.totalDebits, 0) * 100) / 100,
-      totalCredits: Math.round(rows.reduce((s, r) => s + r.totalCredits, 0) * 100) / 100,
-      debitBalanceTotal: Math.round(rows.reduce((s, r) => s + r.debitBalance, 0) * 100) / 100,
-      creditBalanceTotal: Math.round(rows.reduce((s, r) => s + r.creditBalance, 0) * 100) / 100,
+      totalDebits: Math.round(rows.reduce((s, r) => s + r.totalDebits, 0) * 10000) / 10000,
+      totalCredits: Math.round(rows.reduce((s, r) => s + r.totalCredits, 0) * 10000) / 10000,
+      debitBalanceTotal: Math.round(rows.reduce((s, r) => s + r.debitBalance, 0) * 10000) / 10000,
+      creditBalanceTotal: Math.round(rows.reduce((s, r) => s + r.creditBalance, 0) * 10000) / 10000,
     };
 
     return {
       asOfDate: asOfDate.toISOString().slice(0, 10),
       rows,
       totals,
-      isBalanced: Math.abs(totals.debitBalanceTotal - totals.creditBalanceTotal) < 0.01,
+      isBalanced: Math.abs(totals.debitBalanceTotal - totals.creditBalanceTotal) < 0.0001,
     };
   }
 }

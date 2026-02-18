@@ -74,7 +74,7 @@ export class BalanceSheetService {
         code: account.code,
         name: account.name,
         accountType: account.accountType,
-        balance: Math.round((opening + net) * 100) / 100,
+        balance: Math.round((opening + net) * 10000) / 10000,
       };
     });
 
@@ -95,8 +95,8 @@ export class BalanceSheetService {
     const expenseTotal = expenseAccounts.reduce((s, a) => s + a.balance, 0);
 
     // Retained Earnings = Revenue - Expenses (net income added to equity)
-    const retainedEarnings = Math.round((revenueTotal - expenseTotal) * 100) / 100;
-    const totalLiabilitiesAndEquity = Math.round((liabilitiesTotal + equityTotal + retainedEarnings) * 100) / 100;
+    const retainedEarnings = Math.round((revenueTotal - expenseTotal) * 10000) / 10000;
+    const totalLiabilitiesAndEquity = Math.round((liabilitiesTotal + equityTotal + retainedEarnings) * 10000) / 10000;
 
     return {
       asOfDate: asOfDate.toISOString().slice(0, 10),
@@ -104,23 +104,23 @@ export class BalanceSheetService {
         type: 'ASSET',
         label: 'Assets',
         accounts: assetAccounts,
-        total: Math.round(assetsTotal * 100) / 100,
+        total: Math.round(assetsTotal * 10000) / 10000,
       },
       liabilities: {
         type: 'LIABILITY',
         label: 'Liabilities',
         accounts: liabilityAccounts,
-        total: Math.round(liabilitiesTotal * 100) / 100,
+        total: Math.round(liabilitiesTotal * 10000) / 10000,
       },
       equity: {
         type: 'EQUITY',
         label: 'Equity',
         accounts: equityAccounts,
-        total: Math.round(equityTotal * 100) / 100,
+        total: Math.round(equityTotal * 10000) / 10000,
       },
       retainedEarnings,
       totalLiabilitiesAndEquity,
-      isBalanced: Math.abs(Math.round(assetsTotal * 100) / 100 - totalLiabilitiesAndEquity) < 0.01,
+      isBalanced: Math.abs(Math.round(assetsTotal * 10000) / 10000 - totalLiabilitiesAndEquity) < 0.0001,
     };
   }
 }

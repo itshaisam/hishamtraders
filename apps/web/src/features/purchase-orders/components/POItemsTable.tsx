@@ -72,12 +72,12 @@ export const POItemsTable: React.FC<POItemsTableProps> = ({
               </td>
               <td className="px-4 py-3 text-right">
                 <span className="text-gray-900">
-                  {cs} {item.unitCost.toFixed(2)}
+                  {cs} {item.unitCost.toFixed(4)}
                 </span>
               </td>
               <td className="px-4 py-3 text-right">
                 <span className="font-medium text-gray-900">
-                  {cs} {item.totalCost.toFixed(2)}
+                  {cs} {item.totalCost.toFixed(4)}
                 </span>
               </td>
               {!readonly && (
@@ -99,7 +99,7 @@ export const POItemsTable: React.FC<POItemsTableProps> = ({
             </td>
             <td className="px-4 py-3 text-right">
               <span className="text-lg font-bold text-blue-600">
-                {cs} {totalAmount.toFixed(2)}
+                {cs} {totalAmount.toFixed(4)}
               </span>
             </td>
             {!readonly && <td className="px-4 py-3"></td>}

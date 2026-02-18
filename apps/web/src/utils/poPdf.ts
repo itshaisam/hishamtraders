@@ -14,7 +14,7 @@ const AMBER: [number, number, number] = [202, 138, 4];        // #ca8a04
 // ─── Helpers ────────────────────────────────────────────────────────
 
 function fmtCurrency(amount: number, currencySymbol: string): string {
-  return `${currencySymbol} ${amount.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return `${currencySymbol} ${amount.toLocaleString('en-PK', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
 }
 
 function fmtDate(dateStr: string | Date | null | undefined): string {

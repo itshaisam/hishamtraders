@@ -146,12 +146,12 @@ export class AgingAnalysisService {
         balance: parseFloat(client.balance.toString()),
         creditLimit: parseFloat(client.creditLimit.toString()),
         recoveryAgent: client.recoveryAgent?.name ?? null,
-        current: Math.round(current * 100) / 100,
-        days1to7: Math.round(days1to7 * 100) / 100,
-        days8to14: Math.round(days8to14 * 100) / 100,
-        days15to30: Math.round(days15to30 * 100) / 100,
-        days30plus: Math.round(days30plus * 100) / 100,
-        totalOverdue: Math.round(totalOverdue * 100) / 100,
+        current: Math.round(current * 10000) / 10000,
+        days1to7: Math.round(days1to7 * 10000) / 10000,
+        days8to14: Math.round(days8to14 * 10000) / 10000,
+        days15to30: Math.round(days15to30 * 10000) / 10000,
+        days30plus: Math.round(days30plus * 10000) / 10000,
+        totalOverdue: Math.round(totalOverdue * 10000) / 10000,
         oldestDueDate,
       });
     }
@@ -176,12 +176,12 @@ export class AgingAnalysisService {
       summary.totalOutstanding += row.current + row.totalOverdue;
     }
 
-    summary.totalOutstanding = Math.round(summary.totalOutstanding * 100) / 100;
-    summary.currentTotal = Math.round(summary.currentTotal * 100) / 100;
-    summary.days1to7Total = Math.round(summary.days1to7Total * 100) / 100;
-    summary.days8to14Total = Math.round(summary.days8to14Total * 100) / 100;
-    summary.days15to30Total = Math.round(summary.days15to30Total * 100) / 100;
-    summary.days30plusTotal = Math.round(summary.days30plusTotal * 100) / 100;
+    summary.totalOutstanding = Math.round(summary.totalOutstanding * 10000) / 10000;
+    summary.currentTotal = Math.round(summary.currentTotal * 10000) / 10000;
+    summary.days1to7Total = Math.round(summary.days1to7Total * 10000) / 10000;
+    summary.days8to14Total = Math.round(summary.days8to14Total * 10000) / 10000;
+    summary.days15to30Total = Math.round(summary.days15to30Total * 10000) / 10000;
+    summary.days30plusTotal = Math.round(summary.days30plusTotal * 10000) / 10000;
 
     return { clients: agingRows, summary };
   }

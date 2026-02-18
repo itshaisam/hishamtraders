@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Bell, CheckCircle, AlertTriangle, AlertOctagon, Info } from 'lucide-react';
 import { recoveryService } from '../../../services/recoveryService';
 import { Card, Button, Badge, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const PRIORITY_CONFIG: Record<string, { color: string; icon: any }> = {
   LOW: { color: 'info', icon: Info },
@@ -35,6 +36,7 @@ export default function AlertsPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs items={[{ label: 'Recovery', href: '/recovery/dashboard' }, { label: 'Alerts' }]} className="mb-4" />
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Alerts</h1>

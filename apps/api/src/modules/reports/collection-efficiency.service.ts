@@ -120,7 +120,7 @@ export class CollectionEfficiencyService {
     //    If no invoiced amount, DSO = 0
     // ---------------------------------------------------------------
     const dso = totalInvoiced > 0
-      ? Math.round((totalOutstanding / totalInvoiced) * periodDays * 100) / 100
+      ? Math.round((totalOutstanding / totalInvoiced) * periodDays * 10000) / 10000
       : 0;
 
     // ---------------------------------------------------------------
@@ -216,13 +216,13 @@ export class CollectionEfficiencyService {
     return {
       dateFrom: effectiveDateFrom.toISOString().slice(0, 10),
       dateTo: effectiveDateTo.toISOString().slice(0, 10),
-      totalInvoiced: Math.round(totalInvoiced * 100) / 100,
-      totalCollected: Math.round(totalCollected * 100) / 100,
+      totalInvoiced: Math.round(totalInvoiced * 10000) / 10000,
+      totalCollected: Math.round(totalCollected * 10000) / 10000,
       collectionRate,
       dso,
       cei,
-      totalOutstanding: Math.round(totalOutstanding * 100) / 100,
-      overdueAmount: Math.round(overdueAmount * 100) / 100,
+      totalOutstanding: Math.round(totalOutstanding * 10000) / 10000,
+      overdueAmount: Math.round(overdueAmount * 10000) / 10000,
     };
   }
 
@@ -270,8 +270,8 @@ export class CollectionEfficiencyService {
 
       results.push({
         month: monthLabel,
-        totalInvoiced: Math.round(totalInvoiced * 100) / 100,
-        totalCollected: Math.round(totalCollected * 100) / 100,
+        totalInvoiced: Math.round(totalInvoiced * 10000) / 10000,
+        totalCollected: Math.round(totalCollected * 10000) / 10000,
         collectionRate,
       });
     }

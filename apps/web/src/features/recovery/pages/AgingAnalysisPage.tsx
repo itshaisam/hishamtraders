@@ -4,6 +4,7 @@ import { Download, Filter } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { recoveryService } from '../../../services/recoveryService';
 import { Card, Button, Input, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const formatCurrency = (n: number) =>
   `PKR ${Number(n || 0).toLocaleString('en-PK', { minimumFractionDigits: 0 })}`;
@@ -64,6 +65,7 @@ export default function AgingAnalysisPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs items={[{ label: 'Recovery', href: '/recovery/dashboard' }, { label: 'Aging Analysis' }]} className="mb-4" />
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Aging Analysis</h1>

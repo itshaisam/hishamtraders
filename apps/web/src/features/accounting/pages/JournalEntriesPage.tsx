@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Eye, Trash2, CheckCircle } from 'lucide-react';
-import { Card, Badge, Spinner, Modal } from '../../../components/ui';
+import { Card, Badge, ListPageSkeleton, Modal, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 import { useJournalEntries, useDeleteJournalEntry, usePostJournalEntry } from '../../../hooks/useJournalEntries';
 import { JournalEntry, JournalEntryStatus } from '../../../types/accounting.types';
 
@@ -53,6 +54,7 @@ export function JournalEntriesPage() {
 
   return (
     <div className="p-6 space-y-4">
+      <Breadcrumbs items={[{ label: 'Accounting', href: '/accounting/chart-of-accounts' }, { label: 'Journal Entries' }]} className="mb-4" />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

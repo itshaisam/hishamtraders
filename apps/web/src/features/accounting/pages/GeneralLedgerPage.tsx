@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Card, Spinner } from '../../../components/ui';
+import { Card, ListPageSkeleton, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 import { useAccountHeads } from '../../../hooks/useAccountHeads';
 import { reportsService, GeneralLedgerEntry } from '../../../services/reportsService';
 import { AccountHead } from '../../../types/accounting.types';
@@ -24,8 +25,8 @@ export function GeneralLedgerPage() {
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-PK', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
     }).format(amount);
 
   const formatDate = (dateStr: string) =>
@@ -37,6 +38,7 @@ export function GeneralLedgerPage() {
 
   return (
     <div className="p-6 space-y-4">
+      <Breadcrumbs items={[{ label: 'Accounting', href: '/accounting/chart-of-accounts' }, { label: 'General Ledger' }]} className="mb-4" />
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">General Ledger</h1>

@@ -8,6 +8,7 @@ import { useClients } from '../../../hooks/useClients';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { useBankAccounts } from '../../../hooks/useBankAccounts';
 import { PaymentMethod } from '../../../types/payment.types';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 interface PaymentFormData {
   clientId: string;
@@ -99,14 +100,14 @@ function RecordClientPaymentPage() {
                 <div>
                   <p className="text-green-600">Total Allocated</p>
                   <p className="font-semibold text-green-900 text-lg">
-                    {cs} {allocationResult.totalAllocated.toFixed(2)}
+                    {cs} {allocationResult.totalAllocated.toFixed(4)}
                   </p>
                 </div>
                 {allocationResult.overpayment > 0 && (
                   <div>
                     <p className="text-orange-600">Overpayment (Credit Balance)</p>
                     <p className="font-semibold text-orange-900 text-lg">
-                      {cs} {allocationResult.overpayment.toFixed(2)}
+                      {cs} {allocationResult.overpayment.toFixed(4)}
                     </p>
                   </div>
                 )}
@@ -130,7 +131,7 @@ function RecordClientPaymentPage() {
                         <p className="text-sm text-gray-600">Invoice #{index + 1}</p>
                       </div>
                       <p className="font-semibold text-green-700">
-                        {cs} {allocation.allocatedAmount.toFixed(2)}
+                        {cs} {allocation.allocatedAmount.toFixed(4)}
                       </p>
                     </div>
                   ))}
@@ -167,6 +168,7 @@ function RecordClientPaymentPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Payments', href: '/payments/supplier' }, { label: 'Customer Payments', href: '/payments/client/history' }, { label: 'Record Payment' }]} className="mb-4" />
       <div className="mb-6 flex items-center gap-4">
         <button
           onClick={() => navigate(-1)}
@@ -217,7 +219,7 @@ function RecordClientPaymentPage() {
                     Outstanding Invoices ({outstandingInvoices.length})
                   </h3>
                   <p className="text-sm text-blue-700 mb-3">
-                    Total Outstanding: <span className="font-bold">{cs} {totalOutstanding.toFixed(2)}</span>
+                    Total Outstanding: <span className="font-bold">{cs} {totalOutstanding.toFixed(4)}</span>
                   </p>
                   <div className="space-y-1 max-h-40 overflow-y-auto">
                     {outstandingInvoices.slice(0, 5).map((invoice: any) => {
@@ -230,7 +232,7 @@ function RecordClientPaymentPage() {
                           className="flex justify-between items-center text-xs bg-white p-2 rounded"
                         >
                           <span className="text-blue-900 font-medium">{invoice.invoiceNumber}</span>
-                          <span className="text-blue-700">{cs} {outstanding.toFixed(2)}</span>
+                          <span className="text-blue-700">{cs} {outstanding.toFixed(4)}</span>
                         </div>
                       );
                     })}
@@ -268,7 +270,7 @@ function RecordClientPaymentPage() {
             </label>
             <input
               type="number"
-              step="0.01"
+              step="0.0001"
               {...register('amount', {
                 required: 'Amount is required',
                 min: { value: 0.01, message: 'Amount must be greater than 0' },

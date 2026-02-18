@@ -66,7 +66,7 @@ export class GeneralLedgerService {
       const credit = parseFloat(line.creditAmount.toString());
       openingBalance += isDebitNormal ? debit - credit : credit - debit;
     }
-    openingBalance = Math.round(openingBalance * 100) / 100;
+    openingBalance = Math.round(openingBalance * 10000) / 10000;
 
     // Get journal lines within the date range
     const journalLines = await prisma.journalEntryLine.findMany({
@@ -107,12 +107,12 @@ export class GeneralLedgerService {
         referenceId: line.journalEntry.referenceId,
         debitAmount: debit,
         creditAmount: credit,
-        runningBalance: Math.round(runningBalance * 100) / 100,
+        runningBalance: Math.round(runningBalance * 10000) / 10000,
       };
     });
 
-    const totalDebits = Math.round(entries.reduce((s, e) => s + e.debitAmount, 0) * 100) / 100;
-    const totalCredits = Math.round(entries.reduce((s, e) => s + e.creditAmount, 0) * 100) / 100;
+    const totalDebits = Math.round(entries.reduce((s, e) => s + e.debitAmount, 0) * 10000) / 10000;
+    const totalCredits = Math.round(entries.reduce((s, e) => s + e.creditAmount, 0) * 10000) / 10000;
 
     return {
       account: {
@@ -125,7 +125,7 @@ export class GeneralLedgerService {
       dateTo: dateTo.toISOString().slice(0, 10),
       openingBalance,
       entries,
-      closingBalance: Math.round(runningBalance * 100) / 100,
+      closingBalance: Math.round(runningBalance * 10000) / 10000,
       totalDebits,
       totalCredits,
     };

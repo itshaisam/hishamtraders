@@ -57,14 +57,19 @@ export const prisma = basePrisma.$extends({
         args.where = { ...args.where, tenantId };
       }
 
-      // CREATE operations: inject tenantId into data
+      // CREATE operations: inject tenantId into data (only if not already set)
       if (CREATE_OPS.has(operation)) {
         if (operation === 'createMany' || operation === 'createManyAndReturn') {
           if (Array.isArray((args as any).data)) {
-            (args as any).data = (args as any).data.map((d: any) => ({ ...d, tenantId }));
+            (args as any).data = (args as any).data.map((d: any) =>
+              d.tenantId ? d : { ...d, tenantId }
+            );
           }
         } else {
-          (args as any).data = { ...(args as any).data, tenantId };
+          const data = (args as any).data;
+          if (!data?.tenantId && !data?.tenant) {
+            (args as any).data = { ...data, tenantId };
+          }
         }
       }
 
@@ -72,7 +77,10 @@ export const prisma = basePrisma.$extends({
       if (MUTATE_OPS.has(operation)) {
         if (operation === 'upsert') {
           args.where = { ...args.where, tenantId };
-          (args as any).create = { ...(args as any).create, tenantId };
+          const createData = (args as any).create;
+          if (!createData?.tenantId && !createData?.tenant) {
+            (args as any).create = { ...createData, tenantId };
+          }
         } else {
           args.where = { ...args.where, tenantId };
         }

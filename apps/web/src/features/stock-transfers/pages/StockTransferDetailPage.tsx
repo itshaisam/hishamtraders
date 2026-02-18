@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { stockTransferService } from '../../../services/stockTransferService';
 import { TransferStatus, StockTransfer } from '../../../types/stock-transfer.types';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const statusColors: Record<TransferStatus, string> = {
   PENDING: 'bg-yellow-100 text-yellow-800',
@@ -66,6 +67,7 @@ export default function StockTransferDetailPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Stock Transfers', href: '/stock-transfers' }, { label: transfer?.transferNumber || 'Transfer Detail' }]} className="mb-4" />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{transfer.transferNumber}</h1>

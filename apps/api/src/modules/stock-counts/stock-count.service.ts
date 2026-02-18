@@ -49,7 +49,7 @@ export class StockCountService {
 
     const countNumber = await this.generateCountNumber();
 
-    const stockCount = await (prisma.stockCount as any).create({
+    const created = await prisma.stockCount.create({
       data: {
         countNumber,
         warehouseId: data.warehouseId,
@@ -58,22 +58,28 @@ export class StockCountService {
         notes: data.notes?.trim() || null,
         createdBy: userId,
         tenantId: getTenantId(),
-        items: {
-          create: inventoryItems.map((inv: any) => ({
-            productId: inv.productId,
-            batchNo: inv.batchNo,
-            binLocation: inv.binLocation,
-            systemQuantity: inv.quantity,
-            tenantId: getTenantId(),
-          })),
-        },
       },
+    });
+
+    await prisma.stockCountItem.createMany({
+      data: inventoryItems.map((inv: any) => ({
+        stockCountId: created.id,
+        productId: inv.productId,
+        batchNo: inv.batchNo,
+        binLocation: inv.binLocation,
+        systemQuantity: inv.quantity,
+        tenantId: getTenantId(),
+      })),
+    });
+
+    const stockCount = (await prisma.stockCount.findUnique({
+      where: { id: created.id },
       include: {
         warehouse: { select: { id: true, name: true } },
         creator: { select: { id: true, name: true } },
         items: { include: { product: { select: { id: true, name: true, sku: true } } } },
       },
-    });
+    }))!;
 
     await AuditService.log({
       userId, action: 'CREATE', entityType: 'StockCount', entityId: stockCount.id,

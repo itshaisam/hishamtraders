@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma.js';
+import { prisma, getTenantId } from '../lib/prisma.js';
 import { calculateBalanceChange } from '../utils/balance-helper.js';
 import logger from '../lib/logger.js';
 
@@ -100,8 +100,8 @@ async function createAutoJournalEntry(
     resolvedLines.push({
       accountHeadId: account.id,
       accountType: account.accountType,
-      debitAmount: Math.round(line.debit * 100) / 100,
-      creditAmount: Math.round(line.credit * 100) / 100,
+      debitAmount: Math.round(line.debit * 10000) / 10000,
+      creditAmount: Math.round(line.credit * 10000) / 10000,
       description: line.description || null,
     });
   }
@@ -109,14 +109,14 @@ async function createAutoJournalEntry(
   // Validate balance
   const totalDebits = resolvedLines.reduce((s, l) => s + l.debitAmount, 0);
   const totalCredits = resolvedLines.reduce((s, l) => s + l.creditAmount, 0);
-  if (Math.abs(totalDebits - totalCredits) > 0.01) {
+  if (Math.abs(totalDebits - totalCredits) > 0.0001) {
     logger.error('Auto-journal: Entry not balanced', { totalDebits, totalCredits, description: opts.description });
     return null;
   }
 
   const entryNumber = await generateEntryNumber(tx, opts.date);
 
-  // Create POSTED entry directly
+  // Create POSTED entry, then lines separately (avoids nested create tenant conflict)
   const entry = await tx.journalEntry.create({
     data: {
       entryNumber,
@@ -127,15 +127,19 @@ async function createAutoJournalEntry(
       referenceId: opts.referenceId,
       createdBy: opts.userId,
       approvedBy: opts.userId,
-      lines: {
-        create: resolvedLines.map((l) => ({
-          accountHeadId: l.accountHeadId,
-          debitAmount: l.debitAmount,
-          creditAmount: l.creditAmount,
-          description: l.description,
-        })),
-      },
+      tenantId: getTenantId(),
     },
+  });
+
+  await tx.journalEntryLine.createMany({
+    data: resolvedLines.map((l) => ({
+      journalEntryId: entry.id,
+      accountHeadId: l.accountHeadId,
+      debitAmount: l.debitAmount,
+      creditAmount: l.creditAmount,
+      description: l.description,
+      tenantId: getTenantId(),
+    })),
   });
 
   // Update account balances
@@ -395,7 +399,7 @@ export const AutoJournalService = {
     const lossTypes = ['WASTAGE', 'DAMAGE', 'THEFT'];
     if (!lossTypes.includes(adjustment.adjustmentType)) return null;
 
-    const amount = Math.round(adjustment.quantity * adjustment.costPrice * 100) / 100;
+    const amount = Math.round(adjustment.quantity * adjustment.costPrice * 10000) / 10000;
     if (amount <= 0) return null;
 
     return createAutoJournalEntry(tx, {

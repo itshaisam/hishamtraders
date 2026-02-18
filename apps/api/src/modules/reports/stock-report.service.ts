@@ -76,7 +76,7 @@ export class StockReportService {
       data,
       summary: {
         totalItems: total,
-        totalValue: Math.round(totalValue * 100) / 100,
+        totalValue: Math.round(totalValue * 10000) / 10000,
       },
       meta: {
         total,
@@ -117,7 +117,7 @@ export class StockReportService {
       categoryId: catId,
       categoryName: cat.name,
       totalQuantity: cat.quantity,
-      totalValue: Math.round(cat.value * 100) / 100,
+      totalValue: Math.round(cat.value * 10000) / 10000,
       percentage: totalValue > 0 ? Math.round((cat.value / totalValue) * 10000) / 100 : 0,
     }));
 

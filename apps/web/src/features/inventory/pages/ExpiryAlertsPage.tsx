@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../lib/api-client';
+import { Breadcrumbs } from '../../../components/ui';
 
 export default function ExpiryAlertsPage() {
   const [days, setDays] = useState(30);
@@ -32,6 +33,7 @@ export default function ExpiryAlertsPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Expiry Alerts' }]} className="mb-4" />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Expiry Alerts</h1>
         <p className="text-sm text-gray-500 mt-1">Monitor inventory items approaching or past expiry date</p>

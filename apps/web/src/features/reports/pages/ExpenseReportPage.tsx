@@ -9,6 +9,7 @@ import { useExportExcel } from '../../../hooks/useExportExcel';
 import ExportButtons from '../components/ExportButtons';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { formatCurrencyDecimal } from '../../../lib/formatCurrency';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const CATEGORY_DISPLAY: Record<string, string> = {
   RENT: 'Rent',
@@ -129,6 +130,7 @@ export default function ExpenseReportPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Reports', href: '/reports' }, { label: 'Expense Report' }]} className="mb-4" />
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">

@@ -146,7 +146,7 @@ export class AgentPerformanceService {
       agentEmail: agent.email,
       totalVisits,
       visitsByOutcome,
-      totalCollected: Math.round(totalCollected * 100) / 100,
+      totalCollected: Math.round(totalCollected * 10000) / 10000,
       promiseStats: {
         total: totalPromises,
         fulfilled,
@@ -280,7 +280,7 @@ export class AgentPerformanceService {
         agentName: agent.name,
         agentEmail: agent.email,
         totalVisits,
-        totalCollected: Math.round(totalCollected * 100) / 100,
+        totalCollected: Math.round(totalCollected * 10000) / 10000,
         assignedClients,
         fulfillmentRate,
       };

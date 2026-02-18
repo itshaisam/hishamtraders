@@ -287,17 +287,6 @@ function App() {
           />
 
           <Route
-            path="/warehouses/:id"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <WarehouseDetailPage />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
             path="/warehouses/bin-locations"
             element={
               <ProtectedRoute>
@@ -314,6 +303,17 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <BinTransferPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/warehouses/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <WarehouseDetailPage />
                 </Layout>
               </ProtectedRoute>
             }

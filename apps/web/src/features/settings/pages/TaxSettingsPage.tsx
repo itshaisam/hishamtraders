@@ -9,6 +9,7 @@ import {
 } from '../../../hooks/useSettings';
 import { useAuthStore } from '../../../stores/auth.store';
 import { formatCurrency, formatCurrencyCompact } from '../../../lib/formatCurrency';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 export function TaxSettingsPage() {
   const navigate = useNavigate();
@@ -89,7 +90,8 @@ export function TaxSettingsPage() {
   const isError = taxError || currencyError;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Settings' }]} className="mb-4" />
       <div className="mb-6">
         <button
           onClick={() => navigate('/dashboard')}
@@ -98,7 +100,7 @@ export function TaxSettingsPage() {
           <ArrowLeft size={20} />
           Back to Dashboard
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">System Settings</h1>
+        <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
         <p className="text-gray-500 mt-1">Configure company info, tax rate, currency, and other system-wide settings</p>
       </div>
 
@@ -224,7 +226,7 @@ export function TaxSettingsPage() {
                     type="number"
                     min="0"
                     max="100"
-                    step="0.1"
+                    step="0.0001"
                     value={taxRate}
                     onChange={(e) => setTaxRate(e.target.value)}
                     className={`w-40 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${

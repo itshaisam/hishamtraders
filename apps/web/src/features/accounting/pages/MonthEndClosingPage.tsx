@@ -7,6 +7,7 @@ import { useCurrencySymbol } from '../../../hooks/useSettings';
 import Spinner from '../../../components/ui/Spinner';
 import Badge from '../../../components/ui/Badge';
 import Modal from '../../../components/ui/Modal';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -63,6 +64,7 @@ export function MonthEndClosingPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Accounting', href: '/accounting/chart-of-accounts' }, { label: 'Month-End Closing' }]} className="mb-4" />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <Calendar className="h-6 w-6" />
@@ -138,7 +140,7 @@ export function MonthEndClosingPage() {
                   <TrendingUp className="h-4 w-4" /> Total Revenue
                 </p>
                 <p className="text-xl font-bold text-green-800">
-                  {cs} {pnl.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  {cs} {pnl.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                 </p>
               </div>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -146,7 +148,7 @@ export function MonthEndClosingPage() {
                   <TrendingDown className="h-4 w-4" /> Total Expenses
                 </p>
                 <p className="text-xl font-bold text-red-800">
-                  {cs} {pnl.totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  {cs} {pnl.totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                 </p>
               </div>
               <div className={`border rounded-lg p-4 ${pnl.netProfit >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
@@ -154,7 +156,7 @@ export function MonthEndClosingPage() {
                   Net {pnl.netProfit >= 0 ? 'Profit' : 'Loss'}
                 </p>
                 <p className={`text-xl font-bold ${pnl.netProfit >= 0 ? 'text-blue-800' : 'text-orange-800'}`}>
-                  {cs} {Math.abs(pnl.netProfit).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  {cs} {Math.abs(pnl.netProfit).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                 </p>
               </div>
             </div>
@@ -170,7 +172,7 @@ export function MonthEndClosingPage() {
                         <td className="py-2 text-gray-600">{r.code}</td>
                         <td className="py-2 text-gray-900">{r.name}</td>
                         <td className="py-2 text-right text-green-700 font-medium">
-                          {cs} {r.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          {cs} {r.amount.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                         </td>
                       </tr>
                     ))}
@@ -190,7 +192,7 @@ export function MonthEndClosingPage() {
                         <td className="py-2 text-gray-600">{e.code}</td>
                         <td className="py-2 text-gray-900">{e.name}</td>
                         <td className="py-2 text-right text-red-700 font-medium">
-                          {cs} {e.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          {cs} {e.amount.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                         </td>
                       </tr>
                     ))}
@@ -237,7 +239,7 @@ export function MonthEndClosingPage() {
                       {monthName} {d.getFullYear()}
                     </td>
                     <td className={`px-4 py-3 text-right font-medium ${p.netProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                      {cs} {Number(p.netProfit).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {cs} {Number(p.netProfit).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <Badge variant={p.status === 'CLOSED' ? 'success' : 'warning'}>

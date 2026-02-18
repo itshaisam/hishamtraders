@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useGatePasses } from '../../../hooks/useGatePasses';
 import { GatePassFilters, GatePassStatus, GatePassPurpose } from '../../../types/gate-pass.types';
 import { Badge, Button, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const statusVariants: Record<GatePassStatus, 'warning' | 'info' | 'default' | 'success' | 'danger'> = {
   PENDING: 'warning',
@@ -28,6 +29,7 @@ export default function GatePassListPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Gate Passes' }]} className="mb-4" />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gate Passes</h1>

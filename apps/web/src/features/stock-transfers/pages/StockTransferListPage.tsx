@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { stockTransferService } from '../../../services/stockTransferService';
 import { TransferStatus } from '../../../types/stock-transfer.types';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const statusColors: Record<TransferStatus, string> = {
   PENDING: 'bg-yellow-100 text-yellow-800',
@@ -32,6 +33,7 @@ export default function StockTransferListPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Stock Transfers' }]} className="mb-4" />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Stock Transfers</h1>

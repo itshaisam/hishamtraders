@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { BarChart3, Package, FileText, DollarSign, ShoppingCart, Receipt } from 'lucide-react';
 import { useAuthStore } from '../../../stores/auth.store';
 import { REPORTS, REPORT_CATEGORIES, ReportDefinition } from '../data/reportDefinitions';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   inventory: <Package className="h-5 w-5 text-blue-600" />,
@@ -35,6 +36,7 @@ export default function ReportsCenterPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Reports', href: '/reports' }, { label: 'Reports Center' }]} className="mb-4" />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <BarChart3 className="h-6 w-6" />

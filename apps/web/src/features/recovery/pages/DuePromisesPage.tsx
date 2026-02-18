@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { CheckCircle, XCircle, AlertTriangle, Clock } from 'lucide-react';
 import { recoveryService } from '../../../services/recoveryService';
 import { Card, Button, Badge, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: 'warning',
@@ -64,6 +65,7 @@ export default function DuePromisesPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs items={[{ label: 'Recovery', href: '/recovery/dashboard' }, { label: 'Payment Promises' }]} className="mb-4" />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Payment Promises</h1>
         <p className="text-gray-600 mt-1">Track and manage customer payment promises</p>

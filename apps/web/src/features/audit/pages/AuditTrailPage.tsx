@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Download, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuditLogs } from '../../../hooks/useAuditLogs';
 import { auditService, AuditLogEntry } from '../../../services/auditService';
 import { apiClient } from '../../../lib/api-client';
-import { Card, Button, Spinner } from '../../../components/ui';
+import { Card, Button, Spinner, Breadcrumbs } from '../../../components/ui';
 import toast from 'react-hot-toast';
 
 const ACTION_OPTIONS = ['CREATE', 'UPDATE', 'DELETE', 'VIEW', 'LOGIN', 'LOGOUT'];
@@ -25,6 +25,49 @@ const ACTION_COLORS: Record<string, string> = {
   LOGIN: 'bg-purple-100 text-purple-800',
   LOGOUT: 'bg-yellow-100 text-yellow-800',
 };
+
+/** "UPDATE_IMPORT_DETAILS" → "Update Import Details" */
+const formatAction = (action: string) =>
+  action.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+/** Detect CUID-as-entity-type, split PascalCase: "PurchaseOrder" → "Purchase Order" */
+const formatEntityType = (et: string) => {
+  if (!et || et === '-') return '—';
+  if (/^[a-z][a-zA-Z0-9]{20,}$/.test(et) || /^[A-Z][a-z][a-zA-Z0-9]{18,}$/.test(et)) return '—';
+  return et.replace(/([a-z])([A-Z])/g, '$1 $2');
+};
+
+/** "clientId" → "Client Id", "arrivalDate" → "Arrival Date" */
+const formatFieldName = (f: string) =>
+  f.replace(/([a-z])([A-Z])/g, '$1 $2')
+   .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+   .replace(/^./, (c) => c.toUpperCase());
+
+/** Get the base action for color lookup: "UPDATE_IMPORT_DETAILS" → "UPDATE" */
+const getBaseAction = (action: string) => {
+  const base = action.split('_')[0];
+  if (ACTION_COLORS[base]) return base;
+  if (ACTION_COLORS[action]) return action;
+  return '';
+};
+
+function CopyIdButton({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="font-mono">{id.substring(0, 8)}</span>
+      <button onClick={handleCopy} className="text-gray-400 hover:text-blue-600 transition-colors" title="Copy full ID">
+        {copied ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+      </button>
+    </div>
+  );
+}
 
 export function AuditTrailPage() {
   const [page, setPage] = useState(1);
@@ -116,7 +159,7 @@ export function AuditTrailPage() {
         <tbody>
           {Object.entries(fields).map(([field, change]) => (
             <tr key={field} className="border-b last:border-0">
-              <td className="py-2 font-medium text-gray-700">{field}</td>
+              <td className="py-2 font-medium text-gray-700">{formatFieldName(field)}</td>
               {change && typeof change === 'object' && 'old' in change && 'new' in change ? (
                 <>
                   <td className="py-2 text-red-600">{String(change.old ?? 'null')}</td>
@@ -136,7 +179,9 @@ export function AuditTrailPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Audit Trail' }]} className="mb-4" />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Audit Trail</h1>
@@ -178,7 +223,7 @@ export function AuditTrailPage() {
             >
               <option value="">All Types</option>
               {ENTITY_TYPE_OPTIONS.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>{formatEntityType(t)}</option>
               ))}
             </select>
           </div>
@@ -261,14 +306,13 @@ export function AuditTrailPage() {
                     <th className="text-left py-3 px-3 text-xs font-medium text-gray-600 uppercase">Action</th>
                     <th className="text-left py-3 px-3 text-xs font-medium text-gray-600 uppercase">Entity Type</th>
                     <th className="text-left py-3 px-3 text-xs font-medium text-gray-600 uppercase">Entity ID</th>
-                    <th className="text-left py-3 px-3 text-xs font-medium text-gray-600 uppercase">IP</th>
-                    <th className="text-left py-3 px-3 text-xs font-medium text-gray-600 uppercase">Changed</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-gray-600 uppercase">Changed Fields</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {data.items.map((entry: AuditLogEntry) => (
                     <tr key={entry.id} className="group">
-                      <td colSpan={8} className="p-0">
+                      <td colSpan={7} className="p-0">
                         <div>
                           <div
                             className={`flex items-center cursor-pointer hover:bg-gray-50 ${entry.action === 'DELETE' ? 'bg-red-50' : ''}`}
@@ -289,26 +333,23 @@ export function AuditTrailPage() {
                               </button>
                             </div>
                             <div className="py-3 px-3">
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${ACTION_COLORS[entry.action] || 'bg-gray-100 text-gray-700'}`}>
-                                {entry.action}
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${ACTION_COLORS[getBaseAction(entry.action)] || 'bg-gray-100 text-gray-700'}`}>
+                                {formatAction(entry.action)}
                               </span>
                             </div>
                             <div className="py-3 px-3 text-sm text-gray-700">
-                              {entry.entityType}
-                            </div>
-                            <div className="py-3 px-3 text-sm text-gray-500 font-mono text-xs">
-                              {entry.entityId ? entry.entityId.substring(0, 12) + '...' : '-'}
+                              {formatEntityType(entry.entityType)}
                             </div>
                             <div className="py-3 px-3 text-sm text-gray-500 text-xs">
-                              {entry.ipAddress || '-'}
+                              {entry.entityId ? <CopyIdButton id={entry.entityId} /> : '—'}
                             </div>
                             <div className="py-3 px-3 text-sm text-gray-600 text-xs">
                               {entry.changedFieldsSummary && entry.changedFieldsSummary.length > 0 ? (
                                 <span>
-                                  {entry.changedFieldsSummary.slice(0, 3).join(', ')}
+                                  {entry.changedFieldsSummary.slice(0, 3).map(formatFieldName).join(', ')}
                                   {entry.changedFieldsSummary.length > 3 && ` +${entry.changedFieldsSummary.length - 3}`}
                                 </span>
-                              ) : '-'}
+                              ) : '—'}
                             </div>
                           </div>
 

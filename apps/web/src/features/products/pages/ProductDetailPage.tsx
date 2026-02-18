@@ -172,7 +172,7 @@ export const ProductDetailPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+      <div className="p-6 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">Loading product details...</p>
@@ -183,8 +183,7 @@ export const ProductDetailPage: React.FC = () => {
 
   if (isError || !product) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-5xl mx-auto px-4">
+      <div className="p-6">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <h2 className="text-lg font-semibold text-red-900 mb-2">Product Not Found</h2>
             <p className="text-red-700 mb-4">The product you're looking for doesn't exist or has been deleted.</p>
@@ -192,21 +191,20 @@ export const ProductDetailPage: React.FC = () => {
               Back to Products
             </Button>
           </div>
-        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-5xl mx-auto px-4 space-y-4">
+    <div className="p-6 space-y-4">
         {/* Breadcrumbs - Responsive */}
         <Breadcrumbs
           items={[
+            { label: 'Inventory', href: '/stock-levels' },
             { label: 'Products', href: '/products' },
             { label: product.name },
           ]}
-          className="text-xs sm:text-sm"
+          className="mb-4"
         />
 
         {/* Header with back button - Responsive Flex */}
@@ -317,7 +315,7 @@ export const ProductDetailPage: React.FC = () => {
                     <Input
                       {...register('costPrice')}
                       type="number"
-                      step="0.01"
+                      step="0.0001"
                       placeholder="0.00"
                       className="w-full"
                     />
@@ -333,7 +331,7 @@ export const ProductDetailPage: React.FC = () => {
                     <Input
                       {...register('sellingPrice')}
                       type="number"
-                      step="0.01"
+                      step="0.0001"
                       placeholder="0.00"
                       className="w-full"
                     />
@@ -456,10 +454,10 @@ export const ProductDetailPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {cs} {variant.costPrice.toFixed(2)}
+                        {cs} {variant.costPrice.toFixed(4)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        {cs} {variant.sellingPrice.toFixed(2)}
+                        {cs} {variant.sellingPrice.toFixed(4)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span
@@ -499,7 +497,6 @@ export const ProductDetailPage: React.FC = () => {
             </div>
           ) : null}
         </div>
-      </div>
 
       {id && (
         <ChangeHistoryModal

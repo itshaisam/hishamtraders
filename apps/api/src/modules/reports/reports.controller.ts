@@ -526,7 +526,7 @@ export class ReportsController {
           { header: '% of Total', key: 'percentage', width: 12, numFmt: '0.00"%"' },
         ],
         data,
-        summaryRow: { categoryName: 'TOTAL', totalQuantity: totalQty, totalValue: Math.round(totalValue * 100) / 100 },
+        summaryRow: { categoryName: 'TOTAL', totalQuantity: totalQty, totalValue: Math.round(totalValue * 10000) / 10000 },
       });
 
       logger.info('Stock valuation exported', { userId: req.user?.id });
@@ -611,7 +611,7 @@ export class ReportsController {
           { header: 'Revenue', key: 'revenue', width: 18, numFmt: '"Rs."#,##0.00' },
         ],
         data,
-        summaryRow: { clientName: 'TOTAL', invoiceCount: totalInvoices, revenue: Math.round(totalRevenue * 100) / 100 },
+        summaryRow: { clientName: 'TOTAL', invoiceCount: totalInvoices, revenue: Math.round(totalRevenue * 10000) / 10000 },
       });
 
       logger.info('Sales by client exported', { userId: req.user?.id });
@@ -646,7 +646,7 @@ export class ReportsController {
           { header: 'Revenue', key: 'revenue', width: 18, numFmt: '"Rs."#,##0.00' },
         ],
         data,
-        summaryRow: { productName: 'TOTAL', qtySold: totalQty, revenue: Math.round(totalRevenue * 100) / 100 },
+        summaryRow: { productName: 'TOTAL', qtySold: totalQty, revenue: Math.round(totalRevenue * 10000) / 10000 },
       });
 
       logger.info('Sales by product exported', { userId: req.user?.id });
@@ -718,8 +718,8 @@ export class ReportsController {
         data,
         summaryRow: {
           clientName: 'TOTAL',
-          balance: Math.round(totalBalance * 100) / 100,
-          overdueAmount: Math.round(totalOverdue * 100) / 100,
+          balance: Math.round(totalBalance * 10000) / 10000,
+          overdueAmount: Math.round(totalOverdue * 10000) / 10000,
         },
       });
 

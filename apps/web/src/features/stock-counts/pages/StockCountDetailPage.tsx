@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { stockCountService } from '../../../services/stockCountService';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const statusColors: Record<string, string> = {
   PLANNED: 'bg-blue-100 text-blue-800',
@@ -80,6 +81,7 @@ export default function StockCountDetailPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Stock Counts', href: '/stock-counts' }, { label: stockCount?.countNumber || 'Stock Count Detail' }]} className="mb-4" />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{stockCount.countNumber}</h1>

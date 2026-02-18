@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Phone, Calendar, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { recoveryService } from '../../../services/recoveryService';
 import { Card, Button, Spinner, Input, Badge } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const formatCurrency = (n: number) =>
   `PKR ${Number(n || 0).toLocaleString('en-PK', { minimumFractionDigits: 0 })}`;
@@ -42,6 +43,7 @@ export default function RecoveryRoutePage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs items={[{ label: 'Recovery', href: '/recovery/dashboard' }, { label: "Today's Route" }]} className="mb-4" />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Recovery Route</h1>
         <p className="text-gray-600 mt-1">

@@ -9,7 +9,8 @@ import {
   useBankAccounts,
 } from '../../../hooks/useBankAccounts';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
-import Spinner from '../../../components/ui/Spinner';
+import { ListPageSkeleton, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 export function PettyCashPage() {
   const [showAdvanceForm, setShowAdvanceForm] = useState(false);
@@ -50,6 +51,7 @@ export function PettyCashPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Accounting', href: '/accounting/chart-of-accounts' }, { label: 'Petty Cash' }]} className="mb-4" />
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -73,7 +75,7 @@ export function PettyCashPage() {
           <Spinner />
         ) : (
           <p className="text-3xl font-bold text-green-900">
-            {cs} {(balance?.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {cs} {(balance?.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
           </p>
         )}
       </div>
@@ -109,7 +111,7 @@ export function PettyCashPage() {
               </label>
               <input
                 type="number"
-                step="0.01"
+                step="0.0001"
                 min="0.01"
                 value={advanceAmount}
                 onChange={(e) => setAdvanceAmount(e.target.value)}
@@ -165,12 +167,12 @@ export function PettyCashPage() {
                     <td className="px-4 py-3 text-gray-700">{tx.description}</td>
                     <td className="px-4 py-3 text-right text-green-700 font-medium">
                       {tx.debit > 0
-                        ? `${cs} ${tx.debit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                        ? `${cs} ${tx.debit.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`
                         : '-'}
                     </td>
                     <td className="px-4 py-3 text-right text-red-700 font-medium">
                       {tx.credit > 0
-                        ? `${cs} ${tx.credit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                        ? `${cs} ${tx.credit.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`
                         : '-'}
                     </td>
                   </tr>

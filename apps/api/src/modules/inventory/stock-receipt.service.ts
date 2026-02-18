@@ -1,7 +1,9 @@
+import { Prisma } from '@prisma/client';
 import { prisma, getTenantId } from '../../lib/prisma.js';
 import { InventoryRepository } from './inventory.repository.js';
 import { NotFoundError, BadRequestError } from '../../utils/errors.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
+import { LandedCostService } from '../purchase-orders/landed-cost.service.js';
 import logger from '../../lib/logger.js';
 import { format } from 'date-fns';
 
@@ -183,6 +185,42 @@ export class StockReceiptService {
           updatedBy: userId,
         },
       });
+
+      // Update product/variant costPrice from PO unit costs (with landed cost if available)
+      const landedCostService = new LandedCostService(tx);
+      let landedCostMap: Record<string, number> = {};
+      try {
+        const landedCost = await landedCostService.calculateLandedCost(poId);
+        for (const item of landedCost.breakdown) {
+          const key = item.variantId || item.productId;
+          landedCostMap[key] = item.landedCostPerUnit;
+        }
+      } catch {
+        // No additional costs — will fall back to PO item unitCost
+      }
+
+      for (const poItem of po.items) {
+        const key = poItem.productVariantId || poItem.productId;
+        const newCost = landedCostMap[key] || parseFloat(poItem.unitCost.toString());
+
+        if (poItem.productVariantId) {
+          await tx.productVariant.update({
+            where: { id: poItem.productVariantId },
+            data: { costPrice: new Prisma.Decimal(newCost.toFixed(4)) },
+          });
+        } else {
+          await tx.product.update({
+            where: { id: poItem.productId },
+            data: { costPrice: new Prisma.Decimal(newCost.toFixed(4)) },
+          });
+        }
+
+        logger.info('Updated product cost price from PO', {
+          productId: poItem.productId,
+          variantId: poItem.productVariantId,
+          newCostPrice: newCost,
+        });
+      }
 
       // Auto journal entry: DR Inventory, CR A/P
       await AutoJournalService.onGoodsReceived(tx, {

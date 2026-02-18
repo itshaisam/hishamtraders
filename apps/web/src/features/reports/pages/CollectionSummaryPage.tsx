@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { recoveryService } from '../../../services/recoveryService';
 import { Card, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const formatCurrency = (n: number) =>
   `PKR ${Number(n || 0).toLocaleString('en-PK', { minimumFractionDigits: 0 })}`;
@@ -20,6 +21,7 @@ export default function CollectionSummaryPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs items={[{ label: 'Reports', href: '/reports' }, { label: 'Collection Summary' }]} className="mb-4" />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Collection Summary</h1>
         <p className="text-gray-600 mt-1">Summary of collections by agent and daily breakdown</p>

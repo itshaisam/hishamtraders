@@ -4,6 +4,7 @@ import { TrendingUp, DollarSign, Clock, Target } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { recoveryService } from '../../../services/recoveryService';
 import { Card, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const formatCurrency = (n: number) =>
   `PKR ${Number(n || 0).toLocaleString('en-PK', { minimumFractionDigits: 0 })}`;
@@ -31,6 +32,7 @@ export default function CollectionEfficiencyPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumbs items={[{ label: 'Recovery', href: '/recovery/dashboard' }, { label: 'Collection Efficiency' }]} className="mb-4" />
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Collection Efficiency</h1>
         <p className="text-gray-600 mt-1">KPI metrics for payment collection performance</p>

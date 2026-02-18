@@ -58,9 +58,9 @@ export class PeriodCloseService {
       const totalDebits = allLines.reduce((s: number, l: any) => s + parseFloat(l.debitAmount.toString()), 0);
       const totalCredits = allLines.reduce((s: number, l: any) => s + parseFloat(l.creditAmount.toString()), 0);
 
-      if (Math.abs(totalDebits - totalCredits) > 0.01) {
+      if (Math.abs(totalDebits - totalCredits) > 0.0001) {
         throw new BadRequestError(
-          `Trial balance is not balanced. Debits: ${totalDebits.toFixed(2)}, Credits: ${totalCredits.toFixed(2)}`
+          `Trial balance is not balanced. Debits: ${totalDebits.toFixed(4)}, Credits: ${totalCredits.toFixed(4)}`
         );
       }
 
@@ -109,7 +109,7 @@ export class PeriodCloseService {
         }
       }
 
-      const netProfit = Math.round((revenueTotal - expenseTotal) * 100) / 100;
+      const netProfit = Math.round((revenueTotal - expenseTotal) * 10000) / 10000;
 
       // 3. Create closing journal entry (zero out revenue/expense to Retained Earnings 3200)
       const retainedEarnings = await tx.accountHead.findFirst({
@@ -126,11 +126,11 @@ export class PeriodCloseService {
 
       // Zero out revenue accounts (they are credit-normal, so debit to zero them)
       for (const [, acct] of revenueAccounts) {
-        if (Math.abs(acct.net) < 0.01) continue;
+        if (Math.abs(acct.net) < 0.0001) continue;
         if (acct.net > 0) {
           closingLines.push({
             accountHeadId: acct.id,
-            debitAmount: Math.round(acct.net * 100) / 100,
+            debitAmount: Math.round(acct.net * 10000) / 10000,
             creditAmount: 0,
             description: `Close revenue ${acct.code}`,
           });
@@ -138,7 +138,7 @@ export class PeriodCloseService {
           closingLines.push({
             accountHeadId: acct.id,
             debitAmount: 0,
-            creditAmount: Math.round(Math.abs(acct.net) * 100) / 100,
+            creditAmount: Math.round(Math.abs(acct.net) * 10000) / 10000,
             description: `Close revenue ${acct.code}`,
           });
         }
@@ -146,18 +146,18 @@ export class PeriodCloseService {
 
       // Zero out expense accounts (they are debit-normal, so credit to zero them)
       for (const [, acct] of expenseAccounts) {
-        if (Math.abs(acct.net) < 0.01) continue;
+        if (Math.abs(acct.net) < 0.0001) continue;
         if (acct.net > 0) {
           closingLines.push({
             accountHeadId: acct.id,
             debitAmount: 0,
-            creditAmount: Math.round(acct.net * 100) / 100,
+            creditAmount: Math.round(acct.net * 10000) / 10000,
             description: `Close expense ${acct.code}`,
           });
         } else {
           closingLines.push({
             accountHeadId: acct.id,
-            debitAmount: Math.round(Math.abs(acct.net) * 100) / 100,
+            debitAmount: Math.round(Math.abs(acct.net) * 10000) / 10000,
             creditAmount: 0,
             description: `Close expense ${acct.code}`,
           });
@@ -166,18 +166,18 @@ export class PeriodCloseService {
 
       // Net profit to Retained Earnings (3200 is EQUITY = credit-normal)
       // If profit > 0: credit RE. If loss: debit RE.
-      if (Math.abs(netProfit) >= 0.01) {
+      if (Math.abs(netProfit) >= 0.0001) {
         if (netProfit > 0) {
           closingLines.push({
             accountHeadId: retainedEarnings.id,
             debitAmount: 0,
-            creditAmount: Math.round(netProfit * 100) / 100,
+            creditAmount: Math.round(netProfit * 10000) / 10000,
             description: 'Net profit to Retained Earnings',
           });
         } else {
           closingLines.push({
             accountHeadId: retainedEarnings.id,
-            debitAmount: Math.round(Math.abs(netProfit) * 100) / 100,
+            debitAmount: Math.round(Math.abs(netProfit) * 10000) / 10000,
             creditAmount: 0,
             description: 'Net loss to Retained Earnings',
           });
@@ -206,9 +206,9 @@ export class PeriodCloseService {
         // Validate balance
         const totalD = closingLines.reduce((s, l) => s + l.debitAmount, 0);
         const totalC = closingLines.reduce((s, l) => s + l.creditAmount, 0);
-        if (Math.abs(totalD - totalC) > 0.01) {
+        if (Math.abs(totalD - totalC) > 0.0001) {
           throw new BadRequestError(
-            `Closing JE not balanced: debits ${totalD.toFixed(2)} != credits ${totalC.toFixed(2)}`
+            `Closing JE not balanced: debits ${totalD.toFixed(4)} != credits ${totalC.toFixed(4)}`
           );
         }
 
@@ -222,10 +222,15 @@ export class PeriodCloseService {
             referenceType: 'PERIOD_CLOSE',
             createdBy: userId,
             approvedBy: userId,
-            lines: {
-              create: closingLines.map((line) => ({ ...line, tenantId: getTenantId() })),
-            },
           },
+        });
+
+        await tx.journalEntryLine.createMany({
+          data: closingLines.map((line) => ({
+            ...line,
+            journalEntryId: closingEntry.id,
+            tenantId: getTenantId(),
+          })),
         });
 
         closingJournalEntryId = closingEntry.id;
@@ -374,15 +379,15 @@ export class PeriodCloseService {
     }
 
     const revenues = Array.from(revenueMap.values())
-      .filter(r => Math.abs(r.amount) >= 0.01)
+      .filter(r => Math.abs(r.amount) >= 0.0001)
       .sort((a, b) => a.code.localeCompare(b.code));
     const expenses = Array.from(expenseMap.values())
-      .filter(e => Math.abs(e.amount) >= 0.01)
+      .filter(e => Math.abs(e.amount) >= 0.0001)
       .sort((a, b) => a.code.localeCompare(b.code));
 
-    const totalRevenue = Math.round(revenues.reduce((s, r) => s + r.amount, 0) * 100) / 100;
-    const totalExpenses = Math.round(expenses.reduce((s, e) => s + e.amount, 0) * 100) / 100;
-    const netProfit = Math.round((totalRevenue - totalExpenses) * 100) / 100;
+    const totalRevenue = Math.round(revenues.reduce((s, r) => s + r.amount, 0) * 10000) / 10000;
+    const totalExpenses = Math.round(expenses.reduce((s, e) => s + e.amount, 0) * 10000) / 10000;
+    const netProfit = Math.round((totalRevenue - totalExpenses) * 10000) / 10000;
 
     return {
       period: `${year}-${String(month).padStart(2, '0')}`,

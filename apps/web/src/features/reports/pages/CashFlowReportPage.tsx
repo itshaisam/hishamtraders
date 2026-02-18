@@ -6,6 +6,7 @@ import { formatCurrency } from '../../../lib/formatCurrency';
 import { format, startOfMonth } from 'date-fns';
 import { exportPDF, exportExcel } from '../../../utils/exportReport';
 import ExportButtons from '../components/ExportButtons';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 const PAYMENT_METHOD_DISPLAY: Record<string, string> = {
   CASH: 'Cash',
@@ -49,6 +50,7 @@ export default function CashFlowReportPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Reports', href: '/reports' }, { label: 'Cash Flow' }]} className="mb-4" />
       {/* Header */}
       <div className="mb-6 flex items-start justify-between">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">

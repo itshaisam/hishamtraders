@@ -72,13 +72,13 @@ export const ProductList: React.FC<ProductListProps> = ({
               <td className="px-6 py-3 text-right">
                 <div className="flex items-center justify-end gap-1">
                   <span className="text-xs text-gray-400">{cs}</span>
-                  <span className="text-gray-900 font-medium">{product.costPrice.toFixed(2)}</span>
+                  <span className="text-gray-900 font-medium">{product.costPrice.toFixed(4)}</span>
                 </div>
               </td>
               <td className="px-6 py-3 text-right">
                 <div className="flex items-center justify-end gap-1">
                   <span className="text-xs text-gray-400">{cs}</span>
-                  <span className="text-gray-900 font-medium">{product.sellingPrice.toFixed(2)}</span>
+                  <span className="text-gray-900 font-medium">{product.sellingPrice.toFixed(4)}</span>
                 </div>
               </td>
               <td className="px-6 py-3 text-center">

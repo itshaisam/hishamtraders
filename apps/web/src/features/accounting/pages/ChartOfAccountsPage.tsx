@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Save, X, Search, RefreshCw, Trash2, Edit2 } from 'lucide-react';
-import { Card, Modal, Spinner } from '../../../components/ui';
+import { Card, Modal, ListPageSkeleton, Spinner } from '../../../components/ui';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 import { AccountTree } from '../components/AccountTree';
 import {
   useAccountHeadTree,
@@ -174,6 +175,7 @@ export function ChartOfAccountsPage() {
 
   return (
     <div className="p-6 space-y-4">
+      <Breadcrumbs items={[{ label: 'Accounting', href: '/accounting/chart-of-accounts' }, { label: 'Chart of Accounts' }]} className="mb-4" />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -305,7 +307,7 @@ export function ChartOfAccountsPage() {
                   type="number"
                   value={openingBalance}
                   onChange={(e) => setOpeningBalance(Number(e.target.value))}
-                  step="0.01"
+                  step="0.0001"
                   className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="0.00"
                 />

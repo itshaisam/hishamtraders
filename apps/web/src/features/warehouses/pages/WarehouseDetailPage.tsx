@@ -33,20 +33,17 @@ export const WarehouseDetailPage: React.FC = () => {
 
   if (isLoadingWarehouse) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-5xl mx-auto px-4">
+      <div className="p-6">
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
           </div>
-        </div>
       </div>
     );
   }
 
   if (!warehouseData?.data) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-5xl mx-auto px-4">
+      <div className="p-6">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900">Warehouse not found</h2>
             <button
@@ -56,7 +53,6 @@ export const WarehouseDetailPage: React.FC = () => {
               Go back to warehouses
             </button>
           </div>
-        </div>
       </div>
     );
   }
@@ -64,14 +60,14 @@ export const WarehouseDetailPage: React.FC = () => {
   const warehouse = warehouseData.data;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-5xl mx-auto px-4 space-y-4">
+    <div className="p-6 space-y-4">
         <Breadcrumbs
           items={[
+            { label: 'Inventory', href: '/stock-levels' },
             { label: 'Warehouses', href: '/warehouses' },
             { label: warehouse.name },
           ]}
-          className="text-xs sm:text-sm"
+          className="mb-4"
         />
 
         <div className="flex flex-col sm:flex-row sm:items-start sm:gap-4 gap-2">
@@ -93,7 +89,6 @@ export const WarehouseDetailPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-6 md:p-8 mt-2">
           <WarehouseForm warehouse={warehouse} onSubmit={handleSubmit} isLoading={isUpdating} />
         </div>
-      </div>
     </div>
   );
 };

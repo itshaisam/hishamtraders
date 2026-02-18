@@ -16,6 +16,7 @@ import { useCurrencySymbol } from '../../../hooks/useSettings';
 import Spinner from '../../../components/ui/Spinner';
 import Badge from '../../../components/ui/Badge';
 import Modal from '../../../components/ui/Modal';
+import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
 export function ReconciliationDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -113,6 +114,7 @@ export function ReconciliationDetailPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Accounting', href: '/accounting/chart-of-accounts' }, { label: 'Bank Reconciliation', href: '/accounting/bank-reconciliation' }, { label: 'Reconciliation Detail' }]} className="mb-4" />
       {/* Header */}
       <div className="mb-6 flex items-center gap-4">
         <button onClick={() => navigate('/accounting/bank-reconciliation')} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -137,19 +139,19 @@ export function ReconciliationDetailPage() {
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <p className="text-sm text-gray-600">Statement Balance</p>
           <p className="text-lg font-bold text-gray-900">
-            {cs} {session.statementBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {cs} {session.statementBalance.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
           </p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <p className="text-sm text-gray-600">System Balance</p>
           <p className="text-lg font-bold text-gray-900">
-            {cs} {session.systemBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {cs} {session.systemBalance.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
           </p>
         </div>
         <div className={`border rounded-lg p-4 ${Math.abs(diff) < 0.01 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
           <p className="text-sm text-gray-600">Difference</p>
           <p className={`text-lg font-bold ${Math.abs(diff) < 0.01 ? 'text-green-700' : 'text-red-700'}`}>
-            {cs} {diff.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            {cs} {diff.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
           </p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -211,7 +213,7 @@ export function ReconciliationDetailPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-700">{item.description}</td>
                   <td className={`px-4 py-3 text-right font-medium ${item.statementAmount >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                    {cs} {item.statementAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {cs} {item.statementAmount.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
                   </td>
                   <td className="px-4 py-3 text-center">
                     {item.matched ? (
@@ -307,13 +309,13 @@ export function ReconciliationDetailPage() {
                     <td className="px-4 py-3">{tx.description}</td>
                     <td className="px-4 py-3 text-xs">{tx.referenceType || '-'}</td>
                     <td className="px-4 py-3 text-right text-green-700">
-                      {tx.debit > 0 ? `${cs} ${tx.debit.toFixed(2)}` : '-'}
+                      {tx.debit > 0 ? `${cs} ${tx.debit.toFixed(4)}` : '-'}
                     </td>
                     <td className="px-4 py-3 text-right text-red-700">
-                      {tx.credit > 0 ? `${cs} ${tx.credit.toFixed(2)}` : '-'}
+                      {tx.credit > 0 ? `${cs} ${tx.credit.toFixed(4)}` : '-'}
                     </td>
                     <td className={`px-4 py-3 text-right font-medium ${tx.netAmount >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                      {cs} {tx.netAmount.toFixed(2)}
+                      {cs} {tx.netAmount.toFixed(4)}
                     </td>
                   </tr>
                 ))}
@@ -351,7 +353,7 @@ export function ReconciliationDetailPage() {
             </label>
             <input
               type="number"
-              step="0.01"
+              step="0.0001"
               value={itemAmount}
               onChange={(e) => setItemAmount(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"

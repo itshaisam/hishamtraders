@@ -126,7 +126,7 @@ export const LandedCostBreakdown: React.FC<LandedCostBreakdownProps> = ({ poId }
                       {cs} {item.totalLandedCost.toLocaleString()}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-right bg-yellow-50 font-bold text-gray-900">
-                      {cs} {item.landedCostPerUnit.toFixed(2)}
+                      {cs} {item.landedCostPerUnit.toFixed(4)}
                     </td>
                   </tr>
                 ))}

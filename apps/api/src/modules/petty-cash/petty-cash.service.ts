@@ -73,8 +73,8 @@ export class PettyCashService {
       }
       const entryNumber = `${prefix}${String(nextSeq).padStart(3, '0')}`;
 
-      // Create POSTED journal entry
-      const entry = await (tx.journalEntry as any).create({
+      // Create POSTED journal entry, then lines separately
+      const entry = await tx.journalEntry.create({
         data: {
           entryNumber,
           date,
@@ -85,25 +85,28 @@ export class PettyCashService {
           createdBy: userId,
           approvedBy: userId,
           tenantId: getTenantId(),
-          lines: {
-            create: [
-              {
-                accountHeadId: pettyCash.id,
-                debitAmount: amount,
-                creditAmount: 0,
-                description: 'Petty cash advance',
-                tenantId: getTenantId(),
-              },
-              {
-                accountHeadId: bankAccount.id,
-                debitAmount: 0,
-                creditAmount: amount,
-                description: `Transfer from ${bankAccount.name}`,
-                tenantId: getTenantId(),
-              },
-            ],
-          },
         },
+      });
+
+      await tx.journalEntryLine.createMany({
+        data: [
+          {
+            journalEntryId: entry.id,
+            accountHeadId: pettyCash.id,
+            debitAmount: amount,
+            creditAmount: 0,
+            description: 'Petty cash advance',
+            tenantId: getTenantId(),
+          },
+          {
+            journalEntryId: entry.id,
+            accountHeadId: bankAccount.id,
+            debitAmount: 0,
+            creditAmount: amount,
+            description: `Transfer from ${bankAccount.name}`,
+            tenantId: getTenantId(),
+          },
+        ],
       });
 
       // Update petty cash balance (ASSET: debit increases)

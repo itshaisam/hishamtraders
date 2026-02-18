@@ -6,6 +6,7 @@ import { useStockMovements } from '../../../hooks/useStockMovements';
 import { useProducts } from '../../products/hooks/useProducts';
 import { useWarehouses } from '../../../hooks/useWarehouses';
 import { MovementType, ReferenceType, StockMovementFilters } from '../../../types/stock-movement.types';
+import { Breadcrumbs } from '../../../components/ui';
 import * as XLSX from 'xlsx';
 
 function StockMovementsPage() {
@@ -103,6 +104,7 @@ function StockMovementsPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Stock Movements' }]} className="mb-4" />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Stock Movement Report</h1>
         <p className="text-gray-600 mt-1">View complete movement history with running balance</p>

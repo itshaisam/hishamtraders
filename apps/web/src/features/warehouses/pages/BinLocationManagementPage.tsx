@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { apiClient } from '../../../lib/api-client';
 import { binLocationService, BinLocation, CreateBinDto } from '../../../services/binLocationService';
+import { Breadcrumbs } from '../../../components/ui';
 
 export default function BinLocationManagementPage() {
   const queryClient = useQueryClient();
@@ -100,6 +101,7 @@ export default function BinLocationManagementPage() {
 
   return (
     <div className="p-6">
+      <Breadcrumbs items={[{ label: 'Inventory', href: '/stock-levels' }, { label: 'Warehouses', href: '/warehouses' }, { label: 'Bin Locations' }]} className="mb-4" />
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Bin Location Management</h1>
         <p className="text-sm text-gray-500 mt-1">Manage bin locations within warehouses</p>
