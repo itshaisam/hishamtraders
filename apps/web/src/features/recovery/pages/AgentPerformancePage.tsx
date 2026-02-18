@@ -107,7 +107,7 @@ export default function AgentPerformancePage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Agent</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Clients</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Customers</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Visits</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Collected</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Avg/Visit</th>

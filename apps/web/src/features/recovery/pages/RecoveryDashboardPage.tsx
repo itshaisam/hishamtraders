@@ -187,12 +187,12 @@ export default function RecoveryDashboardPage() {
 
         <Card className="p-4">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold text-gray-900">Top Overdue Clients</h3>
+            <h3 className="font-semibold text-gray-900">Top Overdue Customers</h3>
             <Link to="/reports/recovery/overdue" className="text-sm text-blue-600">View All</Link>
           </div>
           <div className="space-y-2">
             {(d.topOverdueClients || []).length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-4">No overdue clients</p>
+              <p className="text-gray-400 text-sm text-center py-4">No overdue customers</p>
             ) : (
               (d.topOverdueClients || []).map((c: any, i: number) => (
                 <div key={c.id} className="flex justify-between items-center text-sm border-b pb-2">

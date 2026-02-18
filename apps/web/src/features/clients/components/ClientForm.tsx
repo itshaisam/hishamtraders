@@ -37,7 +37,7 @@ const RECOVERY_DAYS = [
 ];
 
 export const clientFormSchema = z.object({
-  name: z.string().min(1, 'Client name is required').min(2, 'Name must be at least 2 characters'),
+  name: z.string().min(1, 'Customer name is required').min(2, 'Name must be at least 2 characters'),
   contactPerson: z.string().optional(),
   phone: z.string().optional(),
   whatsapp: z.string().optional(),
@@ -174,11 +174,11 @@ export const ClientForm: React.FC<ClientFormProps> = ({
           Basic Information
         </h3>
 
-        <FormField label="Client Name" error={errors.name?.message} required>
+        <FormField label="Customer Name" error={errors.name?.message} required>
           <Input
             {...register('name')}
             type="text"
-            placeholder="Enter client name"
+            placeholder="Enter customer name"
             disabled={isLoading}
             className="py-2.5"
           />
@@ -312,7 +312,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
             label={`Credit Limit (${cs})`}
             error={errors.creditLimit?.message}
             required
-            helperText="Set to 0 for cash-only clients"
+            helperText="Set to 0 for cash-only customers"
           >
             <Input
               {...register('creditLimit', { valueAsNumber: true })}
@@ -381,7 +381,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
           Status
         </h3>
 
-        <FormField label="Client Status" error={errors.status?.message}>
+        <FormField label="Customer Status" error={errors.status?.message}>
           <RadioBadgeGroup
             name="status"
             value={status}
@@ -410,7 +410,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
             disabled={isLoading}
             className="flex-1"
           >
-            {client ? 'Update Client' : 'Save Client'}
+            {client ? 'Update Customer' : 'Save Customer'}
           </Button>
         </div>
       </div>

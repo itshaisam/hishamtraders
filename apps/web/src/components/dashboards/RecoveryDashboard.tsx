@@ -99,7 +99,7 @@ export default function RecoveryDashboard() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Recovery Dashboard</h1>
-          <p className="text-gray-600">Overdue accounts, collections tracking, and client follow-ups</p>
+          <p className="text-gray-600">Overdue accounts, collections tracking, and customer follow-ups</p>
         </div>
         <div className="flex items-center text-sm text-gray-500">
           <Clock size={14} className="mr-1" />
@@ -115,12 +115,12 @@ export default function RecoveryDashboard() {
             <AlertCircle className="text-red-500" size={20} />
           </div>
           <div className="text-2xl font-bold text-red-600">{formatCurrencyCompact(stats.totalOutstanding, cs)}</div>
-          <div className="text-xs text-gray-500 mt-2">From all clients</div>
+          <div className="text-xs text-gray-500 mt-2">From all customers</div>
         </div>
 
         <div className="bg-white rounded-xl p-6 border-l-4 border-orange-500 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-gray-600">Overdue Clients</div>
+            <div className="text-sm text-gray-600">Overdue Customers</div>
             <Users className="text-orange-500" size={20} />
           </div>
           <div className="text-2xl font-bold text-orange-600">{stats.overdueCount}</div>
@@ -133,7 +133,7 @@ export default function RecoveryDashboard() {
             <DollarSign className="text-green-500" size={20} />
           </div>
           <div className="text-2xl font-bold text-green-600">{formatCurrencyCompact(stats.collectedThisWeek, cs)}</div>
-          <div className="text-xs text-gray-500 mt-2">Client payments received</div>
+          <div className="text-xs text-gray-500 mt-2">Customer payments received</div>
         </div>
 
         <div className="bg-white rounded-xl p-6 border-l-4 border-blue-500 shadow-sm">
@@ -183,7 +183,7 @@ export default function RecoveryDashboard() {
           <Card className="rounded-xl" padding="none">
             <div className="p-6 border-b">
               <h3 className="text-lg font-bold text-gray-900">
-                Overdue Clients ({stats.overdueClientsList.length})
+                Overdue Customers ({stats.overdueClientsList.length})
               </h3>
             </div>
             {stats.overdueClientsList.length > 0 ? (
@@ -191,7 +191,7 @@ export default function RecoveryDashboard() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Customer</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Phone</th>
                       <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase">Outstanding</th>
                       <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Days Overdue</th>
@@ -229,7 +229,7 @@ export default function RecoveryDashboard() {
               </div>
             ) : (
               <div className="flex items-center justify-center h-32 text-gray-400">
-                No overdue clients
+                No overdue customers
               </div>
             )}
           </Card>
@@ -291,7 +291,7 @@ export default function RecoveryDashboard() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium"
           >
             <Users size={16} />
-            View Clients
+            View Customers
           </Link>
           <Link
             to="/invoices"

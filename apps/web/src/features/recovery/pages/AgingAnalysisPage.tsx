@@ -67,7 +67,7 @@ export default function AgingAnalysisPage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Aging Analysis</h1>
-          <p className="text-gray-600 mt-1">Client receivables broken down by overdue period</p>
+          <p className="text-gray-600 mt-1">Customer receivables broken down by overdue period</p>
         </div>
         <Button variant="secondary" onClick={handleExport}>
           <Download size={16} className="mr-2" /> Export Excel
@@ -165,7 +165,7 @@ export default function AgingAnalysisPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">City</th>
                   <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
                   <th className="px-3 py-3 text-right text-xs font-medium text-green-600 uppercase">Current</th>
@@ -194,7 +194,7 @@ export default function AgingAnalysisPage() {
             </table>
           </div>
           {clients.length === 0 && (
-            <p className="text-center text-gray-500 py-8">No clients with outstanding balances</p>
+            <p className="text-center text-gray-500 py-8">No customers with outstanding balances</p>
           )}
         </Card>
       )}

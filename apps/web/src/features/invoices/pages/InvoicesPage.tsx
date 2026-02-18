@@ -101,13 +101,13 @@ export function InvoicesPage() {
 
           {/* Client */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
             <select
               value={filters.clientId}
               onChange={(e) => handleFilterChange('clientId', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">All Clients</option>
+              <option value="">All Customers</option>
               {clientsData?.data.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.name}
@@ -184,7 +184,7 @@ export function InvoicesPage() {
                       Invoice #
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Client
+                      Customer
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date

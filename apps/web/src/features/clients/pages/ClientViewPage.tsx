@@ -24,7 +24,7 @@ export const ClientViewPage: React.FC = () => {
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center py-8">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-            <p className="mt-2 text-gray-600">Loading client...</p>
+            <p className="mt-2 text-gray-600">Loading customer...</p>
           </div>
         </div>
       </div>
@@ -36,10 +36,10 @@ export const ClientViewPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <h2 className="text-lg font-semibold text-red-900 mb-2">Client Not Found</h2>
-            <p className="text-red-700 mb-4">The client you're looking for doesn't exist or has been deleted.</p>
+            <h2 className="text-lg font-semibold text-red-900 mb-2">Customer Not Found</h2>
+            <p className="text-red-700 mb-4">The customer you're looking for doesn't exist or has been deleted.</p>
             <Button variant="primary" onClick={() => navigate('/clients')}>
-              Back to Clients
+              Back to Customers
             </Button>
           </div>
         </div>
@@ -76,7 +76,7 @@ export const ClientViewPage: React.FC = () => {
       <div className="max-w-5xl mx-auto px-4 space-y-6">
         <Breadcrumbs
           items={[
-            { label: 'Clients', href: '/clients' },
+            { label: 'Customers', href: '/clients' },
             { label: client.name },
           ]}
           className="text-xs sm:text-sm"

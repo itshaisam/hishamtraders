@@ -14,7 +14,7 @@ export const reportsContent: GuideContent = {
   title: 'Reports',
   icon: BarChart3,
   introduction:
-    'The Reports module is your central hub for generating, viewing, and exporting business reports. Reports are organized into categories — Stock, Sales, Payments, Import, Expenses, and Gate Pass — and each report is accessible only to users whose role permits it. Use filters to narrow data by date range, warehouse, client, category, or status, then export the results for offline analysis.',
+    'The Reports module is your central hub for generating, viewing, and exporting business reports. Reports are organized into categories — Stock, Sales, Payments, Import, Expenses, and Gate Pass — and each report is accessible only to users whose role permits it. Use filters to narrow data by date range, warehouse, customer, category, or status, then export the results for offline analysis.',
   tableOfContents: [
     { id: 'reports-center', label: 'Reports Center', level: 1 },
     { id: 'stock-reports', label: 'Stock Reports', level: 1 },
@@ -22,7 +22,7 @@ export const reportsContent: GuideContent = {
     { id: 'stock-valuation', label: 'Stock Valuation', level: 2 },
     { id: 'sales-reports', label: 'Sales Reports', level: 1 },
     { id: 'sales-report', label: 'Sales Report', level: 2 },
-    { id: 'sales-by-client', label: 'Sales by Client', level: 2 },
+    { id: 'sales-by-customer', label: 'Sales by Customer', level: 2 },
     { id: 'sales-by-product', label: 'Sales by Product', level: 2 },
     { id: 'payment-reports', label: 'Payment Reports', level: 1 },
     { id: 'payment-collections', label: 'Payment Collections', level: 2 },
@@ -56,10 +56,10 @@ export const reportsContent: GuideContent = {
           pairs: [
             { key: 'Stock Report', value: 'Current stock levels by warehouse, category, and status.' },
             { key: 'Stock Valuation', value: 'Inventory value breakdown across warehouses.' },
-            { key: 'Sales Report', value: 'Invoice details with date range, client, and status filters.' },
-            { key: 'Sales by Client', value: 'Revenue totals grouped by client.' },
+            { key: 'Sales Report', value: 'Invoice details with date range, customer, and status filters.' },
+            { key: 'Sales by Customer', value: 'Revenue totals grouped by customer.' },
             { key: 'Sales by Product', value: 'Quantities sold and revenue grouped by product.' },
-            { key: 'Payment Collections', value: 'Client payments with method and date filters.' },
+            { key: 'Payment Collections', value: 'Customer payments with method and date filters.' },
             { key: 'Receivables', value: 'Outstanding balances with aging indicators.' },
             { key: 'Cash Flow', value: 'Inflows vs outflows broken down by payment method.' },
             { key: 'Import Cost Report', value: 'Purchase orders with landed cost breakdown.' },
@@ -154,7 +154,7 @@ export const reportsContent: GuideContent = {
       content: [
         {
           type: 'paragraph',
-          text: 'Sales reports help you track revenue, monitor client purchasing patterns, and analyze which products drive the most sales. Three views are available: a detailed invoice-level report, a client-grouped summary, and a product-grouped summary.',
+          text: 'Sales reports help you track revenue, monitor customer purchasing patterns, and analyze which products drive the most sales. Three views are available: a detailed invoice-level report, a customer-grouped summary, and a product-grouped summary.',
         },
       ],
       subSections: [
@@ -164,7 +164,7 @@ export const reportsContent: GuideContent = {
           content: [
             {
               type: 'paragraph',
-              text: 'The Sales Report shows individual invoice records with full details including invoice number, date, client name, subtotal, tax, total amount, payment status, and the sales officer who created it.',
+              text: 'The Sales Report shows individual invoice records with full details including invoice number, date, customer name, subtotal, tax, total amount, payment status, and the sales officer who created it.',
             },
             {
               type: 'steps',
@@ -174,9 +174,9 @@ export const reportsContent: GuideContent = {
                   description: 'Choose a start and end date to limit the invoices shown. Defaults to the current month.',
                 },
                 {
-                  title: 'Filter by client or status',
+                  title: 'Filter by customer or status',
                   description:
-                    'Optionally select a specific client or filter by invoice status (Pending, Partial, Paid, Overdue, Cancelled, Voided) to narrow the results.',
+                    'Optionally select a specific customer or filter by invoice status (Pending, Partial, Paid, Overdue, Cancelled, Voided) to narrow the results.',
                 },
                 {
                   title: 'Review totals',
@@ -188,12 +188,12 @@ export const reportsContent: GuideContent = {
           ],
         },
         {
-          id: 'sales-by-client',
-          title: 'Sales by Client',
+          id: 'sales-by-customer',
+          title: 'Sales by Customer',
           content: [
             {
               type: 'paragraph',
-              text: 'This report groups revenue by client. Each row shows the client name, total number of invoices, total revenue, and the average invoice value. Use it to identify your highest-value clients and spot trends in client purchasing behavior.',
+              text: 'This report groups revenue by customer. Each row shows the customer name, total number of invoices, total revenue, and the average invoice value. Use it to identify your highest-value customers and spot trends in customer purchasing behavior.',
             },
           ],
         },
@@ -219,7 +219,7 @@ export const reportsContent: GuideContent = {
       content: [
         {
           type: 'paragraph',
-          text: 'Payment reports track money coming in from clients, outstanding balances, and the overall cash flow picture. These reports are essential for the accounts and recovery teams to monitor collections and manage receivables.',
+          text: 'Payment reports track money coming in from customers, outstanding balances, and the overall cash flow picture. These reports are essential for the accounts and recovery teams to monitor collections and manage receivables.',
         },
       ],
       subSections: [
@@ -229,7 +229,7 @@ export const reportsContent: GuideContent = {
           content: [
             {
               type: 'paragraph',
-              text: 'The Payment Collections report lists all client payments received within a given period. Each entry shows the payment date, client name, amount, payment method (cash, cheque, bank transfer, online), reference number, and the invoices the payment was applied against.',
+              text: 'The Payment Collections report lists all customer payments received within a given period. Each entry shows the payment date, customer name, amount, payment method (cash, cheque, bank transfer, online), reference number, and the invoices the payment was applied against.',
             },
             {
               type: 'steps',
@@ -258,7 +258,7 @@ export const reportsContent: GuideContent = {
           content: [
             {
               type: 'paragraph',
-              text: 'The Receivables report shows all outstanding client balances. Each row includes the client name, total invoiced amount, total paid, outstanding balance, and an aging indicator showing how long the balance has been overdue.',
+              text: 'The Receivables report shows all outstanding customer balances. Each row includes the customer name, total invoiced amount, total paid, outstanding balance, and an aging indicator showing how long the balance has been overdue.',
             },
             {
               type: 'callout',
@@ -274,12 +274,12 @@ export const reportsContent: GuideContent = {
           content: [
             {
               type: 'paragraph',
-              text: 'The Cash Flow report compares inflows (client payments received) against outflows (supplier payments made) over a selected period. It breaks the figures down by payment method so you can see how much cash versus bank transfers are flowing through the business.',
+              text: 'The Cash Flow report compares inflows (customer payments received) against outflows (supplier payments made) over a selected period. It breaks the figures down by payment method so you can see how much cash versus bank transfers are flowing through the business.',
             },
             {
               type: 'keyValue',
               pairs: [
-                { key: 'Inflows', value: 'Total payments received from clients, grouped by method.' },
+                { key: 'Inflows', value: 'Total payments received from customers, grouped by method.' },
                 { key: 'Outflows', value: 'Total payments made to suppliers, grouped by method.' },
                 { key: 'Net Cash Flow', value: 'Inflows minus outflows — a positive number means more money coming in than going out.' },
               ],

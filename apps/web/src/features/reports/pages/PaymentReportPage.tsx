@@ -52,7 +52,7 @@ export default function PaymentReportPage() {
         ],
         columns: [
           { header: 'Date', key: 'date', format: (v) => format(new Date(v), 'dd MMM yyyy') },
-          { header: 'Client', key: 'clientName' },
+          { header: 'Customer', key: 'clientName' },
           { header: 'Amount', key: 'amount', align: 'right', format: (v) => formatRs(v) },
           { header: 'Method', key: 'method', format: (v) => METHOD_DISPLAY[v] || v },
           { header: 'Reference', key: 'referenceNumber', format: (v) => v || '-' },
@@ -68,7 +68,7 @@ export default function PaymentReportPage() {
           { label: 'Total Overdue', value: formatRs(receivablesQuery.data.data.reduce((s, r) => s + r.overdueAmount, 0)) },
         ],
         columns: [
-          { header: 'Client', key: 'clientName' },
+          { header: 'Customer', key: 'clientName' },
           { header: 'Balance', key: 'balance', align: 'right', format: (v) => formatRs(v) },
           { header: 'Credit Limit', key: 'creditLimit', align: 'right', format: (v) => formatRs(v) },
           { header: 'Overdue', key: 'overdueAmount', align: 'right', format: (v) => formatRs(v) },
@@ -188,7 +188,7 @@ export default function PaymentReportPage() {
                   <thead>
                     <tr className="bg-gray-50 border-b">
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
@@ -252,7 +252,7 @@ export default function PaymentReportPage() {
                   <table className="min-w-full">
                     <thead>
                       <tr className="bg-gray-50 border-b">
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Credit Limit</th>
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Overdue</th>

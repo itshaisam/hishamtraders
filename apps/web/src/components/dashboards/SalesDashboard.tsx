@@ -107,7 +107,7 @@ export default function SalesDashboard() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Sales Dashboard</h1>
-          <p className="text-gray-600">Sales performance, client management, and revenue tracking</p>
+          <p className="text-gray-600">Sales performance, customer management, and revenue tracking</p>
         </div>
         <div className="flex items-center text-sm text-gray-500">
           <Clock size={14} className="mr-1" />
@@ -159,7 +159,7 @@ export default function SalesDashboard() {
             <CreditCard className="text-orange-500" size={20} />
           </div>
           <div className="text-2xl font-bold text-orange-600">{stats.creditAlerts.length}</div>
-          <div className="text-xs text-gray-500 mt-2">Clients &gt;80% credit used</div>
+          <div className="text-xs text-gray-500 mt-2">Customers &gt;80% credit used</div>
         </div>
 
         <div className="bg-white rounded-xl p-6 border-l-4 border-purple-500 shadow-sm">
@@ -218,7 +218,7 @@ export default function SalesDashboard() {
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
         {/* Top Clients */}
         <Card className="rounded-xl">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Top 5 Clients (This Month)</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Top 5 Customers (This Month)</h3>
           {stats.topClients.length > 0 ? (
             <div className="space-y-3">
               {stats.topClients.map((client, idx) => (
@@ -312,7 +312,7 @@ export default function SalesDashboard() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-32 text-green-500">
-              All clients within credit limits
+              All customers within credit limits
             </div>
           )}
         </Card>
@@ -335,15 +335,15 @@ export default function SalesDashboard() {
             >
               <ShoppingCart className="w-8 h-8 text-green-600 mb-2" />
               <div className="text-sm font-semibold text-gray-900">Record Payment</div>
-              <div className="text-xs text-gray-600">Client payment</div>
+              <div className="text-xs text-gray-600">Customer payment</div>
             </Link>
             <Link
               to="/clients"
               className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition border border-purple-200"
             >
               <CreditCard className="w-8 h-8 text-purple-600 mb-2" />
-              <div className="text-sm font-semibold text-gray-900">View Clients</div>
-              <div className="text-xs text-gray-600">Client management</div>
+              <div className="text-sm font-semibold text-gray-900">View Customers</div>
+              <div className="text-xs text-gray-600">Customer management</div>
             </Link>
             <Link
               to="/invoices"

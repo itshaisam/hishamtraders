@@ -5,11 +5,11 @@ export const paymentsContent: GuideContent = {
   title: 'Payments',
   icon: DollarSign,
   introduction:
-    'The Payments module handles all money movement in and out of the business. Record payments received from clients, payments made to suppliers, view full payment history, and track business expenses. Each payment automatically updates the related invoice statuses and ledger balances.',
+    'The Payments module handles all money movement in and out of the business. Record payments received from customers, payments made to suppliers, view full payment history, and track business expenses. Each payment automatically updates the related invoice statuses and ledger balances.',
   tableOfContents: [
-    { id: 'client-payments', label: 'Client Payments', level: 1 },
-    { id: 'client-payment-process', label: 'Payment Process', level: 2 },
-    { id: 'client-payment-fields', label: 'Payment Fields', level: 2 },
+    { id: 'customer-payments', label: 'Customer Payments', level: 1 },
+    { id: 'customer-payment-process', label: 'Payment Process', level: 2 },
+    { id: 'customer-payment-fields', label: 'Payment Fields', level: 2 },
     { id: 'supplier-payments', label: 'Supplier Payments', level: 1 },
     { id: 'supplier-payment-fields', label: 'Payment Fields', level: 2 },
     { id: 'payment-history', label: 'Payment History', level: 1 },
@@ -20,19 +20,19 @@ export const paymentsContent: GuideContent = {
   ],
   sections: [
     {
-      id: 'client-payments',
-      title: 'Client Payments',
+      id: 'customer-payments',
+      title: 'Customer Payments',
       icon: Users,
       roles: ['Admin', 'Accountant', 'Recovery Agent'],
       content: [
         {
           type: 'paragraph',
-          text: 'Client payments record money received from clients against their outstanding invoices. When a payment is recorded, it is allocated to one or more invoices, and each invoice status is updated automatically (e.g., from PENDING to PARTIAL or PAID).',
+          text: 'Customer payments record money received from customers against their outstanding invoices. When a payment is recorded, it is allocated to one or more invoices, and each invoice status is updated automatically (e.g., from PENDING to PARTIAL or PAID).',
         },
         {
           type: 'flow',
           steps: [
-            'Select Client',
+            'Select Customer',
             'Enter Amount',
             'Choose Payment Method',
             'Allocate to Invoices',
@@ -44,26 +44,26 @@ export const paymentsContent: GuideContent = {
           type: 'callout',
           variant: 'tip',
           title: 'Partial Payment Allocation',
-          text: 'You can allocate a single payment across multiple invoices. For example, if a client pays PKR 50,000 and has two invoices of PKR 30,000 each, you can allocate PKR 30,000 to the first invoice (marking it PAID) and PKR 20,000 to the second (marking it PARTIAL). The system will prevent you from allocating more than the total payment amount.',
+          text: 'You can allocate a single payment across multiple invoices. For example, if a customer pays PKR 50,000 and has two invoices of PKR 30,000 each, you can allocate PKR 30,000 to the first invoice (marking it PAID) and PKR 20,000 to the second (marking it PARTIAL). The system will prevent you from allocating more than the total payment amount.',
         },
       ],
       subSections: [
         {
-          id: 'client-payment-process',
+          id: 'customer-payment-process',
           title: 'Payment Process',
           content: [
             {
               type: 'steps',
               steps: [
                 {
-                  title: 'Select the Client',
+                  title: 'Select the Customer',
                   description:
-                    'Use the client dropdown to select the paying client. Once selected, the system loads all their outstanding invoices (PENDING, PARTIAL, or OVERDUE).',
+                    'Use the customer dropdown to select the paying customer. Once selected, the system loads all their outstanding invoices (PENDING, PARTIAL, or OVERDUE).',
                 },
                 {
                   title: 'Enter Payment Amount',
                   description:
-                    'Enter the total amount received from the client. This is the gross amount before allocation.',
+                    'Enter the total amount received from the customer. This is the gross amount before allocation.',
                 },
                 {
                   title: 'Choose Payment Method',
@@ -78,21 +78,21 @@ export const paymentsContent: GuideContent = {
                 {
                   title: 'Confirm and Save',
                   description:
-                    'Review the allocation summary and confirm. The payment is recorded, invoice statuses are updated, and the client ledger balance is adjusted.',
+                    'Review the allocation summary and confirm. The payment is recorded, invoice statuses are updated, and the customer ledger balance is adjusted.',
                 },
               ],
             },
           ],
         },
         {
-          id: 'client-payment-fields',
+          id: 'customer-payment-fields',
           title: 'Payment Fields',
           content: [
             {
               type: 'fieldTable',
               fields: [
-                { name: 'Client', fieldType: 'Dropdown', required: true, description: 'The client making the payment. Searchable dropdown.' },
-                { name: 'Amount', fieldType: 'Number', required: true, description: 'Total payment amount received from the client.' },
+                { name: 'Customer', fieldType: 'Dropdown', required: true, description: 'The customer making the payment. Searchable dropdown.' },
+                { name: 'Amount', fieldType: 'Number', required: true, description: 'Total payment amount received from the customer.' },
                 { name: 'Payment Method', fieldType: 'Select', required: true, description: 'Cash, Bank Transfer, Cheque, or Online.' },
                 { name: 'Reference', fieldType: 'Text', required: false, description: 'Cheque number, transaction ID, or bank reference.' },
                 { name: 'Payment Date', fieldType: 'Date', required: true, description: 'The date the payment was received. Defaults to today.' },
@@ -169,7 +169,7 @@ export const paymentsContent: GuideContent = {
       content: [
         {
           type: 'paragraph',
-          text: 'The Payment History page provides a comprehensive view of all recorded payments, both client and supplier. Use filters to narrow down results by date range, payment type, or method. Each row shows the payment amount, method, associated client or supplier, and allocation details.',
+          text: 'The Payment History page provides a comprehensive view of all recorded payments, both customer and supplier. Use filters to narrow down results by date range, payment type, or method. Each row shows the payment amount, method, associated customer or supplier, and allocation details.',
         },
         {
           type: 'keyValue',
@@ -177,7 +177,7 @@ export const paymentsContent: GuideContent = {
             { key: 'Payment Number', value: 'Auto-generated unique identifier for each payment.' },
             { key: 'Date', value: 'The date the payment was recorded.' },
             { key: 'Type', value: 'CLIENT or SUPPLIER, indicating the direction of payment.' },
-            { key: 'Party', value: 'The client or supplier name associated with the payment.' },
+            { key: 'Party', value: 'The customer or supplier name associated with the payment.' },
             { key: 'Amount', value: 'The total payment amount.' },
             { key: 'Method', value: 'Cash, Bank Transfer, Cheque, or Online.' },
             { key: 'Reference', value: 'Cheque number or transaction reference, if provided.' },
@@ -196,7 +196,7 @@ export const paymentsContent: GuideContent = {
             {
               type: 'fieldTable',
               fields: [
-                { name: 'Search', fieldType: 'Text', required: false, description: 'Search by payment number, client name, supplier name, or reference.' },
+                { name: 'Search', fieldType: 'Text', required: false, description: 'Search by payment number, customer name, supplier name, or reference.' },
                 { name: 'Date Range', fieldType: 'Date Range', required: false, description: 'Filter payments within a specific start and end date.' },
                 { name: 'Type', fieldType: 'Select', required: false, description: 'Filter by CLIENT or SUPPLIER payments.' },
                 { name: 'Method', fieldType: 'Select', required: false, description: 'Filter by payment method: Cash, Bank Transfer, Cheque, or Online.' },

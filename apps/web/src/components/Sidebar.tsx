@@ -303,7 +303,7 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                   to="/clients"
                   className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                 >
-                  Clients
+                  Customers
                 </Link>
                 <Link
                   to="/invoices"
@@ -350,13 +350,13 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                       to="/payments/client/record"
                       className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                     >
-                      Record Client Payment
+                      Record Customer Payment
                     </Link>
                     <Link
                       to="/payments/client/history"
                       className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                     >
-                      Client Payment History
+                      Customer Payment History
                     </Link>
                     <Link
                       to="/payments/supplier/record"

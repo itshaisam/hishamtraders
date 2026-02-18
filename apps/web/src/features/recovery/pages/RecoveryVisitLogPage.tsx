@@ -9,7 +9,7 @@ import { Card, Button, Input, Spinner } from '../../../components/ui';
 const OUTCOMES = [
   { value: 'PAYMENT_COLLECTED', label: 'Payment Collected' },
   { value: 'PROMISE_MADE', label: 'Promise Made' },
-  { value: 'CLIENT_UNAVAILABLE', label: 'Client Unavailable' },
+  { value: 'CLIENT_UNAVAILABLE', label: 'Customer Unavailable' },
   { value: 'REFUSED_TO_PAY', label: 'Refused to Pay' },
   { value: 'PARTIAL_PAYMENT', label: 'Partial Payment' },
   { value: 'DISPUTE_RAISED', label: 'Dispute Raised' },
@@ -84,7 +84,7 @@ export default function RecoveryVisitLogPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.clientId || !form.outcome) {
-      toast.error('Please select a client and outcome');
+      toast.error('Please select a customer and outcome');
       return;
     }
     createMutation.mutate({
@@ -107,7 +107,7 @@ export default function RecoveryVisitLogPage() {
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Log Recovery Visit</h1>
-        <p className="text-gray-600 mt-1">Record the outcome of a client visit</p>
+        <p className="text-gray-600 mt-1">Record the outcome of a customer visit</p>
       </div>
 
       <Card className="p-6">
@@ -130,7 +130,7 @@ export default function RecoveryVisitLogPage() {
 
           {/* Client Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Client *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
             {loadingClients ? (
               <Spinner />
             ) : (
@@ -140,7 +140,7 @@ export default function RecoveryVisitLogPage() {
                 className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                 required
               >
-                <option value="">Select a client</option>
+                <option value="">Select a customer</option>
                 {clients.map((c: any) => (
                   <option key={c.id} value={c.id}>
                     {c.name} — PKR {Number(c.balance || 0).toLocaleString()}
@@ -260,7 +260,7 @@ export default function RecoveryVisitLogPage() {
       {/* Recent Visits */}
       {form.clientId && recentVisits.length > 0 && (
         <Card className="p-4">
-          <h3 className="font-semibold text-gray-900 mb-3">Recent Visits for This Client</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">Recent Visits for This Customer</h3>
           <div className="space-y-2">
             {recentVisits.map((v: any) => (
               <div key={v.id} className="flex justify-between items-center text-sm border-b pb-2">

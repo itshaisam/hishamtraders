@@ -66,7 +66,7 @@ export default function DuePromisesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Payment Promises</h1>
-        <p className="text-gray-600 mt-1">Track and manage client payment promises</p>
+        <p className="text-gray-600 mt-1">Track and manage customer payment promises</p>
       </div>
 
       {/* Summary Cards */}
@@ -141,7 +141,7 @@ export default function DuePromisesPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Promise Date</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>

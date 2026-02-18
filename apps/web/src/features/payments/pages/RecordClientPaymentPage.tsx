@@ -145,7 +145,7 @@ function RecordClientPaymentPage() {
                   <p className="font-medium text-yellow-900">No Outstanding Invoices</p>
                   <p className="text-yellow-700 mt-1">
                     This payment was recorded but not allocated to any invoices. The full amount is
-                    credited to the client's account.
+                    credited to the customer's account.
                   </p>
                 </div>
               </div>
@@ -177,9 +177,9 @@ function RecordClientPaymentPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <DollarSign className="h-6 w-6" />
-            Record Client Payment
+            Record Customer Payment
           </h1>
-          <p className="text-gray-600 mt-1">Record a payment received from a client</p>
+          <p className="text-gray-600 mt-1">Record a payment received from a customer</p>
         </div>
       </div>
 
@@ -188,14 +188,14 @@ function RecordClientPaymentPage() {
           {/* Client Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Client <span className="text-red-500">*</span>
+              Customer <span className="text-red-500">*</span>
             </label>
             <select
-              {...register('clientId', { required: 'Client is required' })}
+              {...register('clientId', { required: 'Customer is required' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={clientsLoading || !!urlClientId}
             >
-              <option value="">Select Client</option>
+              <option value="">Select Customer</option>
               {clientsData?.data?.map((client: any) => (
                 <option key={client.id} value={client.id}>
                   {client.name}
@@ -254,7 +254,7 @@ function RecordClientPaymentPage() {
               <div className="text-sm">
                 <p className="font-medium text-yellow-900">No Outstanding Invoices</p>
                 <p className="text-yellow-700 mt-1">
-                  This client has no outstanding invoices. The payment will be credited to their
+                  This customer has no outstanding invoices. The payment will be credited to their
                   account.
                 </p>
               </div>

@@ -83,7 +83,7 @@ export const VoidInvoiceModal: FC<VoidInvoiceModalProps> = ({
               <li>Reverse all inventory deductions (stock will be restored)</li>
               <li>
                 {invoice.paymentType === 'CREDIT' && (
-                  <>Reduce client balance by {formatCurrency(Number(invoice.total), cs)}</>
+                  <>Reduce customer balance by {formatCurrency(Number(invoice.total), cs)}</>
                 )}
                 {invoice.paymentType === 'CASH' && <>No balance change (CASH invoice)</>}
               </li>
@@ -96,7 +96,7 @@ export const VoidInvoiceModal: FC<VoidInvoiceModalProps> = ({
             <h4 className="font-medium text-gray-900 mb-3">Invoice Details:</h4>
             <div className="grid grid-cols-2 gap-3 text-sm bg-gray-50 rounded-lg p-4">
               <div>
-                <span className="text-gray-600">Client:</span>
+                <span className="text-gray-600">Customer:</span>
                 <span className="ml-2 font-medium text-gray-900">{invoice.client.name}</span>
               </div>
               <div>
@@ -159,7 +159,7 @@ export const VoidInvoiceModal: FC<VoidInvoiceModalProps> = ({
               className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
             <label htmlFor="confirm-void" className="ml-2 text-sm text-gray-700">
-              I understand this will reverse inventory deductions and update client balance
+              I understand this will reverse inventory deductions and update customer balance
             </label>
           </div>
         </div>

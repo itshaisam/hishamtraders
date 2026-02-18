@@ -223,13 +223,13 @@ export function CreateInvoicePage() {
             {/* Client */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Client <span className="text-red-500">*</span>
+                Customer <span className="text-red-500">*</span>
               </label>
               <select
                 {...register('clientId')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select Client</option>
+                <option value="">Select Customer</option>
                 {clientsData?.data.map((client) => (
                   <option key={client.id} value={client.id}>
                     {client.name} - {client.city || 'N/A'}

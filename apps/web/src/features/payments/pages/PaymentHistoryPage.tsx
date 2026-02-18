@@ -55,7 +55,7 @@ export default function PaymentHistoryPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by client or supplier name..."
+            placeholder="Search by customer or supplier name..."
             value={filters.search || ''}
             onChange={(e) => updateFilter('search', e.target.value)}
             className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -89,7 +89,7 @@ export default function PaymentHistoryPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
               >
                 <option value="ALL">All Types</option>
-                <option value="CLIENT">Client (IN)</option>
+                <option value="CLIENT">Customer (IN)</option>
                 <option value="SUPPLIER">Supplier (OUT)</option>
               </select>
             </div>

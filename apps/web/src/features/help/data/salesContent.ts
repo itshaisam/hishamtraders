@@ -5,13 +5,13 @@ export const salesContent: GuideContent = {
   title: 'Sales',
   icon: FileText,
   introduction:
-    'The Sales module covers client management, invoice creation, payment tracking, and sales returns. It provides the tools needed to manage your entire order-to-cash cycle, from onboarding a client and raising invoices to processing returns and issuing credit notes.',
+    'The Sales module covers customer management, invoice creation, payment tracking, and sales returns. It provides the tools needed to manage your entire order-to-cash cycle, from onboarding a customer and raising invoices to processing returns and issuing credit notes.',
   tableOfContents: [
-    { id: 'clients', label: 'Clients', level: 1 },
-    { id: 'clients-create', label: 'Creating a Client', level: 2 },
-    { id: 'clients-fields', label: 'Client Fields', level: 2 },
-    { id: 'clients-credit-limit', label: 'Credit Limit Enforcement', level: 2 },
-    { id: 'clients-edit-delete', label: 'Editing & Deactivating Clients', level: 2 },
+    { id: 'customers', label: 'Customers', level: 1 },
+    { id: 'customers-create', label: 'Creating a Customer', level: 2 },
+    { id: 'customers-fields', label: 'Customer Fields', level: 2 },
+    { id: 'customers-credit-limit', label: 'Credit Limit Enforcement', level: 2 },
+    { id: 'customers-edit-delete', label: 'Editing & Deactivating Customers', level: 2 },
     { id: 'invoices', label: 'Invoices', level: 1 },
     { id: 'invoices-create', label: 'Creating an Invoice', level: 2 },
     { id: 'invoices-fields', label: 'Invoice Form Fields', level: 2 },
@@ -27,41 +27,41 @@ export const salesContent: GuideContent = {
     // 1. CLIENTS
     // ========================================================================
     {
-      id: 'clients',
-      title: 'Clients',
+      id: 'customers',
+      title: 'Customers',
       icon: Users,
       roles: ['Admin', 'Sales Officer'],
       content: [
         {
           type: 'paragraph',
-          text: 'Clients represent the businesses or individuals you sell to. Each client record stores contact details, location, credit terms, and tax-exemption status. Maintaining accurate client data ensures invoices, payments, and reports are correctly attributed.',
+          text: 'Customers represent the businesses or individuals you sell to. Each customer record stores contact details, location, credit terms, and tax-exemption status. Maintaining accurate customer data ensures invoices, payments, and reports are correctly attributed.',
         },
         {
           type: 'callout',
           variant: 'tip',
           title: 'Quick Search',
-          text: 'Use the search bar on the Clients list page to filter by name, city, or contact person. The search is case-insensitive.',
+          text: 'Use the search bar on the Customers list page to filter by name, city, or contact person. The search is case-insensitive.',
         },
       ],
       subSections: [
         {
-          id: 'clients-create',
-          title: 'Creating a Client',
+          id: 'customers-create',
+          title: 'Creating a Customer',
           content: [
             {
               type: 'steps',
               steps: [
                 {
-                  title: 'Navigate to Sales > Clients',
-                  description: 'Open the Clients list page from the sidebar.',
+                  title: 'Navigate to Sales > Customers',
+                  description: 'Open the Customers list page from the sidebar.',
                 },
                 {
-                  title: 'Click "Add Client"',
-                  description: 'Opens the client creation form.',
+                  title: 'Click "Add Customer"',
+                  description: 'Opens the customer creation form.',
                 },
                 {
                   title: 'Fill in required fields',
-                  description: 'At minimum, provide the client name. All other fields are optional but recommended for complete records.',
+                  description: 'At minimum, provide the customer name. All other fields are optional but recommended for complete records.',
                 },
                 {
                   title: 'Set credit limit and payment terms',
@@ -69,48 +69,48 @@ export const salesContent: GuideContent = {
                 },
                 {
                   title: 'Save',
-                  description: 'Click Save to create the client. The client will appear in the list and be available for invoice creation.',
+                  description: 'Click Save to create the customer. The customer will appear in the list and be available for invoice creation.',
                 },
               ],
             },
           ],
         },
         {
-          id: 'clients-fields',
-          title: 'Client Fields',
+          id: 'customers-fields',
+          title: 'Customer Fields',
           content: [
             {
               type: 'fieldTable',
               fields: [
-                { name: 'name', fieldType: 'text', required: true, description: 'Full name of the client or business. Must be unique.' },
-                { name: 'contactPerson', fieldType: 'text', required: false, description: 'Name of the primary point of contact at the client.' },
+                { name: 'name', fieldType: 'text', required: true, description: 'Full name of the customer or business. Must be unique.' },
+                { name: 'contactPerson', fieldType: 'text', required: false, description: 'Name of the primary point of contact at the customer.' },
                 { name: 'email', fieldType: 'email', required: false, description: 'Email address for correspondence and invoice delivery.' },
-                { name: 'phone', fieldType: 'text', required: false, description: 'Primary phone number for the client.' },
+                { name: 'phone', fieldType: 'text', required: false, description: 'Primary phone number for the customer.' },
                 { name: 'whatsapp', fieldType: 'text', required: false, description: 'WhatsApp number for quick communication.' },
-                { name: 'city', fieldType: 'text', required: false, description: 'City where the client is located.' },
+                { name: 'city', fieldType: 'text', required: false, description: 'City where the customer is located.' },
                 { name: 'area', fieldType: 'text', required: false, description: 'Area or locality within the city.' },
-                { name: 'creditLimit', fieldType: 'number', required: false, description: 'Maximum outstanding balance allowed for this client. Defaults to 0 (no limit enforcement). Decimal value up to 12 digits.' },
+                { name: 'creditLimit', fieldType: 'number', required: false, description: 'Maximum outstanding balance allowed for this customer. Defaults to 0 (no limit enforcement). Decimal value up to 12 digits.' },
                 { name: 'paymentTermsDays', fieldType: 'number', required: false, description: 'Default number of days from invoice date until payment is due. Defaults to 30.' },
-                { name: 'taxExempt', fieldType: 'boolean', required: false, description: 'When enabled, invoices for this client will not include tax.' },
+                { name: 'taxExempt', fieldType: 'boolean', required: false, description: 'When enabled, invoices for this customer will not include tax.' },
                 { name: 'taxExemptReason', fieldType: 'text', required: false, description: 'Reason for tax exemption (required when taxExempt is true).' },
-                { name: 'status', fieldType: 'select', required: false, description: 'ACTIVE or INACTIVE. Inactive clients cannot be selected when creating new invoices.' },
+                { name: 'status', fieldType: 'select', required: false, description: 'ACTIVE or INACTIVE. Inactive customers cannot be selected when creating new invoices.' },
               ],
             },
           ],
         },
         {
-          id: 'clients-credit-limit',
+          id: 'customers-credit-limit',
           title: 'Credit Limit Enforcement',
           content: [
             {
               type: 'paragraph',
-              text: 'When a credit limit is set for a client, the system checks the client\'s current outstanding balance before allowing a new invoice to be created. If adding the new invoice would push the balance beyond the credit limit, a warning is displayed to the user.',
+              text: 'When a credit limit is set for a customer, the system checks the customer\'s current outstanding balance before allowing a new invoice to be created. If adding the new invoice would push the balance beyond the credit limit, a warning is displayed to the user.',
             },
             {
               type: 'flow',
               steps: [
                 'Create Invoice',
-                'System checks client balance + new invoice total',
+                'System checks customer balance + new invoice total',
                 'Balance within limit? Proceed',
                 'Balance exceeds limit? Show warning',
                 'User can override or cancel',
@@ -120,31 +120,31 @@ export const salesContent: GuideContent = {
               type: 'callout',
               variant: 'warning',
               title: 'Credit Limit Warnings',
-              text: 'The credit limit check is a soft warning, not a hard block. Admin and Sales Officer users can choose to proceed with the invoice even when the limit would be exceeded. However, the dashboard will show the client in the credit limit alerts section.',
+              text: 'The credit limit check is a soft warning, not a hard block. Admin and Sales Officer users can choose to proceed with the invoice even when the limit would be exceeded. However, the dashboard will show the customer in the credit limit alerts section.',
             },
             {
               type: 'keyValue',
               pairs: [
-                { key: 'Credit Limit = 0', value: 'No credit limit enforcement. The client can have unlimited outstanding balance.' },
-                { key: 'Balance > 80% of Limit', value: 'Client appears as a yellow alert on the dashboard.' },
-                { key: 'Balance > 100% of Limit', value: 'Client appears as a red alert on the dashboard. Warning shown when creating new invoices.' },
+                { key: 'Credit Limit = 0', value: 'No credit limit enforcement. The customer can have unlimited outstanding balance.' },
+                { key: 'Balance > 80% of Limit', value: 'Customer appears as a yellow alert on the dashboard.' },
+                { key: 'Balance > 100% of Limit', value: 'Customer appears as a red alert on the dashboard. Warning shown when creating new invoices.' },
               ],
             },
           ],
         },
         {
-          id: 'clients-edit-delete',
-          title: 'Editing & Deactivating Clients',
+          id: 'customers-edit-delete',
+          title: 'Editing & Deactivating Customers',
           content: [
             {
               type: 'paragraph',
-              text: 'You can edit any client field at any time. Changes to credit limit or payment terms apply to future invoices only; existing invoices retain their original terms. Clients with existing invoices or payments cannot be deleted; instead, set their status to INACTIVE to prevent further use.',
+              text: 'You can edit any customer field at any time. Changes to credit limit or payment terms apply to future invoices only; existing invoices retain their original terms. Customers with existing invoices or payments cannot be deleted; instead, set their status to INACTIVE to prevent further use.',
             },
             {
               type: 'callout',
               variant: 'note',
-              title: 'Inactive Clients',
-              text: 'Deactivating a client hides them from the client dropdown when creating invoices but preserves all historical data. Existing invoices and payments remain unaffected.',
+              title: 'Inactive Customers',
+              text: 'Deactivating a customer hides them from the customer dropdown when creating invoices but preserves all historical data. Existing invoices and payments remain unaffected.',
             },
           ],
         },
@@ -162,11 +162,11 @@ export const salesContent: GuideContent = {
       content: [
         {
           type: 'paragraph',
-          text: 'Invoices are the core sales documents. Each invoice records a sale to a client, including the products sold, quantities, prices, discounts, and applicable tax. Invoices drive the accounts receivable balance and are the basis for payment tracking.',
+          text: 'Invoices are the core sales documents. Each invoice records a sale to a customer, including the products sold, quantities, prices, discounts, and applicable tax. Invoices drive the accounts receivable balance and are the basis for payment tracking.',
         },
         {
           type: 'paragraph',
-          text: 'Invoice numbers are auto-generated and unique. Each invoice is linked to a specific client and warehouse (determining which stock is deducted).',
+          text: 'Invoice numbers are auto-generated and unique. Each invoice is linked to a specific customer and warehouse (determining which stock is deducted).',
         },
       ],
       subSections: [
@@ -186,8 +186,8 @@ export const salesContent: GuideContent = {
                   description: 'Opens the invoice creation form.',
                 },
                 {
-                  title: 'Select a client',
-                  description: 'Choose the client from the dropdown. The system will check their credit limit and display a warning if it would be exceeded.',
+                  title: 'Select a customer',
+                  description: 'Choose the customer from the dropdown. The system will check their credit limit and display a warning if it would be exceeded.',
                 },
                 {
                   title: 'Select a warehouse',
@@ -195,7 +195,7 @@ export const salesContent: GuideContent = {
                 },
                 {
                   title: 'Set invoice date and due date',
-                  description: 'The invoice date defaults to today. The due date is auto-calculated based on the client\'s payment terms but can be overridden.',
+                  description: 'The invoice date defaults to today. The due date is auto-calculated based on the customer\'s payment terms but can be overridden.',
                 },
                 {
                   title: 'Choose payment type',
@@ -207,11 +207,11 @@ export const salesContent: GuideContent = {
                 },
                 {
                   title: 'Review totals',
-                  description: 'The form displays the subtotal (sum of line totals), tax amount (calculated from the system tax rate unless client is tax-exempt), and grand total.',
+                  description: 'The form displays the subtotal (sum of line totals), tax amount (calculated from the system tax rate unless customer is tax-exempt), and grand total.',
                 },
                 {
                   title: 'Save',
-                  description: 'Click Save to create the invoice. Stock is deducted from inventory, and the client\'s balance is updated.',
+                  description: 'Click Save to create the invoice. Stock is deducted from inventory, and the customer\'s balance is updated.',
                 },
               ],
             },
@@ -231,10 +231,10 @@ export const salesContent: GuideContent = {
               type: 'fieldTable',
               fields: [
                 { name: 'invoiceNumber', fieldType: 'text (auto)', required: true, description: 'Auto-generated unique invoice number. Cannot be edited.' },
-                { name: 'clientId', fieldType: 'select', required: true, description: 'The client being invoiced. Select from active clients.' },
+                { name: 'customerId', fieldType: 'select', required: true, description: 'The customer being invoiced. Select from active customers.' },
                 { name: 'warehouseId', fieldType: 'select', required: true, description: 'The warehouse from which stock will be dispatched.' },
                 { name: 'invoiceDate', fieldType: 'date', required: true, description: 'Date of the invoice. Defaults to today.' },
-                { name: 'dueDate', fieldType: 'date', required: true, description: 'Payment due date. Auto-calculated from client payment terms.' },
+                { name: 'dueDate', fieldType: 'date', required: true, description: 'Payment due date. Auto-calculated from customer payment terms.' },
                 { name: 'paymentType', fieldType: 'select', required: true, description: 'CASH or CREDIT. Determines payment expectations.' },
                 { name: 'notes', fieldType: 'textarea', required: false, description: 'Free-text notes or special instructions for the invoice.' },
               ],
@@ -259,9 +259,9 @@ export const salesContent: GuideContent = {
               type: 'keyValue',
               pairs: [
                 { key: 'Subtotal', value: 'Sum of all line item totals before tax.' },
-                { key: 'Tax Rate', value: 'System-wide tax rate, snapshotted at invoice creation. Zero if client is tax-exempt.' },
+                { key: 'Tax Rate', value: 'System-wide tax rate, snapshotted at invoice creation. Zero if customer is tax-exempt.' },
                 { key: 'Tax Amount', value: 'Subtotal multiplied by the tax rate.' },
-                { key: 'Total', value: 'Subtotal plus tax amount. This is the amount the client owes.' },
+                { key: 'Total', value: 'Subtotal plus tax amount. This is the amount the customer owes.' },
               ],
             },
           ],
@@ -317,8 +317,8 @@ export const salesContent: GuideContent = {
             {
               type: 'keyValue',
               pairs: [
-                { key: 'Cancel', value: 'Use when the invoice was created in error and no payment has been received. Cancelling sets the status to CANCELLED. Stock is returned to inventory. The client balance is not affected since no payment was involved.' },
-                { key: 'Void', value: 'Use when the invoice needs to be reversed after it has been partially or fully processed. Voiding sets the status to VOIDED, records who voided it and why (voidedBy, voidedAt, voidReason), reverses stock movements, and adjusts the client balance.' },
+                { key: 'Cancel', value: 'Use when the invoice was created in error and no payment has been received. Cancelling sets the status to CANCELLED. Stock is returned to inventory. The customer balance is not affected since no payment was involved.' },
+                { key: 'Void', value: 'Use when the invoice needs to be reversed after it has been partially or fully processed. Voiding sets the status to VOIDED, records who voided it and why (voidedBy, voidedAt, voidReason), reverses stock movements, and adjusts the customer balance.' },
               ],
             },
             {
@@ -351,7 +351,7 @@ export const salesContent: GuideContent = {
       content: [
         {
           type: 'paragraph',
-          text: 'When a client returns goods, a credit note is created against the original invoice. The credit note records which items were returned, in what quantity, and the reason for the return. Stock is automatically added back to inventory, and the credit is applied to the client\'s account.',
+          text: 'When a customer returns goods, a credit note is created against the original invoice. The credit note records which items were returned, in what quantity, and the reason for the return. Stock is automatically added back to inventory, and the credit is applied to the customer\'s account.',
         },
         {
           type: 'paragraph',
@@ -388,7 +388,7 @@ export const salesContent: GuideContent = {
                 },
                 {
                   title: 'Review and save',
-                  description: 'Review the credit note totals (subtotal, tax, total). Click Save to create the credit note. Stock is returned to inventory and the client balance is adjusted.',
+                  description: 'Review the credit note totals (subtotal, tax, total). Click Save to create the credit note. Stock is returned to inventory and the customer balance is adjusted.',
                 },
               ],
             },
@@ -400,7 +400,7 @@ export const salesContent: GuideContent = {
                 'Enter reason',
                 'Create Credit Note',
                 'Stock returned to inventory',
-                'Client balance adjusted',
+                'Customer balance adjusted',
               ],
             },
             {
@@ -420,12 +420,12 @@ export const salesContent: GuideContent = {
               fields: [
                 { name: 'creditNoteNumber', fieldType: 'text (auto)', required: true, description: 'Auto-generated unique credit note number. Cannot be edited.' },
                 { name: 'invoiceId', fieldType: 'select', required: true, description: 'The original invoice this return is being made against.' },
-                { name: 'clientId', fieldType: 'text (auto)', required: true, description: 'Automatically set to the client from the selected invoice.' },
+                { name: 'customerId', fieldType: 'text (auto)', required: true, description: 'Automatically set to the customer from the selected invoice.' },
                 { name: 'reason', fieldType: 'textarea', required: true, description: 'Explanation for the return. Required for audit compliance.' },
                 { name: 'subtotal', fieldType: 'number (auto)', required: true, description: 'Sum of all return line item totals before tax.' },
                 { name: 'taxRate', fieldType: 'number (auto)', required: true, description: 'Tax rate snapshotted from the original invoice.' },
                 { name: 'taxAmount', fieldType: 'number (auto)', required: true, description: 'Tax calculated on the return subtotal.' },
-                { name: 'totalAmount', fieldType: 'number (auto)', required: true, description: 'Total credit amount (subtotal + tax). This is credited to the client.' },
+                { name: 'totalAmount', fieldType: 'number (auto)', required: true, description: 'Total credit amount (subtotal + tax). This is credited to the customer.' },
               ],
             },
             {
@@ -467,7 +467,7 @@ export const salesContent: GuideContent = {
             {
               type: 'keyValue',
               pairs: [
-                { key: 'OPEN', value: 'The credit note has been created. The credit amount is available to be applied against the client\'s outstanding balance or future invoices.' },
+                { key: 'OPEN', value: 'The credit note has been created. The credit amount is available to be applied against the customer\'s outstanding balance or future invoices.' },
                 { key: 'APPLIED', value: 'The credit note has been fully applied. No remaining credit balance.' },
                 { key: 'VOIDED', value: 'The credit note was voided, reversing the credit and the stock return. Use this if the credit note was created in error.' },
               ],
@@ -476,7 +476,7 @@ export const salesContent: GuideContent = {
               type: 'callout',
               variant: 'warning',
               title: 'Voiding a Credit Note',
-              text: 'Voiding a credit note reverses the stock addition and removes the credit from the client\'s account. This action is irreversible. Only void a credit note if it was created in error. An APPLIED credit note cannot be voided.',
+              text: 'Voiding a credit note reverses the stock addition and removes the credit from the customer\'s account. This action is irreversible. Only void a credit note if it was created in error. An APPLIED credit note cannot be voided.',
             },
           ],
         },

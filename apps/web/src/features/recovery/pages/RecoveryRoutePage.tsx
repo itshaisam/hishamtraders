@@ -57,7 +57,7 @@ export default function RecoveryRoutePage() {
               <Calendar size={20} className="text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Scheduled Clients</p>
+              <p className="text-sm text-gray-500">Scheduled Customers</p>
               <p className="text-xl font-bold">{filtered.length}</p>
             </div>
           </div>
@@ -91,7 +91,7 @@ export default function RecoveryRoutePage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <Input
-          placeholder="Search client..."
+          placeholder="Search customer..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="sm:w-64"
@@ -117,7 +117,7 @@ export default function RecoveryRoutePage() {
       ) : filtered.length === 0 ? (
         <Card className="p-8 text-center">
           <Clock size={48} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500 text-lg">No clients scheduled for {dateFilter || 'today'}</p>
+          <p className="text-gray-500 text-lg">No customers scheduled for {dateFilter || 'today'}</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -165,7 +165,7 @@ export default function RecoveryRoutePage() {
                     <Button size="sm" variant="primary">Log Visit</Button>
                   </Link>
                   <Link to={`/clients/${c.id || client.id}/view`}>
-                    <Button size="sm" variant="secondary">View Client</Button>
+                    <Button size="sm" variant="secondary">View Customer</Button>
                   </Link>
                 </div>
               </Card>

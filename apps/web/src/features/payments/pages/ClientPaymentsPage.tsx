@@ -36,9 +36,9 @@ function ClientPaymentsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <DollarSign className="h-6 w-6" />
-            Client Payments
+            Customer Payments
           </h1>
-          <p className="text-gray-600 mt-1">View client payment history and allocations</p>
+          <p className="text-gray-600 mt-1">View customer payment history and allocations</p>
         </div>
         <Link
           to="/payments/client/record"
@@ -54,14 +54,14 @@ function ClientPaymentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Client Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
             <select
               value={selectedClientId}
               onChange={(e) => setSelectedClientId(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={clientsLoading}
             >
-              <option value="">All Clients</option>
+              <option value="">All Customers</option>
               {clientsData?.data?.map((client: any) => (
                 <option key={client.id} value={client.id}>
                   {client.name}
@@ -83,8 +83,8 @@ function ClientPaymentsPage() {
         ) : payments.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             {selectedClientId
-              ? 'No payments found for this client.'
-              : 'No client payments recorded yet.'}
+              ? 'No payments found for this customer.'
+              : 'No customer payments recorded yet.'}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -95,7 +95,7 @@ function ClientPaymentsPage() {
                     Date
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Client
+                    Customer
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Amount
@@ -174,7 +174,7 @@ function ClientPaymentsPage() {
                           className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
                         >
                           <Eye className="h-4 w-4" />
-                          View Client
+                          View Customer
                         </Link>
                       )}
                     </td>

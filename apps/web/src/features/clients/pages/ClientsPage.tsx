@@ -85,15 +85,15 @@ export function ClientsPage() {
       <div className="max-w-6xl mx-auto px-4 space-y-6">
         {/* Breadcrumbs - Responsive */}
         <Breadcrumbs
-          items={[{ label: 'Clients' }]}
+          items={[{ label: 'Customers' }]}
           className="text-xs sm:text-sm"
         />
 
         {/* Header - Responsive Flex */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Clients</h1>
-            <p className="mt-1 text-sm sm:text-base text-gray-600">Manage client information and credit terms</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Customers</h1>
+            <p className="mt-1 text-sm sm:text-base text-gray-600">Manage customer information and credit terms</p>
           </div>
           {canEdit && (
             <Button
@@ -103,7 +103,7 @@ export function ClientsPage() {
               icon={<Plus size={20} />}
               className="w-full sm:w-auto"
             >
-              New Client
+              New Customer
             </Button>
           )}
         </div>
@@ -113,7 +113,7 @@ export function ClientsPage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Search clients..."
+            placeholder="Search customers..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -283,7 +283,7 @@ export function ClientsPage() {
                 {data.data.length === 0 && (
                   <tr>
                     <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
-                      No clients found
+                      No customers found
                     </td>
                   </tr>
                 )}

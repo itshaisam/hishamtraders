@@ -307,7 +307,7 @@ export function InvoiceDetailPage() {
                 {companyLogo && <img src={companyLogo} alt="" style={{ height: '40px', objectFit: 'contain' }} />}
                 <div>
                   <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1a1a1a' }}>{companyName}</div>
-                  <div style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px' }}>Client Credit Statement</div>
+                  <div style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '2px' }}>Customer Credit Statement</div>
                 </div>
               </div>
               <div style={{ textAlign: 'right', fontSize: '11px', color: '#666' }}>
@@ -316,9 +316,9 @@ export function InvoiceDetailPage() {
               </div>
             </div>
 
-            {/* Client Info */}
+            {/* Customer Info */}
             <div style={{ marginBottom: '16px', fontSize: '13px' }}>
-              <span style={{ color: '#888' }}>Client: </span>
+              <span style={{ color: '#888' }}>Customer: </span>
               <span style={{ fontWeight: 'bold' }}>{invoice.client.name}</span>
               {invoice.client.city && <span style={{ color: '#888' }}> ({invoice.client.city})</span>}
             </div>
@@ -399,7 +399,7 @@ export function InvoiceDetailPage() {
 
             {/* Footer */}
             <div style={{ marginTop: '40px', borderTop: '1px solid #ddd', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#aaa' }}>
-              <div>{companyName} - Client Credit Statement</div>
+              <div>{companyName} - Customer Credit Statement</div>
               <div>Generated on {format(new Date(), 'dd MMM yyyy, HH:mm')}</div>
             </div>
           </div>
@@ -545,7 +545,7 @@ export function InvoiceDetailPage() {
             <div className="flex items-start gap-3">
               <Building2 className="text-gray-400 mt-1" size={20} />
               <div>
-                <p className="text-sm text-gray-600">Client</p>
+                <p className="text-sm text-gray-600">Customer</p>
                 <p className="font-semibold text-gray-900">{invoice.client.name}</p>
                 {invoice.client.city && <p className="text-sm text-gray-600">{invoice.client.city}</p>}
               </div>
@@ -668,11 +668,11 @@ export function InvoiceDetailPage() {
           </div>
         </div>
 
-        {/* Client Credit History Section */}
+        {/* Customer Credit History Section */}
         {creditHistory && (
           <div className="bg-white rounded-lg shadow p-6 mt-6">
             <h2 className="text-xl font-semibold mb-4 border-b pb-2">
-              Client Credit History - {invoice.client.name}
+              Customer Credit History - {invoice.client.name}
             </h2>
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

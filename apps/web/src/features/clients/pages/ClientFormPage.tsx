@@ -26,8 +26,8 @@ export const ClientFormPage: React.FC = () => {
         {/* Breadcrumbs - Responsive */}
         <Breadcrumbs
           items={[
-            { label: 'Clients', href: '/clients' },
-            { label: 'Create New Client' },
+            { label: 'Customers', href: '/clients' },
+            { label: 'Create New Customer' },
           ]}
           className="text-xs sm:text-sm"
         />
@@ -37,14 +37,14 @@ export const ClientFormPage: React.FC = () => {
           <button
             onClick={() => navigate('/clients')}
             className="p-2 hover:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
-            aria-label="Go back to clients"
+            aria-label="Go back to customers"
           >
             <ArrowLeft size={24} className="text-gray-700" />
           </button>
           <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create New Client</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create New Customer</h1>
             <p className="mt-1 text-sm sm:text-base text-gray-600">
-              Add a new client to your system. All required fields must be filled.
+              Add a new customer to your system. All required fields must be filled.
             </p>
           </div>
         </div>

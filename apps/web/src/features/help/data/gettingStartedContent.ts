@@ -140,7 +140,7 @@ export const gettingStartedContent: GuideContent = {
         },
         {
           type: 'paragraph',
-          text: 'The items visible in the sidebar depend on your assigned user role. For example, a Sales Officer will see the Sales and Clients sections but will not see Accounting or Administration modules. This role-based visibility ensures that each user only sees the features relevant to their responsibilities.',
+          text: 'The items visible in the sidebar depend on your assigned user role. For example, a Sales Officer will see the Sales and Customers sections but will not see Accounting or Administration modules. This role-based visibility ensures that each user only sees the features relevant to their responsibilities.',
         },
       ],
       subSections: [
@@ -170,11 +170,11 @@ export const gettingStartedContent: GuideContent = {
                 },
                 {
                   key: 'Sales',
-                  value: 'Clients, Invoices, Returns/Credit Notes.',
+                  value: 'Customers, Invoices, Returns/Credit Notes.',
                 },
                 {
                   key: 'Payments',
-                  value: 'Client Payments, Supplier Payments, Payment History, Expenses.',
+                  value: 'Customer Payments, Supplier Payments, Payment History, Expenses.',
                 },
                 {
                   key: 'Reports',
@@ -262,17 +262,17 @@ export const gettingStartedContent: GuideContent = {
             {
               key: 'SALES_OFFICER',
               value:
-                'Access to Sales modules including Clients, Invoices, and Returns/Credit Notes. Can create and manage client records, generate invoices, process sales returns, and view sales-related reports.',
+                'Access to Sales modules including Customers, Invoices, and Returns/Credit Notes. Can create and manage customer records, generate invoices, process sales returns, and view sales-related reports.',
             },
             {
               key: 'ACCOUNTANT',
               value:
-                'Access to Accounting modules including Chart of Accounts, Journal Entries, Trial Balance, Balance Sheet, General Ledger, Bank Accounts, Petty Cash, Bank Reconciliation, and Month-End Closing. Also has access to Payments (Client Payments, Supplier Payments, Payment History, Expenses) and the Reports Center.',
+                'Access to Accounting modules including Chart of Accounts, Journal Entries, Trial Balance, Balance Sheet, General Ledger, Bank Accounts, Petty Cash, Bank Reconciliation, and Month-End Closing. Also has access to Payments (Customer Payments, Supplier Payments, Payment History, Expenses) and the Reports Center.',
             },
             {
               key: 'RECOVERY_AGENT',
               value:
-                'Access to Client Payments and receivables-related features. Focused on collecting outstanding payments from clients, viewing payment history, and tracking overdue invoices.',
+                'Access to Customer Payments and receivables-related features. Focused on collecting outstanding payments from customers, viewing payment history, and tracking overdue invoices.',
             },
           ],
         },
@@ -317,7 +317,7 @@ export const gettingStartedContent: GuideContent = {
                   name: 'Payments',
                   fieldType: 'Module',
                   required: false,
-                  description: 'Accessible by ADMIN, ACCOUNTANT, and RECOVERY_AGENT (client payments only).',
+                  description: 'Accessible by ADMIN, ACCOUNTANT, and RECOVERY_AGENT (customer payments only).',
                 },
                 {
                   name: 'Reports',

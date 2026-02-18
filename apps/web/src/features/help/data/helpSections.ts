@@ -45,7 +45,7 @@ export const HELP_SECTIONS: HelpSectionDef[] = [
   {
     id: 'sales',
     title: 'Sales',
-    description: 'Clients, invoices, returns, and credit notes',
+    description: 'Customers, invoices, returns, and credit notes',
     icon: FileText,
     path: '/help/sales',
     order: 5,
@@ -54,7 +54,7 @@ export const HELP_SECTIONS: HelpSectionDef[] = [
   {
     id: 'payments',
     title: 'Payments',
-    description: 'Client and supplier payments, payment history, and expenses',
+    description: 'Customer and supplier payments, payment history, and expenses',
     icon: DollarSign,
     path: '/help/payments',
     order: 6,

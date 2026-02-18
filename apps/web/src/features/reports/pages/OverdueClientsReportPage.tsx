@@ -29,8 +29,8 @@ export default function OverdueClientsReportPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Overdue Clients Report</h1>
-        <p className="text-gray-600 mt-1">Clients with past-due invoices</p>
+        <h1 className="text-2xl font-bold text-gray-900">Overdue Customers Report</h1>
+        <p className="text-gray-600 mt-1">Customers with past-due invoices</p>
       </div>
 
       <div className="flex gap-3 items-end flex-wrap">
@@ -49,7 +49,7 @@ export default function OverdueClientsReportPage() {
       {summary && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card className="p-4">
-            <p className="text-xs text-gray-500">Overdue Clients</p>
+            <p className="text-xs text-gray-500">Overdue Customers</p>
             <p className="text-xl font-bold">{summary.clientCount}</p>
           </Card>
           <Card className="p-4">
@@ -67,7 +67,7 @@ export default function OverdueClientsReportPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">City</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Overdue Amount</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Days Overdue</th>
@@ -99,7 +99,7 @@ export default function OverdueClientsReportPage() {
               </tbody>
             </table>
           </div>
-          {clients.length === 0 && <p className="text-center text-gray-500 py-8">No overdue clients found</p>}
+          {clients.length === 0 && <p className="text-center text-gray-500 py-8">No overdue customers found</p>}
           {meta && meta.totalPages > 1 && (
             <div className="flex justify-center gap-2 py-4">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}

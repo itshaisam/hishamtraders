@@ -31,7 +31,7 @@ export const dashboardContent: GuideContent = {
           type: 'keyValue',
           pairs: [
             { key: 'Total Revenue', value: 'Sum of all paid invoices for the current fiscal period.' },
-            { key: 'Outstanding Receivables', value: 'Total unpaid amount across all client invoices.' },
+            { key: 'Outstanding Receivables', value: 'Total unpaid amount across all customer invoices.' },
             { key: 'Total Inventory Value', value: 'Aggregate value of stock across all warehouses.' },
             { key: 'Monthly Sales', value: 'Invoice total for the current calendar month.' },
           ],
@@ -54,7 +54,7 @@ export const dashboardContent: GuideContent = {
           content: [
             {
               type: 'paragraph',
-              text: 'Shows the total unpaid balance across all client invoices with status PENDING, PARTIAL, or OVERDUE. A rising number may indicate collection issues.',
+              text: 'Shows the total unpaid balance across all customer invoices with status PENDING, PARTIAL, or OVERDUE. A rising number may indicate collection issues.',
             },
           ],
         },
@@ -88,7 +88,7 @@ export const dashboardContent: GuideContent = {
       content: [
         {
           type: 'paragraph',
-          text: 'This section lists clients who are approaching or have exceeded their assigned credit limits. Alerts help the sales and recovery teams take timely action before further credit is extended.',
+          text: 'This section lists customers who are approaching or have exceeded their assigned credit limits. Alerts help the sales and recovery teams take timely action before further credit is extended.',
         },
         {
           type: 'steps',
@@ -96,12 +96,12 @@ export const dashboardContent: GuideContent = {
             {
               title: 'Red Alert — Limit Exceeded',
               description:
-                'The client\'s outstanding balance has surpassed their credit limit. New invoices should not be created until the balance is recovered.',
+                'The customer\'s outstanding balance has surpassed their credit limit. New invoices should not be created until the balance is recovered.',
             },
             {
               title: 'Yellow Alert — Approaching Limit (>80%)',
               description:
-                'The client has used more than 80% of their credit limit. Follow up on pending payments to prevent the limit from being exceeded.',
+                'The customer has used more than 80% of their credit limit. Follow up on pending payments to prevent the limit from being exceeded.',
             },
           ],
         },
@@ -109,7 +109,7 @@ export const dashboardContent: GuideContent = {
           type: 'callout',
           variant: 'warning',
           title: 'Action Required',
-          text: 'Clients shown in red have exceeded their credit limit. Coordinate with the Recovery Agent to collect outstanding dues before approving new orders.',
+          text: 'Customers shown in red have exceeded their credit limit. Coordinate with the Recovery Agent to collect outstanding dues before approving new orders.',
         },
       ],
     },
@@ -126,8 +126,8 @@ export const dashboardContent: GuideContent = {
         {
           type: 'keyValue',
           pairs: [
-            { key: 'Create Invoice', value: 'Opens the new invoice form to bill a client.' },
-            { key: 'Record Payment', value: 'Opens the payment entry form to record a client or supplier payment.' },
+            { key: 'Create Invoice', value: 'Opens the new invoice form to bill a customer.' },
+            { key: 'Record Payment', value: 'Opens the payment entry form to record a customer or supplier payment.' },
             { key: 'New Purchase Order', value: 'Opens the purchase order form to place an order with a supplier.' },
             { key: 'Stock Adjustment', value: 'Opens the stock adjustment form to correct inventory quantities.' },
           ],
