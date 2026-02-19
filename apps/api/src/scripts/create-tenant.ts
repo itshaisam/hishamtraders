@@ -85,36 +85,63 @@ async function createTenant(args: TenantArgs) {
     });
     console.log(`  [OK] Admin user created: ${adminUser.email}`);
 
-    // 3. Clone Chart of Accounts
-    const accounts = [
-      { code: '1101', name: 'Main Bank Account', accountType: 'ASSET' as const },
-      { code: '1102', name: 'Petty Cash', accountType: 'ASSET' as const },
-      { code: '1200', name: 'Accounts Receivable', accountType: 'ASSET' as const },
-      { code: '1300', name: 'Inventory', accountType: 'ASSET' as const },
-      { code: '2100', name: 'Accounts Payable', accountType: 'LIABILITY' as const },
-      { code: '2200', name: 'Tax Payable', accountType: 'LIABILITY' as const },
-      { code: '3100', name: "Owner's Equity", accountType: 'EQUITY' as const },
-      { code: '4100', name: 'Sales Revenue', accountType: 'REVENUE' as const },
-      { code: '4200', name: 'Other Income', accountType: 'REVENUE' as const },
-      { code: '5100', name: 'Cost of Goods Sold', accountType: 'EXPENSE' as const },
-      { code: '5150', name: 'Inventory Loss', accountType: 'EXPENSE' as const },
-      { code: '5200', name: 'Rent Expense', accountType: 'EXPENSE' as const },
-      { code: '5300', name: 'Utilities Expense', accountType: 'EXPENSE' as const },
-      { code: '5400', name: 'Salary Expense', accountType: 'EXPENSE' as const },
-      { code: '5500', name: 'Transport Expense', accountType: 'EXPENSE' as const },
-      { code: '5900', name: 'General Expense', accountType: 'EXPENSE' as const },
+    // 3. Chart of Accounts (hierarchical with parent-child)
+    const accountHeads = [
+      // ASSETS (1xxx)
+      { code: '1000', name: 'Assets', accountType: 'ASSET' as const, parentCode: null as string | null, isSystemAccount: true },
+      { code: '1100', name: 'Bank Accounts', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: true },
+      { code: '1101', name: 'Main Bank Account', accountType: 'ASSET' as const, parentCode: '1100', isSystemAccount: true },
+      { code: '1102', name: 'Petty Cash', accountType: 'ASSET' as const, parentCode: '1100', isSystemAccount: true },
+      { code: '1200', name: 'Accounts Receivable', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: true },
+      { code: '1300', name: 'Inventory', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: true },
+      { code: '1400', name: 'Fixed Assets', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: false },
+
+      // LIABILITIES (2xxx)
+      { code: '2000', name: 'Liabilities', accountType: 'LIABILITY' as const, parentCode: null as string | null, isSystemAccount: true },
+      { code: '2100', name: 'Accounts Payable', accountType: 'LIABILITY' as const, parentCode: '2000', isSystemAccount: true },
+      { code: '2200', name: 'Tax Payable', accountType: 'LIABILITY' as const, parentCode: '2000', isSystemAccount: true },
+      { code: '2300', name: 'Loans Payable', accountType: 'LIABILITY' as const, parentCode: '2000', isSystemAccount: false },
+
+      // EQUITY (3xxx)
+      { code: '3000', name: 'Equity', accountType: 'EQUITY' as const, parentCode: null as string | null, isSystemAccount: true },
+      { code: '3100', name: "Owner's Capital", accountType: 'EQUITY' as const, parentCode: '3000', isSystemAccount: true },
+      { code: '3200', name: 'Retained Earnings', accountType: 'EQUITY' as const, parentCode: '3000', isSystemAccount: true },
+
+      // REVENUE (4xxx)
+      { code: '4000', name: 'Revenue', accountType: 'REVENUE' as const, parentCode: null as string | null, isSystemAccount: true },
+      { code: '4100', name: 'Sales Revenue', accountType: 'REVENUE' as const, parentCode: '4000', isSystemAccount: true },
+      { code: '4200', name: 'Other Income', accountType: 'REVENUE' as const, parentCode: '4000', isSystemAccount: false },
+
+      // EXPENSES (5xxx)
+      { code: '5000', name: 'Expenses', accountType: 'EXPENSE' as const, parentCode: null as string | null, isSystemAccount: true },
+      { code: '5100', name: 'Cost of Goods Sold', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: true },
+      { code: '5150', name: 'Inventory Loss', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: true },
+      { code: '5200', name: 'Rent Expense', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: false },
+      { code: '5300', name: 'Utilities Expense', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: false },
+      { code: '5400', name: 'Salaries Expense', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: false },
+      { code: '5500', name: 'Transport Expense', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: false },
+      { code: '5900', name: 'Other Expenses', accountType: 'EXPENSE' as const, parentCode: '5000', isSystemAccount: false },
     ];
 
-    await tx.accountHead.createMany({
-      data: accounts.map(a => ({
-        ...a,
-        openingBalance: 0,
-        currentBalance: 0,
-        isSystemAccount: false,
-        tenantId: tenant.id,
-      })),
-    });
-    console.log(`  [OK] Chart of accounts created (${accounts.length} accounts)`);
+    // Create accounts in order (parents first) to build parent-child relationships
+    const accountIdMap: Record<string, string> = {};
+    for (const acct of accountHeads) {
+      const parentId = acct.parentCode ? accountIdMap[acct.parentCode] : null;
+      const created = await tx.accountHead.create({
+        data: {
+          code: acct.code,
+          name: acct.name,
+          accountType: acct.accountType,
+          parentId,
+          isSystemAccount: acct.isSystemAccount,
+          openingBalance: 0,
+          currentBalance: 0,
+          tenantId: tenant.id,
+        },
+      });
+      accountIdMap[acct.code] = created.id;
+    }
+    console.log(`  [OK] Chart of accounts created (${accountHeads.length} accounts with hierarchy)`);
 
     // 4. Default System Settings
     const settings = [
