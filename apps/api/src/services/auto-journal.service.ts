@@ -273,23 +273,56 @@ export const AutoJournalService = {
   },
 
   /**
-   * PO receipt: DR Inventory (1300)  CR A/P (2100)
+   * PO receipt: DR Inventory (1300) + DR Tax Payable (2200)  CR A/P (2100)
+   * totalAmount = product cost + tax; taxAmount = input tax credit
    */
   async onGoodsReceived(
     tx: PrismaLike,
-    receipt: { poId: string; poNumber: string; totalAmount: number; date: Date },
+    receipt: { poId: string; poNumber: string; totalAmount: number; taxAmount: number; date: Date },
     userId: string
   ) {
+    const productCost = receipt.totalAmount - receipt.taxAmount;
+    const lines: JournalLine[] = [
+      { accountCode: '1300', debit: productCost, credit: 0, description: `Inventory from ${receipt.poNumber}` },
+      { accountCode: '2100', debit: 0, credit: receipt.totalAmount, description: `A/P for ${receipt.poNumber}` },
+    ];
+    if (receipt.taxAmount > 0) {
+      lines.push({ accountCode: '2200', debit: receipt.taxAmount, credit: 0, description: `Input tax ${receipt.poNumber}` });
+    }
     return createAutoJournalEntry(tx, {
       date: receipt.date,
       description: `Goods received: ${receipt.poNumber}`,
       referenceType: 'PO',
       referenceId: receipt.poId,
       userId,
-      lines: [
-        { accountCode: '1300', debit: receipt.totalAmount, credit: 0, description: `Inventory from ${receipt.poNumber}` },
-        { accountCode: '2100', debit: 0, credit: receipt.totalAmount, description: `A/P for ${receipt.poNumber}` },
-      ],
+      lines,
+    });
+  },
+
+  /**
+   * GRN cancelled: reverse goods-received entry
+   * DR A/P (2100)  CR Inventory (1300) + CR Tax Payable (2200)
+   */
+  async onGoodsReceivedReversed(
+    tx: PrismaLike,
+    receipt: { poId: string; poNumber: string; totalAmount: number; taxAmount: number; date: Date },
+    userId: string
+  ) {
+    const productCost = receipt.totalAmount - receipt.taxAmount;
+    const lines: JournalLine[] = [
+      { accountCode: '2100', debit: receipt.totalAmount, credit: 0, description: `Reverse A/P for ${receipt.poNumber}` },
+      { accountCode: '1300', debit: 0, credit: productCost, description: `Reverse inventory from ${receipt.poNumber}` },
+    ];
+    if (receipt.taxAmount > 0) {
+      lines.push({ accountCode: '2200', debit: 0, credit: receipt.taxAmount, description: `Reverse input tax ${receipt.poNumber}` });
+    }
+    return createAutoJournalEntry(tx, {
+      date: receipt.date,
+      description: `Reverse goods received: ${receipt.poNumber}`,
+      referenceType: 'PO',
+      referenceId: receipt.poId,
+      userId,
+      lines,
     });
   },
 
@@ -311,6 +344,48 @@ export const AutoJournalService = {
       lines: [
         { accountCode: '1300', debit: cost.amount, credit: 0, description: `Landed cost (${cost.type}) for ${cost.poNumber}` },
         { accountCode: '2100', debit: 0, credit: cost.amount, description: `A/P for ${cost.type} — ${cost.poNumber}` },
+      ],
+    });
+  },
+
+  /**
+   * GRN additional/landed cost added: DR Inventory (1300)  CR A/P (2100)
+   */
+  async onGRNCostAdded(
+    tx: PrismaLike,
+    cost: { grnId: string; grnNumber: string; poNumber: string; amount: number; type: string; date: Date },
+    userId: string
+  ) {
+    return createAutoJournalEntry(tx, {
+      date: cost.date,
+      description: `GRN additional cost (${cost.type}): ${cost.grnNumber} (${cost.poNumber})`,
+      referenceType: 'PO',
+      referenceId: cost.grnId,
+      userId,
+      lines: [
+        { accountCode: '1300', debit: cost.amount, credit: 0, description: `Landed cost (${cost.type}) for ${cost.grnNumber}` },
+        { accountCode: '2100', debit: 0, credit: cost.amount, description: `A/P for ${cost.type} — ${cost.grnNumber}` },
+      ],
+    });
+  },
+
+  /**
+   * GRN cost reversal (on GRN cancellation): DR A/P (2100)  CR Inventory (1300)
+   */
+  async onGRNCostReversed(
+    tx: PrismaLike,
+    cost: { grnId: string; grnNumber: string; amount: number; type: string; date: Date },
+    userId: string
+  ) {
+    return createAutoJournalEntry(tx, {
+      date: cost.date,
+      description: `Reverse GRN cost (${cost.type}): ${cost.grnNumber}`,
+      referenceType: 'PO',
+      referenceId: cost.grnId,
+      userId,
+      lines: [
+        { accountCode: '2100', debit: cost.amount, credit: 0, description: `Reverse A/P for ${cost.type} — ${cost.grnNumber}` },
+        { accountCode: '1300', debit: 0, credit: cost.amount, description: `Reverse landed cost (${cost.type}) for ${cost.grnNumber}` },
       ],
     });
   },

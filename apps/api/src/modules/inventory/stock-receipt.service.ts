@@ -222,11 +222,13 @@ export class StockReceiptService {
         });
       }
 
-      // Auto journal entry: DR Inventory, CR A/P
+      // Auto journal entry: DR Inventory + DR Tax Payable, CR A/P
+      const poTaxAmount = parseFloat(po.taxAmount.toString());
       await AutoJournalService.onGoodsReceived(tx, {
         poId,
         poNumber: po.poNumber,
         totalAmount: parseFloat(po.totalAmount.toString()),
+        taxAmount: poTaxAmount,
         date: data.receivedDate || new Date(),
       }, userId);
 
