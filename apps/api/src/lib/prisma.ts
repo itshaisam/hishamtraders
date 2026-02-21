@@ -9,6 +9,7 @@ const TENANT_SCOPED_MODELS = new Set([
   'Supplier', 'Warehouse', 'BinLocation',
   'Product', 'ProductVariant',
   'PurchaseOrder', 'POItem', 'POCost',
+  'GoodsReceiveNote', 'GoodsReceiveNoteItem', 'GRNCost',
   'Inventory', 'StockMovement', 'StockAdjustment',
   'StockTransfer', 'StockTransferItem',
   'StockCount', 'StockCountItem',

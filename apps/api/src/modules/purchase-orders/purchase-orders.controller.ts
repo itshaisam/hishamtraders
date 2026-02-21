@@ -307,23 +307,11 @@ export class PurchaseOrderController {
 
       const validatedData: AddPOCostRequest = addPOCostSchema.parse(req.body);
 
-      const cost = await this.service.addCost(
+      await this.service.addCost(
         id,
         validatedData,
         req.user?.userId || ''
       );
-
-      logger.info('Cost added to purchase order via API', {
-        userId: req.user?.userId,
-        poId: id,
-        costId: cost.id,
-      });
-
-      res.status(201).json({
-        success: true,
-        data: cost,
-        message: 'Cost added successfully',
-      });
     } catch (error: any) {
       logger.error('Error adding cost to purchase order', { error });
 

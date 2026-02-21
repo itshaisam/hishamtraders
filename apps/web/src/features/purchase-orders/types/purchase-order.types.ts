@@ -1,6 +1,6 @@
 import { Product } from '@/features/products/types/product.types';
 
-export type POStatus = 'PENDING' | 'IN_TRANSIT' | 'RECEIVED' | 'CANCELLED';
+export type POStatus = 'PENDING' | 'IN_TRANSIT' | 'PARTIALLY_RECEIVED' | 'RECEIVED' | 'CANCELLED';
 
 export type POCostType = 'SHIPPING' | 'CUSTOMS' | 'TAX' | 'OTHER';
 
@@ -47,6 +47,7 @@ export interface POItem {
   productId: string;
   productVariantId?: string | null;
   quantity: number;
+  receivedQuantity: number;
   unitCost: number;
   totalCost: number;
   createdAt?: string | Date;
@@ -69,6 +70,8 @@ export interface PurchaseOrder {
   orderDate: string | Date;
   expectedArrivalDate?: string | Date | null;
   status: POStatus;
+  taxRate: number;
+  taxAmount: number;
   totalAmount: number;
   notes?: string;
   // Import documentation fields (Story 2.3)
@@ -88,6 +91,14 @@ export interface PurchaseOrder {
   };
   items: POItem[];
   costs?: POCost[];
+  goodsReceiveNotes?: Array<{
+    id: string;
+    grnNumber: string;
+    receivedDate: string | Date;
+    status: string;
+    warehouse?: { id: string; name: string };
+    creator?: { id: string; name: string };
+  }>;
 }
 
 export interface CreatePOItemRequest {

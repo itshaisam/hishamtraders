@@ -28,11 +28,14 @@ function fmtDateTime(date: Date): string {
   return `${date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, ${date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
 }
 
+const PURPLE: [number, number, number] = [147, 51, 234];      // #9333ea
+
 function getStatusColor(status: string): [number, number, number] {
   switch (status) {
     case 'RECEIVED': return GREEN;
     case 'CANCELLED': return RED;
     case 'IN_TRANSIT': return BLUE;
+    case 'PARTIALLY_RECEIVED': return PURPLE;
     default: return AMBER;
   }
 }
@@ -205,7 +208,21 @@ export function generatePoPdf(
   doc.text('Subtotal', totalsX, y);
   doc.setTextColor(...DARK);
   doc.text(fmtCurrency(subtotal, currencySymbol), totalsValueX, y, { align: 'right' });
-  y += 2;
+  y += 5.5;
+
+  // Tax line (if applicable)
+  const taxRate = Number(purchaseOrder.taxRate || 0);
+  const taxAmount = Number(purchaseOrder.taxAmount || 0);
+  if (taxAmount > 0) {
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...MUTED);
+    doc.text(`Tax (${taxRate}%)`, totalsX, y);
+    doc.setTextColor(...DARK);
+    doc.text(fmtCurrency(taxAmount, currencySymbol), totalsValueX, y, { align: 'right' });
+    y += 2;
+  } else {
+    y -= 3.5;
+  }
 
   // Total (bold, larger)
   doc.setDrawColor(...DARK);

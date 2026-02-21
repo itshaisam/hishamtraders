@@ -136,6 +136,7 @@ export const PurchaseOrdersPage: React.FC = () => {
                   { value: '', label: 'All', color: 'gray' },
                   { value: 'PENDING', label: 'Pending', color: 'blue' },
                   { value: 'IN_TRANSIT', label: 'In Transit', color: 'yellow' },
+                  { value: 'PARTIALLY_RECEIVED', label: 'Partial', color: 'purple' },
                   { value: 'RECEIVED', label: 'Received', color: 'green' },
                   { value: 'CANCELLED', label: 'Cancelled', color: 'red' },
                 ]}

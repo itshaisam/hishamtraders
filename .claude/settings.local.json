@@ -68,7 +68,8 @@
       "mcp__playwright__browser_hover",
       "Bash(npx prisma db execute:*)",
       "Bash(perl -i -pe:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(npx prisma db push:*)"
     ],
     "deny": [],
     "ask": []

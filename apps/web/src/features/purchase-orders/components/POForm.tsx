@@ -9,13 +9,13 @@ import { useSuppliers } from '@/features/suppliers/hooks/useSuppliers';
 import { useProducts } from '@/features/products/hooks/useProducts';
 import { useVariantsByProduct } from '@/features/products/hooks/useVariants';
 import { useUomsForSelect } from '@/hooks/useUoms';
-import { useCurrencySymbol } from '../../../hooks/useSettings';
+import { useCurrencySymbol, useGetTaxRate } from '../../../hooks/useSettings';
 
 const poFormSchema = z.object({
   supplierId: z.string().min(1, 'Supplier is required'),
   orderDate: z.string().min(1, 'Order date is required'),
   expectedArrivalDate: z.string().optional(),
-  status: z.enum(['PENDING', 'IN_TRANSIT', 'RECEIVED', 'CANCELLED']).default('PENDING'),
+  status: z.enum(['PENDING', 'IN_TRANSIT', 'PARTIALLY_RECEIVED', 'RECEIVED', 'CANCELLED']).default('PENDING'),
   notes: z.string().optional(),
 });
 
@@ -39,6 +39,8 @@ export const POForm: React.FC<POFormProps> = ({
 }) => {
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
+  const { data: taxRateData } = useGetTaxRate();
+  const taxRate = taxRateData?.taxRate ?? 0;
   const [items, setItems] = useState<CreatePOItemRequest[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [selectedVariant, setSelectedVariant] = useState<string>('');
@@ -552,10 +554,29 @@ export const POForm: React.FC<POFormProps> = ({
               </tbody>
             </table>
 
-            {/* Grand Total */}
-            <div className="mt-4 p-4 bg-white border border-gray-300 rounded-md flex justify-end">
-              <div className="text-lg font-semibold text-gray-900">
-                Grand Total: <span className="text-blue-600">{cs} {calculateGrandTotal()}</span>
+            {/* Order Summary */}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3">
+              <div className="md:col-start-3">
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-700 font-medium">Subtotal:</span>
+                    <span className="text-gray-900">{cs} {calculateGrandTotal()}</span>
+                  </div>
+                  {taxRate > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-700 font-medium">Tax ({taxRate.toFixed(2)}%):</span>
+                      <span className="text-gray-900">
+                        {cs} {(parseFloat(calculateGrandTotal()) * taxRate / 100).toFixed(4)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="border-t border-gray-200 pt-3 flex justify-between">
+                    <span className="text-lg font-semibold text-gray-900">Total:</span>
+                    <span className="text-lg font-semibold text-blue-600">
+                      {cs} {(parseFloat(calculateGrandTotal()) * (1 + taxRate / 100)).toFixed(4)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -88,9 +88,9 @@ export const POViewPage: React.FC = () => {
             <p className="mt-1 text-sm sm:text-base text-gray-600">Read-only details</p>
           </div>
           <div className="flex gap-2">
-            {canUserReceive && canReceive && (purchaseOrder.status === 'PENDING' || purchaseOrder.status === 'IN_TRANSIT') && (
+            {canUserReceive && (purchaseOrder.status === 'PENDING' || purchaseOrder.status === 'IN_TRANSIT' || purchaseOrder.status === 'PARTIALLY_RECEIVED') && (
               <button
-                onClick={() => navigate(`/purchase-orders/${id}/receive`)}
+                onClick={() => navigate(`/goods-receipts/new/${id}`)}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm font-medium"
                 title="Receive goods from this purchase order"
               >
@@ -229,6 +229,9 @@ export const POViewPage: React.FC = () => {
                       <th className="px-4 py-3 text-right font-semibold text-gray-900">
                         Quantity
                       </th>
+                      <th className="px-4 py-3 text-center font-semibold text-gray-900">
+                        Received
+                      </th>
                       <th className="px-4 py-3 text-right font-semibold text-gray-900">
                         Unit Cost
                       </th>
@@ -247,6 +250,11 @@ export const POViewPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-right text-gray-900">{item.quantity}</td>
+                        <td className="px-4 py-3 text-center text-gray-700">
+                          <span className={`text-xs font-medium ${(item.receivedQuantity || 0) >= item.quantity ? 'text-green-600' : (item.receivedQuantity || 0) > 0 ? 'text-purple-600' : 'text-gray-400'}`}>
+                            {item.receivedQuantity || 0} / {item.quantity}
+                          </span>
+                        </td>
                         <td className="px-4 py-3 text-right text-gray-900">
                           {cs} {typeof item.unitCost === 'number' ? item.unitCost.toFixed(4) : Number(item.unitCost).toFixed(4)}
                         </td>
@@ -278,6 +286,14 @@ export const POViewPage: React.FC = () => {
                       .toFixed(4)}
                   </span>
                 </div>
+                {(purchaseOrder.taxAmount > 0 || purchaseOrder.taxRate > 0) && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-700 font-medium">Tax ({Number(purchaseOrder.taxRate).toFixed(2)}%):</span>
+                    <span className="text-gray-900">
+                      {cs} {Number(purchaseOrder.taxAmount).toFixed(4)}
+                    </span>
+                  </div>
+                )}
                 <div className="border-t border-gray-200 pt-3 flex justify-between">
                   <span className="text-lg font-semibold text-gray-900">Total:</span>
                   <span className="text-lg font-semibold text-blue-600">
@@ -305,12 +321,51 @@ export const POViewPage: React.FC = () => {
         </div>
 
         {/* Story 2.3: Import Documentation, Costs, and Landed Cost (Only show for IN_TRANSIT or RECEIVED) */}
-        {(purchaseOrder.status === 'IN_TRANSIT' || purchaseOrder.status === 'RECEIVED') && (
+        {(purchaseOrder.status === 'IN_TRANSIT' || purchaseOrder.status === 'PARTIALLY_RECEIVED' || purchaseOrder.status === 'RECEIVED') && (
           <>
             <ImportDocumentationSection po={purchaseOrder} />
-            <POAdditionalCostsTable po={purchaseOrder} />
+            <POAdditionalCostsTable po={purchaseOrder} readOnly />
             <LandedCostBreakdown poId={purchaseOrder.id} />
           </>
+        )}
+
+        {/* GRN History */}
+        {purchaseOrder.goodsReceiveNotes && purchaseOrder.goodsReceiveNotes.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Goods Receipt History</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b-2 border-gray-200 bg-gray-50">
+                    <th className="px-4 py-2 text-left font-semibold text-gray-900">GRN #</th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-900">Warehouse</th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-900">Date</th>
+                    <th className="px-4 py-2 text-left font-semibold text-gray-900">Created By</th>
+                    <th className="px-4 py-2 text-center font-semibold text-gray-900">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {purchaseOrder.goodsReceiveNotes.map((grn) => (
+                    <tr
+                      key={grn.id}
+                      className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => navigate(`/goods-receipts/${grn.id}`)}
+                    >
+                      <td className="px-4 py-2 font-mono text-blue-600">{grn.grnNumber}</td>
+                      <td className="px-4 py-2 text-gray-700">{grn.warehouse?.name || '-'}</td>
+                      <td className="px-4 py-2 text-gray-700">{new Date(grn.receivedDate).toLocaleDateString()}</td>
+                      <td className="px-4 py-2 text-gray-700">{grn.creator?.name || '-'}</td>
+                      <td className="px-4 py-2 text-center">
+                        <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-full ${grn.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {grn.status === 'COMPLETED' ? 'Completed' : 'Cancelled'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
         {/* Audit Fields Card */}

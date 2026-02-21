@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import logger from '../../lib/logger.js';
 import { prisma, getTenantId } from '../../lib/prisma.js';
 import { changeHistoryService } from '../../services/change-history.service.js';
@@ -225,12 +226,13 @@ export class PurchaseOrderService {
   private validateStatusTransition(currentStatus: POStatus, newStatus: POStatus) {
     const validTransitions: Record<POStatus, POStatus[]> = {
       PENDING: ['IN_TRANSIT', 'CANCELLED'],
-      IN_TRANSIT: ['RECEIVED', 'CANCELLED'],
+      IN_TRANSIT: ['PARTIALLY_RECEIVED', 'RECEIVED', 'CANCELLED'],
+      PARTIALLY_RECEIVED: ['PARTIALLY_RECEIVED', 'RECEIVED', 'CANCELLED'],
       RECEIVED: [],
       CANCELLED: [],
     };
 
-    if (!validTransitions[currentStatus].includes(newStatus)) {
+    if (!validTransitions[currentStatus]?.includes(newStatus)) {
       throw new BadRequestError(
         `Invalid status transition from ${currentStatus} to ${newStatus}`
       );
@@ -253,69 +255,10 @@ export class PurchaseOrderService {
    * Add a cost to a purchase order
    * Only allowed when PO status is IN_TRANSIT or RECEIVED
    */
-  async addCost(poId: string, costData: AddPOCostRequest, userId: string) {
-    try {
-      // Validate PO exists
-      const po = await this.repository.findById(poId);
-      if (!po) {
-        throw new NotFoundError('Purchase order not found');
-      }
-
-      // Validate PO status - costs can only be added when PO is IN_TRANSIT or RECEIVED
-      if (po.status !== 'IN_TRANSIT' && po.status !== 'RECEIVED') {
-        throw new BadRequestError(
-          `Cannot add costs to ${po.status} purchase order. Costs can only be added when status is IN_TRANSIT or RECEIVED.`
-        );
-      }
-
-      // Validate amount
-      if (costData.amount <= 0) {
-        throw new BadRequestError('Cost amount must be greater than 0');
-      }
-
-      logger.info(`Adding ${costData.type} cost to PO: ${po.poNumber}`, {
-        userId,
-        amount: costData.amount,
-      });
-
-      // Use transaction to create cost record + journal entry atomically
-      const cost = await prisma.$transaction(async (tx: any) => {
-        const costRecord = await tx.pOCost.create({
-          data: {
-            tenantId: getTenantId(),
-            poId,
-            type: costData.type,
-            amount: costData.amount,
-            description: costData.description,
-            createdBy: userId,
-          },
-        });
-
-        // Create journal entry: DR Inventory (1300) / CR A/P (2100)
-        await AutoJournalService.onPOCostAdded(tx, {
-          poId,
-          poNumber: po.poNumber,
-          amount: costData.amount,
-          type: costData.type,
-          date: new Date(),
-        }, userId);
-
-        return costRecord;
-      });
-
-      logger.info(`Cost added with journal entry for PO: ${po.poNumber}`, {
-        userId,
-        costId: cost.id,
-      });
-
-      return cost;
-    } catch (error) {
-      if (error instanceof NotFoundError || error instanceof BadRequestError) {
-        throw error;
-      }
-      logger.error('Error adding cost to purchase order', { error, poId, userId });
-      throw new BadRequestError('Failed to add cost to purchase order');
-    }
+  async addCost(poId: string, costData: AddPOCostRequest, userId: string): Promise<never> {
+    throw new BadRequestError(
+      'Adding costs at PO level is no longer supported. Please add costs to individual Goods Receipt Notes.'
+    );
   }
 
   /**
@@ -356,9 +299,9 @@ export class PurchaseOrderService {
       }
 
       // Validate PO status
-      if (po.status !== 'IN_TRANSIT' && po.status !== 'RECEIVED') {
+      if (po.status !== 'IN_TRANSIT' && po.status !== 'PARTIALLY_RECEIVED' && po.status !== 'RECEIVED') {
         throw new BadRequestError(
-          `Cannot update import details for ${po.status} purchase order. Import details can only be updated when status is IN_TRANSIT or RECEIVED.`
+          `Cannot update import details for ${po.status} purchase order. Import details can only be updated when status is IN_TRANSIT, PARTIALLY_RECEIVED, or RECEIVED.`
         );
       }
 

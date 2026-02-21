@@ -4,9 +4,14 @@ import { CreatePurchaseOrderRequest, POItemInput } from './dto/create-purchase-o
 import { UpdatePurchaseOrderRequest } from './dto/update-purchase-order.dto.js';
 import { AddPOCostRequest } from './dto/add-po-cost.dto.js';
 import { UpdateImportDetailsRequest } from './dto/update-import-details.dto.js';
+import { SettingsService } from '../settings/settings.service.js';
 
 export class PurchaseOrderRepository {
-  constructor(private prisma: any) {}
+  private settingsService: SettingsService;
+
+  constructor(private prisma: any) {
+    this.settingsService = new SettingsService(prisma);
+  }
 
   /**
    * Transform Prisma Decimal values to numbers for JSON serialization
@@ -15,11 +20,14 @@ export class PurchaseOrderRepository {
   private transformDecimals(po: any) {
     return {
       ...po,
+      taxRate: po.taxRate != null ? Number(po.taxRate) : 0,
+      taxAmount: po.taxAmount != null ? Number(po.taxAmount) : 0,
       totalAmount: typeof po.totalAmount === 'number' ? po.totalAmount : Number(po.totalAmount),
       items: po.items?.map((item: any) => ({
         ...item,
         unitCost: typeof item.unitCost === 'number' ? item.unitCost : Number(item.unitCost),
         totalCost: typeof item.totalCost === 'number' ? item.totalCost : Number(item.totalCost),
+        receivedQuantity: item.receivedQuantity ?? 0,
       })) || [],
     };
   }
@@ -62,11 +70,16 @@ export class PurchaseOrderRepository {
   ): Promise<PurchaseOrder> {
     const poNumber = await this.generatePONumber();
 
-    // Calculate total amount from items
-    const totalAmount = data.items.reduce(
+    // Calculate subtotal from items
+    const subtotal = data.items.reduce(
       (sum, item) => sum + item.quantity * item.unitCost,
       0
     );
+
+    // Fetch tax rate from settings
+    const taxRate = await this.settingsService.getTaxRate();
+    const taxAmount = Math.round(subtotal * taxRate / 100 * 10000) / 10000;
+    const totalAmount = subtotal + taxAmount;
 
     // Create PO and items in transaction
     const po = await this.prisma.$transaction(async (tx: any) => {
@@ -77,7 +90,9 @@ export class PurchaseOrderRepository {
           orderDate: new Date(data.orderDate),
           expectedArrivalDate: data.expectedArrivalDate ? new Date(data.expectedArrivalDate) : null,
           status: 'PENDING' as POStatus,
-          totalAmount: totalAmount,
+          taxRate,
+          taxAmount,
+          totalAmount,
           notes: data.notes,
         },
       });
@@ -87,7 +102,7 @@ export class PurchaseOrderRepository {
         data: data.items.map((item) => ({
           poId: createdPO.id,
           productId: item.productId,
-          productVariantId: item.productVariantId || null, // Support product variants
+          productVariantId: item.productVariantId || null,
           quantity: item.quantity,
           unitCost: item.unitCost,
           totalCost: item.quantity * item.unitCost,
@@ -187,6 +202,13 @@ export class PurchaseOrderRepository {
           },
         },
         costs: true,
+        goodsReceiveNotes: {
+          include: {
+            warehouse: { select: { id: true, name: true } },
+            creator: { select: { id: true, name: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
     return po ? this.transformDecimals(po) : null;

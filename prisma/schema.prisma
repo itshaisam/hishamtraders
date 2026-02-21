@@ -58,6 +58,9 @@ model Tenant {
   paymentPromises        PaymentPromise[]
   alerts                 Alert[]
   alertRules             AlertRule[]
+  goodsReceiveNotes      GoodsReceiveNote[]
+  goodsReceiveNoteItems  GoodsReceiveNoteItem[]
+  grnCosts               GRNCost[]
   systemSettings         SystemSetting[]
   changeHistories        ChangeHistory[]
   auditLogs              AuditLog[]
@@ -238,6 +241,7 @@ model Warehouse {
   outboundTransfers  StockTransfer[] @relation("TransferSource")       // Story 6.4
   inboundTransfers   StockTransfer[] @relation("TransferDestination")  // Story 6.4
   stockCounts        StockCount[]   // Story 6.9
+  goodsReceiveNotes  GoodsReceiveNote[] // GRN
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -518,6 +522,7 @@ model Product {
   gatePassItems    GatePassItem[]     // Epic 6
   stockTransferItems StockTransferItem[] // Story 6.4
   stockCountItems    StockCountItem[]    // Story 6.9
+  goodsReceiveNoteItems GoodsReceiveNoteItem[] // GRN
 
   @@unique([tenantId, sku])
   @@index([tenantId])
@@ -537,7 +542,13 @@ model Product {
 enum POStatus {
   PENDING
   IN_TRANSIT
+  PARTIALLY_RECEIVED
   RECEIVED
+  CANCELLED
+}
+
+enum GRNStatus {
+  COMPLETED
   CANCELLED
 }
 
@@ -548,6 +559,8 @@ model PurchaseOrder {
   orderDate           DateTime
   expectedArrivalDate DateTime?
   status              POStatus @default(PENDING)
+  taxRate             Decimal  @db.Decimal(7, 4) @default(0)
+  taxAmount           Decimal  @db.Decimal(12, 4) @default(0)
   totalAmount         Decimal  @db.Decimal(12, 4)
   notes               String?  @db.Text
 
@@ -566,6 +579,7 @@ model PurchaseOrder {
   supplier            Supplier @relation(fields: [supplierId], references: [id])
   items               POItem[]
   costs               POCost[] // Story 2.3: Additional costs
+  goodsReceiveNotes   GoodsReceiveNote[]
 
   @@unique([tenantId, poNumber])
   @@index([tenantId])
@@ -646,6 +660,7 @@ model ProductVariant {
   stockAdjustments StockAdjustment[]
   invoiceItems     InvoiceItem[]
   creditNoteItems  CreditNoteItem[]   // Story 3.9
+  goodsReceiveNoteItems GoodsReceiveNoteItem[] // GRN
 
   @@unique([tenantId, sku])
   @@index([tenantId])
@@ -656,30 +671,105 @@ model ProductVariant {
 }
 
 model POItem {
-  id              String          @id @default(cuid())
-  poId            String
-  productId       String
-  productVariantId String?       // Optional: references specific variant
-  quantity        Int
-  unitCost        Decimal         @db.Decimal(10, 4)
-  totalCost       Decimal         @db.Decimal(12, 4)
+  id               String          @id @default(cuid())
+  poId             String
+  productId        String
+  productVariantId String?        // Optional: references specific variant
+  quantity         Int
+  receivedQuantity Int            @default(0)
+  unitCost         Decimal         @db.Decimal(10, 4)
+  totalCost        Decimal         @db.Decimal(12, 4)
 
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  createdBy       String?
-  updatedBy       String?
-  tenantId        String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  createdBy        String?
+  updatedBy        String?
+  tenantId         String
 
-  tenant          Tenant          @relation(fields: [tenantId], references: [id])
-  purchaseOrder   PurchaseOrder   @relation(fields: [poId], references: [id], onDelete: Cascade)
-  product         Product         @relation(fields: [productId], references: [id])
-  productVariant  ProductVariant? @relation(fields: [productVariantId], references: [id])
+  tenant           Tenant          @relation(fields: [tenantId], references: [id])
+  purchaseOrder    PurchaseOrder   @relation(fields: [poId], references: [id], onDelete: Cascade)
+  product          Product         @relation(fields: [productId], references: [id])
+  productVariant   ProductVariant? @relation(fields: [productVariantId], references: [id])
+  goodsReceiveNoteItems GoodsReceiveNoteItem[]
 
   @@index([tenantId])
   @@index([poId])
   @@index([productId])
   @@index([productVariantId])
   @@map("po_items")
+}
+
+// ============================================================================
+// GOODS RECEIVE NOTES (GRN)
+// ============================================================================
+
+model GoodsReceiveNote {
+  id            String    @id @default(cuid())
+  grnNumber     String
+  poId          String
+  warehouseId   String
+  receivedDate  DateTime  @default(now())
+  status        GRNStatus @default(COMPLETED)
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdBy     String
+  tenantId      String
+
+  tenant        Tenant          @relation(fields: [tenantId], references: [id])
+  purchaseOrder PurchaseOrder   @relation(fields: [poId], references: [id])
+  warehouse     Warehouse       @relation(fields: [warehouseId], references: [id])
+  creator       User            @relation("CreatedGRNs", fields: [createdBy], references: [id])
+  items         GoodsReceiveNoteItem[]
+  costs         GRNCost[]
+
+  @@unique([tenantId, grnNumber])
+  @@index([tenantId])
+  @@index([poId])
+  @@index([warehouseId])
+  @@index([status])
+  @@map("goods_receive_notes")
+}
+
+model GoodsReceiveNoteItem {
+  id               String  @id @default(cuid())
+  grnId            String
+  poItemId         String
+  productId        String
+  productVariantId String?
+  quantity         Int
+  binLocation      String?
+  batchNo          String?
+  tenantId         String
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id])
+  grn              GoodsReceiveNote @relation(fields: [grnId], references: [id], onDelete: Cascade)
+  poItem           POItem           @relation(fields: [poItemId], references: [id])
+  product          Product          @relation(fields: [productId], references: [id])
+  productVariant   ProductVariant?  @relation(fields: [productVariantId], references: [id])
+
+  @@index([tenantId])
+  @@index([grnId])
+  @@index([poItemId])
+  @@map("goods_receive_note_items")
+}
+
+model GRNCost {
+  id          String     @id @default(cuid())
+  grnId       String
+  type        POCostType
+  amount      Decimal    @db.Decimal(10, 4)
+  description String?    @db.Text
+  createdAt   DateTime   @default(now())
+  createdBy   String?
+  tenantId    String
+
+  tenant Tenant           @relation(fields: [tenantId], references: [id])
+  grn    GoodsReceiveNote @relation(fields: [grnId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([grnId])
+  @@map("grn_costs")
 }
 
 model User {
@@ -713,6 +803,7 @@ model User {
   requestedTransfers     StockTransfer[] @relation("TransferRequester")     // Story 6.4
   approvedTransfers      StockTransfer[] @relation("TransferApprover")      // Story 6.4
   createdStockCounts     StockCount[]    @relation("StockCountCreator")     // Story 6.9
+  createdGRNs            GoodsReceiveNote[] @relation("CreatedGRNs")        // GRN
   recoveryClients        Client[]        @relation("RecoveryAgentClients")  // Epic 7
   recoveryVisits         RecoveryVisit[] @relation("RecoveryVisits")        // Epic 7
   createdPromises        PaymentPromise[] @relation("CreatedPromises")      // Epic 7

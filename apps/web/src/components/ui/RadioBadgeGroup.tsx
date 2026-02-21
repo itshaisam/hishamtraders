@@ -3,7 +3,7 @@ import React from 'react';
 export interface RadioBadgeOption {
   value: string;
   label: string;
-  color?: 'green' | 'red' | 'blue' | 'gray' | 'yellow';
+  color?: 'green' | 'red' | 'blue' | 'gray' | 'yellow' | 'purple';
 }
 
 interface RadioBadgeGroupProps {
@@ -41,13 +41,19 @@ const colorClasses = {
     unselected: 'border-gray-300 bg-white text-gray-700 hover:border-gray-400',
     dot: 'bg-gray-500',
   },
+  purple: {
+    selected: 'border-purple-500 bg-purple-50 text-purple-700',
+    unselected: 'border-gray-300 bg-white text-gray-700 hover:border-purple-300',
+    dot: 'bg-purple-500',
+  },
 };
 
-const colorMap: Record<string, 'green' | 'red' | 'blue' | 'yellow' | 'gray'> = {
+const colorMap: Record<string, 'green' | 'red' | 'blue' | 'yellow' | 'gray' | 'purple'> = {
   ACTIVE: 'green',
   INACTIVE: 'red',
   PENDING: 'blue',
   IN_TRANSIT: 'yellow',
+  PARTIALLY_RECEIVED: 'purple',
   RECEIVED: 'green',
   CANCELLED: 'red',
 };

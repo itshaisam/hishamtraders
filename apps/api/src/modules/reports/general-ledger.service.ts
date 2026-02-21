@@ -48,6 +48,10 @@ export class GeneralLedgerService {
     const isDebitNormal =
       account.accountType === 'ASSET' || account.accountType === 'EXPENSE';
 
+    // Set dateTo to end of day so we include all entries on that date
+    const endOfDateTo = new Date(dateTo);
+    endOfDateTo.setHours(23, 59, 59, 999);
+
     // Calculate opening balance: account's opening balance + all posted lines BEFORE dateFrom
     const priorLines = await prisma.journalEntryLine.findMany({
       where: {
@@ -74,7 +78,7 @@ export class GeneralLedgerService {
         accountHeadId,
         journalEntry: {
           status: 'POSTED',
-          date: { gte: dateFrom, lte: dateTo },
+          date: { gte: dateFrom, lte: endOfDateTo },
         },
       },
       include: {

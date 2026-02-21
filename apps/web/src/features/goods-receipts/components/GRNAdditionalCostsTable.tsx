@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { PurchaseOrder } from '../types/purchase-order.types';
+import { GoodsReceiveNote } from '../types/goods-receipt.types';
 import { useAuthStore } from '@/stores/auth.store';
 import { format } from 'date-fns';
-import { AddCostModal } from './AddCostModal';
+import { AddGRNCostModal } from './AddGRNCostModal';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
-import { Info } from 'lucide-react';
 
-interface POAdditionalCostsTableProps {
-  po: PurchaseOrder;
-  readOnly?: boolean;
+interface GRNAdditionalCostsTableProps {
+  grn: GoodsReceiveNote;
 }
 
 const costTypeLabels: Record<string, string> = {
@@ -18,21 +16,17 @@ const costTypeLabels: Record<string, string> = {
   OTHER: 'Other',
 };
 
-export const POAdditionalCostsTable: React.FC<POAdditionalCostsTableProps> = ({ po, readOnly = false }) => {
+export const GRNAdditionalCostsTable: React.FC<GRNAdditionalCostsTableProps> = ({ grn }) => {
   const user = useAuthStore((state: any) => state.user);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
 
-  // Only ADMIN and ACCOUNTANT can add costs
-  const canAddCost = !readOnly && (user?.role?.name === 'ADMIN' || user?.role?.name === 'ACCOUNTANT');
+  const canAddCost =
+    grn.status === 'COMPLETED' &&
+    (user?.role?.name === 'ADMIN' || user?.role?.name === 'ACCOUNTANT');
 
-  // Only show section when PO is IN_TRANSIT, PARTIALLY_RECEIVED, or RECEIVED
-  if (po.status !== 'IN_TRANSIT' && po.status !== 'PARTIALLY_RECEIVED' && po.status !== 'RECEIVED') {
-    return null;
-  }
-
-  const costs = po.costs || [];
+  const costs = grn.costs || [];
   const totalAdditionalCosts = costs.reduce((sum, cost) => sum + Number(cost.amount), 0);
 
   return (
@@ -48,16 +42,6 @@ export const POAdditionalCostsTable: React.FC<POAdditionalCostsTableProps> = ({ 
           </button>
         )}
       </div>
-
-      {readOnly && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2">
-          <Info size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
-          <p className="text-sm text-blue-800">
-            Costs are now managed at the Goods Receipt (GRN) level. To add new costs, navigate to the
-            specific GRN from the Goods Receipt History below.
-          </p>
-        </div>
-      )}
 
       {costs.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
@@ -106,7 +90,6 @@ export const POAdditionalCostsTable: React.FC<POAdditionalCostsTableProps> = ({ 
             </table>
           </div>
 
-          {/* Total Row */}
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex justify-end">
               <div className="text-right">
@@ -120,10 +103,9 @@ export const POAdditionalCostsTable: React.FC<POAdditionalCostsTableProps> = ({ 
         </>
       )}
 
-      {/* Add Cost Modal */}
       {isAddModalOpen && (
-        <AddCostModal
-          poId={po.id}
+        <AddGRNCostModal
+          grnId={grn.id}
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
         />

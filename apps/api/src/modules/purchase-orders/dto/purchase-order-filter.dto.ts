@@ -5,7 +5,7 @@ export const purchaseOrderFilterSchema = z.object({
   status: z.string()
     .optional()
     .transform(val => val === '' || val === undefined ? undefined : val)
-    .pipe(z.enum(['PENDING', 'IN_TRANSIT', 'RECEIVED', 'CANCELLED']).optional()),
+    .pipe(z.enum(['PENDING', 'IN_TRANSIT', 'PARTIALLY_RECEIVED', 'RECEIVED', 'CANCELLED']).optional()),
   supplierId: z.string()
     .optional()
     .transform(val => val === '' ? undefined : val),

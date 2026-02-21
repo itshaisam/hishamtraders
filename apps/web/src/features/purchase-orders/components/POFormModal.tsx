@@ -332,6 +332,7 @@ export const POFormModal: React.FC<POFormModalProps> = ({
                   poId: '',
                   productId: item.productId,
                   quantity: item.quantity,
+                  receivedQuantity: 0,
                   unitCost: item.unitCost,
                   totalCost: item.quantity * item.unitCost,
                   product: product ? {

@@ -267,6 +267,12 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                   Purchase Orders
                 </Link>
                 <Link
+                  to="/goods-receipts"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Goods Receipts
+                </Link>
+                <Link
                   to="/suppliers"
                   className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                 >

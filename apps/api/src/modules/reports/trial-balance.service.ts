@@ -34,12 +34,16 @@ export class TrialBalanceService {
       orderBy: { code: 'asc' },
     });
 
+    // Set asOfDate to end of day so we include all entries on that date
+    const endOfDay = new Date(asOfDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
     // Get posted journal entry lines up to asOfDate
     const lines = await prisma.journalEntryLine.findMany({
       where: {
         journalEntry: {
           status: 'POSTED',
-          date: { lte: asOfDate },
+          date: { lte: endOfDay },
         },
       },
       select: {

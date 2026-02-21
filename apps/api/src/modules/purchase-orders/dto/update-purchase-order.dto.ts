@@ -6,7 +6,7 @@ export const updatePurchaseOrderSchema = z.object({
     .or(z.date())
     .pipe(z.coerce.date())
     .optional(),
-  status: z.enum(['PENDING', 'IN_TRANSIT', 'RECEIVED', 'CANCELLED'] as const).optional(),
+  status: z.enum(['PENDING', 'IN_TRANSIT', 'PARTIALLY_RECEIVED', 'RECEIVED', 'CANCELLED'] as const).optional(),
   notes: z.string().optional(),
 });
 

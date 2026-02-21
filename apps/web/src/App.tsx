@@ -21,6 +21,9 @@ import { WarehouseFormPage } from './features/warehouses/pages/WarehouseFormPage
 import { WarehouseDetailPage } from './features/warehouses/pages/WarehouseDetailPage';
 import BinLocationManagementPage from './features/warehouses/pages/BinLocationManagementPage';
 import { ReceiveGoodsPage } from './features/purchase-orders/pages/ReceiveGoodsPage';
+import { GoodsReceiptsPage } from './features/goods-receipts/pages/GoodsReceiptsPage';
+import { CreateGoodsReceiptPage } from './features/goods-receipts/pages/CreateGoodsReceiptPage';
+import { GoodsReceiptDetailPage } from './features/goods-receipts/pages/GoodsReceiptDetailPage';
 import { InventoryPage } from './features/inventory/pages/InventoryPage';
 import { StockAdjustmentPage } from './features/inventory/pages/StockAdjustmentPage';
 import { AdjustmentHistoryPage } from './features/inventory/pages/AdjustmentHistoryPage';
@@ -247,6 +250,51 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <ReceiveGoodsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Goods Receipts (GRN) routes */}
+          <Route
+            path="/goods-receipts"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <GoodsReceiptsPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/goods-receipts/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateGoodsReceiptPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/goods-receipts/new/:poId"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateGoodsReceiptPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/goods-receipts/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <GoodsReceiptDetailPage />
                 </Layout>
               </ProtectedRoute>
             }

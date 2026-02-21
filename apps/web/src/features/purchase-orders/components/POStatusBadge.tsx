@@ -16,6 +16,8 @@ export const POStatusBadge: React.FC<POStatusBadgeProps> = ({
         return 'bg-yellow-100 text-yellow-800';
       case 'IN_TRANSIT':
         return 'bg-blue-100 text-blue-800';
+      case 'PARTIALLY_RECEIVED':
+        return 'bg-purple-100 text-purple-800';
       case 'RECEIVED':
         return 'bg-green-100 text-green-800';
       case 'CANCELLED':
@@ -31,6 +33,8 @@ export const POStatusBadge: React.FC<POStatusBadgeProps> = ({
         return 'Pending';
       case 'IN_TRANSIT':
         return 'In Transit';
+      case 'PARTIALLY_RECEIVED':
+        return 'Partially Received';
       case 'RECEIVED':
         return 'Received';
       case 'CANCELLED':
