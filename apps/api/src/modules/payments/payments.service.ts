@@ -65,28 +65,26 @@ export class PaymentsService {
       throw new Error('PO ID is required when payment reference type is PO');
     }
 
-    // Create payment
-    const payment = await this.repository.create({
-      paymentType: PaymentType.SUPPLIER,
-      paymentReferenceType: dto.paymentReferenceType || null,
-      referenceId: dto.referenceId || null,
-      amount: dto.amount,
-      method: dto.method,
-      date: dto.date,
-      notes: dto.notes || null,
-      tenantId: getTenantId(),
-      user: {
-        connect: { id: dto.recordedBy },
+    // Create payment using flat fields (same pattern as client payment)
+    const payment = await prisma.payment.create({
+      data: {
+        paymentType: PaymentType.SUPPLIER,
+        paymentReferenceType: dto.paymentReferenceType || null,
+        referenceId: dto.referenceId || null,
+        amount: new Prisma.Decimal(dto.amount.toFixed(4)),
+        method: dto.method,
+        date: dto.date,
+        notes: dto.notes || null,
+        recordedBy: dto.recordedBy,
+        supplierId: dto.supplierId,
+        tenantId: getTenantId(),
+        ...(dto.bankAccountId && { bankAccountId: dto.bankAccountId }),
       },
-      supplier: dto.supplierId
-        ? {
-            connect: { id: dto.supplierId },
-          }
-        : undefined,
-      ...(dto.bankAccountId && {
-        bankAccount: { connect: { id: dto.bankAccountId } },
-      }),
-    } as any);
+      include: {
+        supplier: { select: { id: true, name: true } },
+        user: { select: { id: true, name: true, email: true } },
+      },
+    });
 
     // Auto journal entry: DR A/P, CR Bank
     await AutoJournalService.onSupplierPayment(
