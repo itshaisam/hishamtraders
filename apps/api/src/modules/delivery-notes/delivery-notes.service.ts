@@ -7,17 +7,17 @@ import logger from '../../lib/logger.js';
 import { format } from 'date-fns';
 
 interface CreateDeliveryNoteDto {
-  salesOrderId?: string;
+  salesOrderId?: string | null;
   clientId: string;
   warehouseId: string;
-  deliveryAddress?: string;
-  driverName?: string;
-  vehicleNo?: string;
-  notes?: string;
+  deliveryAddress?: string | null;
+  driverName?: string | null;
+  vehicleNo?: string | null;
+  notes?: string | null;
   items: Array<{
-    salesOrderItemId?: string;
+    salesOrderItemId?: string | null;
     productId: string;
-    productVariantId?: string;
+    productVariantId?: string | null;
     quantity: number;
   }>;
 }

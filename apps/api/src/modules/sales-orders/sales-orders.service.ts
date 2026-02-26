@@ -8,11 +8,11 @@ interface CreateSalesOrderDto {
   clientId: string;
   warehouseId: string;
   paymentType?: 'CASH' | 'CREDIT';
-  expectedDeliveryDate?: string;
-  notes?: string;
+  expectedDeliveryDate?: string | null;
+  notes?: string | null;
   items: Array<{
     productId: string;
-    productVariantId?: string;
+    productVariantId?: string | null;
     quantity: number;
     unitPrice: number;
     discount?: number;

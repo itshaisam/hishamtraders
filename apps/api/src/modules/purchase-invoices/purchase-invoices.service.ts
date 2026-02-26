@@ -4,12 +4,12 @@ import { NotFoundError, BadRequestError } from '../../utils/errors.js';
 interface CreatePurchaseInvoiceDto {
   invoiceNumber: string;
   supplierId: string;
-  poId?: string;
-  grnId?: string;
+  poId?: string | null;
+  grnId?: string | null;
   invoiceDate: string;
-  dueDate?: string;
+  dueDate?: string | null;
   taxRate: number;
-  notes?: string;
+  notes?: string | null;
   items: Array<{
     productId: string;
     productVariantId?: string | null;
