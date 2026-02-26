@@ -64,7 +64,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validated = createPurchaseInvoiceSchema.parse(req.body);
-      const userId = (req as any).user.id;
+      const userId = (req as any).user.userId;
       const pi = await service.create(validated, userId);
       res.status(201).json(pi);
     } catch (error) {
@@ -83,7 +83,7 @@ router.patch(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validated = cancelPurchaseInvoiceSchema.parse(req.body);
-      const userId = (req as any).user.id;
+      const userId = (req as any).user.userId;
       const pi = await service.cancel(req.params.id, userId, validated.cancelReason);
       res.json(pi);
     } catch (error) {

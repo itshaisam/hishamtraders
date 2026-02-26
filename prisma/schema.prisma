@@ -1771,7 +1771,7 @@ model SalesOrder {
   warehouseId          String
   orderDate            DateTime         @default(now())
   expectedDeliveryDate DateTime?
-  paymentType          PaymentType
+  paymentType          String           @default("CASH")
   subtotal             Decimal          @db.Decimal(14, 4)
   taxRate              Decimal          @db.Decimal(5, 4)
   taxAmount            Decimal          @db.Decimal(14, 4)

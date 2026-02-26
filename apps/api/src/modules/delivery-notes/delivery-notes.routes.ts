@@ -51,7 +51,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validated = createDeliveryNoteSchema.parse(req.body);
-      const userId = (req as any).user.id;
+      const userId = (req as any).user.userId;
       const dn = await service.create(validated, userId);
       res.status(201).json(dn);
     } catch (error) {
@@ -69,7 +69,7 @@ router.patch(
   requireRole(['ADMIN', 'WAREHOUSE_MANAGER']),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user.userId;
       const dn = await service.dispatch(req.params.id, userId);
       res.json(dn);
     } catch (error) {
@@ -87,7 +87,7 @@ router.patch(
   requireRole(['ADMIN', 'WAREHOUSE_MANAGER', 'SALES_OFFICER']),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user.userId;
       const dn = await service.deliver(req.params.id, userId);
       res.json(dn);
     } catch (error) {
@@ -106,7 +106,7 @@ router.patch(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validated = cancelDeliveryNoteSchema.parse(req.body);
-      const userId = (req as any).user.id;
+      const userId = (req as any).user.userId;
       const dn = await service.cancel(req.params.id, userId, validated.cancelReason);
       res.json(dn);
     } catch (error) {

@@ -76,7 +76,7 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validated = createSalesOrderSchema.parse(req.body);
-      const userId = (req as any).user.id;
+      const userId = (req as any).user.userId;
       const order = await service.create(validated, userId);
       res.status(201).json(order);
     } catch (error) {
@@ -94,7 +94,7 @@ router.patch(
   requireRole(['ADMIN', 'SALES_OFFICER']),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user.userId;
       const order = await service.confirm(req.params.id, userId);
       res.json(order);
     } catch (error) {
@@ -113,7 +113,7 @@ router.patch(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validated = cancelSalesOrderSchema.parse(req.body);
-      const userId = (req as any).user.id;
+      const userId = (req as any).user.userId;
       const order = await service.cancel(req.params.id, userId, validated.cancelReason);
       res.json(order);
     } catch (error) {
@@ -131,7 +131,7 @@ router.patch(
   requireRole(['ADMIN']),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user.userId;
       const order = await service.close(req.params.id, userId);
       res.json(order);
     } catch (error) {
