@@ -6,9 +6,10 @@ interface InvoiceSummaryProps {
   taxAmount: number;
   total: number;
   taxRate?: number;
+  onTaxRateChange?: (rate: number) => void;
 }
 
-export function InvoiceSummary({ subtotal, taxAmount, total, taxRate }: InvoiceSummaryProps) {
+export function InvoiceSummary({ subtotal, taxAmount, total, taxRate, onTaxRateChange }: InvoiceSummaryProps) {
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
   return (
@@ -21,8 +22,26 @@ export function InvoiceSummary({ subtotal, taxAmount, total, taxRate }: InvoiceS
             {formatCurrencyDecimal(subtotal, cs)}
           </span>
         </div>
-        <div className="flex justify-between text-gray-700">
-          <span>Tax ({taxRate ?? 18}%):</span>
+        <div className="flex justify-between items-center text-gray-700">
+          <span className="flex items-center gap-2">
+            Tax:
+            {onTaxRateChange ? (
+              <>
+                <input
+                  type="number"
+                  value={taxRate ?? 18}
+                  onChange={(e) => onTaxRateChange(Math.max(0, Math.min(100, Number(e.target.value))))}
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-500">%</span>
+              </>
+            ) : (
+              <span>({taxRate ?? 18}%)</span>
+            )}
+          </span>
           <span className="font-medium">
             {formatCurrencyDecimal(taxAmount, cs)}
           </span>

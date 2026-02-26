@@ -15,6 +15,8 @@ import { changeHistoryService } from '../../services/change-history.service.js';
 import { AutoJournalService } from '../../services/auto-journal.service.js';
 import { GatePassService } from '../gate-passes/gate-pass.service.js';
 import { validatePeriodNotClosed } from '../../utils/period-lock.js';
+import { getWorkflowSetting } from '../../utils/workflow-settings.js';
+import { updateSalesOrderStatus } from '../sales-orders/sales-orders.service.js';
 import logger from '../../lib/logger.js';
 
 export class InvoicesService {
@@ -70,8 +72,10 @@ export class InvoicesService {
     // 4. Calculate due date
     const dueDate = addDays(data.invoiceDate, client.paymentTermsDays);
 
-    // 5. Get tax rate from settings (check client tax exemption - Story 3.5)
-    const taxRate = client.taxExempt ? 0 : await this.settingsService.getTaxRate();
+    // 5. Get tax rate: use custom rate if provided, otherwise fetch from settings (check client tax exemption - Story 3.5)
+    const taxRate = client.taxExempt
+      ? 0
+      : (data.taxRate !== undefined && data.taxRate !== null ? data.taxRate : await this.settingsService.getTaxRate());
 
     // 6. Validate and calculate line item totals
     const itemsWithTotals = await this.calculateLineItemTotals(data.items);
@@ -89,8 +93,43 @@ export class InvoicesService {
       });
     }
 
-    // 8. Check stock availability for all items
-    await this.validateStockAvailability(data.items, data.warehouseId);
+    // 8. Workflow setting enforcement
+    const requireSO = await getWorkflowSetting('sales.requireSalesOrder');
+    const requireDN = await getWorkflowSetting('sales.requireDeliveryNote');
+    const allowDirect = await getWorkflowSetting('sales.allowDirectInvoice');
+
+    // 8a. Enforce: Sales Order required
+    if (requireSO && !data.salesOrderId) {
+      throw new BadRequestError('Sales Order is required. Create an invoice from a confirmed Sales Order, or disable "Require Sales Order" in Workflow Settings.');
+    }
+
+    // 8b. Enforce: Delivery Note required
+    if (requireDN && !data.deliveryNoteId) {
+      throw new BadRequestError('Delivery Note is required. Create an invoice from a dispatched Delivery Note, or disable "Require Delivery Note" in Workflow Settings.');
+    }
+
+    // 8c. Enforce: Direct invoice not allowed (must have SO or DN)
+    if (!allowDirect && !data.salesOrderId && !data.deliveryNoteId) {
+      throw new BadRequestError('Direct invoice creation is disabled. Create invoices from Sales Orders or Delivery Notes.');
+    }
+
+    // 8d. DN mode: skip stock deduction (DN already deducted stock)
+    const skipStockDeduction = requireDN && !!data.deliveryNoteId;
+
+    // 8e. Validate DN if provided in full mode
+    if (skipStockDeduction) {
+      const dn = await this.prisma.deliveryNote.findFirst({
+        where: { id: data.deliveryNoteId, status: { in: ['DISPATCHED', 'DELIVERED'] } },
+      });
+      if (!dn) {
+        throw new BadRequestError('Delivery Note must be dispatched or delivered before invoicing');
+      }
+    }
+
+    // 8f. Check stock availability only in simple mode (no DN)
+    if (!skipStockDeduction) {
+      await this.validateStockAvailability(data.items, data.warehouseId);
+    }
 
     // 9. Credit limit check for CREDIT sales
     if (data.paymentType === 'CREDIT') {
@@ -116,10 +155,12 @@ export class InvoicesService {
           paymentType: data.paymentType,
           subtotal: new Prisma.Decimal(subtotal.toFixed(4)),
           taxAmount: new Prisma.Decimal(taxAmount.toFixed(4)),
-          taxRate: new Prisma.Decimal(taxRate.toFixed(4)), // Snapshot tax rate (Story 3.5)
+          taxRate: new Prisma.Decimal(taxRate.toFixed(4)),
           total: new Prisma.Decimal(total.toFixed(4)),
           paidAmount: data.paymentType === 'CASH' ? new Prisma.Decimal(total.toFixed(4)) : new Prisma.Decimal(0),
           status: data.paymentType === 'CASH' ? 'PAID' : 'PENDING',
+          salesOrderId: data.salesOrderId || null,
+          deliveryNoteId: data.deliveryNoteId || null,
           notes: data.adminOverride && data.overrideReason
             ? `${data.notes || ''}\n[ADMIN OVERRIDE] ${data.overrideReason}`.trim()
             : data.notes,
@@ -129,48 +170,61 @@ export class InvoicesService {
         },
       });
 
-      // Create invoice items and deduct stock
+      // Create invoice items — conditionally deduct stock
       for (const item of itemsWithTotals) {
-        // Get FIFO deductions for this item
-        const deductions = await this.fifoService.deductStockFifo(
-          item.productId,
-          data.warehouseId,
-          item.quantity,
-          item.productVariantId
-        );
-
-        // Create invoice item (track first batch number for reference)
-        await tx.invoiceItem.create({
-          data: {
-            invoiceId: createdInvoice.id,
-            productId: item.productId,
-            productVariantId: item.productVariantId,
-            batchNo: deductions[0]?.batchNo || null,
-            quantity: item.quantity,
-            unitPrice: new Prisma.Decimal(item.unitPrice.toFixed(4)),
-            discount: new Prisma.Decimal(item.discount.toFixed(4)),
-            total: new Prisma.Decimal(item.total.toFixed(4)),
-          },
-        });
-
-        // Apply inventory deductions
-        await this.fifoService.applyDeductions(deductions, tx);
-
-        // Create stock movements for each batch deducted
-        for (const deduction of deductions) {
-          await tx.stockMovement.create({
+        if (skipStockDeduction) {
+          // FULL MODE: DN already handled stock — just create invoice item
+          await tx.invoiceItem.create({
             data: {
+              invoiceId: createdInvoice.id,
               productId: item.productId,
               productVariantId: item.productVariantId,
-              warehouseId: data.warehouseId,
-              movementType: 'SALE',
-              quantity: deduction.quantityDeducted,
-              referenceType: 'INVOICE',
-              referenceId: createdInvoice.id,
-              userId,
-              notes: `Invoice ${invoiceNumber} - Batch ${deduction.batchNo || 'N/A'}`,
+              batchNo: null,
+              quantity: item.quantity,
+              unitPrice: new Prisma.Decimal(item.unitPrice.toFixed(4)),
+              discount: new Prisma.Decimal(item.discount.toFixed(4)),
+              total: new Prisma.Decimal(item.total.toFixed(4)),
             },
           });
+        } else {
+          // SIMPLE MODE: Deduct stock via FIFO
+          const deductions = await this.fifoService.deductStockFifo(
+            item.productId,
+            data.warehouseId,
+            item.quantity,
+            item.productVariantId
+          );
+
+          await tx.invoiceItem.create({
+            data: {
+              invoiceId: createdInvoice.id,
+              productId: item.productId,
+              productVariantId: item.productVariantId,
+              batchNo: deductions[0]?.batchNo || null,
+              quantity: item.quantity,
+              unitPrice: new Prisma.Decimal(item.unitPrice.toFixed(4)),
+              discount: new Prisma.Decimal(item.discount.toFixed(4)),
+              total: new Prisma.Decimal(item.total.toFixed(4)),
+            },
+          });
+
+          await this.fifoService.applyDeductions(deductions, tx);
+
+          for (const deduction of deductions) {
+            await tx.stockMovement.create({
+              data: {
+                productId: item.productId,
+                productVariantId: item.productVariantId,
+                warehouseId: data.warehouseId,
+                movementType: 'SALE',
+                quantity: deduction.quantityDeducted,
+                referenceType: 'INVOICE',
+                referenceId: createdInvoice.id,
+                userId,
+                notes: `Invoice ${invoiceNumber} - Batch ${deduction.batchNo || 'N/A'}`,
+              },
+            });
+          }
         }
       }
 
@@ -186,7 +240,7 @@ export class InvoicesService {
         });
       }
 
-      // Auto journal entry: DR A/R, CR Sales Revenue + Tax Payable
+      // Auto journal entry: DR A/R, CR Sales Revenue + Tax Payable + optionally COGS
       await AutoJournalService.onInvoiceCreated(tx, {
         id: createdInvoice.id,
         invoiceNumber,
@@ -194,7 +248,21 @@ export class InvoicesService {
         subtotal,
         taxAmount,
         date: data.invoiceDate,
-      }, userId);
+        items: itemsWithTotals.map((i: any) => ({ productId: i.productId, quantity: i.quantity })),
+      }, userId, { skipCogs: skipStockDeduction });
+
+      // Update Sales Order item invoicedQuantity if SO linked
+      if (data.salesOrderId) {
+        for (const item of data.items) {
+          if (item.salesOrderItemId) {
+            await tx.salesOrderItem.update({
+              where: { id: item.salesOrderItemId },
+              data: { invoicedQuantity: { increment: item.quantity } },
+            });
+          }
+        }
+        await updateSalesOrderStatus(tx, data.salesOrderId);
+      }
 
       return createdInvoice;
     });
@@ -203,19 +271,21 @@ export class InvoicesService {
       invoiceId: invoice.id,
       total,
       paymentType: data.paymentType,
+      mode: skipStockDeduction ? 'full (DN)' : 'simple',
     });
 
-    // Auto-create gate pass from invoice (Epic 6)
+    // Auto-create gate pass only in simple mode (no DN)
     let gatePassInfo: { id: string; gatePassNumber: string; status: string } | null = null;
-    try {
-      const gp = await this.gatePassService.createGatePassFromInvoice(invoice.id, userId);
-      gatePassInfo = { id: gp.id, gatePassNumber: gp.gatePassNumber, status: gp.status };
-    } catch (gpError: any) {
-      // Log but don't fail the invoice creation
-      logger.warn('Failed to auto-create gate pass for invoice', {
-        invoiceId: invoice.id,
-        error: gpError.message,
-      });
+    if (!skipStockDeduction) {
+      try {
+        const gp = await this.gatePassService.createGatePassFromInvoice(invoice.id, userId);
+        gatePassInfo = { id: gp.id, gatePassNumber: gp.gatePassNumber, status: gp.status };
+      } catch (gpError: any) {
+        logger.warn('Failed to auto-create gate pass for invoice', {
+          invoiceId: invoice.id,
+          error: gpError.message,
+        });
+      }
     }
 
     // Return full invoice with relations + gate pass info
@@ -502,13 +572,14 @@ export class InvoicesService {
         },
       });
 
-      // 4. Auto journal entry: reverse the original
+      // 4. Auto journal entry: reverse the original (including COGS reversal)
       await AutoJournalService.onInvoiceVoided(tx, {
         id: invoiceId,
         invoiceNumber: invoice.invoiceNumber,
         total: parseFloat(invoice.total.toString()),
         subtotal: parseFloat(invoice.subtotal.toString()),
         taxAmount: parseFloat(invoice.taxAmount.toString()),
+        items: invoice.items.map((i: any) => ({ productId: i.productId, quantity: i.quantity })),
       }, userId);
 
       // 5. Log audit

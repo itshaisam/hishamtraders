@@ -15,6 +15,10 @@ router.use(authenticate);
 router.get('/tax-rate', controller.getTaxRate);
 router.put('/tax-rate', controller.updateTaxRate); // Admin only
 
+// Purchase tax rate settings
+router.get('/purchase-tax-rate', controller.getPurchaseTaxRate);
+router.put('/purchase-tax-rate', controller.updatePurchaseTaxRate); // Admin only
+
 // Currency symbol settings
 router.get('/currency-symbol', controller.getCurrencySymbol);
 router.put('/currency-symbol', controller.updateCurrencySymbol); // Admin only
@@ -23,5 +27,9 @@ router.put('/currency-symbol', controller.updateCurrencySymbol); // Admin only
 router.put('/company-name', controller.updateCompanyName); // Admin only
 router.get('/company-logo', controller.getCompanyLogo);
 router.put('/company-logo', controller.updateCompanyLogo); // Admin only
+
+// Workflow settings (Story 10.10)
+router.get('/workflow', controller.getWorkflowSettings);
+router.put('/workflow', controller.updateWorkflowSetting); // Admin only
 
 export { router as settingsRoutes };

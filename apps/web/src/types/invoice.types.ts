@@ -78,6 +78,19 @@ export interface Invoice {
     gatePassNumber: string;
     status: string;
   } | null;
+  // Story 10.9: Source document references
+  salesOrderId?: string | null;
+  deliveryNoteId?: string | null;
+  salesOrder?: {
+    id: string;
+    orderNumber: string;
+    status: string;
+  } | null;
+  deliveryNote?: {
+    id: string;
+    deliveryNoteNumber: string;
+    status: string;
+  } | null;
 }
 
 export interface InvoiceCreditNoteItem {
@@ -113,6 +126,9 @@ export interface CreateInvoiceDto {
   notes?: string;
   adminOverride?: boolean;
   overrideReason?: string;
+  salesOrderId?: string;
+  deliveryNoteId?: string;
+  taxRate?: number;
 }
 
 export interface InvoiceFilters {

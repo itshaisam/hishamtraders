@@ -8,6 +8,8 @@ import {
   Clock,
   CreditCard,
   ShoppingCart,
+  ClipboardList,
+  Truck,
 } from 'lucide-react';
 import {
   BarChart,
@@ -322,36 +324,36 @@ export default function SalesDashboard() {
           <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             <Link
-              to="/invoices/create"
+              to="/sales-orders/new"
               className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg text-left transition border border-blue-200"
             >
-              <FileText className="w-8 h-8 text-blue-600 mb-2" />
+              <ClipboardList className="w-8 h-8 text-blue-600 mb-2" />
+              <div className="text-sm font-semibold text-gray-900">New Sales Order</div>
+              <div className="text-xs text-gray-600">Create sales order</div>
+            </Link>
+            <Link
+              to="/invoices/create"
+              className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition border border-green-200"
+            >
+              <FileText className="w-8 h-8 text-green-600 mb-2" />
               <div className="text-sm font-semibold text-gray-900">New Invoice</div>
               <div className="text-xs text-gray-600">Create sales invoice</div>
             </Link>
             <Link
-              to="/payments/client"
-              className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition border border-green-200"
-            >
-              <ShoppingCart className="w-8 h-8 text-green-600 mb-2" />
-              <div className="text-sm font-semibold text-gray-900">Record Payment</div>
-              <div className="text-xs text-gray-600">Customer payment</div>
-            </Link>
-            <Link
-              to="/clients"
+              to="/delivery-notes/new"
               className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition border border-purple-200"
             >
-              <CreditCard className="w-8 h-8 text-purple-600 mb-2" />
-              <div className="text-sm font-semibold text-gray-900">View Customers</div>
-              <div className="text-xs text-gray-600">Customer management</div>
+              <Truck className="w-8 h-8 text-purple-600 mb-2" />
+              <div className="text-sm font-semibold text-gray-900">New Delivery Note</div>
+              <div className="text-xs text-gray-600">Create delivery note</div>
             </Link>
             <Link
-              to="/invoices"
+              to="/payments/client/record"
               className="p-4 bg-orange-50 hover:bg-orange-100 rounded-lg text-left transition border border-orange-200"
             >
-              <TrendingUp className="w-8 h-8 text-orange-600 mb-2" />
-              <div className="text-sm font-semibold text-gray-900">All Invoices</div>
-              <div className="text-xs text-gray-600">Invoice listing</div>
+              <ShoppingCart className="w-8 h-8 text-orange-600 mb-2" />
+              <div className="text-sm font-semibold text-gray-900">Record Payment</div>
+              <div className="text-xs text-gray-600">Customer payment</div>
             </Link>
           </div>
         </Card>

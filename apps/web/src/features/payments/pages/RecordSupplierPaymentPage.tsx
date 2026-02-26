@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
-import { DollarSign, ArrowLeft } from 'lucide-react';
+import { DollarSign, ArrowLeft, Info } from 'lucide-react';
 import { useCreateSupplierPayment, usePOBalance } from '../../../hooks/usePayments';
 import { useSuppliers } from '../../suppliers/hooks/useSuppliers';
 import { usePurchaseOrders } from '../../purchase-orders/hooks/usePurchaseOrders';
+import { usePurchaseInvoices } from '../../../hooks/usePurchaseInvoices';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { useBankAccounts } from '../../../hooks/useBankAccounts';
+import { useWorkflowSettings } from '../../../hooks/useWorkflowSettings';
 import { PaymentMethod, PaymentReferenceType } from '../../../types/payment.types';
 import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 
@@ -24,10 +26,13 @@ interface PaymentFormData {
 
 function RecordSupplierPaymentPage() {
   const navigate = useNavigate();
+  const { data: wfSettings } = useWorkflowSettings();
+  const requirePI = wfSettings?.['purchasing.requirePurchaseInvoice'] ?? false;
+
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<PaymentFormData>({
     defaultValues: {
       date: format(new Date(), 'yyyy-MM-dd'),
-      paymentReferenceType: PaymentReferenceType.GENERAL,
+      paymentReferenceType: requirePI ? PaymentReferenceType.PURCHASE_INVOICE : PaymentReferenceType.GENERAL,
     },
   });
 
@@ -36,6 +41,7 @@ function RecordSupplierPaymentPage() {
   const cs = currencyData?.currencySymbol || 'PKR';
   const { data: suppliersData, isLoading: suppliersLoading } = useSuppliers({ page: 1, limit: 100 });
   const { data: posData, isLoading: posLoading } = usePurchaseOrders({ page: 1, limit: 100 });
+  const { data: pisData } = usePurchaseInvoices({ page: 1, limit: 200 });
   const { data: bankAccounts } = useBankAccounts();
 
   const selectedSupplierId = watch('supplierId');
@@ -46,9 +52,21 @@ function RecordSupplierPaymentPage() {
   const { data: poBalanceData } = usePOBalance(selectedPOId);
   const poBalance = poBalanceData?.data;
 
+  // When requirePI setting loads and is true, force reference type to PI
+  useEffect(() => {
+    if (requirePI) {
+      setValue('paymentReferenceType', PaymentReferenceType.PURCHASE_INVOICE);
+    }
+  }, [requirePI, setValue]);
+
   // Filter POs by selected supplier
   const filteredPOs = selectedSupplierId
     ? posData?.data?.filter((po: any) => po.supplierId === selectedSupplierId)
+    : [];
+
+  // Filter Purchase Invoices by selected supplier
+  const filteredPIs = selectedSupplierId
+    ? pisData?.data?.filter((pi: any) => pi.supplierId === selectedSupplierId)
     : [];
 
   // Reset PO selection when supplier changes
@@ -97,6 +115,22 @@ function RecordSupplierPaymentPage() {
         </div>
       </div>
 
+      {/* Workflow enforcement banner */}
+      {requirePI && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3 mb-6">
+          <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-amber-800">Purchase Invoice required</p>
+            <p className="mt-1 text-sm text-amber-700">
+              Payments must be recorded against a Purchase Invoice. Create a{' '}
+              <a href="/purchase-invoices/create" className="underline font-medium">Purchase Invoice</a>{' '}
+              first if you haven't already.
+            </p>
+            <p className="mt-1 text-xs text-amber-600">This setting can be changed in <a href="/settings?tab=workflow" className="underline">System Settings</a>.</p>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-sm p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Supplier Selection */}
@@ -129,10 +163,15 @@ function RecordSupplierPaymentPage() {
             <select
               {...register('paymentReferenceType')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={requirePI}
             >
-              <option value={PaymentReferenceType.GENERAL}>General Payment / Advance</option>
-              <option value={PaymentReferenceType.PO}>Against Purchase Order</option>
+              {!requirePI && <option value={PaymentReferenceType.GENERAL}>General Payment / Advance</option>}
+              {!requirePI && <option value={PaymentReferenceType.PO}>Against Purchase Order</option>}
+              <option value={PaymentReferenceType.PURCHASE_INVOICE}>Against Purchase Invoice</option>
             </select>
+            {requirePI && (
+              <p className="mt-1 text-xs text-amber-600">Locked — Purchase Invoice is required by workflow settings</p>
+            )}
           </div>
 
           {/* PO Selection (if payment type is PO) */}
@@ -152,6 +191,33 @@ function RecordSupplierPaymentPage() {
                 {filteredPOs?.map((po: any) => (
                   <option key={po.id} value={po.id}>
                     {po.poNumber} - {cs} {parseFloat(po.totalAmount).toFixed(4)}
+                  </option>
+                ))}
+              </select>
+              {errors.referenceId && (
+                <p className="mt-1 text-sm text-red-600">{errors.referenceId.message}</p>
+              )}
+            </div>
+          )}
+
+          {/* Purchase Invoice Selection (if payment type is PURCHASE_INVOICE) */}
+          {paymentReferenceType === PaymentReferenceType.PURCHASE_INVOICE && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Purchase Invoice <span className="text-red-500">*</span>
+              </label>
+              <select
+                {...register('referenceId', {
+                  required: paymentReferenceType === PaymentReferenceType.PURCHASE_INVOICE ? 'Purchase Invoice is required' : false,
+                })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!selectedSupplierId}
+              >
+                <option value="">Select Purchase Invoice</option>
+                {filteredPIs?.map((pi: any) => (
+                  <option key={pi.id} value={pi.id}>
+                    {pi.invoiceNumber || pi.internalNumber} - {cs} {parseFloat(pi.total).toFixed(4)}
+                    {pi.status === 'PAID' ? ' (Paid)' : pi.status === 'PARTIAL' ? ' (Partial)' : ''}
                   </option>
                 ))}
               </select>

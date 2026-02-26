@@ -14,6 +14,7 @@ import { AgingAnalysisService } from './aging-analysis.service.js';
 import { AgentPerformanceService } from './agent-performance.service.js';
 import { CollectionEfficiencyService } from './collection-efficiency.service.js';
 import { RecoveryReportsService } from './recovery-reports.service.js';
+import { Epic10ReportService } from './epic10-report.service.js';
 import { expenseService } from '../expenses/expenses.service.js';
 import { generateExcel } from '../../utils/excel-export.util.js';
 import { BadRequestError } from '../../utils/errors.js';
@@ -38,6 +39,7 @@ export class ReportsController {
   private agentPerformanceService: AgentPerformanceService;
   private collectionEfficiencyService: CollectionEfficiencyService;
   private recoveryReportsService: RecoveryReportsService;
+  private epic10ReportService: Epic10ReportService;
 
   constructor() {
     this.creditLimitReportService = new CreditLimitReportService(prisma);
@@ -55,6 +57,7 @@ export class ReportsController {
     this.agentPerformanceService = new AgentPerformanceService(prisma);
     this.collectionEfficiencyService = new CollectionEfficiencyService(prisma);
     this.recoveryReportsService = new RecoveryReportsService(prisma);
+    this.epic10ReportService = new Epic10ReportService(prisma);
   }
 
   // ---- Existing endpoints ----
@@ -452,6 +455,76 @@ export class ReportsController {
       const result = await this.recoveryReportsService.agentProductivityReport(filters);
       logger.info('Agent productivity report generated', { userId: req.user?.id });
       res.json({ success: true, data: result });
+    } catch (error) { next(error); }
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // Story 10.10: Sales Order, Delivery Note, Purchase Invoice Reports
+  // ════════════════════════════════════════════════════════════════════
+
+  getSalesOrderReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined;
+      const dateTo = req.query.dateTo ? new Date(req.query.dateTo as string) : undefined;
+      const filters = {
+        dateFrom,
+        dateTo,
+        clientId: req.query.clientId as string | undefined,
+        status: req.query.status as string | undefined,
+        page: req.query.page ? parseInt(req.query.page as string) : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+      };
+      const result = await this.epic10ReportService.getSalesOrderReport(filters);
+      logger.info('Sales order report generated', { userId: req.user?.id });
+      res.json({ success: true, ...result });
+    } catch (error) { next(error); }
+  };
+
+  getDeliveryNoteReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined;
+      const dateTo = req.query.dateTo ? new Date(req.query.dateTo as string) : undefined;
+      const filters = {
+        dateFrom,
+        dateTo,
+        clientId: req.query.clientId as string | undefined,
+        warehouseId: req.query.warehouseId as string | undefined,
+        status: req.query.status as string | undefined,
+        page: req.query.page ? parseInt(req.query.page as string) : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+      };
+      const result = await this.epic10ReportService.getDeliveryNoteReport(filters);
+      logger.info('Delivery note report generated', { userId: req.user?.id });
+      res.json({ success: true, ...result });
+    } catch (error) { next(error); }
+  };
+
+  getPurchaseInvoiceAging = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.epic10ReportService.getPurchaseInvoiceAging();
+      logger.info('Purchase invoice aging report generated', { userId: req.user?.id });
+      res.json({ success: true, ...result });
+    } catch (error) { next(error); }
+  };
+
+  getSalesOrderStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.epic10ReportService.getSalesOrderStats();
+      res.json({ success: true, data });
+    } catch (error) { next(error); }
+  };
+
+  getDeliveryNoteStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.epic10ReportService.getDeliveryNoteStats();
+      res.json({ success: true, data });
+    } catch (error) { next(error); }
+  };
+
+  getPurchaseInvoiceOutstanding = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.epic10ReportService.getPurchaseInvoiceStats();
+      res.json({ success: true, data });
     } catch (error) { next(error); }
   };
 

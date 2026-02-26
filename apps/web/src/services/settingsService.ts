@@ -18,6 +18,23 @@ export const settingsService = {
     return response.data;
   },
 
+  async getPurchaseTaxRate() {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: { purchaseTaxRate: number };
+    }>('/settings/purchase-tax-rate');
+    return response.data.data;
+  },
+
+  async updatePurchaseTaxRate(purchaseTaxRate: number) {
+    const response = await apiClient.put<{
+      success: boolean;
+      message: string;
+      data: { purchaseTaxRate: number };
+    }>('/settings/purchase-tax-rate', { purchaseTaxRate });
+    return response.data;
+  },
+
   async getCurrencySymbol() {
     const response = await apiClient.get<{
       success: boolean;

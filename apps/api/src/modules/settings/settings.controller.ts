@@ -92,6 +92,73 @@ export class SettingsController {
   };
 
   /**
+   * GET /api/settings/purchase-tax-rate
+   * Get current purchase tax rate
+   */
+  getPurchaseTaxRate = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const purchaseTaxRate = await this.settingsService.getPurchaseTaxRate();
+      res.json({ success: true, data: { purchaseTaxRate } });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * PUT /api/settings/purchase-tax-rate
+   * Update purchase tax rate (Admin only)
+   */
+  updatePurchaseTaxRate = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user?.userId! },
+        include: { role: true },
+      });
+
+      if (!user || user.role.name !== 'ADMIN') {
+        throw new ForbiddenError('Only Admin users can update purchase tax rate');
+      }
+
+      const { purchaseTaxRate } = req.body;
+
+      if (typeof purchaseTaxRate !== 'number') {
+        throw new BadRequestError('Purchase tax rate must be a number');
+      }
+
+      if (purchaseTaxRate < 0 || purchaseTaxRate > 100) {
+        throw new BadRequestError('Purchase tax rate must be between 0 and 100');
+      }
+
+      const oldRate = await this.settingsService.getPurchaseTaxRate();
+      await this.settingsService.upsertSetting('PURCHASE_TAX_RATE', purchaseTaxRate.toString(), 'Purchase Tax Rate (%)', 'number', 'tax');
+
+      await AuditService.log({
+        userId: req.user?.userId!,
+        action: 'UPDATE',
+        entityType: 'SystemSetting',
+        entityId: 'PURCHASE_TAX_RATE',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        changedFields: { purchaseTaxRate: { old: oldRate, new: purchaseTaxRate } },
+        notes: `Purchase tax rate changed from ${oldRate}% to ${purchaseTaxRate}% by ${user.name}`,
+      });
+
+      logger.info(`Purchase tax rate updated to ${purchaseTaxRate}%`, {
+        userId: req.user?.userId,
+        userName: user.name,
+      });
+
+      res.json({
+        success: true,
+        message: `Purchase tax rate updated to ${purchaseTaxRate}%`,
+        data: { purchaseTaxRate },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
    * GET /api/settings/currency-symbol
    * Get current currency symbol
    */
@@ -207,6 +274,89 @@ export class SettingsController {
       });
 
       res.json({ success: true, message: 'Company logo updated', data: { companyLogo: trimmed } });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * GET /api/settings/workflow
+   * Get all workflow settings
+   */
+  getWorkflowSettings = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const keys = [
+        'sales.requireSalesOrder',
+        'sales.requireDeliveryNote',
+        'sales.allowDirectInvoice',
+        'purchasing.requirePurchaseInvoice',
+        'sales.enableStockReservation',
+      ];
+
+      const settings: Record<string, boolean> = {};
+      for (const key of keys) {
+        const value = await this.settingsService.getSetting(key);
+        settings[key] = value === 'true';
+      }
+
+      res.json({ success: true, data: settings });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * PUT /api/settings/workflow
+   * Update a workflow setting (Admin only)
+   */
+  updateWorkflowSetting = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user?.userId! },
+        include: { role: true },
+      });
+
+      if (!user || user.role.name !== 'ADMIN') {
+        throw new ForbiddenError('Only Admin users can update workflow settings');
+      }
+
+      const { key, value } = req.body;
+
+      const validKeys = [
+        'sales.requireSalesOrder',
+        'sales.requireDeliveryNote',
+        'sales.allowDirectInvoice',
+        'purchasing.requirePurchaseInvoice',
+        'sales.enableStockReservation',
+      ];
+
+      if (!validKeys.includes(key)) {
+        throw new BadRequestError(`Invalid workflow setting key: ${key}`);
+      }
+
+      if (typeof value !== 'boolean') {
+        throw new BadRequestError('Value must be a boolean');
+      }
+
+      const oldValue = await this.settingsService.getSetting(key);
+      await this.settingsService.upsertSetting(key, String(value), key, 'boolean', 'workflow');
+
+      await AuditService.log({
+        userId: req.user?.userId!,
+        action: 'UPDATE',
+        entityType: 'SystemSetting',
+        entityId: key,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        changedFields: { [key]: { old: oldValue, new: String(value) } },
+        notes: `Workflow setting "${key}" changed to ${value} by ${user.name}`,
+      });
+
+      res.json({
+        success: true,
+        message: `Setting "${key}" updated to ${value}`,
+        data: { key, value },
+      });
     } catch (error) {
       next(error);
     }

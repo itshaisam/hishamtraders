@@ -11,7 +11,8 @@ import logger from '../lib/logger.js';
  * Account mapping:
  * 1101 Main Bank Account     1102 Petty Cash
  * 1200 Accounts Receivable   1300 Inventory
- * 2100 Accounts Payable      2200 Tax Payable
+ * 1350 Input Tax Receivable (purchase tax — ASSET, govt owes you)
+ * 2100 Accounts Payable      2200 Tax Payable (sales tax — LIABILITY, you owe govt)
  * 4100 Sales Revenue          4200 Other Income (used for returns contra)
  * 5100 COGS                   5150 Inventory Loss
  * 5200-5900 Expense accounts
@@ -171,40 +172,80 @@ async function createAutoJournalEntry(
 export const AutoJournalService = {
   /**
    * Invoice created: DR A/R (1200)  CR Sales Revenue (4100) + Tax Payable (2200)
+   * + COGS posting: DR COGS (5100)  CR Inventory (1300)
+   * Options:
+   *   skipCogs: true when DN already posted COGS (full mode: SO→DN→Invoice)
    */
   async onInvoiceCreated(
     tx: PrismaLike,
-    invoice: { id: string; invoiceNumber: string; total: number; subtotal: number; taxAmount: number; date: Date },
-    userId: string
+    invoice: { id: string; invoiceNumber: string; total: number; subtotal: number; taxAmount: number; date: Date; items?: Array<{ productId: string; quantity: number }> },
+    userId: string,
+    options?: { skipCogs?: boolean }
   ) {
-    const lines: JournalLine[] = [
+    // A/R journal entry: DR A/R, CR Sales + Tax
+    const arLines: JournalLine[] = [
       { accountCode: '1200', debit: invoice.total, credit: 0, description: `A/R for ${invoice.invoiceNumber}` },
       { accountCode: '4100', debit: 0, credit: invoice.subtotal, description: `Sales revenue ${invoice.invoiceNumber}` },
     ];
 
     if (invoice.taxAmount > 0) {
-      lines.push({ accountCode: '2200', debit: 0, credit: invoice.taxAmount, description: `Tax payable ${invoice.invoiceNumber}` });
+      arLines.push({ accountCode: '2200', debit: 0, credit: invoice.taxAmount, description: `Tax payable ${invoice.invoiceNumber}` });
     }
 
-    return createAutoJournalEntry(tx, {
+    const arEntryId = await createAutoJournalEntry(tx, {
       date: invoice.date,
       description: `Invoice ${invoice.invoiceNumber}`,
       referenceType: 'INVOICE',
       referenceId: invoice.id,
       userId,
-      lines,
+      lines: arLines,
     });
+
+    // COGS journal entry: DR COGS (5100), CR Inventory (1300)
+    // Skip if DN already posted COGS (full mode)
+    if (!options?.skipCogs && invoice.items && invoice.items.length > 0) {
+      let totalCogs = 0;
+      for (const item of invoice.items) {
+        const product = await tx.product.findFirst({
+          where: { id: item.productId },
+          select: { costPrice: true },
+        });
+        if (product?.costPrice) {
+          totalCogs += Number(product.costPrice) * item.quantity;
+        }
+      }
+
+      if (totalCogs > 0) {
+        totalCogs = Math.round(totalCogs * 10000) / 10000;
+        await createAutoJournalEntry(tx, {
+          date: invoice.date,
+          description: `COGS for Invoice ${invoice.invoiceNumber}`,
+          referenceType: 'INVOICE',
+          referenceId: invoice.id,
+          userId,
+          lines: [
+            { accountCode: '5100', debit: totalCogs, credit: 0, description: 'Cost of Goods Sold' },
+            { accountCode: '1300', debit: 0, credit: totalCogs, description: 'Inventory reduction' },
+          ],
+        });
+      }
+    }
+
+    return arEntryId;
   },
 
   /**
    * Invoice voided: reverse the original entry
    * DR Sales Revenue (4100) + Tax Payable (2200)  CR A/R (1200)
+   * + Reverse COGS if applicable: DR Inventory (1300)  CR COGS (5100)
    */
   async onInvoiceVoided(
     tx: PrismaLike,
-    invoice: { id: string; invoiceNumber: string; total: number; subtotal: number; taxAmount: number },
-    userId: string
+    invoice: { id: string; invoiceNumber: string; total: number; subtotal: number; taxAmount: number; items?: Array<{ productId: string; quantity: number }> },
+    userId: string,
+    options?: { skipCogs?: boolean }
   ) {
+    // Reverse A/R entry
     const lines: JournalLine[] = [
       { accountCode: '4100', debit: invoice.subtotal, credit: 0, description: `Void ${invoice.invoiceNumber}` },
       { accountCode: '1200', debit: 0, credit: invoice.total, description: `Void A/R ${invoice.invoiceNumber}` },
@@ -214,13 +255,78 @@ export const AutoJournalService = {
       lines.push({ accountCode: '2200', debit: invoice.taxAmount, credit: 0, description: `Void tax ${invoice.invoiceNumber}` });
     }
 
-    return createAutoJournalEntry(tx, {
+    await createAutoJournalEntry(tx, {
       date: new Date(),
       description: `Void Invoice ${invoice.invoiceNumber}`,
       referenceType: 'INVOICE',
       referenceId: invoice.id,
       userId,
       lines,
+    });
+
+    // Reverse COGS if it was posted at invoice time (simple mode)
+    if (!options?.skipCogs && invoice.items && invoice.items.length > 0) {
+      let totalCogs = 0;
+      for (const item of invoice.items) {
+        const product = await tx.product.findFirst({
+          where: { id: item.productId },
+          select: { costPrice: true },
+        });
+        if (product?.costPrice) {
+          totalCogs += Number(product.costPrice) * item.quantity;
+        }
+      }
+
+      if (totalCogs > 0) {
+        totalCogs = Math.round(totalCogs * 10000) / 10000;
+        await createAutoJournalEntry(tx, {
+          date: new Date(),
+          description: `Reverse COGS for Void Invoice ${invoice.invoiceNumber}`,
+          referenceType: 'INVOICE',
+          referenceId: invoice.id,
+          userId,
+          lines: [
+            { accountCode: '1300', debit: totalCogs, credit: 0, description: 'Inventory restoration' },
+            { accountCode: '5100', debit: 0, credit: totalCogs, description: 'Reverse COGS' },
+          ],
+        });
+      }
+    }
+  },
+
+  /**
+   * Delivery Note dispatched (full mode): DR COGS (5100)  CR Inventory (1300)
+   * COGS posting happens at dispatch — stock leaves warehouse
+   */
+  async onDeliveryDispatched(
+    tx: PrismaLike,
+    deliveryNote: { id: string; deliveryNoteNumber: string; date: Date; items: Array<{ productId: string; quantity: number }> },
+    userId: string
+  ) {
+    let totalCogs = 0;
+    for (const item of deliveryNote.items) {
+      const product = await tx.product.findFirst({
+        where: { id: item.productId },
+        select: { costPrice: true },
+      });
+      if (product?.costPrice) {
+        totalCogs += Number(product.costPrice) * item.quantity;
+      }
+    }
+
+    if (totalCogs <= 0) return null;
+
+    totalCogs = Math.round(totalCogs * 10000) / 10000;
+    return createAutoJournalEntry(tx, {
+      date: deliveryNote.date,
+      description: `COGS for Delivery Note ${deliveryNote.deliveryNoteNumber}`,
+      referenceType: 'DELIVERY_NOTE',
+      referenceId: deliveryNote.id,
+      userId,
+      lines: [
+        { accountCode: '5100', debit: totalCogs, credit: 0, description: 'Cost of Goods Sold' },
+        { accountCode: '1300', debit: 0, credit: totalCogs, description: 'Inventory reduction' },
+      ],
     });
   },
 
@@ -273,8 +379,8 @@ export const AutoJournalService = {
   },
 
   /**
-   * PO receipt: DR Inventory (1300) + DR Tax Payable (2200)  CR A/P (2100)
-   * totalAmount = product cost + tax; taxAmount = input tax credit
+   * PO receipt: DR Inventory (1300) + DR Input Tax Receivable (1350)  CR A/P (2100)
+   * totalAmount = product cost + tax; taxAmount = input tax credit (govt owes you)
    */
   async onGoodsReceived(
     tx: PrismaLike,
@@ -287,7 +393,7 @@ export const AutoJournalService = {
       { accountCode: '2100', debit: 0, credit: receipt.totalAmount, description: `A/P for ${receipt.poNumber}` },
     ];
     if (receipt.taxAmount > 0) {
-      lines.push({ accountCode: '2200', debit: receipt.taxAmount, credit: 0, description: `Input tax ${receipt.poNumber}` });
+      lines.push({ accountCode: '1350', debit: receipt.taxAmount, credit: 0, description: `Input Tax Receivable ${receipt.poNumber}` });
     }
     return createAutoJournalEntry(tx, {
       date: receipt.date,
@@ -301,7 +407,7 @@ export const AutoJournalService = {
 
   /**
    * GRN cancelled: reverse goods-received entry
-   * DR A/P (2100)  CR Inventory (1300) + CR Tax Payable (2200)
+   * DR A/P (2100)  CR Inventory (1300) + CR Input Tax Receivable (1350)
    */
   async onGoodsReceivedReversed(
     tx: PrismaLike,
@@ -314,7 +420,7 @@ export const AutoJournalService = {
       { accountCode: '1300', debit: 0, credit: productCost, description: `Reverse inventory from ${receipt.poNumber}` },
     ];
     if (receipt.taxAmount > 0) {
-      lines.push({ accountCode: '2200', debit: 0, credit: receipt.taxAmount, description: `Reverse input tax ${receipt.poNumber}` });
+      lines.push({ accountCode: '1350', debit: 0, credit: receipt.taxAmount, description: `Reverse Input Tax Receivable ${receipt.poNumber}` });
     }
     return createAutoJournalEntry(tx, {
       date: receipt.date,

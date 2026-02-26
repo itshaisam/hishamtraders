@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, XCircle } from 'lucide-react';
+import { ArrowLeft, XCircle, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useGoodsReceipt, useCancelGRN } from '../hooks/useGoodsReceipts';
 import { GRNStatusBadge } from '../components/GRNStatusBadge';
@@ -73,15 +73,26 @@ export const GoodsReceiptDetailPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Goods Receipt Note</h1>
           <p className="mt-1 text-sm text-gray-600">{grn.grnNumber}</p>
         </div>
-        {grn.status === 'COMPLETED' && (
-          <button
-            onClick={() => setShowCancelModal(true)}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 text-sm font-medium"
-          >
-            <XCircle size={16} />
-            Cancel GRN
-          </button>
-        )}
+        <div className="flex gap-2 flex-wrap">
+          {grn.status === 'COMPLETED' && (
+            <>
+              <button
+                onClick={() => navigate(`/purchase-invoices/new?grnId=${grn.id}`)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium"
+              >
+                <FileText size={16} />
+                Create Purchase Invoice
+              </button>
+              <button
+                onClick={() => setShowCancelModal(true)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 text-sm font-medium"
+              >
+                <XCircle size={16} />
+                Cancel GRN
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Header Info */}

@@ -128,6 +128,7 @@ export interface CreatePurchaseOrderRequest {
   expectedArrivalDate?: string | Date;
   items: CreatePOItemRequest[];
   notes?: string;
+  taxRate?: number;
 }
 
 export interface UpdatePurchaseOrderRequest {

@@ -69,7 +69,9 @@
       "Bash(npx prisma db execute:*)",
       "Bash(perl -i -pe:*)",
       "Bash(echo:*)",
-      "Bash(npx prisma db push:*)"
+      "Bash(npx prisma db push:*)",
+      "Bash(npx prisma validate:*)",
+      "Bash(npx vite build)"
     ],
     "deny": [],
     "ask": []

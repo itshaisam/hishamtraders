@@ -7,6 +7,8 @@ import { AutoJournalService } from '../../services/auto-journal.service.js';
 import { validatePeriodNotClosed } from '../../utils/period-lock.js';
 import logger from '../../lib/logger.js';
 import { recoveryService } from '../recovery/recovery.service.js';
+import { PurchaseInvoicesService } from '../purchase-invoices/purchase-invoices.service.js';
+import { getWorkflowSetting } from '../../utils/workflow-settings.js';
 
 export interface CreateSupplierPaymentDto {
   supplierId: string;
@@ -65,6 +67,17 @@ export class PaymentsService {
       throw new Error('PO ID is required when payment reference type is PO');
     }
 
+    // Validation: If paymentReferenceType is PURCHASE_INVOICE, referenceId is required
+    if (dto.paymentReferenceType === PaymentReferenceType.PURCHASE_INVOICE && !dto.referenceId) {
+      throw new Error('Purchase Invoice ID is required when payment reference type is PURCHASE_INVOICE');
+    }
+
+    // Workflow enforcement: Purchase Invoice required for supplier payments
+    const requirePI = await getWorkflowSetting('purchasing.requirePurchaseInvoice');
+    if (requirePI && dto.paymentReferenceType !== PaymentReferenceType.PURCHASE_INVOICE) {
+      throw new Error('Purchase Invoice is required for supplier payments. Record payment against a Purchase Invoice, or disable "Require Purchase Invoice" in Workflow Settings.');
+    }
+
     // Create payment using flat fields (same pattern as client payment)
     const payment = await prisma.payment.create({
       data: {
@@ -91,6 +104,12 @@ export class PaymentsService {
       { id: payment.id, amount: dto.amount, date: dto.date, referenceNumber: dto.notes, bankAccountId: dto.bankAccountId },
       dto.recordedBy
     );
+
+    // Update Purchase Invoice paidAmount if payment references a PI
+    if (dto.paymentReferenceType === PaymentReferenceType.PURCHASE_INVOICE && dto.referenceId) {
+      const piService = new PurchaseInvoicesService();
+      await piService.updatePaidAmount(prisma, dto.referenceId, dto.amount);
+    }
 
     return payment;
   }
@@ -354,10 +373,20 @@ export class PaymentsService {
       });
     }
 
+    // For supplier payments with PI reference, look up the PI
+    let purchaseInvoice = null;
+    if (payment.paymentType === 'SUPPLIER' && payment.paymentReferenceType === 'PURCHASE_INVOICE' && payment.referenceId) {
+      purchaseInvoice = await prisma.purchaseInvoice.findFirst({
+        where: { id: payment.referenceId },
+        select: { id: true, internalNumber: true, invoiceNumber: true, total: true, paidAmount: true, status: true },
+      });
+    }
+
     return {
       ...payment,
       amount: parseFloat(payment.amount.toString()),
       purchaseOrder,
+      purchaseInvoice,
     };
   }
 }

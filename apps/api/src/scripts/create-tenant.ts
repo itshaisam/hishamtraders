@@ -94,6 +94,7 @@ async function createTenant(args: TenantArgs) {
       { code: '1102', name: 'Petty Cash', accountType: 'ASSET' as const, parentCode: '1100', isSystemAccount: true },
       { code: '1200', name: 'Accounts Receivable', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: true },
       { code: '1300', name: 'Inventory', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: true },
+      { code: '1350', name: 'Input Tax Receivable', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: true },
       { code: '1400', name: 'Fixed Assets', accountType: 'ASSET' as const, parentCode: '1000', isSystemAccount: false },
 
       // LIABILITIES (2xxx)
@@ -146,8 +147,15 @@ async function createTenant(args: TenantArgs) {
     // 4. Default System Settings
     const settings = [
       { key: 'COMPANY_NAME', value: args.name, dataType: 'string', label: 'Company Name', category: 'company' },
-      { key: 'TAX_RATE', value: '18', dataType: 'number', label: 'Default Tax Rate (%)', category: 'tax' },
+      { key: 'TAX_RATE', value: '18', dataType: 'number', label: 'Sales Tax Rate (%)', category: 'tax' },
+      { key: 'PURCHASE_TAX_RATE', value: '0', dataType: 'number', label: 'Purchase Tax Rate (%)', category: 'tax' },
       { key: 'CURRENCY_SYMBOL', value: 'PKR', dataType: 'string', label: 'Currency Symbol', category: 'currency' },
+      // Epic 10: Workflow settings (all default to simple mode)
+      { key: 'sales.requireSalesOrder', value: 'false', dataType: 'boolean', label: 'Require Sales Order', category: 'workflow' },
+      { key: 'sales.requireDeliveryNote', value: 'false', dataType: 'boolean', label: 'Require Delivery Note', category: 'workflow' },
+      { key: 'sales.allowDirectInvoice', value: 'true', dataType: 'boolean', label: 'Allow Direct Invoice Creation', category: 'workflow' },
+      { key: 'purchasing.requirePurchaseInvoice', value: 'false', dataType: 'boolean', label: 'Require Purchase Invoice', category: 'workflow' },
+      { key: 'sales.enableStockReservation', value: 'false', dataType: 'boolean', label: 'Enable Stock Reservation on Sales Orders', category: 'workflow' },
     ];
 
     await tx.systemSetting.createMany({

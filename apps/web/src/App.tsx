@@ -90,6 +90,19 @@ import VisitActivityReportPage from './features/reports/pages/VisitActivityRepor
 import CollectionSummaryPage from './features/reports/pages/CollectionSummaryPage';
 import OverdueClientsReportPage from './features/reports/pages/OverdueClientsReportPage';
 import AgentProductivityPage from './features/reports/pages/AgentProductivityPage';
+import { SalesOrderReportPage } from './features/reports/pages/SalesOrderReportPage';
+import { DeliveryNoteReportPage } from './features/reports/pages/DeliveryNoteReportPage';
+import { PurchaseInvoiceAgingPage } from './features/reports/pages/PurchaseInvoiceAgingPage';
+// WorkflowSettingsPage merged into unified TaxSettingsPage (System Settings)
+import { SalesOrdersPage } from './features/sales-orders/pages/SalesOrdersPage';
+import { CreateSalesOrderPage } from './features/sales-orders/pages/CreateSalesOrderPage';
+import { SalesOrderDetailPage } from './features/sales-orders/pages/SalesOrderDetailPage';
+import { DeliveryNotesPage } from './features/delivery-notes/pages/DeliveryNotesPage';
+import { CreateDeliveryNotePage } from './features/delivery-notes/pages/CreateDeliveryNotePage';
+import { DeliveryNoteDetailPage } from './features/delivery-notes/pages/DeliveryNoteDetailPage';
+import { PurchaseInvoicesPage } from './features/purchase-invoices/pages/PurchaseInvoicesPage';
+import { CreatePurchaseInvoicePage } from './features/purchase-invoices/pages/CreatePurchaseInvoicePage';
+import { PurchaseInvoiceDetailPage } from './features/purchase-invoices/pages/PurchaseInvoiceDetailPage';
 import HelpIndexPage from './features/help/pages/HelpIndexPage';
 import GettingStartedPage from './features/help/pages/GettingStartedPage';
 import DashboardGuidePage from './features/help/pages/DashboardGuidePage';
@@ -295,6 +308,40 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <GoodsReceiptDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Purchase Invoices routes */}
+          <Route
+            path="/purchase-invoices"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PurchaseInvoicesPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/purchase-invoices/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreatePurchaseInvoicePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/purchase-invoices/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PurchaseInvoiceDetailPage />
                 </Layout>
               </ProtectedRoute>
             }
@@ -539,6 +586,74 @@ function App() {
             }
           />
 
+          {/* Sales Orders routes */}
+          <Route
+            path="/sales-orders"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <SalesOrdersPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/sales-orders/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateSalesOrderPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/sales-orders/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <SalesOrderDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Delivery Notes routes */}
+          <Route
+            path="/delivery-notes"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <DeliveryNotesPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/delivery-notes/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <CreateDeliveryNotePage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/delivery-notes/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <DeliveryNoteDetailPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Invoices routes */}
           <Route
             path="/invoices"
@@ -693,6 +808,40 @@ function App() {
             }
           />
 
+          {/* Report pages (Story 10.10) */}
+          <Route
+            path="/reports/sales-orders"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <SalesOrderReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/reports/delivery-notes"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <DeliveryNoteReportPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/reports/purchase-invoice-aging"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <PurchaseInvoiceAgingPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Returns / Credit Notes routes (Story 3.9) */}
           <Route
             path="/returns"
@@ -727,9 +876,9 @@ function App() {
             }
           />
 
-          {/* Settings routes (Story 3.10) */}
+          {/* Unified System Settings (Story 8.7) */}
           <Route
-            path="/settings/tax"
+            path="/settings"
             element={
               <ProtectedRoute>
                 <Layout>

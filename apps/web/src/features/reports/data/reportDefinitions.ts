@@ -2,7 +2,7 @@ export interface ReportDefinition {
   id: string;
   title: string;
   description: string;
-  category: 'inventory' | 'sales' | 'payments' | 'imports' | 'expenses';
+  category: 'inventory' | 'sales' | 'payments' | 'imports' | 'expenses' | 'purchasing';
   path: string;
   roles: string[]; // empty = all roles
 }
@@ -51,6 +51,22 @@ export const REPORTS: ReportDefinition[] = [
     path: '/reports/sales?tab=by-product',
     roles: ['ADMIN', 'SALES_OFFICER'],
   },
+  {
+    id: 'sales-order-report',
+    title: 'Sales Order Report',
+    description: 'Sales orders with status, date range, and client filters',
+    category: 'sales',
+    path: '/reports/sales-orders',
+    roles: ['ADMIN', 'SALES_OFFICER', 'ACCOUNTANT'],
+  },
+  {
+    id: 'delivery-note-report',
+    title: 'Delivery Note Report',
+    description: 'Delivery notes with dispatch status and delivery rate tracking',
+    category: 'sales',
+    path: '/reports/delivery-notes',
+    roles: ['ADMIN', 'SALES_OFFICER', 'WAREHOUSE_MANAGER'],
+  },
 
   // Payments
   {
@@ -75,6 +91,16 @@ export const REPORTS: ReportDefinition[] = [
     description: 'Cash inflows vs outflows by payment method',
     category: 'payments',
     path: '/reports/cash-flow',
+    roles: ['ADMIN', 'ACCOUNTANT'],
+  },
+
+  // Purchasing
+  {
+    id: 'purchase-invoice-aging',
+    title: 'Purchase Invoice Aging',
+    description: 'Outstanding purchase invoices grouped by supplier with aging buckets',
+    category: 'purchasing',
+    path: '/reports/purchase-invoice-aging',
     roles: ['ADMIN', 'ACCOUNTANT'],
   },
 
@@ -118,6 +144,7 @@ export const REPORTS: ReportDefinition[] = [
 export const REPORT_CATEGORIES: Record<string, string> = {
   inventory: 'Inventory & Stock',
   sales: 'Sales',
+  purchasing: 'Purchasing',
   payments: 'Payments & Receivables',
   imports: 'Imports & Purchasing',
   expenses: 'Expenses',

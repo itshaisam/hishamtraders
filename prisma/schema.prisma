@@ -64,6 +64,12 @@ model Tenant {
   systemSettings         SystemSetting[]
   changeHistories        ChangeHistory[]
   auditLogs              AuditLog[]
+  salesOrders            SalesOrder[]
+  salesOrderItems        SalesOrderItem[]
+  deliveryNotes          DeliveryNote[]
+  deliveryNoteItems      DeliveryNoteItem[]
+  purchaseInvoices       PurchaseInvoice[]
+  purchaseInvoiceItems   PurchaseInvoiceItem[]
 
   @@map("tenants")
 }
@@ -194,8 +200,9 @@ model Supplier {
   tenant        Tenant             @relation(fields: [tenantId], references: [id])
   country       Country?           @relation(fields: [countryId], references: [id])
   paymentTerm   PaymentTerm?       @relation(fields: [paymentTermId], references: [id])
-  purchaseOrders PurchaseOrder[]
-  payments      Payment[]
+  purchaseOrders   PurchaseOrder[]
+  payments         Payment[]
+  purchaseInvoices PurchaseInvoice[]  // Epic 10
 
   @@unique([tenantId, name])
   @@unique([tenantId, email])
@@ -242,6 +249,8 @@ model Warehouse {
   inboundTransfers   StockTransfer[] @relation("TransferDestination")  // Story 6.4
   stockCounts        StockCount[]   // Story 6.9
   goodsReceiveNotes  GoodsReceiveNote[] // GRN
+  salesOrders        SalesOrder[]       // Epic 10
+  deliveryNotes      DeliveryNote[]     // Epic 10
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -364,6 +373,7 @@ model Inventory {
 enum MovementType {
   RECEIPT
   SALE
+  DELIVERY
   ADJUSTMENT
   TRANSFER
   SALES_RETURN
@@ -372,9 +382,13 @@ enum MovementType {
 enum ReferenceType {
   PO
   INVOICE
+  SALES_ORDER
+  DELIVERY_NOTE
+  PURCHASE_INVOICE
   ADJUSTMENT
   TRANSFER
   CREDIT_NOTE
+  DEBIT_NOTE
 }
 
 model StockMovement {
@@ -523,6 +537,9 @@ model Product {
   stockTransferItems StockTransferItem[] // Story 6.4
   stockCountItems    StockCountItem[]    // Story 6.9
   goodsReceiveNoteItems GoodsReceiveNoteItem[] // GRN
+  salesOrderItems       SalesOrderItem[]       // Epic 10
+  deliveryNoteItems     DeliveryNoteItem[]     // Epic 10
+  purchaseInvoiceItems  PurchaseInvoiceItem[]  // Epic 10
 
   @@unique([tenantId, sku])
   @@index([tenantId])
@@ -580,6 +597,7 @@ model PurchaseOrder {
   items               POItem[]
   costs               POCost[] // Story 2.3: Additional costs
   goodsReceiveNotes   GoodsReceiveNote[]
+  purchaseInvoices    PurchaseInvoice[]  // Epic 10
 
   @@unique([tenantId, poNumber])
   @@index([tenantId])
@@ -661,6 +679,9 @@ model ProductVariant {
   invoiceItems     InvoiceItem[]
   creditNoteItems  CreditNoteItem[]   // Story 3.9
   goodsReceiveNoteItems GoodsReceiveNoteItem[] // GRN
+  salesOrderItems       SalesOrderItem[]       // Epic 10
+  deliveryNoteItems     DeliveryNoteItem[]     // Epic 10
+  purchaseInvoiceItems  PurchaseInvoiceItem[]  // Epic 10
 
   @@unique([tenantId, sku])
   @@index([tenantId])
@@ -720,8 +741,9 @@ model GoodsReceiveNote {
   purchaseOrder PurchaseOrder   @relation(fields: [poId], references: [id])
   warehouse     Warehouse       @relation(fields: [warehouseId], references: [id])
   creator       User            @relation("CreatedGRNs", fields: [createdBy], references: [id])
-  items         GoodsReceiveNoteItem[]
-  costs         GRNCost[]
+  items            GoodsReceiveNoteItem[]
+  costs            GRNCost[]
+  purchaseInvoices PurchaseInvoice[]  // Epic 10
 
   @@unique([tenantId, grnNumber])
   @@index([tenantId])
@@ -810,6 +832,11 @@ model User {
   alertsReceived         Alert[]         @relation("AlertTargetUser")       // Epic 7
   alertsAcknowledged     Alert[]         @relation("AlertAcknowledger")     // Epic 7
   changeHistory          ChangeHistory[]                                    // Epic 8
+  salesOrdersCreated     SalesOrder[]    @relation("SalesOrderCreator")            // Epic 10
+  deliveryNotesCreated   DeliveryNote[]  @relation("DeliveryNoteCreator")          // Epic 10
+  deliveryNotesDispatched DeliveryNote[] @relation("DeliveryNoteDispatcher")       // Epic 10
+  deliveryNotesCompleted DeliveryNote[]  @relation("DeliveryNoteCompleter")        // Epic 10
+  purchaseInvoicesCreated PurchaseInvoice[] @relation("PurchaseInvoiceCreator")    // Epic 10
 
   @@index([email])
   @@index([roleId])
@@ -878,6 +905,7 @@ enum PaymentType {
 enum PaymentReferenceType {
   PO
   INVOICE
+  PURCHASE_INVOICE
   GENERAL
 }
 
@@ -983,6 +1011,8 @@ model Client {
   recoveryAgent   User?                @relation("RecoveryAgentClients", fields: [recoveryAgentId], references: [id])
   recoveryVisits  RecoveryVisit[]      // Epic 7
   paymentPromises PaymentPromise[]     // Epic 7
+  salesOrders     SalesOrder[]         // Epic 10
+  deliveryNotes   DeliveryNote[]       // Epic 10
 
   @@index([tenantId])
   @@index([recoveryAgentId])
@@ -1031,20 +1061,22 @@ enum InvoicePaymentType {
 }
 
 model Invoice {
-  id            String               @id @default(cuid())
-  invoiceNumber String
-  clientId      String
-  warehouseId   String
-  invoiceDate   DateTime
-  dueDate       DateTime
-  paymentType   InvoicePaymentType
-  subtotal      Decimal              @db.Decimal(12, 4)
-  taxAmount     Decimal              @db.Decimal(12, 4)
-  taxRate       Decimal              @db.Decimal(7, 4) @default(0) // Snapshot of tax rate at creation (Story 3.5)
-  total         Decimal              @db.Decimal(12, 4)
-  paidAmount    Decimal              @db.Decimal(12, 4) @default(0)
-  status        InvoiceStatus        @default(PENDING)
-  notes         String?              @db.Text
+  id             String               @id @default(cuid())
+  invoiceNumber  String
+  clientId       String
+  warehouseId    String
+  salesOrderId   String?              // Epic 10: Link to SO
+  deliveryNoteId String?              // Epic 10: Link to DN
+  invoiceDate    DateTime
+  dueDate        DateTime
+  paymentType    InvoicePaymentType
+  subtotal       Decimal              @db.Decimal(12, 4)
+  taxAmount      Decimal              @db.Decimal(12, 4)
+  taxRate        Decimal              @db.Decimal(7, 4) @default(0) // Snapshot of tax rate at creation (Story 3.5)
+  total          Decimal              @db.Decimal(12, 4)
+  paidAmount     Decimal              @db.Decimal(12, 4) @default(0)
+  status         InvoiceStatus        @default(PENDING)
+  notes          String?              @db.Text
 
   // Story 3.4: Void tracking
   voidedAt      DateTime?
@@ -1059,6 +1091,8 @@ model Invoice {
   client        Client               @relation(fields: [clientId], references: [id])
   warehouse     Warehouse            @relation(fields: [warehouseId], references: [id])
   voider        User?                @relation("VoidedInvoices", fields: [voidedBy], references: [id])
+  salesOrder    SalesOrder?          @relation(fields: [salesOrderId], references: [id])    // Epic 10
+  deliveryNote  DeliveryNote?        @relation(fields: [deliveryNoteId], references: [id])  // Epic 10
   items         InvoiceItem[]
   allocations   PaymentAllocation[]  // Story 3.6: Payment allocations
   creditNotes   CreditNote[]         // Story 3.9: Credit notes / sales returns
@@ -1713,4 +1747,216 @@ model Alert {
   @@index([type, relatedId])
   @@index([targetRole, acknowledged])
   @@map("alerts")
+}
+
+// ============================================================================
+// SALES ORDERS (Epic 10 - Story 10.1)
+// ============================================================================
+
+enum SalesOrderStatus {
+  DRAFT
+  CONFIRMED
+  PARTIALLY_DELIVERED
+  DELIVERED
+  PARTIALLY_INVOICED
+  INVOICED
+  CANCELLED
+  CLOSED
+}
+
+model SalesOrder {
+  id                   String           @id @default(cuid())
+  orderNumber          String
+  clientId             String
+  warehouseId          String
+  orderDate            DateTime         @default(now())
+  expectedDeliveryDate DateTime?
+  paymentType          PaymentType
+  subtotal             Decimal          @db.Decimal(14, 4)
+  taxRate              Decimal          @db.Decimal(5, 4)
+  taxAmount            Decimal          @db.Decimal(14, 4)
+  total                Decimal          @db.Decimal(14, 4)
+  status               SalesOrderStatus @default(DRAFT)
+  notes                String?          @db.Text
+  createdBy            String
+  updatedBy            String?
+  cancelReason         String?          @db.Text
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  tenantId             String
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id])
+  client        Client    @relation(fields: [clientId], references: [id])
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id])
+  creator       User      @relation("SalesOrderCreator", fields: [createdBy], references: [id])
+  items         SalesOrderItem[]
+  deliveryNotes DeliveryNote[]
+  invoices      Invoice[]
+
+  @@unique([tenantId, orderNumber])
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([status])
+  @@map("sales_orders")
+}
+
+model SalesOrderItem {
+  id                String  @id @default(cuid())
+  salesOrderId      String
+  productId         String
+  productVariantId  String?
+  quantity          Int
+  deliveredQuantity Int     @default(0)
+  invoicedQuantity  Int     @default(0)
+  unitPrice         Decimal @db.Decimal(14, 4)
+  discount          Decimal @default(0) @db.Decimal(5, 2)
+  total             Decimal @db.Decimal(14, 4)
+  tenantId          String
+
+  tenant            Tenant          @relation(fields: [tenantId], references: [id])
+  salesOrder        SalesOrder      @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+  product           Product         @relation(fields: [productId], references: [id])
+  productVariant    ProductVariant? @relation(fields: [productVariantId], references: [id])
+  deliveryNoteItems DeliveryNoteItem[]
+
+  @@index([tenantId])
+  @@index([salesOrderId])
+  @@map("sales_order_items")
+}
+
+// ============================================================================
+// DELIVERY NOTES (Epic 10 - Story 10.1)
+// ============================================================================
+
+enum DeliveryNoteStatus {
+  PENDING
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+model DeliveryNote {
+  id                 String             @id @default(cuid())
+  deliveryNoteNumber String
+  salesOrderId       String?
+  clientId           String
+  warehouseId        String
+  deliveryDate       DateTime           @default(now())
+  status             DeliveryNoteStatus @default(PENDING)
+  deliveryAddress    String?            @db.Text
+  driverName         String?
+  vehicleNo          String?
+  notes              String?            @db.Text
+  createdBy          String
+  dispatchedBy       String?
+  completedBy        String?
+  cancelReason       String?            @db.Text
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  tenantId           String
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  salesOrder SalesOrder? @relation(fields: [salesOrderId], references: [id])
+  client     Client      @relation(fields: [clientId], references: [id])
+  warehouse  Warehouse   @relation(fields: [warehouseId], references: [id])
+  creator    User        @relation("DeliveryNoteCreator", fields: [createdBy], references: [id])
+  dispatcher User?       @relation("DeliveryNoteDispatcher", fields: [dispatchedBy], references: [id])
+  completer  User?       @relation("DeliveryNoteCompleter", fields: [completedBy], references: [id])
+  items      DeliveryNoteItem[]
+  invoices   Invoice[]
+
+  @@unique([tenantId, deliveryNoteNumber])
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([salesOrderId])
+  @@index([status])
+  @@map("delivery_notes")
+}
+
+model DeliveryNoteItem {
+  id               String  @id @default(cuid())
+  deliveryNoteId   String
+  salesOrderItemId String?
+  productId        String
+  productVariantId String?
+  batchNo          String?
+  quantity         Int
+  tenantId         String
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  deliveryNote   DeliveryNote    @relation(fields: [deliveryNoteId], references: [id], onDelete: Cascade)
+  salesOrderItem SalesOrderItem? @relation(fields: [salesOrderItemId], references: [id])
+  product        Product         @relation(fields: [productId], references: [id])
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id])
+
+  @@index([tenantId])
+  @@index([deliveryNoteId])
+  @@map("delivery_note_items")
+}
+
+// ============================================================================
+// PURCHASE INVOICES (Epic 10 - Story 10.1)
+// ============================================================================
+
+enum PurchaseInvoiceStatus {
+  PENDING
+  PARTIAL
+  PAID
+  CANCELLED
+}
+
+model PurchaseInvoice {
+  id             String                @id @default(cuid())
+  invoiceNumber  String                // Supplier's invoice # (manual entry)
+  internalNumber String                // Auto: PI-YYYYMMDD-NNN
+  supplierId     String
+  poId           String?
+  grnId          String?
+  invoiceDate    DateTime
+  dueDate        DateTime?
+  subtotal       Decimal               @db.Decimal(14, 4)
+  taxRate        Decimal               @db.Decimal(5, 4)
+  taxAmount      Decimal               @db.Decimal(14, 4)
+  total          Decimal               @db.Decimal(14, 4)
+  paidAmount     Decimal               @default(0) @db.Decimal(14, 4)
+  status         PurchaseInvoiceStatus @default(PENDING)
+  notes          String?               @db.Text
+  createdBy      String
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  tenantId       String
+
+  tenant           Tenant            @relation(fields: [tenantId], references: [id])
+  supplier         Supplier          @relation(fields: [supplierId], references: [id])
+  purchaseOrder    PurchaseOrder?    @relation(fields: [poId], references: [id])
+  goodsReceiveNote GoodsReceiveNote? @relation(fields: [grnId], references: [id])
+  creator          User              @relation("PurchaseInvoiceCreator", fields: [createdBy], references: [id])
+  items            PurchaseInvoiceItem[]
+
+  @@unique([tenantId, internalNumber])
+  @@index([tenantId])
+  @@index([supplierId])
+  @@index([poId])
+  @@index([status])
+  @@map("purchase_invoices")
+}
+
+model PurchaseInvoiceItem {
+  id                String  @id @default(cuid())
+  purchaseInvoiceId String
+  productId         String
+  productVariantId  String?
+  quantity          Int
+  unitCost          Decimal @db.Decimal(14, 4)
+  total             Decimal @db.Decimal(14, 4)
+  tenantId          String
+
+  tenant          Tenant          @relation(fields: [tenantId], references: [id])
+  purchaseInvoice PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], onDelete: Cascade)
+  product         Product         @relation(fields: [productId], references: [id])
+  productVariant  ProductVariant? @relation(fields: [productVariantId], references: [id])
+
+  @@index([tenantId])
+  @@index([purchaseInvoiceId])
+  @@map("purchase_invoice_items")
 }

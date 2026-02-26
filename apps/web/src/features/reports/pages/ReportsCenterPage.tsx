@@ -7,6 +7,7 @@ import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   inventory: <Package className="h-5 w-5 text-blue-600" />,
   sales: <FileText className="h-5 w-5 text-green-600" />,
+  purchasing: <ShoppingCart className="h-5 w-5 text-indigo-600" />,
   payments: <DollarSign className="h-5 w-5 text-purple-600" />,
   imports: <ShoppingCart className="h-5 w-5 text-orange-600" />,
   expenses: <Receipt className="h-5 w-5 text-red-600" />,
@@ -15,6 +16,7 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 const CATEGORY_COLORS: Record<string, string> = {
   inventory: 'border-blue-200 hover:border-blue-400 hover:bg-blue-50',
   sales: 'border-green-200 hover:border-green-400 hover:bg-green-50',
+  purchasing: 'border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50',
   payments: 'border-purple-200 hover:border-purple-400 hover:bg-purple-50',
   imports: 'border-orange-200 hover:border-orange-400 hover:bg-orange-50',
   expenses: 'border-red-200 hover:border-red-400 hover:bg-red-50',

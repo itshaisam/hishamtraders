@@ -1,234 +1,277 @@
-# System Architecture Overview
+# EnterpriseOne ERP - System Architecture
 
-**Project:** Hisham Traders ERP System
-**Version:** MVP + Phase 2
-**Last Updated:** 2025-01-15
+**Multi-Tenant SaaS Business Management Platform**
+
+**Version:** 2.0 - SaaS Architecture  
+**Last Updated:** February 2026
 
 ---
 
 ## Table of Contents
 
 1. [System Overview](#system-overview)
-2. [Architecture Diagrams](#architecture-diagrams)
-3. [Technology Stack](#technology-stack)
-4. [Data Flow](#data-flow)
-5. [Security Architecture](#security-architecture)
-6. [Scalability Considerations](#scalability-considerations)
-7. [Related Documents](#related-documents)
+2. [Multi-Tenant Architecture](#multi-tenant-architecture)
+3. [Architecture Diagrams](#architecture-diagrams)
+4. [Technology Stack](#technology-stack)
+5. [Data Flow](#data-flow)
+6. [Security Architecture](#security-architecture)
+7. [Scalability Strategy](#scalability-strategy)
+8. [Related Documents](#related-documents)
 
 ---
 
 ## System Overview
 
-The Hisham Traders ERP is a **full-stack web application** built using modern JavaScript/TypeScript technologies. The system follows a **monolithic architecture** for MVP with clear service boundaries to enable future microservices migration if needed.
+EnterpriseOne is a **true multi-tenant SaaS ERP platform** built with modern JavaScript/TypeScript technologies. Unlike competitors (Odoo, SAP B1) that use single-tenant architecture, EnterpriseOne is designed from the ground up to serve multiple organizations from a single deployment.
 
 ### High-Level Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        CLIENT LAYER                          │
+│                                                              │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐│
+│  │   Web Browser   │ │   Mobile PWA    │ │  Mobile App     ││
+│  │   (Desktop)     │ │   (Tablet/Phone)│ │  (Future)       ││
+│  └────────┬────────┘ └────────┬────────┘ └────────┬────────┘│
+│           │                    │                    │        │
+│           └────────────────────┴────────────────────┘        │
+│                              │                               │
 │  React 18 + TypeScript + Tailwind CSS + TanStack Query      │
-│  (Responsive Web App - Desktop, Tablet, Mobile)             │
-└────────────────────┬────────────────────────────────────────┘
-                     │ HTTPS / JSON
-                     │
-┌────────────────────▼────────────────────────────────────────┐
-│                      WEB SERVER LAYER                        │
-│          Nginx (Reverse Proxy + Static Files + SSL)         │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-┌────────────────────▼────────────────────────────────────────┐
+└──────────────────────────────┬──────────────────────────────┘
+                               │ HTTPS / JSON
+                               │
+┌──────────────────────────────▼──────────────────────────────┐
+│                      EDGE LAYER                              │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │  CDN (CloudFlare) - Static assets, DDoS protection     ││
+│  └─────────────────────────┬───────────────────────────────┘│
+│                            │                                 │
+│  ┌─────────────────────────▼───────────────────────────────┐│
+│  │  Load Balancer (Nginx/Kong) - SSL, rate limiting       ││
+│  └─────────────────────────┬───────────────────────────────┘│
+└────────────────────────────┬────────────────────────────────┘
+                             │
+┌────────────────────────────▼────────────────────────────────┐
 │                    APPLICATION LAYER                         │
 │        Node.js 20 + Express + TypeScript + Prisma           │
 │                                                              │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │  Auth Middleware → Audit Middleware → Business Logic │  │
+│  │  Tenant Context → Auth → Audit → Business Logic      │  │
 │  └──────────────────────────────────────────────────────┘  │
 │                                                              │
-│  Services:                                                   │
-│  - Authentication (JWT)                                      │
-│  - Authorization (RBAC)                                      │
-│  - Audit Logging (Automatic)                                │
-│  - Business Logic (Products, Sales, Inventory, etc.)        │
-└────────────────────┬────────────────────────────────────────┘
-                     │ Prisma ORM
-┌────────────────────▼────────────────────────────────────────┐
+│  Multi-Tenant Services:                                      │
+│  - Tenant Resolution (subdomain/header)                     │
+│  - Context Isolation (AsyncLocalStorage)                    │
+│  - Automatic Query Filtering (Prisma Extension)             │
+│  - Shared Cache with Tenant Prefixing                       │
+└────────────────────────────┬────────────────────────────────┘
+                             │ Prisma ORM
+┌────────────────────────────▼────────────────────────────────┐
 │                       DATA LAYER                             │
-│             MySQL 8+ (Primary Database)                      │
+│              PostgreSQL 15 / MySQL 8+                        │
 │                                                              │
-│  Tables: User, Product, Client, Invoice, Payment,           │
-│          PurchaseOrder, Inventory, AuditLog, etc.           │
-└──────────────────────────────────────────────────────────────┘
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  Shared Database with Row-Level Security            │   │
+│  │                                                      │   │
+│  │  tenantId column on all business tables             │   │
+│  │  Composite indexes: [tenantId + business_key]       │   │
+│  │  Foreign keys with RESTRICT for data integrity      │   │
+│  │                                                      │   │
+│  │  Tables: Tenant, User, Product, Invoice, etc.       │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  Redis (Phase 3) - Session, Cache, Queue            │   │
+│  │  Meilisearch (Phase 3) - Full-text search           │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Multi-Tenant Architecture
+
+### What is Multi-Tenancy?
+
+Multi-tenancy is an architecture where a single instance of software serves multiple customers (tenants). Each tenant's data is isolated and remains invisible to other tenants.
+
+**EnterpriseOne's Approach:**
+- **Shared Database, Separate Schemas** (Row-Level Security)
+- All tenants share the same application instance
+- Automatic tenant context injection
+- Zero data leakage between tenants
+
+### Why Multi-Tenancy Matters
+
+| Aspect | Single-Tenant (Odoo/SAP) | Multi-Tenant (EnterpriseOne) |
+|--------|-------------------------|------------------------------|
+| **Infrastructure** | Per-customer servers | Shared infrastructure |
+| **Cost per Tenant** | $200-500/month | $20-50/month |
+| **Updates** | Manual per instance | Automatic, instant |
+| **Scaling** | Vertical only | Horizontal scaling |
+| **Maintenance** | Per-customer effort | Single codebase |
+
+### Implementation Details
+
+#### 1. Tenant Identification
+
+```typescript
+// Tenant resolution middleware
+const tenantMiddleware = (req, res, next) => {
+  // Method 1: Subdomain (tenant1.enterpriseone.com)
+  const subdomain = req.headers.host.split('.')[0];
+  
+  // Method 2: Header (X-Tenant-ID)
+  const tenantId = req.headers['x-tenant-id'] || subdomain;
+  
+  // Store in AsyncLocalStorage for request lifetime
+  tenantContext.run({ tenantId }, () => {
+    next();
+  });
+};
+```
+
+#### 2. Prisma Extension for Tenant Isolation
+
+```typescript
+// Prisma client with automatic tenant filtering
+const prisma = new PrismaClient().$extends({
+  query: {
+    $allModels: {
+      async findMany({ model, operation, args, query }) {
+        const { tenantId } = tenantContext.getStore();
+        args.where = { ...args.where, tenantId };
+        return query(args);
+      },
+      async create({ model, operation, args, query }) {
+        const { tenantId } = tenantContext.getStore();
+        args.data = { ...args.data, tenantId };
+        return query(args);
+      },
+      // ... update, delete, etc.
+    },
+  },
+});
+```
+
+#### 3. Database Schema Pattern
+
+```prisma
+// Every business model includes tenantId
+model Product {
+  id          String   @id @default(cuid())
+  tenantId    String   // Row-level isolation
+  sku         String
+  name        String
+  // ... other fields
+  
+  @@unique([tenantId, sku])  // Business key uniqueness per tenant
+  @@index([tenantId])        // Query performance
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  tenantId    String
+  invoiceNumber String
+  // ... other fields
+  
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId])
+  @@index([tenantId, createdAt])  // Common query pattern
+}
+```
+
+#### 4. Tenant Onboarding Flow
+
+```
+1. User signs up on website
+   ↓
+2. System creates Tenant record
+   - Generate unique tenantId
+   - Create default settings
+   - Setup default chart of accounts
+   ↓
+3. Create Admin User
+   - Assign to tenant
+   - Send welcome email
+   ↓
+4. Provision complete (< 2 minutes)
+   - Tenant can start using immediately
+   - No manual infrastructure setup
 ```
 
 ---
 
 ## Architecture Diagrams
 
-### Request Flow (MVP)
-
-```
-┌─────────┐
-│ Browser │
-└────┬────┘
-     │ 1. GET /products
-     ▼
-┌─────────────┐
-│   Nginx     │  2. Proxy to Node.js
-│   :80/443   │
-└────┬────────┘
-     │
-     ▼
-┌────────────────────┐
-│  Express Router    │  3. Route to /api/products
-└────┬───────────────┘
-     │
-     ▼
-┌────────────────────┐
-│  Auth Middleware   │  4. Verify JWT, extract user
-└────┬───────────────┘
-     │
-     ▼
-┌────────────────────┐
-│  Audit Middleware  │  5. Intercept response (log after success)
-└────┬───────────────┘
-     │
-     ▼
-┌────────────────────┐
-│ Product Controller │  6. Execute business logic
-└────┬───────────────┘
-     │
-     ▼
-┌────────────────────┐
-│  Prisma Service    │  7. Query database
-└────┬───────────────┘
-     │
-     ▼
-┌────────────────────┐
-│      MySQL         │  8. Return data
-└────┬───────────────┘
-     │
-     ▼
-┌────────────────────┐
-│  Audit Logger      │  9. Log action asynchronously (non-blocking)
-└────────────────────┘
-     │
-     ▼
-┌────────────────────┐
-│  Response to User  │  10. JSON response sent
-└────────────────────┘
-```
-
----
-
-### Authentication Flow
+### Request Flow with Multi-Tenancy
 
 ```
 ┌──────────┐
-│  Client  │
+│  Browser │  tenant1.enterpriseone.com
 └────┬─────┘
-     │ POST /api/auth/login { email, password }
+     │ GET /api/products
      ▼
 ┌─────────────────┐
-│ Auth Controller │
+│   Load Balancer │  1. Route to app server
+│   (Nginx)       │
 └────┬────────────┘
      │
-     │ 1. Find user by email
      ▼
-┌──────────────┐
-│    MySQL     │
-└────┬─────────┘
-     │ User record
-     ▼
-┌─────────────────┐
-│ bcrypt.compare  │  2. Verify password hash
-└────┬────────────┘
-     │ Match? Yes
-     ▼
-┌─────────────────┐
-│  jwt.sign()     │  3. Generate token
-└────┬────────────┘     Payload: { userId, email, roleId }
-     │                  Secret: JWT_SECRET
-     │                  Expiry: 24 hours
-     ▼
-┌─────────────────┐
-│  Response       │  4. Return { token, user }
-│  200 OK         │
-└─────────────────┘
+┌──────────────────────┐
+│  Tenant Middleware   │  2. Extract tenant from subdomain
+│  - Parse hostname    │     tenantId = "tenant1"
+│  - Lookup tenant     │  3. Validate tenant exists & active
+└────┬─────────────────┘
      │
      ▼
-┌─────────────────┐
-│  Client         │  5. Store token in localStorage
-│  localStorage   │     Include in future requests:
-└─────────────────┘     Authorization: Bearer {token}
+┌──────────────────────┐
+│  Auth Middleware     │  4. Verify JWT
+│  - Validate token    │  5. Extract user info
+│  - Check user belongs│     to this tenant
+└────┬─────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│  Context Setup       │  6. Set AsyncLocalStorage
+│  - tenantContext.run │     with tenantId
+└────┬─────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│  Audit Middleware    │  7. Setup response interception
+│  - Log after success │
+└────┬─────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│  Product Controller  │  8. Execute business logic
+└────┬─────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│  Prisma Query        │  9. Automatic WHERE tenantId = 'tenant1'
+│  - findMany()        │     added by extension
+└────┬─────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│  PostgreSQL          │  10. Return tenant1's products only
+└────┬─────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│  Audit Logger        │  11. Log access (async)
+│  (background)        │
+└──────────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│  Response to Client  │  12. JSON response
+└──────────────────────┘
 ```
-
----
-
-### Audit Logging Flow (MVP - From Day 1)
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                  User Action (e.g., Update Product)      │
-└────────────────────┬────────────────────────────────────┘
-                     │
-                     ▼
-┌────────────────────────────────────────────────────────┐
-│  PUT /api/products/:id                                  │
-│  Body: { name: "New Name", price: 150 }                │
-└────────────────────┬───────────────────────────────────┘
-                     │
-                     ▼
-┌────────────────────────────────────────────────────────┐
-│  Auth Middleware: Extract user from JWT                │
-└────────────────────┬───────────────────────────────────┘
-                     │
-                     ▼
-┌────────────────────────────────────────────────────────┐
-│  Audit Middleware: Intercept res.json()                │
-│  - Store original res.json method                      │
-│  - Override with custom handler                        │
-└────────────────────┬───────────────────────────────────┘
-                     │
-                     ▼
-┌────────────────────────────────────────────────────────┐
-│  Business Logic: Update product in database            │
-│  - Validate input                                       │
-│  - Update product record                               │
-│  - Return updated product                              │
-└────────────────────┬───────────────────────────────────┘
-                     │
-                     ▼
-┌────────────────────────────────────────────────────────┐
-│  Audit Middleware: On successful response (2xx)        │
-│  - Extract: user, action, entity, changed fields       │
-│  - Call logAudit() ASYNCHRONOUSLY                      │
-│  - Send response immediately (don't wait)              │
-└────────────────────┬───────────────────────────────────┘
-                     │
-                     ▼ (async, non-blocking)
-┌────────────────────────────────────────────────────────┐
-│  Log to AuditLog Table                                 │
-│  {                                                      │
-│    userId: "user123",                                  │
-│    action: "UPDATE",                                   │
-│    entityType: "Product",                              │
-│    entityId: "prod456",                                │
-│    timestamp: "2025-01-15T10:30:00Z",                 │
-│    ipAddress: "192.168.1.100",                        │
-│    changedFields: {                                    │
-│      name: { old: "Old Name", new: "New Name" },     │
-│      price: { old: 100, new: 150 }                   │
-│    }                                                   │
-│  }                                                     │
-└────────────────────────────────────────────────────────┘
-```
-
-**Key Points:**
-- ✅ Audit logging is **automatic** (no manual code in business logic)
-- ✅ Logging is **asynchronous** (doesn't slow down user operations)
-- ✅ All CRUD operations logged from **Day 1**
-- ✅ Captures **changed fields** with old/new values
 
 ---
 
@@ -236,332 +279,229 @@ The Hisham Traders ERP is a **full-stack web application** built using modern Ja
 
 ### Frontend
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Framework | React 18 | UI library |
-| Language | TypeScript 5.3+ | Type safety |
-| Build Tool | Vite | Fast dev server + builds |
-| Styling | Tailwind CSS v3 | Utility-first CSS |
-| Icons | Lucide React | Modern icon library |
-| State (Server) | TanStack Query v5 | API data fetching/caching |
-| State (Client) | Zustand | Lightweight state management |
-| Forms | React Hook Form + Zod | Form handling + validation |
-| Tables | TanStack Table v8 | Data tables |
-| Charts | Recharts | Data visualization |
-| Routing | React Router v6 | Client-side routing |
-| HTTP Client | Axios | API requests |
-| Date Handling | date-fns | Date utilities |
-| Notifications | react-hot-toast | Toast notifications |
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 18.x | UI library |
+| TypeScript | 5.3+ | Type safety |
+| Vite | 5.x | Build tool |
+| Tailwind CSS | 3.4+ | Styling |
+| TanStack Query | 5.x | Server state |
+| Zustand | 4.x | Client state |
+| React Router | 6.x | Routing |
+| Recharts | 2.x | Charts |
+| Lucide React | Latest | Icons |
 
 ### Backend
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Runtime | Node.js 20 LTS | JavaScript runtime |
-| Language | TypeScript 5.3+ | Type safety |
-| Framework | Express.js | Web framework |
-| ORM | Prisma 5 | Type-safe database access |
-| Validation | Zod | Schema validation |
-| Authentication | JWT + bcrypt | Auth tokens + password hashing |
-| Logging | Winston | Application logging |
-| Process Manager | PM2 | Production process management |
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Node.js | 20 LTS | Runtime |
+| Express | 4.x | Web framework |
+| TypeScript | 5.3+ | Type safety |
+| Prisma | 5.x | ORM |
+| Zod | 3.x | Validation |
+| JWT | jsonwebtoken | Authentication |
+| Winston | 3.x | Logging |
 
-### Database
+### Database & Infrastructure
 
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| RDBMS | MySQL 8+ | Primary database |
-| Migrations | Prisma Migrate | Schema versioning |
-| Admin Tool | Prisma Studio | Visual database browser |
-
-### DevOps
-
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| Package Manager | pnpm | Fast, disk-efficient |
-| Monorepo | pnpm Workspaces | Shared code |
-| Code Quality | ESLint + Prettier | Linting + formatting |
-| Pre-commit | Husky + lint-staged | Git hooks |
-| Containers | Docker Compose | Dev environment |
-| Web Server | Nginx | Reverse proxy + SSL |
-| SSL | Let's Encrypt | Free HTTPS certificates |
-| Hosting | DigitalOcean | Cloud hosting |
-
-**Full Details:** [Tech Stack Documentation](./tech-stack.md)
+| Technology | Purpose |
+|------------|---------|
+| PostgreSQL 15+ | Primary database |
+| MySQL 8+ | Alternative option |
+| Redis | Cache, sessions, queue (Phase 3) |
+| Meilisearch | Full-text search (Phase 3) |
+| Docker | Containerization |
+| Nginx | Reverse proxy, load balancing |
+| AWS/DigitalOcean | Cloud hosting |
 
 ---
 
 ## Data Flow
 
-### Invoice Creation with Stock Deduction (Example)
+### Multi-Tenant Data Flow Example: Invoice Creation
 
 ```
-1. User fills invoice form
-   └─> React form (react-hook-form)
+Tenant: "acme-corp"
+User: john@acme-corp.com
+Action: Create Invoice
 
-2. Submit invoice
-   └─> POST /api/invoices
-       Body: {
-         clientId: "client123",
-         items: [
-           { productId: "prod1", quantity: 10, unitPrice: 100 }
-         ],
-         paymentType: "CREDIT"
-       }
+1. Request
+   POST /api/invoices
+   Headers:
+     Host: acme-corp.enterpriseone.com
+     Authorization: Bearer <jwt>
+   Body: { clientId: "C001", items: [...] }
 
-3. Server receives request
-   └─> Auth middleware: Verify JWT
-   └─> Audit middleware: Intercept response
-   └─> Invoice controller: Business logic
+2. Tenant Resolution
+   - Extract subdomain: "acme-corp"
+   - Validate tenant exists and is active
+   - Set tenantContext = { tenantId: "acme-corp" }
 
-4. Business logic
-   ├─> Validate input (Zod schema)
-   ├─> Check client credit limit
-   │   └─> If exceeded and user != Admin: return 403
-   ├─> Check stock availability
-   │   └─> For each item: inventory.quantity >= item.quantity
-   │   └─> If insufficient: return 400
-   ├─> Begin database transaction
-   ├─> Create invoice record
-   ├─> Create invoice item records
-   ├─> Deduct inventory (FIFO if multiple batches)
-   ├─> Update client balance (if paymentType = CREDIT)
-   ├─> Create stock movement records
-   ├─> Commit transaction
-   └─> Return invoice data
+3. Authentication
+   - Verify JWT signature
+   - Decode: { userId: "usr_123", tenantId: "acme-corp" }
+   - Verify user belongs to this tenant
 
-5. Audit middleware
-   └─> Log invoice creation asynchronously
-       {
-         userId, action: "CREATE",
-         entityType: "Invoice",
-         entityId: invoice.id,
-         changedFields: { ... }
-       }
+4. Validation (Zod)
+   - Validate request body
+   - Check all referenced IDs belong to tenant
 
-6. Response sent to client
-   └─> 201 Created { invoice: {...} }
+5. Business Logic
+   - Check client credit limit
+   - Check stock availability
+   - Calculate totals, tax
 
-7. Frontend updates
-   └─> TanStack Query invalidates cache
-   └─> Refetches invoice list
-   └─> Displays success toast
+6. Database Transaction
+   BEGIN;
+   
+   -- All queries automatically include tenantId filter
+   INSERT INTO invoices (tenantId, invoiceNumber, ...)
+   VALUES ('acme-corp', 'INV-001', ...);
+   
+   INSERT INTO invoice_items (tenantId, invoiceId, ...)
+   VALUES ('acme-corp', 'inv_123', ...);
+   
+   UPDATE inventory 
+   SET quantity = quantity - 10
+   WHERE tenantId = 'acme-corp' AND productId = 'prod_456';
+   
+   INSERT INTO journal_entries (tenantId, ...)
+   VALUES ('acme-corp', ...);
+   
+   COMMIT;
+
+7. Audit Logging (async)
+   INSERT INTO audit_logs (tenantId, userId, action, entity, ...)
+   VALUES ('acme-corp', 'usr_123', 'CREATE', 'Invoice', ...);
+
+8. Response
+   { success: true, data: { id: "inv_123", ... } }
 ```
 
 ---
 
 ## Security Architecture
 
-### Authentication & Authorization
+### Multi-Tenant Security
 
-**Authentication:**
-- JWT-based (stateless)
-- 24-hour token expiry
-- Refresh tokens not implemented in MVP (Phase 2)
-
-**Authorization:**
-- Role-Based Access Control (RBAC)
-- 5 roles: Admin, Warehouse Manager, Sales Officer, Accountant, Recovery Agent
-- Middleware checks role before executing sensitive operations
-
-**Role Permissions Matrix:**
-
-| Feature | Admin | Warehouse | Sales | Accountant | Recovery |
-|---------|-------|-----------|-------|------------|----------|
-| User Management | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Products | ✅ | ✅ | ✅ (view) | ❌ | ❌ |
-| Suppliers | ✅ | ✅ | ❌ | ✅ | ❌ |
-| Purchase Orders | ✅ | ✅ | ❌ | ✅ | ❌ |
-| Inventory | ✅ | ✅ | ✅ (view) | ❌ | ❌ |
-| Clients | ✅ | ❌ | ✅ | ✅ | ✅ (view) |
-| Invoices | ✅ | ❌ | ✅ | ✅ | ✅ (view) |
-| Payments | ✅ | ❌ | ❌ | ✅ | ✅ |
-| Expenses | ✅ | ❌ | ❌ | ✅ | ❌ |
-| Reports | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Audit Logs | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Layer | Protection |
+|-------|-----------|
+| **Network** | TLS 1.3, WAF, DDoS protection |
+| **Authentication** | JWT with expiry, refresh tokens |
+| **Authorization** | RBAC + tenant isolation |
+| **Data** | Row-level security via tenantId |
+| **API** | Rate limiting per tenant |
+| **Audit** | All actions logged |
 
 ### Security Measures
 
-| Attack Vector | Protection |
-|--------------|-----------|
-| SQL Injection | Prisma parameterized queries |
-| XSS | React escapes output by default |
-| CSRF | SameSite cookies + Origin validation |
-| Password Cracking | bcrypt with 10 rounds |
-| Brute Force | Rate limiting (express-rate-limit) |
-| Man-in-the-Middle | HTTPS (Let's Encrypt SSL) |
-| Session Hijacking | JWT with expiry + secure storage |
+```typescript
+// Tenant isolation enforcement
+const enforceTenantIsolation = (req, res, next) => {
+  const tokenTenant = req.user.tenantId;
+  const contextTenant = tenantContext.getStore().tenantId;
+  
+  if (tokenTenant !== contextTenant) {
+    // Security violation - user trying to access another tenant
+    logger.security.warn('Cross-tenant access attempt', {
+      userId: req.user.id,
+      tokenTenant,
+      attemptedTenant: contextTenant
+    });
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  
+  next();
+};
+```
 
-**Full Details:** [Security Documentation](./security.md) (to be created)
+### Data Isolation Guarantee
+
+1. **Database Level:** All queries filtered by tenantId
+2. **Application Level:** Middleware enforces tenant context
+3. **Cache Level:** Keys prefixed with tenantId
+4. **File Storage:** Tenant-specific prefixes in S3
+5. **Search Index:** Tenant-scoped indexes
 
 ---
 
-## Scalability Considerations
+## Scalability Strategy
 
-### MVP Capacity
+### Current Capacity (MVP)
 
-**Expected Load:**
-- 20 concurrent users
-- 10,000 transactions/month
-- 50,000 records (products, clients, invoices combined)
-- 10,000 audit log entries/month
+| Metric | Capacity |
+|--------|----------|
+| Tenants | 100+ per instance |
+| Users per tenant | 100+ |
+| Concurrent users | 500+ |
+| Transactions/day | 100,000+ |
 
-**Server Specs (MVP):**
-- 2 vCPUs
-- 2 GB RAM
-- 50 GB SSD
-- Cost: $18/month (DigitalOcean)
-
-### Phase 2+ Scaling Strategies
-
-**Vertical Scaling (Easiest):**
-- Upgrade to 4 GB RAM droplet ($42/month)
-- Handles 50-100 concurrent users
-
-**Horizontal Scaling (Future):**
-1. **Load Balancer** (Nginx or DigitalOcean Load Balancer)
-2. **Multiple API Servers** (PM2 cluster mode or separate droplets)
-3. **Database Replication** (Read replicas for reports)
-4. **Caching Layer** (Redis for frequent queries)
-5. **CDN** (CloudFlare for static assets)
-
-**Microservices (Phase 3+):**
-- Separate services: Auth, Inventory, Sales, Reports
-- Message queue (RabbitMQ/Redis) for async operations
-- API Gateway (Kong/AWS API Gateway)
-
----
-
-## Monitoring & Observability (Phase 2)
-
-### Application Monitoring
-
-- **PM2 Monitoring:** Process health, CPU, memory
-- **Winston Logs:** Error tracking, request logs
-- **Uptime Monitoring:** UptimeRobot (free tier)
-
-### Database Monitoring
-
-- **MySQL Stats:** Performance schema and slow query log
-- **Slow Query Log:** Queries > 1 second
-- **Connection Pool:** Monitor active connections
-
-### Business Metrics
-
-- **Dashboard KPIs:** Real-time metrics (inventory value, receivables, DSO)
-- **Audit Analytics:** User activity patterns (Epic 8)
-
----
-
-## Disaster Recovery
-
-### Backup Strategy
-
-**Database Backups:**
-- Automated daily backups (DigitalOcean managed databases or custom pg_dump)
-- Retention: 7 days
-- Test restore monthly
-
-**Application Code:**
-- Git repository (GitHub/GitLab)
-- Tagged releases for each deployment
-
-**Recovery Time Objective (RTO):**
-- MVP: 4 hours
-- Phase 2: 1 hour
-
-**Recovery Point Objective (RPO):**
-- MVP: 24 hours (daily backups)
-- Phase 2: 1 hour (hourly backups)
-
----
-
-## Development Workflow
-
-### Git Workflow
+### Phase 3 Scalability (Horizontal)
 
 ```
-main (production)
-  └── develop (staging)
-       └── feature/epic-1-auth
-       └── feature/epic-2-inventory
-       └── bugfix/invoice-calculation
+┌─────────────────┐
+│   CDN/WAF       │
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│  Load Balancer  │
+└────────┬────────┘
+         │
+    ┌────┴────┐
+    ▼         ▼
+┌───────┐ ┌───────┐
+│ App 1 │ │ App 2 │  ... Auto-scaling group
+└───┬───┘ └───┬───┘
+    └────┬────┘
+         │
+┌────────▼────────┐
+│  Read Replica   │  Primary DB (writes)
+│     (reads)     │
+└─────────────────┘
 ```
 
-**Branch Naming:**
-- `feature/epic-X-description`
-- `bugfix/issue-description`
-- `hotfix/critical-issue`
+### Database Scaling
 
-### CI/CD Pipeline (Phase 2)
-
-```
-1. Developer pushes to feature branch
-2. GitHub Actions runs:
-   ├─> Lint (ESLint)
-   ├─> Type check (tsc)
-   ├─> Unit tests (Jest)
-   └─> Build (Vite + tsc)
-3. If pass: Allow merge to develop
-4. Merge to main: Auto-deploy to production
-```
+1. **Read Replicas:** For reporting and analytics queries
+2. **Connection Pooling:** PgBouncer for PostgreSQL
+3. **Query Optimization:** Strategic indexes on tenantId + common filters
+4. **Archiving:** Move old data to cold storage
 
 ---
 
 ## Related Documents
 
-- **[Tech Stack Justification](./tech-stack.md)** - Full technology choices with comparisons
-- **[Database Schema](./database-schema.md)** - Complete Prisma schema with relationships
-- **[API Endpoints](./api-endpoints.md)** - RESTful API documentation
-- **[Audit Logging Architecture](./audit-logging.md)** - Detailed audit system design
-- **[Source Tree Structure](./source-tree.md)** - Monorepo folder organization
-- **[Coding Standards](./coding-standards.md)** - TypeScript/React conventions
+- [Multi-Tenant SaaS Epic](../epics/epic-9-multi-tenant-saas.md) - Implementation details
+- [Database Schema](./database-schema.md) - Complete Prisma schema
+- [API Endpoints](./api-endpoints.md) - REST API documentation
+- [Security Guide](./security.md) - Detailed security practices
+- [Deployment Guide](../../DEPLOYMENT.md) - Production deployment
 
 ---
 
-## Appendix: Key Architectural Decisions
+## Appendix: Comparison with Single-Tenant ERPs
 
-### Why Monolithic Architecture (MVP)?
+### Why Not Single-Tenant Like Odoo?
 
-**Advantages:**
-- ✅ Simpler to develop and deploy
-- ✅ Single codebase (easier to maintain)
-- ✅ No distributed system complexity
-- ✅ Atomic transactions across modules
+| Aspect | Single-Tenant (Odoo) | Multi-Tenant (EnterpriseOne) |
+|--------|---------------------|------------------------------|
+| **Deployment** | Per-customer setup | Single deployment |
+| **Maintenance** | Update each instance | Update once |
+| **Cost** | Infrastructure per customer | Shared infrastructure |
+| **Onboarding** | Hours to days | Minutes |
+| **Scaling** | Manual per customer | Automatic |
 
-**When to Consider Microservices:**
-- Team size > 10 developers
-- Need independent scaling per module
-- Different tech stacks per service
+### Migration from Single-Tenant
 
-**Verdict:** Monolith is perfect for MVP. Can refactor to microservices in Phase 3+ if needed.
-
----
-
-### Why MySQL 8+?
-
-**Advantages:**
-- ✅ Full ACID compliance with InnoDB
-- ✅ Modern features (window functions, CTEs, JSON support)
-- ✅ Excellent performance for reads and writes
-- ✅ Wide adoption and strong community support
-- ✅ Mature and battle-tested in production
-- ✅ Excellent Prisma support
+For customers migrating from Odoo/SAP:
+1. **Data Export:** Standard CSV/Excel exports
+2. **Tenant Creation:** Automated onboarding
+3. **Data Import:** Built-in import tools
+4. **Go-Live:** Same day activation
 
 ---
 
-### Why Not Use MongoDB?
-
-**Reasons:**
-- ❌ ERP needs ACID transactions (inventory consistency critical)
-- ❌ Highly relational data (products, invoices, clients are interconnected)
-- ❌ No foreign key constraints (data integrity risk)
-- ❌ Complex joins are harder in NoSQL
-
-**Verdict:** MySQL is the correct choice for this ERP system.
-
----
-
-**Document Version:** 1.0
-**Last Updated:** 2025-01-15
-**Status:** Approved for MVP Development
+**Document Version:** 2.0
+**Last Updated:** February 2026
+**Status:** Architecture Complete, Phase 3 Scaling In Progress

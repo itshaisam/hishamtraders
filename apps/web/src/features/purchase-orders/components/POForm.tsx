@@ -9,7 +9,7 @@ import { useSuppliers } from '@/features/suppliers/hooks/useSuppliers';
 import { useProducts } from '@/features/products/hooks/useProducts';
 import { useVariantsByProduct } from '@/features/products/hooks/useVariants';
 import { useUomsForSelect } from '@/hooks/useUoms';
-import { useCurrencySymbol, useGetTaxRate } from '../../../hooks/useSettings';
+import { useCurrencySymbol, useGetPurchaseTaxRate } from '../../../hooks/useSettings';
 
 const poFormSchema = z.object({
   supplierId: z.string().min(1, 'Supplier is required'),
@@ -39,8 +39,10 @@ export const POForm: React.FC<POFormProps> = ({
 }) => {
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
-  const { data: taxRateData } = useGetTaxRate();
-  const taxRate = taxRateData?.taxRate ?? 0;
+  const { data: purchaseTaxData } = useGetPurchaseTaxRate();
+  const defaultTaxRate = purchaseTaxData?.purchaseTaxRate ?? 0;
+  const [taxRate, setTaxRate] = useState<number>(0);
+  const [taxRateInitialized, setTaxRateInitialized] = useState(false);
   const [items, setItems] = useState<CreatePOItemRequest[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [selectedVariant, setSelectedVariant] = useState<string>('');
@@ -93,6 +95,14 @@ export const POForm: React.FC<POFormProps> = ({
   });
 
   const supplierId = watch('supplierId');
+
+  // Initialize tax rate from setting or existing PO
+  useEffect(() => {
+    if (!taxRateInitialized && purchaseTaxData !== undefined) {
+      setTaxRate(purchaseOrder?.taxRate ?? defaultTaxRate);
+      setTaxRateInitialized(true);
+    }
+  }, [purchaseTaxData, purchaseOrder, defaultTaxRate, taxRateInitialized]);
 
   useEffect(() => {
     if (purchaseOrder && purchaseOrder.items.length > 0) {
@@ -207,6 +217,7 @@ export const POForm: React.FC<POFormProps> = ({
         expectedArrivalDate: data.expectedArrivalDate ? new Date(data.expectedArrivalDate) : undefined,
         items,
         notes: data.notes,
+        taxRate,
       };
 
       // Include status when editing existing PO
@@ -562,14 +573,24 @@ export const POForm: React.FC<POFormProps> = ({
                     <span className="text-gray-700 font-medium">Subtotal:</span>
                     <span className="text-gray-900">{cs} {calculateGrandTotal()}</span>
                   </div>
-                  {taxRate > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-700 font-medium">Tax ({taxRate.toFixed(2)}%):</span>
-                      <span className="text-gray-900">
-                        {cs} {(parseFloat(calculateGrandTotal()) * taxRate / 100).toFixed(4)}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700 font-medium flex items-center gap-2">
+                      Tax:
+                      <input
+                        type="number"
+                        value={taxRate}
+                        onChange={(e) => setTaxRate(Math.max(0, Math.min(100, Number(e.target.value))))}
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-500">%</span>
+                    </span>
+                    <span className="text-gray-900">
+                      {cs} {(parseFloat(calculateGrandTotal()) * taxRate / 100).toFixed(4)}
+                    </span>
+                  </div>
                   <div className="border-t border-gray-200 pt-3 flex justify-between">
                     <span className="text-lg font-semibold text-gray-900">Total:</span>
                     <span className="text-lg font-semibold text-blue-600">

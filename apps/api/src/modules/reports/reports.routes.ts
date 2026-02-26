@@ -64,6 +64,14 @@ router.get('/recovery/collections', controller.getCollectionSummaryReport);
 router.get('/recovery/overdue', controller.getOverdueClientsReport);
 router.get('/recovery/productivity', controller.getAgentProductivityReport);
 
+// Sales Order, Delivery Note, Purchase Invoice reports (Story 10.10)
+router.get('/sales-orders', controller.getSalesOrderReport);
+router.get('/delivery-notes', controller.getDeliveryNoteReport);
+router.get('/purchase-invoice-aging', controller.getPurchaseInvoiceAging);
+router.get('/dashboard/sales-order-stats', controller.getSalesOrderStats);
+router.get('/dashboard/delivery-note-stats', controller.getDeliveryNoteStats);
+router.get('/dashboard/purchase-invoice-outstanding', controller.getPurchaseInvoiceOutstanding);
+
 // Excel export routes (Story 4.9)
 router.get('/stock/export', controller.exportStockReport);
 router.get('/stock-valuation/export', controller.exportStockValuation);

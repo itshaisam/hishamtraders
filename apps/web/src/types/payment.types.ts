@@ -6,6 +6,7 @@ export enum PaymentType {
 export enum PaymentReferenceType {
   PO = 'PO',
   INVOICE = 'INVOICE',
+  PURCHASE_INVOICE = 'PURCHASE_INVOICE',
   GENERAL = 'GENERAL',
 }
 

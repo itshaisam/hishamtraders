@@ -76,8 +76,10 @@ export class PurchaseOrderRepository {
       0
     );
 
-    // Fetch tax rate from settings
-    const taxRate = await this.settingsService.getTaxRate();
+    // Use custom tax rate if provided, otherwise fetch from settings
+    const taxRate = data.taxRate !== undefined && data.taxRate !== null
+      ? data.taxRate
+      : await this.settingsService.getPurchaseTaxRate();
     const taxAmount = Math.round(subtotal * taxRate / 100 * 10000) / 10000;
     const totalAmount = subtotal + taxAmount;
 

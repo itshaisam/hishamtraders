@@ -132,6 +132,20 @@ export class InvoicesRepository {
           },
           orderBy: { createdAt: 'desc' },
         },
+        salesOrder: {
+          select: {
+            id: true,
+            orderNumber: true,
+            status: true,
+          },
+        },
+        deliveryNote: {
+          select: {
+            id: true,
+            deliveryNoteNumber: true,
+            status: true,
+          },
+        },
       },
     }) as any;
   }

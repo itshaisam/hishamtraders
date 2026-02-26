@@ -28,6 +28,7 @@ export const createPurchaseOrderSchema = z.object({
     unitCost: z.number().positive('Unit cost must be positive'),
   })).min(1, 'At least one item is required'),
   notes: z.string().optional(),
+  taxRate: z.number().min(0).max(100).optional(), // Override purchase tax rate (defaults to system setting)
 });
 
 export type CreatePurchaseOrderRequest = z.infer<typeof createPurchaseOrderSchema>;

@@ -66,6 +66,25 @@ export class SettingsService {
   }
 
   /**
+   * Get purchase tax rate as a number (separate from sales tax rate)
+   */
+  async getPurchaseTaxRate(): Promise<number> {
+    const value = await this.getSetting('PURCHASE_TAX_RATE');
+    if (!value) {
+      logger.warn('PURCHASE_TAX_RATE setting not found, using default 0%');
+      return 0; // Default: no purchase tax
+    }
+
+    const taxRate = parseFloat(value);
+    if (isNaN(taxRate)) {
+      logger.error(`Invalid PURCHASE_TAX_RATE value: ${value}, using default 0%`);
+      return 0;
+    }
+
+    return taxRate;
+  }
+
+  /**
    * Get currency symbol
    */
   async getCurrencySymbol(): Promise<string> {
@@ -136,6 +155,7 @@ export class SettingsService {
   async initializeDefaults() {
     const defaults = [
       { key: 'TAX_RATE', value: '18', label: 'Sales Tax Rate (%)', dataType: 'number', category: 'tax' },
+      { key: 'PURCHASE_TAX_RATE', value: '0', label: 'Purchase Tax Rate (%)', dataType: 'number', category: 'tax' },
       { key: 'CURRENCY_SYMBOL', value: 'PKR', label: 'Currency', dataType: 'string', category: 'general' },
       { key: 'COMPANY_NAME', value: 'Hisham Traders', label: 'Company Name', dataType: 'string', category: 'company' },
       { key: 'COMPANY_LOGO', value: '', label: 'Company Logo URL', dataType: 'string', category: 'company' },

@@ -239,7 +239,7 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
         )}
 
         {/* Purchases Menu */}
-        {hasRole(['ADMIN', 'WAREHOUSE_MANAGER']) && (
+        {hasRole(['ADMIN', 'WAREHOUSE_MANAGER', 'ACCOUNTANT']) && (
           <div className="mt-2">
             <button
               onClick={() => toggleMenu('purchases')}
@@ -273,18 +273,40 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                   Goods Receipts
                 </Link>
                 <Link
+                  to="/purchase-invoices"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Purchase Invoices
+                </Link>
+                <Link
                   to="/suppliers"
                   className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                 >
                   Suppliers
                 </Link>
+                {hasRole(['ADMIN', 'ACCOUNTANT']) && (
+                  <>
+                    <Link
+                      to="/payments/supplier/record"
+                      className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                    >
+                      Record Supplier Payment
+                    </Link>
+                    <Link
+                      to="/payments/supplier/history"
+                      className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                    >
+                      Supplier Payment History
+                    </Link>
+                  </>
+                )}
               </div>
             )}
           </div>
         )}
 
         {/* Sales Menu */}
-        {hasRole(['ADMIN', 'SALES_OFFICER', 'ACCOUNTANT']) && (
+        {hasRole(['ADMIN', 'SALES_OFFICER', 'ACCOUNTANT', 'WAREHOUSE_MANAGER']) && (
           <div className="mt-2">
             <button
               onClick={() => toggleMenu('sales')}
@@ -310,6 +332,18 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                   className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                 >
                   Customers
+                </Link>
+                <Link
+                  to="/sales-orders"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Sales Orders
+                </Link>
+                <Link
+                  to="/delivery-notes"
+                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Delivery Notes
                 </Link>
                 <Link
                   to="/invoices"
@@ -363,18 +397,6 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
                       className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
                     >
                       Customer Payment History
-                    </Link>
-                    <Link
-                      to="/payments/supplier/record"
-                      className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
-                    >
-                      Record Supplier Payment
-                    </Link>
-                    <Link
-                      to="/payments/supplier/history"
-                      className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
-                    >
-                      Supplier Payment History
                     </Link>
                     <Link
                       to="/expenses"
@@ -543,6 +565,24 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
               >
                 Gate Pass Report
               </Link>
+              <Link
+                to="/reports/sales-orders"
+                className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                Sales Order Report
+              </Link>
+              <Link
+                to="/reports/delivery-notes"
+                className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                Delivery Note Report
+              </Link>
+              <Link
+                to="/reports/purchase-invoice-aging"
+                className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                Purchase Invoice Aging
+              </Link>
             </div>
           )}
         </div>
@@ -650,36 +690,16 @@ export default function Sidebar({ isMobile = false, isOpen = false, onClose }: S
           </Link>
         )}
 
-        {/* Settings Menu (Admin only) */}
+        {/* Settings (Admin only) */}
         {isAdmin() && (
           <div className="mt-2">
-            <button
-              onClick={() => toggleMenu('settings')}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            <Link
+              to="/settings"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition"
             >
-              <div className="flex items-center gap-3">
-                <Settings size={20} />
-                {!isCollapsed && <span className="text-sm font-medium">Settings</span>}
-              </div>
-              {!isCollapsed && (
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform ${
-                    isMenuExpanded('settings') ? 'rotate-180' : ''
-                  }`}
-                />
-              )}
-            </button>
-            {isMenuExpanded('settings') && !isCollapsed && (
-              <div className="ml-6 mt-1 space-y-1">
-                <Link
-                  to="/settings/tax"
-                  className="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
-                >
-                  System Settings
-                </Link>
-              </div>
-            )}
+              <Settings size={20} />
+              {!isCollapsed && <span className="text-sm font-medium">System Settings</span>}
+            </Link>
           </div>
         )}
       </nav>

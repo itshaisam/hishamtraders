@@ -5,11 +5,12 @@ import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, addDays, parseISO } from 'date-fns';
-import { Plus, Save, ArrowLeft, Trash2, AlertTriangle, Link2 } from 'lucide-react';
+import { Plus, Save, ArrowLeft, Trash2, AlertTriangle, Link2, Info } from 'lucide-react';
 import { useCreateInvoice } from '../../../hooks/useInvoices';
 import { useClients } from '../../../hooks/useClients';
 import { useWarehouses } from '../../../hooks/useWarehouses';
 import { useGetTaxRate, useCurrencySymbol } from '../../../hooks/useSettings';
+import { useWorkflowSettings } from '../../../hooks/useWorkflowSettings';
 import { formatCurrency, formatCurrencyDecimal } from '../../../lib/formatCurrency';
 import { useProducts } from '../../products/hooks/useProducts';
 import { CreateInvoiceDto, InvoicePaymentType } from '../../../types/invoice.types';
@@ -47,9 +48,26 @@ export function CreateInvoicePage() {
   const { data: warehousesData } = useWarehouses({ page: 1, limit: 100 });
   const { data: productsData } = useProducts({ page: 1, limit: 1000 });
   const { data: taxRateData } = useGetTaxRate();
-  const taxRate = taxRateData?.taxRate ?? 18;
+  const defaultTaxRate = taxRateData?.taxRate ?? 18;
+  const [taxRate, setTaxRate] = useState<number>(18);
+  const [taxRateInitialized, setTaxRateInitialized] = useState(false);
   const { data: currencyData } = useCurrencySymbol();
   const cs = currencyData?.currencySymbol || 'PKR';
+  const { data: wfSettings } = useWorkflowSettings();
+
+  // Initialize tax rate from setting once loaded
+  useEffect(() => {
+    if (!taxRateInitialized && taxRateData !== undefined) {
+      setTaxRate(defaultTaxRate);
+      setTaxRateInitialized(true);
+    }
+  }, [taxRateData, defaultTaxRate, taxRateInitialized]);
+
+  // Workflow enforcement: Check if direct invoice creation is blocked
+  const requireSO = wfSettings?.['sales.requireSalesOrder'] ?? false;
+  const requireDN = wfSettings?.['sales.requireDeliveryNote'] ?? false;
+  const allowDirect = wfSettings?.['sales.allowDirectInvoice'] ?? true;
+  const isDirectBlocked = requireSO || requireDN || !allowDirect;
 
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showCreditWarning, setShowCreditWarning] = useState(false);
@@ -169,6 +187,7 @@ export function CreateInvoicePage() {
         paymentType: data.paymentType as InvoicePaymentType,
         adminOverride: creditOverrideEnabled && data.adminOverride,
         overrideReason: creditOverrideEnabled && data.adminOverride ? data.overrideReason : undefined,
+        taxRate,
       };
 
       const result = await createInvoice.mutateAsync(payload);
@@ -216,6 +235,22 @@ export function CreateInvoicePage() {
         </button>
         <h1 className="text-2xl font-bold text-gray-900">Create Invoice</h1>
       </div>
+
+      {/* Workflow enforcement banner */}
+      {isDirectBlocked && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+          <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-amber-800">Workflow restrictions active</p>
+            <ul className="mt-1 text-sm text-amber-700 list-disc list-inside">
+              {requireSO && <li>Sales Order is required — create an invoice from a <a href="/sales-orders" className="underline font-medium">Sales Order</a></li>}
+              {requireDN && <li>Delivery Note is required — create an invoice from a <a href="/delivery-notes" className="underline font-medium">Delivery Note</a></li>}
+              {!allowDirect && !requireSO && !requireDN && <li>Direct invoice creation is disabled — use a Sales Order or Delivery Note</li>}
+            </ul>
+            <p className="mt-2 text-xs text-amber-600">These settings can be changed in <a href="/settings?tab=workflow" className="underline">System Settings</a>.</p>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Header Section */}
@@ -507,7 +542,7 @@ export function CreateInvoicePage() {
         </div>
 
         {/* Summary Section */}
-        <InvoiceSummary subtotal={subtotal} taxAmount={taxAmount} total={total} taxRate={taxRate} />
+        <InvoiceSummary subtotal={subtotal} taxAmount={taxAmount} total={total} taxRate={taxRate} onTaxRateChange={setTaxRate} />
 
         {/* Action Buttons */}
         <div className="flex items-center justify-end gap-4">

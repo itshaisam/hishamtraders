@@ -25,6 +25,29 @@ export const useUpdateTaxRate = () => {
   });
 };
 
+export const useGetPurchaseTaxRate = () => {
+  return useQuery({
+    queryKey: ['settings', 'purchase-tax-rate'],
+    queryFn: () => settingsService.getPurchaseTaxRate(),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useUpdatePurchaseTaxRate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (purchaseTaxRate: number) => settingsService.updatePurchaseTaxRate(purchaseTaxRate),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['settings', 'purchase-tax-rate'] });
+      toast.success(data.message || 'Purchase tax rate updated successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to update purchase tax rate');
+    },
+  });
+};
+
 export const useCurrencySymbol = () => {
   return useQuery({
     queryKey: ['settings', 'currency-symbol'],

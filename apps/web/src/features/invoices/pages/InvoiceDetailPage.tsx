@@ -480,6 +480,24 @@ export function InvoiceDetailPage() {
                 <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusBadgeColor(invoice.status)}`}>
                   {invoice.status}
                 </span>
+                {invoice.salesOrder && (
+                  <button
+                    onClick={() => navigate(`/sales-orders/${invoice.salesOrder!.id}`)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors cursor-pointer"
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    SO: {invoice.salesOrder.orderNumber}
+                  </button>
+                )}
+                {invoice.deliveryNote && (
+                  <button
+                    onClick={() => navigate(`/delivery-notes/${invoice.deliveryNote!.id}`)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors cursor-pointer"
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    DN: {invoice.deliveryNote.deliveryNoteNumber}
+                  </button>
+                )}
                 {invoice.gatePass && (
                   <button
                     onClick={() => navigate(`/gate-passes/${invoice.gatePass!.id}`)}

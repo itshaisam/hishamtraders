@@ -11,6 +11,8 @@ import {
   Plus,
   FileText,
   ShoppingCart,
+  ClipboardList,
+  Truck,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -366,11 +368,11 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
             <div className="flex flex-wrap gap-3">
               <Link
-                to="/purchase-orders/new"
+                to="/sales-orders/new"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
               >
-                <ShoppingCart size={16} />
-                New Purchase Order
+                <ClipboardList size={16} />
+                New Sales Order
               </Link>
               <Link
                 to="/invoices/create"
@@ -380,8 +382,22 @@ export default function AdminDashboard() {
                 New Invoice
               </Link>
               <Link
-                to="/products/new"
+                to="/purchase-orders/new"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium"
+              >
+                <ShoppingCart size={16} />
+                New Purchase Order
+              </Link>
+              <Link
+                to="/delivery-notes/new"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium"
+              >
+                <Truck size={16} />
+                New Delivery Note
+              </Link>
+              <Link
+                to="/products/new"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-sm font-medium"
               >
                 <Plus size={16} />
                 New Product

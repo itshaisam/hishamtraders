@@ -1,4 +1,5 @@
 import { SystemSetting } from '@prisma/client';
+import { getTenantId } from '../../lib/prisma.js';
 
 export class SettingsRepository {
   constructor(private prisma: any) {}
@@ -26,10 +27,11 @@ export class SettingsRepository {
    * Create or update a system setting
    */
   async upsert(key: string, value: string, label: string, dataType: string, category?: string): Promise<SystemSetting> {
+    const tenantId = getTenantId();
     return this.prisma.systemSetting.upsert({
-      where: { key },
+      where: { tenantId_key: { tenantId, key } },
       update: { value, label, dataType, category },
-      create: { key, value, label, dataType, category },
+      create: { key, value, label, dataType, category, tenantId },
     });
   }
 
@@ -37,8 +39,12 @@ export class SettingsRepository {
    * Update a setting value
    */
   async updateValue(key: string, value: string): Promise<SystemSetting> {
+    const existing = await this.prisma.systemSetting.findFirst({ where: { key } });
+    if (!existing) {
+      throw new Error(`Setting not found: ${key}`);
+    }
     return this.prisma.systemSetting.update({
-      where: { key },
+      where: { id: existing.id },
       data: { value },
     });
   }

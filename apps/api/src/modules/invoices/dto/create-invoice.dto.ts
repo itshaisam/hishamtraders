@@ -7,6 +7,7 @@ export const invoiceItemSchema = z.object({
   quantity: z.number().int().positive('Quantity must be positive'),
   unitPrice: z.number().positive('Unit price must be positive'),
   discount: z.number().min(0).max(100, 'Discount must be between 0 and 100').default(0), // Percentage
+  salesOrderItemId: z.string().optional(), // Link to SO item for quantity tracking
 });
 
 // Create invoice schema
@@ -21,6 +22,9 @@ export const createInvoiceSchema = z.object({
   notes: z.string().optional(),
   adminOverride: z.boolean().optional().default(false), // For credit limit override
   overrideReason: z.string().optional(), // Mandatory if adminOverride is true
+  salesOrderId: z.string().optional(), // Link to Sales Order
+  deliveryNoteId: z.string().optional(), // Link to Delivery Note
+  taxRate: z.number().min(0).max(100).optional(), // Override sales tax rate (defaults to system setting)
 });
 
 // Type inference
