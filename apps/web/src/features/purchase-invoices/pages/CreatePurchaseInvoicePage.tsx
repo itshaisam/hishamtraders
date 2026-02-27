@@ -8,6 +8,8 @@ import { Button, Breadcrumbs, Spinner, Combobox } from '../../../components/ui';
 import { useCurrencySymbol } from '../../../hooks/useSettings';
 import { formatCurrencyDecimal } from '../../../lib/formatCurrency';
 import { apiClient } from '../../../lib/api-client';
+import { goodsReceiptsService } from '../../goods-receipts/services/goodsReceiptsService';
+import type { GoodsReceiveNote } from '../../goods-receipts/types/goods-receipt.types';
 import toast from 'react-hot-toast';
 
 interface LineItem {
@@ -42,6 +44,8 @@ export const CreatePurchaseInvoicePage: React.FC = () => {
   const [linkedGrnId, setLinkedGrnId] = useState<string | null>(null);
   const [prefillLoading, setPrefillLoading] = useState(false);
   const [prefillSource, setPrefillSource] = useState<string | null>(null);
+  const [availableGrns, setAvailableGrns] = useState<GoodsReceiveNote[]>([]);
+  const [grnsLoading, setGrnsLoading] = useState(false);
 
   // Pre-fill from GRN or PO
   useEffect(() => {
@@ -49,7 +53,7 @@ export const CreatePurchaseInvoicePage: React.FC = () => {
       setPrefillLoading(true);
       setPrefillSource('GRN');
       apiClient.get(`/goods-receipts/${grnId}`).then((res) => {
-        const grn = res.data;
+        const grn = res.data.data;
         setSupplierId(grn.purchaseOrder?.supplierId || '');
         setLinkedGrnId(grn.id);
         setLinkedPoId(grn.poId || null);
@@ -57,7 +61,7 @@ export const CreatePurchaseInvoicePage: React.FC = () => {
         // Fetch PO items for costs
         if (grn.poId) {
           apiClient.get(`/purchase-orders/${grn.poId}`).then((poRes) => {
-            const po = poRes.data;
+            const po = poRes.data.data;
             const poItemMap = new Map<string, number>();
             po.items?.forEach((poItem: any) => {
               const key = `${poItem.productId}|${poItem.productVariantId || ''}`;
@@ -110,7 +114,7 @@ export const CreatePurchaseInvoicePage: React.FC = () => {
       setPrefillLoading(true);
       setPrefillSource('PO');
       apiClient.get(`/purchase-orders/${poId}`).then((res) => {
-        const po = res.data;
+        const po = res.data.data;
         setSupplierId(po.supplierId || '');
         setLinkedPoId(po.id);
 
@@ -130,6 +134,87 @@ export const CreatePurchaseInvoicePage: React.FC = () => {
       });
     }
   }, [grnId, poId]);
+
+  // Fetch available GRNs when supplier is selected (non-prefill mode only)
+  useEffect(() => {
+    if (!supplierId || prefillSource) {
+      setAvailableGrns([]);
+      return;
+    }
+    setGrnsLoading(true);
+    goodsReceiptsService
+      .list({ supplierId, status: 'COMPLETED', limit: 100 })
+      .then((res) => {
+        setAvailableGrns(res.data || []);
+      })
+      .catch(() => {
+        setAvailableGrns([]);
+      })
+      .finally(() => setGrnsLoading(false));
+  }, [supplierId, prefillSource]);
+
+  const grnOptions = availableGrns.map((g) => ({
+    value: g.id,
+    label: `${g.grnNumber} (${new Date(g.receivedDate).toLocaleDateString()})`,
+  }));
+
+  const handleGrnSelect = async (selectedGrnId: string | null) => {
+    if (!selectedGrnId) {
+      setLinkedGrnId(null);
+      setLinkedPoId(null);
+      setItems([]);
+      return;
+    }
+    setLinkedGrnId(selectedGrnId);
+    try {
+      const grnRes = await apiClient.get(`/goods-receipts/${selectedGrnId}`);
+      const grn = grnRes.data.data;
+      setLinkedPoId(grn.poId || null);
+
+      if (grn.poId) {
+        try {
+          const poRes = await apiClient.get(`/purchase-orders/${grn.poId}`);
+          const po = poRes.data.data;
+          const poItemMap = new Map<string, number>();
+          po.items?.forEach((poItem: any) => {
+            const key = `${poItem.productId}|${poItem.productVariantId || ''}`;
+            poItemMap.set(key, Number(poItem.unitCost));
+          });
+          setItems((grn.items || []).map((item: any) => {
+            const key = `${item.productId}|${item.productVariantId || ''}`;
+            return {
+              productId: item.productId,
+              productVariantId: item.productVariantId || null,
+              productName: item.product?.name || '',
+              variantName: item.productVariant?.variantName || '',
+              quantity: item.quantity,
+              unitCost: poItemMap.get(key) || 0,
+            };
+          }));
+        } catch {
+          setItems((grn.items || []).map((item: any) => ({
+            productId: item.productId,
+            productVariantId: item.productVariantId || null,
+            productName: item.product?.name || '',
+            variantName: item.productVariant?.variantName || '',
+            quantity: item.quantity,
+            unitCost: 0,
+          })));
+        }
+      } else {
+        setItems((grn.items || []).map((item: any) => ({
+          productId: item.productId,
+          productVariantId: item.productVariantId || null,
+          productName: item.product?.name || '',
+          variantName: item.productVariant?.variantName || '',
+          quantity: item.quantity,
+          unitCost: 0,
+        })));
+      }
+    } catch {
+      toast.error('Failed to load GRN data');
+    }
+  };
 
   const suppliers = suppliersData?.data || suppliersData || [];
   const supplierOptions = (Array.isArray(suppliers) ? suppliers : []).map((s: any) => ({
@@ -244,11 +329,41 @@ export const CreatePurchaseInvoicePage: React.FC = () => {
                 <Combobox
                   options={supplierOptions}
                   value={supplierId}
-                  onChange={(val) => setSupplierId(val as string)}
+                  onChange={(val) => {
+                    setSupplierId(val as string);
+                    setLinkedGrnId(null);
+                    setLinkedPoId(null);
+                    setItems([]);
+                  }}
                   placeholder="Select supplier..."
                 />
               )}
             </div>
+            {!prefillSource && supplierId && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Link to GRN (optional)
+                </label>
+                <Combobox
+                  options={grnOptions}
+                  value={linkedGrnId || ''}
+                  onChange={(val) => handleGrnSelect(val as string | null)}
+                  placeholder={grnsLoading ? 'Loading GRNs...' : 'Select a GRN...'}
+                  disabled={grnsLoading}
+                  isLoading={grnsLoading}
+                />
+              </div>
+            )}
+            {prefillSource === 'GRN' && linkedGrnId && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Linked GRN
+                </label>
+                <div className="px-3 py-2 border border-gray-200 bg-gray-50 rounded-md text-sm">
+                  {linkedGrnId}
+                </div>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Supplier Invoice # <span className="text-red-500">*</span>

@@ -9,6 +9,7 @@ const grnFilterSchema = z.object({
   search: z.string().optional().default(''),
   poId: z.string().optional().transform((v) => (v === '' ? undefined : v)),
   warehouseId: z.string().optional().transform((v) => (v === '' ? undefined : v)),
+  supplierId: z.string().optional().transform((v) => (v === '' ? undefined : v)),
   status: z
     .string()
     .optional()

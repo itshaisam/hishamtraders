@@ -123,6 +123,7 @@ export interface GRNFilters {
   search?: string;
   poId?: string;
   warehouseId?: string;
+  supplierId?: string;
   status?: GRNStatus;
   startDate?: string;
   endDate?: string;

@@ -9,6 +9,7 @@ export const goodsReceiptsService = {
     if (filters?.search) params.set('search', filters.search);
     if (filters?.poId) params.set('poId', filters.poId);
     if (filters?.warehouseId) params.set('warehouseId', filters.warehouseId);
+    if (filters?.supplierId) params.set('supplierId', filters.supplierId);
     if (filters?.status) params.set('status', filters.status);
     if (filters?.startDate) params.set('startDate', filters.startDate);
     if (filters?.endDate) params.set('endDate', filters.endDate);

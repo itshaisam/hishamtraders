@@ -4,6 +4,7 @@ export interface GRNFilters {
   search?: string;
   poId?: string;
   warehouseId?: string;
+  supplierId?: string;
   status?: string;
   startDate?: string;
   endDate?: string;
@@ -65,6 +66,7 @@ export class GoodsReceiptsRepository {
       search = '',
       poId,
       warehouseId,
+      supplierId,
       status,
       startDate,
       endDate,
@@ -85,6 +87,7 @@ export class GoodsReceiptsRepository {
 
     if (poId) where.poId = poId;
     if (warehouseId) where.warehouseId = warehouseId;
+    if (supplierId) where.purchaseOrder = { ...where.purchaseOrder, supplierId };
     if (status) where.status = status;
 
     if (startDate || endDate) {
