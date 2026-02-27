@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Breadcrumbs } from '../../../components/ui/Breadcrumbs';
+import { Spinner } from '../../../components/ui';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, addDays, parseISO } from 'date-fns';
@@ -18,6 +19,8 @@ import { InvoiceSummary } from '../components/InvoiceSummary';
 import { CreditLimitWarning } from '../components/CreditLimitWarning';
 import { inventoryService } from '../../../services/inventoryService';
 import { invoicesService } from '../../../services/invoicesService';
+import { salesOrderService } from '../../../services/salesOrderService';
+import { deliveryNoteService } from '../../../services/deliveryNoteService';
 import toast from 'react-hot-toast';
 
 const invoiceItemSchema = z.object({
@@ -43,6 +46,10 @@ type InvoiceFormData = z.infer<typeof createInvoiceFormSchema>;
 
 export function CreateInvoicePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const salesOrderIdParam = searchParams.get('salesOrderId');
+  const deliveryNoteIdParam = searchParams.get('deliveryNoteId');
+
   const createInvoice = useCreateInvoice();
   const { data: clientsData } = useClients({ page: 1, limit: 1000 });
   const { data: warehousesData } = useWarehouses({ page: 1, limit: 100 });
@@ -74,6 +81,13 @@ export function CreateInvoicePage() {
   const [creditOverrideEnabled, setCreditOverrideEnabled] = useState(false);
   const [stockLevels, setStockLevels] = useState<Record<string, number>>({});
 
+  // Prefill state
+  const [loadingPrefill, setLoadingPrefill] = useState(!!salesOrderIdParam || !!deliveryNoteIdParam);
+  const [linkedSalesOrderId, setLinkedSalesOrderId] = useState<string | undefined>();
+  const [linkedDeliveryNoteId, setLinkedDeliveryNoteId] = useState<string | undefined>();
+  const [prefillSource, setPrefillSource] = useState<string | null>(null); // 'SO' or 'DN'
+  const [prefillLabel, setPrefillLabel] = useState<string>('');
+
   const {
     register,
     control,
@@ -91,10 +105,72 @@ export function CreateInvoicePage() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: 'items',
   });
+
+  // Pre-fill from Sales Order or Delivery Note
+  useEffect(() => {
+    if (!salesOrderIdParam && !deliveryNoteIdParam) return;
+    // For DN path, wait for product data to be available for pricing lookup
+    if (deliveryNoteIdParam && !productsData?.data) return;
+    // Don't re-run if already prefilled
+    if (prefillSource) return;
+
+    const prefill = async () => {
+      setLoadingPrefill(true);
+      try {
+        if (salesOrderIdParam) {
+          // Path A: From Sales Order — use invoiceable items endpoint
+          const data = await salesOrderService.getInvoiceableItems(salesOrderIdParam);
+          setValue('clientId', data.clientId);
+          setValue('warehouseId', data.warehouseId);
+          if (data.paymentType) {
+            setValue('paymentType', data.paymentType);
+          }
+          const items = data.items.map((item: any) => ({
+            productId: item.productId,
+            productVariantId: item.productVariantId || null,
+            quantity: item.remainingQuantity,
+            unitPrice: Number(item.unitPrice),
+            discount: Number(item.discount || 0),
+          }));
+          if (items.length > 0) replace(items);
+          setLinkedSalesOrderId(salesOrderIdParam);
+          setPrefillSource('SO');
+          setPrefillLabel(data.orderNumber);
+        } else if (deliveryNoteIdParam) {
+          // Path B: From Delivery Note — fetch DN detail
+          const dn = await deliveryNoteService.getById(deliveryNoteIdParam);
+          setValue('clientId', dn.clientId);
+          setValue('warehouseId', dn.warehouseId);
+          // Map DN items to invoice items (DN has no pricing, use product catalog)
+          const items = dn.items.map((item: any) => {
+            const product = productsData?.data?.find((p: any) => p.id === item.productId);
+            return {
+              productId: item.productId,
+              productVariantId: item.productVariantId || null,
+              quantity: item.quantity,
+              unitPrice: product ? Number(product.sellingPrice) : 0,
+              discount: 0,
+            };
+          });
+          if (items.length > 0) replace(items);
+          setLinkedDeliveryNoteId(deliveryNoteIdParam);
+          if (dn.salesOrderId) setLinkedSalesOrderId(dn.salesOrderId);
+          setPrefillSource('DN');
+          setPrefillLabel(dn.deliveryNoteNumber);
+        }
+      } catch {
+        toast.error('Failed to load source document');
+      } finally {
+        setLoadingPrefill(false);
+      }
+    };
+
+    prefill();
+  }, [salesOrderIdParam, deliveryNoteIdParam, productsData]);
 
   const watchClientId = watch('clientId');
   const watchPaymentType = watch('paymentType');
@@ -188,6 +264,8 @@ export function CreateInvoicePage() {
         adminOverride: creditOverrideEnabled && data.adminOverride,
         overrideReason: creditOverrideEnabled && data.adminOverride ? data.overrideReason : undefined,
         taxRate,
+        salesOrderId: linkedSalesOrderId,
+        deliveryNoteId: linkedDeliveryNoteId,
       };
 
       const result = await createInvoice.mutateAsync(payload);
@@ -222,6 +300,14 @@ export function CreateInvoicePage() {
     }
   };
 
+  if (loadingPrefill) {
+    return (
+      <div className="p-6 flex justify-center items-center min-h-[400px]">
+        <Spinner />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <Breadcrumbs items={[{ label: 'Sales', href: '/invoices' }, { label: 'Invoices', href: '/invoices' }, { label: 'Create Invoice' }]} className="mb-4" />
@@ -234,10 +320,15 @@ export function CreateInvoicePage() {
           Back to Invoices
         </button>
         <h1 className="text-2xl font-bold text-gray-900">Create Invoice</h1>
+        {prefillSource && (
+          <p className="text-sm text-blue-600 mt-1">
+            Creating from {prefillSource === 'SO' ? 'Sales Order' : 'Delivery Note'} {prefillLabel}
+          </p>
+        )}
       </div>
 
-      {/* Workflow enforcement banner */}
-      {isDirectBlocked && (
+      {/* Workflow enforcement banner — only show when creating directly (not from SO/DN) */}
+      {isDirectBlocked && !prefillSource && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
           <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
           <div>
@@ -264,7 +355,8 @@ export function CreateInvoicePage() {
               </label>
               <select
                 {...register('clientId')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!!prefillSource}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
               >
                 <option value="">Select Customer</option>
                 {clientsData?.data.map((client) => (
@@ -285,7 +377,8 @@ export function CreateInvoicePage() {
               </label>
               <select
                 {...register('warehouseId')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!!prefillSource}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
               >
                 <option value="">Select Warehouse</option>
                 {warehousesData?.data.map((warehouse) => (
@@ -321,7 +414,8 @@ export function CreateInvoicePage() {
               </label>
               <select
                 {...register('paymentType')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={prefillSource === 'SO'}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
               >
                 <option value="CASH">Cash</option>
                 <option value="CREDIT">Credit</option>
@@ -386,14 +480,16 @@ export function CreateInvoicePage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Invoice Items</h2>
-            <button
-              type="button"
-              onClick={() => append({ productId: '', productVariantId: null, quantity: 1, unitPrice: 0, discount: 0 })}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              <Plus size={20} />
-              Add Item
-            </button>
+            {!prefillSource && (
+              <button
+                type="button"
+                onClick={() => append({ productId: '', productVariantId: null, quantity: 1, unitPrice: 0, discount: 0 })}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                <Plus size={20} />
+                Add Item
+              </button>
+            )}
           </div>
 
           <div className="overflow-x-auto">
@@ -422,29 +518,35 @@ export function CreateInvoicePage() {
                   return (
                     <tr key={field.id} className="border-b">
                       <td className="py-2 px-2">
-                        <select
-                          {...register(`items.${index}.productId`)}
-                          onChange={(e) => {
-                            const productId = e.target.value;
-                            setValue(`items.${index}.productId`, productId);
+                        {prefillSource ? (
+                          <span className="text-sm text-gray-900">
+                            {productsData?.data?.find((p: any) => p.id === item?.productId)?.name || item?.productId}
+                          </span>
+                        ) : (
+                          <select
+                            {...register(`items.${index}.productId`)}
+                            onChange={(e) => {
+                              const productId = e.target.value;
+                              setValue(`items.${index}.productId`, productId);
 
-                            // Auto-populate unit price when product is selected
-                            if (productId && productsData?.data) {
-                              const selectedProduct = productsData.data.find((p: any) => p.id === productId);
-                              if (selectedProduct?.sellingPrice) {
-                                setValue(`items.${index}.unitPrice`, Number(selectedProduct.sellingPrice));
+                              // Auto-populate unit price when product is selected
+                              if (productId && productsData?.data) {
+                                const selectedProduct = productsData.data.find((p: any) => p.id === productId);
+                                if (selectedProduct?.sellingPrice) {
+                                  setValue(`items.${index}.unitPrice`, Number(selectedProduct.sellingPrice));
+                                }
                               }
-                            }
-                          }}
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">Select Product</option>
-                          {productsData?.data.map((product: any) => (
-                            <option key={product.id} value={product.id}>
-                              {product.name} ({product.sku}) - {formatCurrency(Number(product.sellingPrice), cs)}
-                            </option>
-                          ))}
-                        </select>
+                            }}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="">Select Product</option>
+                            {productsData?.data.map((product: any) => (
+                              <option key={product.id} value={product.id}>
+                                {product.name} ({product.sku}) - {formatCurrency(Number(product.sellingPrice), cs)}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                         {errors.items?.[index]?.productId && (
                           <p className="text-red-500 text-xs mt-1">{errors.items[index]?.productId?.message}</p>
                         )}
@@ -509,7 +611,7 @@ export function CreateInvoicePage() {
                         {formatCurrencyDecimal(lineTotal, cs)}
                       </td>
                       <td className="py-2 px-2">
-                        {fields.length > 1 && (
+                        {!prefillSource && fields.length > 1 && (
                           <button
                             type="button"
                             onClick={() => remove(index)}
